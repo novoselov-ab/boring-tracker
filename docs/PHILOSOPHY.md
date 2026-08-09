@@ -88,3 +88,15 @@ Before adding anything, ask:
 
 If it's the second one, the answer is no. It is *always* okay for this app to
 do less than the competition. That's the product.
+
+## And the same test for the code
+
+Every technical decision goes through performance and simplicity, in that
+order, with no third criterion. Not "what's the standard architecture", not
+"what does Apple's sample project do", not "what scales to a million users" —
+this app has one user per install and a few thousand numbers.
+
+Reach for the smallest thing that works. A framework you don't need is startup
+time you can't get back, failure modes you don't control, and a manual someone
+has to read before they can fix a bug. If plain structs in an array do the job,
+that is not a prototype to be replaced later. That is the finished design.

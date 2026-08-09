@@ -1,0 +1,59 @@
+name: WhateverTracker
+
+options:
+  bundleIdPrefix: com.novoselov
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    # No DEVELOPMENT_TEAM on purpose: the project must build and run in the
+    # simulator for anyone who clones it, with no Apple developer account.
+
+targets:
+  WhateverTracker:
+    type: application
+    platform: iOS
+    sources:
+      - path: WhateverTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.whatevertracker
+        PRODUCT_NAME: Whatever Tracker
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        CODE_SIGNING_ALLOWED: NO
+
+  WhateverTrackerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: WhateverTrackerTests
+    dependencies:
+      - target: WhateverTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.whatevertracker.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  WhateverTracker:
+    build:
+      targets:
+        WhateverTracker: all
+        WhateverTrackerTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - WhateverTrackerTests

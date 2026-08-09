@@ -146,9 +146,11 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
   a goal of `2,000` is doing subtraction you can do yourself. It also drags in
   progress rings, over/under coloring, and eventually judgment — which rule 9
   forbids. Show the number. That's the feature.
-- **iCloud / CloudKit sync.** Apple's servers, so it wouldn't cost us anything
-  or leak anything, but it's the single biggest source of complexity and bugs
-  in an otherwise tiny app. Export/import is the sync story.
+- **Sync, in v1.** Using the app on an iPhone *and* an iPad is a real goal, so
+  sync is wanted eventually — but not in the first version, and not by adopting
+  a database to get it. The document is built mergeable from the start (see
+  TECH.md) and the transport is chosen later. Until then, export/import moves
+  data between devices, and ordinary iPhone backups protect it.
 - **Apple Health.** Useful and first-party, but it's a permission prompt and a
   pile of unit and edge-case handling for something most users won't turn on.
 - **Apple Watch, iPad, Mac.** A Watch app is the best possible fit for this
