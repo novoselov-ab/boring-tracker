@@ -4,9 +4,10 @@ import SwiftUI
 struct HomeView: View {
     @Environment(Store.self) private var store
     @State private var logging: LogSheet.Target?
+    @State private var path: [UUID] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if store.activeTrackers.isEmpty {
                     ContentUnavailableView(
@@ -18,7 +19,7 @@ struct HomeView: View {
                     list
                 }
             }
-            .navigationTitle("Whatever")
+            .navigationTitle("Boring Tracker")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Log", systemImage: "plus") {
@@ -26,6 +27,9 @@ struct HomeView: View {
                     }
                     .disabled(store.activeTrackers.isEmpty)
                 }
+            }
+            .navigationDestination(for: UUID.self) { trackerID in
+                TrackerDetailView(trackerID: trackerID)
             }
             .sheet(item: $logging) { target in
                 LogSheet(target: target)
@@ -40,9 +44,11 @@ struct HomeView: View {
             }
             Section {
                 ForEach(store.activeTrackers) { tracker in
-                    TrackerCard(tracker: tracker) {
-                        logging = LogSheet.Target(tracker: tracker.id)
-                    }
+                    TrackerCard(
+                        tracker: tracker,
+                        open: { path.append(tracker.id) },
+                        log: { logging = LogSheet.Target(tracker: tracker.id) }
+                    )
                 }
                 .onMove { offsets, destination in
                     store.move(fromOffsets: offsets, toOffset: destination)
@@ -58,24 +64,34 @@ struct HomeView: View {
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
     let tracker: Tracker
+    let open: () -> Void
     let log: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(tracker.name)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Text(headline)
-                    .font(.largeTitle.weight(.medium))
-                    .monospacedDigit()
-                    .contentTransition(.numericText())
-                if let caption {
-                    Text(caption)
-                        .font(.footnote)
+            // Two plain buttons with disjoint frames rather than a
+            // NavigationLink wrapping a button: a link would either swallow the
+            // + or leave its chevron stranded in the middle of the card.
+            Button(action: open) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(tracker.name)
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    Text(headline)
+                        .font(.largeTitle.weight(.medium))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                    if let caption {
+                        Text(caption)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
             }
+            .buttonStyle(.plain)
+            .accessibilityHint("Shows the history")
             Spacer(minLength: 12)
             Button(action: log) {
                 Image(systemName: "plus")

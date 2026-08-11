@@ -27,6 +27,8 @@ final class Store {
     private(set) var origin: StoreOrigin
     /// Set when a save fails, so the app can say so instead of pretending.
     private(set) var saveError: String?
+    /// The entry deleted most recently, so it can be put straight back.
+    private(set) var lastDeletion: Entry?
 
     /// One derived index: the sum of every daily-total tracker, per local day.
     /// It backs both the home screen number and the graph, so nothing has to
@@ -46,9 +48,10 @@ final class Store {
     /// not yank it back to the device's.
     private let followsSystemCalendar: Bool
     private let saver: StoreSaver
-    /// Counts mutations, so the saver can tell a late-arriving old document
-    /// from the current one.
-    private var revision: UInt64 = 0
+    /// Counts mutations. The saver uses it to tell a late-arriving old document
+    /// from the current one, and the graph uses it to know when its aggregated
+    /// points are stale without watching every array.
+    private(set) var revision: UInt64 = 0
     private var timeObserver: (any NSObjectProtocol)?
 
     // MARK: - Life cycle
@@ -203,7 +206,32 @@ final class Store {
         apply(-1, to: entries[index])
         entries.remove(at: index)
         recordDeletion(of: entry.id)
+        lastDeletion = entry
         scheduleSave()
+    }
+
+    /// Puts back the entry that was just deleted.
+    ///
+    /// Fast input means mistakes, so this has to exist. It removes the
+    /// tombstone as well as restoring the record — the deletion is being
+    /// undone, not recorded and reversed.
+    ///
+    /// One honest limit: if you exported between the delete and the undo, that
+    /// export carries the tombstone, and re-importing it deletes the entry
+    /// again. Tombstones beat resurrections on purpose, and the alternative
+    /// costs more than this corner is worth.
+    func undoLastDeletion() {
+        guard let entry = lastDeletion else { return }
+        tombstones.removeAll { $0.id == entry.id }
+        insertSorted(entry)
+        apply(1, to: entry)
+        lastDeletion = nil
+        refreshToday()
+        scheduleSave()
+    }
+
+    func forgetLastDeletion() {
+        lastDeletion = nil
     }
 
     // MARK: - Trackers

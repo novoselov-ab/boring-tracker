@@ -56,7 +56,10 @@ struct StoreFile: Sendable {
         return StoreFile(directory: base.appendingPathComponent("whatever-tracker", isDirectory: true))
     }
 
-    static let appGroupIdentifier = "group.com.novoselov.whatevertracker"
+    /// Matches the permanent bundle id from docs/SHIPPING.md. Like the bundle
+    /// id, this cannot change after shipping without stranding the data of
+    /// everyone who already has the app.
+    static let appGroupIdentifier = "group.com.novoselov.boringtracker"
 
     // MARK: - Reading
 

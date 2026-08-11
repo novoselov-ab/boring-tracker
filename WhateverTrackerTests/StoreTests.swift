@@ -136,6 +136,36 @@ struct StoreTests {
         #expect(store.entries.map { DayKey($0.date, calendar: utc).day } == [11, 12, 13, 14, 15, 16])
     }
 
+    @Test("Undoing a delete puts the entry back, tombstone and all")
+    func undoDelete() {
+        let tracker = Tracker(name: "Calories")
+        let store = makeStore(StoreDocument(trackers: [tracker]))
+        let entry = Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8))
+        store.add(entry)
+        store.add(Entry(trackerID: tracker.id, value: 250, date: date(2026, 3, 14, 13)))
+        let before = store.document
+
+        store.delete(store.entries[0])
+        store.undoLastDeletion()
+
+        #expect(store.document == before)
+        #expect(store.tombstones.isEmpty)
+        #expect(store.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 850)
+        #expect(store.lastDeletion == nil)
+    }
+
+    @Test("Undo with nothing to undo does nothing")
+    func undoWithoutDelete() {
+        let tracker = Tracker(name: "Calories")
+        let store = makeStore(StoreDocument(trackers: [tracker]))
+        store.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
+        let before = store.document
+
+        store.undoLastDeletion()
+
+        #expect(store.document == before)
+    }
+
     // MARK: - Trackers
 
     @Test("One meal logs against several trackers at the same moment")

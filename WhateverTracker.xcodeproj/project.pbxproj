@@ -13,12 +13,15 @@
 		287B3FBEC5C77A801AD5DD65 /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB693F7F838E8DF74944ED6 /* PersistenceTests.swift */; };
 		2F5F32E554E656D62B980EAF /* WhateverTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F35E9E4C61CC523CB9BC2B /* WhateverTrackerApp.swift */; };
 		36969CB235418F236643C28F /* DayBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1C3337F90BFDD9FEAF9748 /* DayBoundaryTests.swift */; };
+		4EA002276319AFFD39AD18F1 /* TrackerChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F952403DEADCBA2B84A796 /* TrackerChart.swift */; };
 		506CA211B609FF4C97304ED3 /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26BAD1D5400B5D2CFC743CE7 /* StoreTests.swift */; };
 		717B99BB240E2A4F5741BF40 /* StoreDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCAE9AA8775EE2999E4E4003 /* StoreDocument.swift */; };
 		78D87C31C7E2DEEFDCFAFCED /* NumberInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71A6D67623B03591ADAB9E1 /* NumberInputTests.swift */; };
 		7B9ACC94719402E8C7429489 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B5AE13BEF0D7A7C0D6AC3 /* Entry.swift */; };
 		81372E43B6038B2FA36EA74B /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF477D1A929BDD3E1219188F /* HomeView.swift */; };
 		85E236F63E1742F2F8AF6E90 /* EntryEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F29201C0103F0340E040E2F9 /* EntryEditor.swift */; };
+		996D4E19EC938E1BCBD96EE1 /* ChartDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 456EC9D5E7BC10BB19E23881 /* ChartDataTests.swift */; };
+		9CCBD74B921A6BCBC311CA23 /* ChartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F08F2DA7A576834677AA83DF /* ChartData.swift */; };
 		A01CD57B0E276BECA14ED3F7 /* NumberInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B66D24D7D631D06DED133B /* NumberInput.swift */; };
 		A4988A2805FAAC536C52D870 /* SaverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BA26E28AEC6703A389A556F /* SaverTests.swift */; };
 		B42A175F31C112191578760E /* StoreCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D387E8A0C8CE4F5747A4C988 /* StoreCoding.swift */; };
@@ -46,8 +49,10 @@
 		26BAD1D5400B5D2CFC743CE7 /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		2AB693F7F838E8DF74944ED6 /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
 		312220FE6C39AE0F0D55DB67 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		456EC9D5E7BC10BB19E23881 /* ChartDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataTests.swift; sourceTree = "<group>"; };
 		4E9B155DA6E7098C1CC3999F /* DayKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayKey.swift; sourceTree = "<group>"; };
 		53B66D24D7D631D06DED133B /* NumberInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberInput.swift; sourceTree = "<group>"; };
+		54F952403DEADCBA2B84A796 /* TrackerChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerChart.swift; sourceTree = "<group>"; };
 		63CEF061C2C8FC3573849BE0 /* Tracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
 		739027C4E4EFB0DC4D9230D8 /* WhateverTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WhateverTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9BA26E28AEC6703A389A556F /* SaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaverTests.swift; sourceTree = "<group>"; };
@@ -61,6 +66,7 @@
 		DDA7B6E96D911B8902066CEC /* MergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergeTests.swift; sourceTree = "<group>"; };
 		EA63DD3FEC22D25DEBBB1238 /* StoreFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFile.swift; sourceTree = "<group>"; };
 		EF477D1A929BDD3E1219188F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		F08F2DA7A576834677AA83DF /* ChartData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartData.swift; sourceTree = "<group>"; };
 		F29201C0103F0340E040E2F9 /* EntryEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditor.swift; sourceTree = "<group>"; };
 		F8A37E22BE8BCC301E6510DE /* WhateverTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WhateverTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCAE9AA8775EE2999E4E4003 /* StoreDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDocument.swift; sourceTree = "<group>"; };
@@ -78,6 +84,7 @@
 		1D6069296DD0712AE65E6DC7 /* WhateverTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
+				456EC9D5E7BC10BB19E23881 /* ChartDataTests.swift */,
 				DA1C3337F90BFDD9FEAF9748 /* DayBoundaryTests.swift */,
 				DDA7B6E96D911B8902066CEC /* MergeTests.swift */,
 				A71A6D67623B03591ADAB9E1 /* NumberInputTests.swift */,
@@ -115,6 +122,7 @@
 				F29201C0103F0340E040E2F9 /* EntryEditor.swift */,
 				EF477D1A929BDD3E1219188F /* HomeView.swift */,
 				249811025335C1EAFC7BF00A /* LogSheet.swift */,
+				54F952403DEADCBA2B84A796 /* TrackerChart.swift */,
 				9CD68941AD125D2D8CE69891 /* TrackerDetailView.swift */,
 			);
 			path = Views;
@@ -145,6 +153,7 @@
 		D5479BD0A07868AE94C69E2C /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				F08F2DA7A576834677AA83DF /* ChartData.swift */,
 				4E9B155DA6E7098C1CC3999F /* DayKey.swift */,
 				53B66D24D7D631D06DED133B /* NumberInput.swift */,
 			);
@@ -240,6 +249,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9CCBD74B921A6BCBC311CA23 /* ChartData.swift in Sources */,
 				0FF0750A13331684E39A4E59 /* DayKey.swift in Sources */,
 				7B9ACC94719402E8C7429489 /* Entry.swift in Sources */,
 				85E236F63E1742F2F8AF6E90 /* EntryEditor.swift in Sources */,
@@ -252,6 +262,7 @@
 				F3ECEB5B6711767BEAB36B52 /* StoreFile.swift in Sources */,
 				D059EAB3C0CF5CAE1DE32EAE /* StoreSaver.swift in Sources */,
 				208055081C55889187CD2FAF /* Tracker.swift in Sources */,
+				4EA002276319AFFD39AD18F1 /* TrackerChart.swift in Sources */,
 				1CE4020CA26F293CA5AA280E /* TrackerDetailView.swift in Sources */,
 				2F5F32E554E656D62B980EAF /* WhateverTrackerApp.swift in Sources */,
 			);
@@ -261,6 +272,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				996D4E19EC938E1BCBD96EE1 /* ChartDataTests.swift in Sources */,
 				36969CB235418F236643C28F /* DayBoundaryTests.swift in Sources */,
 				BB65E544BACC4DF37F46A186 /* MergeTests.swift in Sources */,
 				78D87C31C7E2DEEFDCFAFCED /* NumberInputTests.swift in Sources */,
