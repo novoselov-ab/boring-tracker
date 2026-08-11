@@ -21,6 +21,10 @@ source and ship it themselves.
   broken.
 - [Product](docs/PRODUCT.md) — what the app actually is: the model, the
   screens, the scope.
+- [Tech](docs/TECH.md) — how it's built, and why, with the benchmarks behind
+  the storage decision.
+- [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
+  submission.
 
 ## Status
 
