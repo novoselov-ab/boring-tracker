@@ -22,7 +22,7 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     var isArchived: Bool = false
     /// When this record last changed. Used to resolve edits made on two
     /// devices — newer wins. See "Mergeable by design" in docs/TECH.md.
-    var modified: Date = Date()
+    var modified: Date = .stamp()
 
     /// Formats a value the way this tracker wants to be read: grouped
     /// thousands, fixed decimals, unit appended if there is one.
@@ -32,6 +32,18 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
         )
         guard includeUnit, !unit.isEmpty else { return number }
         return "\(number) \(unit)"
+    }
+
+    /// The value as it would be typed into the number pad: no grouping
+    /// separators, no trailing zeros, so it reads back through `NumberInput`
+    /// as the same number in every region.
+    func editText(_ value: Double, locale: Locale = .current) -> String {
+        value.formatted(
+            .number
+                .precision(.fractionLength(0...max(decimals, 1)))
+                .grouping(.never)
+                .locale(locale)
+        )
     }
 }
 

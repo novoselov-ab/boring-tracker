@@ -7,11 +7,11 @@ struct Entry: Codable, Identifiable, Hashable, Sendable {
     var trackerID: UUID
     var value: Double
     /// When the entry happened — editable, and often backdated.
-    var date: Date = Date()
+    var date: Date = .stamp()
     var note: String?
     /// When the record last changed. Distinct from `date`: editing last
     /// Tuesday's dinner today moves `modified`, not `date`.
-    var modified: Date = Date()
+    var modified: Date = .stamp()
 }
 
 /// A deleted record, remembered rather than dropped.
@@ -39,5 +39,5 @@ struct Pin: Codable, Identifiable, Hashable, Sendable {
     var label: String
     var amounts: [Amount]
     var sortIndex: Int = 0
-    var modified: Date = Date()
+    var modified: Date = .stamp()
 }

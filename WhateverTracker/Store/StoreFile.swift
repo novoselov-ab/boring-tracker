@@ -1,0 +1,156 @@
+import Foundation
+
+enum StoreError: Error, Equatable {
+    /// The file was written by a newer version of the app. Refusing beats
+    /// guessing: decoding it with today's rules would drop whatever is new and
+    /// then save that loss back over the original.
+    case futureSchema(found: Int, supported: Int)
+}
+
+/// Where the document came from, so the app can be honest about it.
+enum StoreOrigin: Equatable, Sendable {
+    /// Normal launch.
+    case file
+    /// The main file would not decode; the previous good copy did.
+    case backup
+    /// Nothing on disk yet — a first launch.
+    case fresh
+    /// Neither file could be read. Both were moved aside to this URL rather
+    /// than overwritten, and the app started over. The user gets told.
+    case unreadable(quarantine: URL)
+}
+
+struct StoreLoad: Sendable {
+    var document: StoreDocument
+    var origin: StoreOrigin
+}
+
+/// Reading and writing the one file the app owns.
+///
+/// Every write is the entire document, written atomically, with the previous
+/// version kept alongside. See "Writing safely" in docs/TECH.md.
+struct StoreFile: Sendable {
+
+    let url: URL
+    let backupURL: URL
+
+    init(directory: URL) {
+        self.url = directory.appendingPathComponent("store.json")
+        self.backupURL = directory.appendingPathComponent("store.backup.json")
+    }
+
+    var directory: URL { url.deletingLastPathComponent() }
+
+    /// The real location: `Application Support/whatever-tracker/`.
+    ///
+    /// Inside the App Group container when the entitlement is present, so a
+    /// widget can read the same file later without the store moving after
+    /// people already have history in it. Signing an App Group needs a paid
+    /// developer account, and the project deliberately builds without one, so
+    /// the plain container is the fallback.
+    static func standard(appGroup: String? = Self.appGroupIdentifier) -> StoreFile {
+        let fileManager = FileManager.default
+        let base = appGroup
+            .flatMap { fileManager.containerURL(forSecurityApplicationGroupIdentifier: $0) }
+            ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return StoreFile(directory: base.appendingPathComponent("whatever-tracker", isDirectory: true))
+    }
+
+    static let appGroupIdentifier = "group.com.novoselov.whatevertracker"
+
+    // MARK: - Reading
+
+    func load(now: Date = Date()) -> StoreLoad {
+        let fileManager = FileManager.default
+        let mainExists = fileManager.fileExists(atPath: url.path)
+        let backupExists = fileManager.fileExists(atPath: backupURL.path)
+
+        if mainExists, let document = try? read(url) {
+            return StoreLoad(document: document, origin: .file)
+        }
+        if backupExists, let document = try? read(backupURL) {
+            return StoreLoad(document: document, origin: .backup)
+        }
+        guard mainExists || backupExists else {
+            return StoreLoad(document: .starter, origin: .fresh)
+        }
+        // Something is there and none of it decodes. Move it aside instead of
+        // letting the next save write over the only copy the user has left.
+        let quarantine = quarantineAll(now: now)
+        return StoreLoad(document: .starter, origin: .unreadable(quarantine: quarantine))
+    }
+
+    func read(_ fileURL: URL) throws -> StoreDocument {
+        try StoreMigration.migrate(Data(contentsOf: fileURL))
+    }
+
+    private func quarantineAll(now: Date) -> URL {
+        let fileManager = FileManager.default
+        let label = now.formatted(
+            Date.ISO8601FormatStyle(dateSeparator: .omitted, timeSeparator: .omitted)
+        )
+        let folder = directory.appendingPathComponent("unreadable-\(label)", isDirectory: true)
+        try? fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+        for source in [url, backupURL] where fileManager.fileExists(atPath: source.path) {
+            try? fileManager.moveItem(at: source, to: folder.appendingPathComponent(source.lastPathComponent))
+        }
+        return folder
+    }
+
+    // MARK: - Writing
+
+    func write(_ document: StoreDocument) throws {
+        let data = try StoreCoding.encode(document)
+        try prepareDirectory()
+
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: url.path) {
+            try? fileManager.removeItem(at: backupURL)
+            // On APFS this is a clone, not a byte copy, so keeping a spare
+            // costs essentially nothing per save.
+            try? fileManager.copyItem(at: url, to: backupURL)
+        }
+        // Writes a temporary file and renames it, so a reader — or a crash —
+        // sees either the whole old document or the whole new one.
+        try data.write(to: url, options: .atomic)
+    }
+
+    func prepareDirectory() throws {
+        let fileManager = FileManager.default
+        var isDirectory: ObjCBool = false
+        if !fileManager.fileExists(atPath: directory.path, isDirectory: &isDirectory) {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        // Stated explicitly because the opposite is a one-line mistake that
+        // silently destroys people's history when they get a new phone: the
+        // store must stay inside iCloud/iTunes backup. See docs/TECH.md.
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = false
+        var mutable = directory
+        try? mutable.setResourceValues(values)
+    }
+}
+
+/// Version N to N+1, run at load.
+///
+/// There is only version 1, so there is nothing to migrate yet — but the probe
+/// and the refusal of a newer file are needed from the first release, because
+/// they are what protects a document this build does not understand. When a
+/// breaking change actually arrives, its step goes here.
+enum StoreMigration {
+
+    private struct VersionProbe: Decodable { var schemaVersion: Int }
+
+    static func migrate(_ data: Data) throws -> StoreDocument {
+        let probe = try StoreCoding.decoder().decode(VersionProbe.self, from: data)
+        guard probe.schemaVersion <= StoreDocument.currentSchemaVersion else {
+            throw StoreError.futureSchema(
+                found: probe.schemaVersion, supported: StoreDocument.currentSchemaVersion
+            )
+        }
+        var document = try StoreCoding.decode(data)
+        document.schemaVersion = StoreDocument.currentSchemaVersion
+        document.entries = StoreDocument.sorted(document.entries)
+        return document
+    }
+}
