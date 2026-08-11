@@ -49,7 +49,7 @@ targets:
       - target: WhateverTracker
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.whatevertracker.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.boringtracker.tests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:

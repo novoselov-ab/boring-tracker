@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0FF0750A13331684E39A4E59 /* DayKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9B155DA6E7098C1CC3999F /* DayKey.swift */; };
+		1CE4020CA26F293CA5AA280E /* TrackerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD68941AD125D2D8CE69891 /* TrackerDetailView.swift */; };
 		208055081C55889187CD2FAF /* Tracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CEF061C2C8FC3573849BE0 /* Tracker.swift */; };
 		287B3FBEC5C77A801AD5DD65 /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB693F7F838E8DF74944ED6 /* PersistenceTests.swift */; };
 		2F5F32E554E656D62B980EAF /* WhateverTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F35E9E4C61CC523CB9BC2B /* WhateverTrackerApp.swift */; };
@@ -17,6 +18,7 @@
 		78D87C31C7E2DEEFDCFAFCED /* NumberInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71A6D67623B03591ADAB9E1 /* NumberInputTests.swift */; };
 		7B9ACC94719402E8C7429489 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90B5AE13BEF0D7A7C0D6AC3 /* Entry.swift */; };
 		81372E43B6038B2FA36EA74B /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF477D1A929BDD3E1219188F /* HomeView.swift */; };
+		85E236F63E1742F2F8AF6E90 /* EntryEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F29201C0103F0340E040E2F9 /* EntryEditor.swift */; };
 		A01CD57B0E276BECA14ED3F7 /* NumberInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B66D24D7D631D06DED133B /* NumberInput.swift */; };
 		A4988A2805FAAC536C52D870 /* SaverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BA26E28AEC6703A389A556F /* SaverTests.swift */; };
 		B42A175F31C112191578760E /* StoreCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D387E8A0C8CE4F5747A4C988 /* StoreCoding.swift */; };
@@ -49,6 +51,7 @@
 		63CEF061C2C8FC3573849BE0 /* Tracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
 		739027C4E4EFB0DC4D9230D8 /* WhateverTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WhateverTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9BA26E28AEC6703A389A556F /* SaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaverTests.swift; sourceTree = "<group>"; };
+		9CD68941AD125D2D8CE69891 /* TrackerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerDetailView.swift; sourceTree = "<group>"; };
 		A6253D7E4D8C24718826923D /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		A71A6D67623B03591ADAB9E1 /* NumberInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberInputTests.swift; sourceTree = "<group>"; };
 		B6E1B2F1A39215301F9DED7F /* StoreSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreSaver.swift; sourceTree = "<group>"; };
@@ -58,6 +61,7 @@
 		DDA7B6E96D911B8902066CEC /* MergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergeTests.swift; sourceTree = "<group>"; };
 		EA63DD3FEC22D25DEBBB1238 /* StoreFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFile.swift; sourceTree = "<group>"; };
 		EF477D1A929BDD3E1219188F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		F29201C0103F0340E040E2F9 /* EntryEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditor.swift; sourceTree = "<group>"; };
 		F8A37E22BE8BCC301E6510DE /* WhateverTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WhateverTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCAE9AA8775EE2999E4E4003 /* StoreDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDocument.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -108,8 +112,10 @@
 		6B249AFD4C7A3F5DD9BEF29B /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				F29201C0103F0340E040E2F9 /* EntryEditor.swift */,
 				EF477D1A929BDD3E1219188F /* HomeView.swift */,
 				249811025335C1EAFC7BF00A /* LogSheet.swift */,
+				9CD68941AD125D2D8CE69891 /* TrackerDetailView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -236,6 +242,7 @@
 			files = (
 				0FF0750A13331684E39A4E59 /* DayKey.swift in Sources */,
 				7B9ACC94719402E8C7429489 /* Entry.swift in Sources */,
+				85E236F63E1742F2F8AF6E90 /* EntryEditor.swift in Sources */,
 				81372E43B6038B2FA36EA74B /* HomeView.swift in Sources */,
 				BB0D0518AD907A6A33F33A27 /* LogSheet.swift in Sources */,
 				A01CD57B0E276BECA14ED3F7 /* NumberInput.swift in Sources */,
@@ -245,6 +252,7 @@
 				F3ECEB5B6711767BEAB36B52 /* StoreFile.swift in Sources */,
 				D059EAB3C0CF5CAE1DE32EAE /* StoreSaver.swift in Sources */,
 				208055081C55889187CD2FAF /* Tracker.swift in Sources */,
+				1CE4020CA26F293CA5AA280E /* TrackerDetailView.swift in Sources */,
 				2F5F32E554E656D62B980EAF /* WhateverTrackerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,7 +359,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.whatevertracker.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.boringtracker.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WhateverTracker.app/WhateverTracker";
@@ -368,7 +376,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.whatevertracker.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.boringtracker.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WhateverTracker.app/WhateverTracker";
@@ -382,7 +390,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Whatever;
+				INFOPLIST_KEY_CFBundleDisplayName = Boring;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -390,7 +398,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.whatevertracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.boringtracker;
 				PRODUCT_NAME = WhateverTracker;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -464,7 +472,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Whatever;
+				INFOPLIST_KEY_CFBundleDisplayName = Boring;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -472,7 +480,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.whatevertracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.boringtracker;
 				PRODUCT_NAME = WhateverTracker;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
