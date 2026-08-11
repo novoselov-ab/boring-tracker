@@ -26,8 +26,11 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.whatevertracker
-        PRODUCT_NAME: Whatever Tracker
+        # The product name stays one word so paths (and the test host) have no
+        # spaces in them; the home screen shows CFBundleDisplayName.
+        PRODUCT_NAME: WhateverTracker
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Whatever
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
