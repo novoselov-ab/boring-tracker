@@ -73,6 +73,74 @@ enrollment rather than trusting this page.** If you do end up classed as a
 trader, the usual answer is a virtual office or mailbox address rather than
 your home.
 
+## Naming and the competitive landscape
+
+Researched August 2026 against the App Store search API. App Store listings
+change constantly — re-check before committing to anything here.
+
+### Availability
+
+**"Whatever Tracker" is unclaimed.** Also unclaimed: *Track Whatever*, *Just
+Track*, *Trackr*, *Tickmark*, *Tap Log*, *Bare Tracker*, *Plain Tracker*,
+*Nought*, *Scribble*.
+
+Taken: *Tally*, *Counted*, *Jot*, *Tick*, *Plainly*, *Log It*, *Quick Log*,
+*Loggit*, *Kept*, *Numo*, *Blank*, *Simply Track*, *Daily Numbers*, and
+*Whatever* on its own (a decision-making app).
+
+The tally-shaped names are especially crowded — several counter apps compete
+there alongside *Tally: The Anything Tracker*, so *Track Anything* and *Tally
+Anything* are worth avoiding even though they're technically free. Being
+mistaken for a tally counter is the wrong association anyway.
+
+Note that three different names are involved and only one must be unique:
+
+- **App Store listing name** — must be unique, claimed first-come, 30 chars.
+- **`CFBundleDisplayName`** — the label under the home screen icon. Does *not*
+  need to be unique; currently `Whatever`, which is fine even though an
+  unrelated app owns that App Store name.
+- **Bundle identifier** — permanent, and changing it makes it a different app.
+
+### Who is already here
+
+| App | Rating | Ratings | Monetization |
+|---|---|---|---|
+| Stupid Simple Macro Tracker | 4.6 | ~7,800 (claims 2.7M users) | premium subscription, ads |
+| Tally: The Anything Tracker | 4.4 | ~4,100 | premium subscription |
+
+Stupid Simple Macro Tracker's own description sells it as the app people
+switch to when they're "done fighting with the other guys" and their
+"cluttered dashboards, screen-hijacking ads" — which is this project's pitch
+almost word for word, from an app that runs ads and sells a subscription.
+
+**The useful conclusion: simplicity is not the differentiator.** Millions of
+people already chose a simple tracker, and the leading ones monetize anyway.
+The gap is that nobody credible is genuinely free — no ads, no subscription,
+no account, no telemetry, source published. That is the one thing a
+venture-funded competitor cannot copy without breaking its own business, and
+it's why the rules in PHILOSOPHY.md are the product rather than a constraint
+on it.
+
+### Listing strategy
+
+Nobody searches for "whatever tracker", and that's fine — App Store discovery
+comes from the subtitle and the hidden keywords field, not the name. So the
+name can be distinctive while those carry the search terms:
+
+- **Name:** `Whatever Tracker`
+- **Subtitle** (30 chars): along the lines of `Calories, weight, anything`
+- **Keywords** (100 chars): calorie, macro, protein, weight, habit, log,
+  counter, free, no ads, open source
+
+Lead the description with what's *absent* — no ads, no subscription, no
+account, no data collection — because that's the part that is both true and
+rare. *Tickmark* is the strongest available fallback if "Whatever Tracker"
+ever has to change.
+
+**Not checked: trademarks.** App Store availability isn't clearance to use a
+name. A USPTO search is cheap insurance before printing it anywhere, though a
+phrase this generic is unlikely to be contested.
+
 ## Before submitting
 
 Things that are easier handled early than discovered at submission:
