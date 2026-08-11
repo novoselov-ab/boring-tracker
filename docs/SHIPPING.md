@@ -78,11 +78,38 @@ your home.
 Researched August 2026 against the App Store search API. App Store listings
 change constantly — re-check before committing to anything here.
 
+### The name is Boring Tracker
+
+Settled. It was already the design principle — PHILOSOPHY.md says "boring and
+native" — and it promises no gamification, no streaks and no dopamine before
+anyone opens the app. It also avoids "simple", a word every competitor has
+already burned while shipping the opposite.
+
+- **App Store listing name:** Boring Tracker
+- **Home screen label** (`CFBundleDisplayName`): `Boring`, because home screen
+  labels truncate around 12 characters
+- **Bundle id:** `com.novoselov.boringtracker` — permanent
+
+Runners-up, both available if it ever has to change: **Napkin Tracker** (more
+charming, evokes jotting a number on the back of something) and **Quiet
+Tracker**. The internal Xcode target and source folder are still named
+`WhateverTracker`; that's invisible to users and can be renamed whenever it's
+convenient.
+
 ### Availability
 
-**"Whatever Tracker" is unclaimed.** Also unclaimed: *Track Whatever*, *Just
-Track*, *Trackr*, *Tickmark*, *Tap Log*, *Bare Tracker*, *Plain Tracker*,
-*Nought*, *Scribble*.
+**"Boring Tracker" is unclaimed**, as is *Whatever Tracker*. Of ~56
+"Something Tracker" names checked, 45 were free — including *Napkin*, *Quiet*,
+*Plain*, *Blunt*, *Honest*, *Calm*, *Lean*, *Minimal*, *Featherweight* and
+*Spartan*. Also unclaimed: *Track Whatever*, *Just Track*, *Trackr*,
+*Tickmark*, *Tap Log*, *Nought*, *Scribble*.
+
+Available but worth avoiding regardless: **Zero Tracker** (collides with
+*Zero: Fasting & Food Tracker*, ~445k ratings, same category), **Snap
+Tracker** ("snap" now means AI photo calorie estimation — it would attract
+exactly the users this app refuses to serve), **Free Tracker** (reads spammy;
+Apple is particular about promotional words in names), and **Naked Tracker**
+(bad search neighbours).
 
 Taken: *Tally*, *Counted*, *Jot*, *Tick*, *Plainly*, *Log It*, *Quick Log*,
 *Loggit*, *Kept*, *Numo*, *Blank*, *Simply Track*, *Daily Numbers*, and
@@ -127,15 +154,16 @@ Nobody searches for "whatever tracker", and that's fine — App Store discovery
 comes from the subtitle and the hidden keywords field, not the name. So the
 name can be distinctive while those carry the search terms:
 
-- **Name:** `Whatever Tracker`
+- **Name:** `Boring Tracker`
 - **Subtitle** (30 chars): along the lines of `Calories, weight, anything`
 - **Keywords** (100 chars): calorie, macro, protein, weight, habit, log,
   counter, free, no ads, open source
 
 Lead the description with what's *absent* — no ads, no subscription, no
 account, no data collection — because that's the part that is both true and
-rare. *Tickmark* is the strongest available fallback if "Whatever Tracker"
-ever has to change.
+rare. The name does useful work here too: leaning into "boring" makes the
+absence of streaks, badges and nagging read as intent rather than as missing
+features.
 
 **Not checked: trademarks.** App Store availability isn't clearance to use a
 name. A USPTO search is cheap insurance before printing it anywhere, though a

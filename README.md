@@ -1,9 +1,13 @@
-# whatever-tracker
+# Boring Tracker
 
 iPhone app for tracking whatever you want — macros, habits, or any other data.
 
 Free, open source, no ads, no accounts, no subscription, no server. Type a
 number, done.
+
+It's called Boring Tracker because that's the promise: no streaks, no badges,
+no confetti, no notifications guilting you back in. It has no opinion about
+your body. It just remembers the numbers you give it.
 
 Other macro trackers want you to scan a barcode for every ingredient of a dish
 you cooked yourself. This one just lets you write down `600 calories, 40
@@ -28,4 +32,4 @@ source and ship it themselves.
 
 ## Status
 
-Early. Nothing built yet.
+Early — the design is settled and written down, the app is being built.
