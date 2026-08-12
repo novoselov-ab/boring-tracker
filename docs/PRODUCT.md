@@ -35,33 +35,43 @@ A tracker has:
 
 No goal field. See "Decided against" below — the number is the feature.
 
-### Group
+### Section
 
-A named set of trackers that get logged **at the same time**. `Macros` holds
-Calories and Protein; `Cat` holds the cat's weight.
+Trackers that get logged **at the same time** share a section. `Food` holds
+Calories and Protein; `Weight` holds your weight, and later your cat's.
 
-This is not a filing system, and it exists for exactly one reason: with a dozen
-trackers, tapping + would open a list of a dozen things to scroll, which breaks
-rule 7. Instead + offers a handful of groups, and picking one opens a single
-sheet with that group's trackers on it — which is the same "one sheet, both
-numbers, one save" requirement described below, arrived at from the other
-direction.
+A section is **a string on the tracker, not an entity.** There is nothing to
+create, nothing to manage, no empty sections and no orphans — you pick an
+existing one or type a new one while editing a tracker. That's deliberate: the
+moment sections get their own screen, this app has grown the management UI it
+exists to avoid.
 
-Two constraints keep it from becoming a taxonomy:
+It earns its place for one reason. With a dozen trackers, tapping + would open
+a dozen-item list to scroll, which breaks rule 7. A section collapses that to
+one sheet with a handful of fields — the same "one sheet, both numbers, one
+save" requirement below, reached from the other direction.
 
-- **A tracker belongs to one group.** Multiple membership needs a management
-  screen, and a management screen is how this app dies.
-- **Groups stay out of the way until they earn their place.** With two or three
-  trackers there is nothing to organise, so a single default group exists and
-  the UI for groups doesn't appear at all.
+**Critically, choosing a section must not cost a tap.** Tapping + opens the
+last-used section's sheet immediately, keyboard already up. Switching sections
+happens *inside* the sheet, for the rare log that isn't the usual one. If
+sections ever add a step to the common path, they have failed and should be
+removed — a picker in front of every log is precisely the friction this app
+exists to delete.
 
-Presets belong to a group, since a preset is a set of numbers for trackers that
-are logged together.
+First launch starts with **Food** and **Weight**.
 
 ### Entry
 
-A number, a tracker, a timestamp, and optionally a short note. That's it.
+A number, a tracker, a timestamp, an optional **name**, and a **batch id**.
 No tags, no meal types, no photos.
+
+The name is the point of the whole design: you don't log "protein", you log a
+*food*. Naming it is what lets you find it again, and what makes presets fall
+out for free — a preset is simply a past entry you liked (see below).
+
+One logged food is two entries — 100 kcal and 10 g protein — so they share a
+`batchID`. That's what makes them a single thing to edit or delete later,
+rather than two rows that happen to have the same timestamp.
 
 ## How logging gets fast
 
@@ -73,34 +83,28 @@ from the fact that **you eat the same things over and over.**
 
 So, in order of importance:
 
-1. **Presets.** Per tracker, a handful of saved values with labels: `Coffee 5`,
-   `Usual breakfast 450`, `Protein shake 160`. One tap logs it. This is the
-   replacement for barcode scanning, and it is better, because it's *your*
-   food and you only pay the setup cost once.
+1. **Presets are named entries you liked.** You never create a preset. You log
+   a food, you give it a name, and that name makes it findable forever: search
+   it, star it, log it again in one tap.
 
-   The danger is that presets are exactly where this app grows a management UI
-   and turns into the thing it replaced. So they are not something you create —
-   they're something you *keep*: **recents appear on their own, and you pin the
-   ones you want to stay.** Pinning is the whole feature. No setup flow, no
-   manage-presets screen, nothing to maintain.
+   This is why naming matters more than it looks. It collapses two features
+   into one — there is no preset library to build, no management screen to
+   maintain, and no separate thing that can drift out of sync with reality.
+   The raw material is simply your own history.
 
-   A pin can carry several trackers at once, because "usual breakfast" is
-   450 kcal and 30 g protein together, not two separate things to tap. That
-   makes a pin naturally belong to a group.
-
-   Call these **presets**, never *recipes*. A preset is a saved set of numbers
+   Call them **presets**, never *recipes*. A preset is a saved set of numbers
    with a label. A recipe is ingredients, and ingredients are permanently out
    of scope — see PHILOSOPHY.md. The word matters because it's the direction
    this feature would drift if allowed to.
 
-   Details deferred on purpose until the basics are in daily use. Building it
-   earlier means guessing.
-2. **Recents.** The last few distinct values you logged, offered
-   automatically. No setup at all, so it's the natural raw material for
-   whatever presets become.
-3. **Multi-tracker entry.** Calories and protein come from the same meal.
-   Typing them in two separate flows is the single most annoying thing this app
-   could do. One sheet, both numbers, one save.
+   Exact behaviour deferred on purpose until the basics are in daily use.
+   Building it earlier means guessing.
+2. **Recents.** Recently logged foods, offered without being asked for. No
+   setup at all, and the natural raw material for whatever pinning becomes.
+3. **One food, one sheet, one save.** Calories and protein come from the same
+   meal. Typing them in two separate flows is the single most annoying thing
+   this app could do — so the sheet takes the whole section at once, plus a
+   name, and writes it as one batch.
 4. **The keypad is already up.** Tapping + goes straight to a numeric field
    with focus. No intermediate screen, no picker, no "choose a category".
 5. **Outside the app entirely.** Home screen widget with your top trackers →

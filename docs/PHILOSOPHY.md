@@ -74,8 +74,17 @@ If you need those, other apps do them, and they'd love your subscription.
   shipped in the OS, not a brand.
 - **Fast to launch.** Cold start to usable in well under a second. No splash
   screen, no animation you have to sit through.
+- **Nothing animates that you have to wait for.** Transitions are there to
+  explain where things went, not to be admired. If a screen can appear
+  instantly, it appears instantly. An animation that delays the keyboard by
+  300ms has cost you more than every clever feature has saved.
 - **The number pad is the interface.** For the common case the keyboard should
   already be up and it should be numeric.
+- **Count the taps, out loud.** The common path — open, log a food, done — has
+  a tap budget and every feature is measured against it. A feature that is
+  merely *good* does not get to spend a tap. Anything that adds a step in front
+  of logging (a picker, a confirmation, a "choose a category") is wrong by
+  default, however tidy it looks.
 - **Legible over clever.** Big numbers, high contrast, readable at a glance
   with one hand at the fridge.
 - **Forgiving.** Fast input means mistakes. Undo and edit must be trivial —
