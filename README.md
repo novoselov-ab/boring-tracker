@@ -59,7 +59,8 @@ change it — or add a source file, since it lists them — regenerate with
 brew install xcodegen && xcodegen generate
 ```
 
-Your data lives in one JSON file inside the app container. In the simulator:
+Your data lives in one JSON file inside the app container. With a simulator
+booted and the app installed on it:
 
 ```sh
 open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/Library/Application Support/whatever-tracker"
