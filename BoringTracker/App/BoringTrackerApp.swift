@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct WhateverTrackerApp: App {
+struct BoringTrackerApp: App {
 
     /// Loaded synchronously, before the first frame. See the launch budget in
     /// docs/TECH.md — an async gate here would flash an empty home screen for

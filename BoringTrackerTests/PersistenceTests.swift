@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import WhateverTracker
+@testable import BoringTracker
 
 @Suite("Persistence")
 struct PersistenceTests {
@@ -203,7 +203,7 @@ struct PersistenceTests {
     func standardLocationIsBackedUp() {
         let path = StoreFile.standard(appGroup: nil).url.path
 
-        #expect(path.hasSuffix("Application Support/whatever-tracker/store.json"))
+        #expect(path.hasSuffix("Application Support/boring-tracker/store.json"))
         #expect(!path.contains("/Caches/"))
         #expect(!path.contains("/tmp/"))
     }

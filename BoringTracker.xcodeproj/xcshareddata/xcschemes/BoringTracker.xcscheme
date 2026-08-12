@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B1ED4B04780E19C4AB77BB62"
-               BuildableName = "WhateverTracker.app"
-               BlueprintName = "WhateverTracker"
-               ReferencedContainer = "container:WhateverTracker.xcodeproj">
+               BlueprintIdentifier = "02B78ECA1F009A1640C465E2"
+               BuildableName = "BoringTracker.app"
+               BlueprintName = "BoringTracker"
+               ReferencedContainer = "container:BoringTracker.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,10 +29,10 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "8CBC6BE2209F57AC8DF09B99"
-               BuildableName = "WhateverTrackerTests.xctest"
-               BlueprintName = "WhateverTrackerTests"
-               ReferencedContainer = "container:WhateverTracker.xcodeproj">
+               BlueprintIdentifier = "8C217055189964DDF1F765AA"
+               BuildableName = "BoringTrackerTests.xctest"
+               BlueprintName = "BoringTrackerTests"
+               ReferencedContainer = "container:BoringTracker.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,10 +46,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B1ED4B04780E19C4AB77BB62"
-            BuildableName = "WhateverTracker.app"
-            BlueprintName = "WhateverTracker"
-            ReferencedContainer = "container:WhateverTracker.xcodeproj">
+            BlueprintIdentifier = "02B78ECA1F009A1640C465E2"
+            BuildableName = "BoringTracker.app"
+            BlueprintName = "BoringTracker"
+            ReferencedContainer = "container:BoringTracker.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -58,10 +58,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "8CBC6BE2209F57AC8DF09B99"
-               BuildableName = "WhateverTrackerTests.xctest"
-               BlueprintName = "WhateverTrackerTests"
-               ReferencedContainer = "container:WhateverTracker.xcodeproj">
+               BlueprintIdentifier = "8C217055189964DDF1F765AA"
+               BuildableName = "BoringTrackerTests.xctest"
+               BlueprintName = "BoringTrackerTests"
+               ReferencedContainer = "container:BoringTracker.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -82,10 +82,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B1ED4B04780E19C4AB77BB62"
-            BuildableName = "WhateverTracker.app"
-            BlueprintName = "WhateverTracker"
-            ReferencedContainer = "container:WhateverTracker.xcodeproj">
+            BlueprintIdentifier = "02B78ECA1F009A1640C465E2"
+            BuildableName = "BoringTracker.app"
+            BlueprintName = "BoringTracker"
+            ReferencedContainer = "container:BoringTracker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -101,10 +101,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B1ED4B04780E19C4AB77BB62"
-            BuildableName = "WhateverTracker.app"
-            BlueprintName = "WhateverTracker"
-            ReferencedContainer = "container:WhateverTracker.xcodeproj">
+            BlueprintIdentifier = "02B78ECA1F009A1640C465E2"
+            BuildableName = "BoringTracker.app"
+            BlueprintName = "BoringTracker"
+            ReferencedContainer = "container:BoringTracker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

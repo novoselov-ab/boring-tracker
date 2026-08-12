@@ -1,5 +1,5 @@
 import Foundation
-@testable import WhateverTracker
+@testable import BoringTracker
 
 // Shared fixtures. Everything here is deterministic on purpose: a merge test
 // that depends on the wall clock or on dictionary ordering is a test that will

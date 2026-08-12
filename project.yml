@@ -1,4 +1,4 @@
-name: WhateverTracker
+name: BoringTracker
 
 options:
   bundleIdPrefix: com.novoselov
@@ -18,11 +18,11 @@ settings:
     # simulator for anyone who clones it, with no Apple developer account.
 
 targets:
-  WhateverTracker:
+  BoringTracker:
     type: application
     platform: iOS
     sources:
-      - path: WhateverTracker
+      - path: BoringTracker
     settings:
       base:
         # Permanent: changing this after shipping makes it a different app
@@ -30,7 +30,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.boringtracker
         # The product name stays one word so paths (and the test host) have no
         # spaces in them; the home screen shows CFBundleDisplayName.
-        PRODUCT_NAME: WhateverTracker
+        PRODUCT_NAME: BoringTracker
         GENERATE_INFOPLIST_FILE: YES
         # Home screen labels truncate around 12 characters, so the icon says
         # "Boring" while the App Store listing is "Boring Tracker".
@@ -40,27 +40,27 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         CODE_SIGNING_ALLOWED: NO
 
-  WhateverTrackerTests:
+  BoringTrackerTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: WhateverTrackerTests
+      - path: BoringTrackerTests
     dependencies:
-      - target: WhateverTracker
+      - target: BoringTracker
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.novoselov.boringtracker.tests
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:
-  WhateverTracker:
+  BoringTracker:
     build:
       targets:
-        WhateverTracker: all
-        WhateverTrackerTests: [test]
+        BoringTracker: all
+        BoringTrackerTests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - WhateverTrackerTests
+        - BoringTrackerTests

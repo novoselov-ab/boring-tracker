@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import WhateverTracker
+@testable import BoringTracker
 
 /// The most bug-prone part of the app, per docs/TECH.md. A day is derived in
 /// the calendar the user is currently living in, never stored — which is a

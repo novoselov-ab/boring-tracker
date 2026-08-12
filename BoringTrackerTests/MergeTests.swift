@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import WhateverTracker
+@testable import BoringTracker
 
 /// The merge is the only genuinely subtle code in the app, and its bugs eat
 /// data quietly instead of crashing. Hence the weight of this file.

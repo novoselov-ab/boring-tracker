@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import WhateverTracker
+@testable import BoringTracker
 
 @Suite("Chart data")
 struct ChartDataTests {

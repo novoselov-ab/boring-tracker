@@ -36,7 +36,7 @@ You need Xcode 26. Nothing else — no package manager, no dependencies to
 fetch, no Apple developer account:
 
 ```sh
-open WhateverTracker.xcodeproj
+open BoringTracker.xcodeproj
 ```
 
 Pick an iPhone simulator and press ⌘R to run, or ⌘U to run the tests. The
@@ -47,7 +47,7 @@ on a real iPhone does need one — set your team in Signing & Capabilities.
 From a terminal instead:
 
 ```sh
-xcodebuild test -project WhateverTracker.xcodeproj -scheme WhateverTracker \
+xcodebuild test -project BoringTracker.xcodeproj -scheme BoringTracker \
   -destination 'platform=iOS Simulator,name=iPhone 17'
 ```
 
@@ -63,7 +63,7 @@ Your data lives in one JSON file inside the app container. With a simulator
 booted and the app installed on it:
 
 ```sh
-open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/Library/Application Support/whatever-tracker"
+open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/Library/Application Support/boring-tracker"
 ```
 
 ## Status

@@ -92,9 +92,8 @@ already burned while shipping the opposite.
 
 Runners-up, both available if it ever has to change: **Napkin Tracker** (more
 charming, evokes jotting a number on the back of something) and **Quiet
-Tracker**. The internal Xcode target and source folder are still named
-`WhateverTracker`; that's invisible to users and can be renamed whenever it's
-convenient.
+Tracker**. The internal Xcode target, source folder and store directory are
+named to match: `BoringTracker` and `boring-tracker`.
 
 ### Availability
 
@@ -150,7 +149,7 @@ on it.
 
 ### Listing strategy
 
-Nobody searches for "whatever tracker", and that's fine — App Store discovery
+Nobody searches for "boring tracker", and that's fine — App Store discovery
 comes from the subtitle and the hidden keywords field, not the name. So the
 name can be distinctive while those carry the search terms:
 

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import WhateverTracker
+@testable import BoringTracker
 
 @MainActor
 @Suite("Store")

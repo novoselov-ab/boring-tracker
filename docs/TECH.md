@@ -72,7 +72,7 @@ serialization format *and* the mapping between them, forever, for no benefit.
 
 ### The file
 
-- Location: app container, `Application Support/whatever-tracker/store.json`.
+- Location: app container, `Application Support/boring-tracker/store.json`.
 - Contains everything: schema version, trackers, entries, pinned values.
 - Pretty-printed with sorted keys — it's meant to be opened and read, and it
   diffs cleanly if someone keeps it in a git repo or Dropbox.
@@ -261,13 +261,13 @@ readable YAML instead of pbxproj conflicts.
 
 ```
 project.yml
-WhateverTracker/
+BoringTracker/
   App/            entry point, root view
   Model/          Tracker, Entry, StoreDocument
   Store/          Store, persistence, migration
   Views/          Home, LogSheet, TrackerDetail, Graph, Settings
   Support/        date math, formatting
-WhateverTrackerTests/
+BoringTrackerTests/
 docs/
 ```
 

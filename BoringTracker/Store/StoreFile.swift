@@ -41,7 +41,7 @@ struct StoreFile: Sendable {
 
     var directory: URL { url.deletingLastPathComponent() }
 
-    /// The real location: `Application Support/whatever-tracker/`.
+    /// The real location: `Application Support/boring-tracker/`.
     ///
     /// Inside the App Group container when the entitlement is present, so a
     /// widget can read the same file later without the store moving after
@@ -53,7 +53,7 @@ struct StoreFile: Sendable {
         let base = appGroup
             .flatMap { fileManager.containerURL(forSecurityApplicationGroupIdentifier: $0) }
             ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return StoreFile(directory: base.appendingPathComponent("whatever-tracker", isDirectory: true))
+        return StoreFile(directory: base.appendingPathComponent("boring-tracker", isDirectory: true))
     }
 
     /// Matches the permanent bundle id from docs/SHIPPING.md. Like the bundle
