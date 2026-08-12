@@ -35,10 +35,33 @@ A tracker has:
 
 No goal field. See "Decided against" below — the number is the feature.
 
+### Group
+
+A named set of trackers that get logged **at the same time**. `Macros` holds
+Calories and Protein; `Cat` holds the cat's weight.
+
+This is not a filing system, and it exists for exactly one reason: with a dozen
+trackers, tapping + would open a list of a dozen things to scroll, which breaks
+rule 7. Instead + offers a handful of groups, and picking one opens a single
+sheet with that group's trackers on it — which is the same "one sheet, both
+numbers, one save" requirement described below, arrived at from the other
+direction.
+
+Two constraints keep it from becoming a taxonomy:
+
+- **A tracker belongs to one group.** Multiple membership needs a management
+  screen, and a management screen is how this app dies.
+- **Groups stay out of the way until they earn their place.** With two or three
+  trackers there is nothing to organise, so a single default group exists and
+  the UI for groups doesn't appear at all.
+
+Presets belong to a group, since a preset is a set of numbers for trackers that
+are logged together.
+
 ### Entry
 
 A number, a tracker, a timestamp, and optionally a short note. That's it.
-No categories, no tags, no meal types, no photos.
+No tags, no meal types, no photos.
 
 ## How logging gets fast
 
@@ -61,9 +84,14 @@ So, in order of importance:
    ones you want to stay.** Pinning is the whole feature. No setup flow, no
    manage-presets screen, nothing to maintain.
 
-   Likely extension: pin a *group* — one entry that logs several trackers at
-   once, because "usual breakfast" is 450 kcal and 30 g protein together, not
-   two separate things to tap.
+   A pin can carry several trackers at once, because "usual breakfast" is
+   450 kcal and 30 g protein together, not two separate things to tap. That
+   makes a pin naturally belong to a group.
+
+   Call these **presets**, never *recipes*. A preset is a saved set of numbers
+   with a label. A recipe is ingredients, and ingredients are permanently out
+   of scope — see PHILOSOPHY.md. The word matters because it's the direction
+   this feature would drift if allowed to.
 
    Details deferred on purpose until the basics are in daily use. Building it
    earlier means guessing.
