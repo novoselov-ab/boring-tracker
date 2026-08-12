@@ -28,4 +28,3 @@ sections of [PRODUCT.md](PRODUCT.md).
 - [ ] Home screen widget, Lock Screen widget, App Shortcuts / Siri.
 - [ ] Sync transport — the document already merges; this is only plumbing.
 - [ ] Apple Watch.
-- [ ] Rename the GitHub repo from `whatever-tracker` to `boring-tracker`.
