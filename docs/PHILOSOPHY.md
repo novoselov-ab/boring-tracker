@@ -17,7 +17,10 @@ meal takes longer than remembering it did, the app has failed.
 And once you build that, you notice it isn't about food at all. It's a fast way
 to write down *any* number that repeats: your weight, your cat's weight, water,
 cigarettes, pushups, hours of sleep, migraines. So the app tracks whatever you
-want. Hence the name.
+want, and it does it without ever making a thing of it. Hence the name:
+*boring* is a promise you can hold the app to. One called Boring Tracker
+cannot grow streaks, badges and a nagging notification later without admitting
+it broke its own name.
 
 ## Rules that must not be broken
 
