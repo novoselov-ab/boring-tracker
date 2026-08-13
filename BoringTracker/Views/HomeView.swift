@@ -3,6 +3,7 @@ import SwiftUI
 /// Your trackers as cards. That's the whole main screen.
 struct HomeView: View {
     @Environment(Store.self) private var store
+    @AppStorage(LogSheet.lastSectionKey) private var lastSection = ""
     @State private var logging: LogSheet.Target?
     @State private var path: [Route] = []
 
@@ -32,8 +33,12 @@ struct HomeView: View {
                     .accessibilityLabel("Settings")
                 }
                 ToolbarItem(placement: .primaryAction) {
+                    // Straight into the section you logged into last, with the
+                    // keypad up. No picker in between — that would be a tap on
+                    // the common path, every time, forever.
                     Button("Log", systemImage: "plus") {
-                        logging = LogSheet.Target(tracker: store.activeTrackers.first?.id)
+                        guard let section = store.sectionToLog(preferring: lastSection) else { return }
+                        logging = LogSheet.Target(section: section)
                     }
                     .disabled(store.activeTrackers.isEmpty)
                 }
@@ -68,16 +73,32 @@ struct HomeView: View {
             if let notice = LoadNotice(origin: store.origin, saveError: store.saveError) {
                 Section { NoticeRow(notice: notice) }
             }
-            Section {
-                ForEach(store.activeTrackers) { tracker in
-                    TrackerCard(
-                        tracker: tracker,
-                        open: { path.append(.tracker(tracker.id)) },
-                        log: { logging = LogSheet.Target(tracker: tracker.id) }
-                    )
-                }
-                .onMove { offsets, destination in
-                    store.move(store.activeTrackers, fromOffsets: offsets, toOffset: destination)
+            // Grouped by section, because a section is the set of trackers
+            // logged together and the log sheet is now one of these groups.
+            // Real sections rather than the heading rows settings uses: this
+            // screen doesn't need a drag between them — that is an
+            // organisational move, and settings is where it lives.
+            ForEach(store.activeSections, id: \.self) { section in
+                let trackers = store.trackers(inSection: section)
+                Section {
+                    ForEach(trackers) { tracker in
+                        TrackerCard(
+                            tracker: tracker,
+                            open: { path.append(.tracker(tracker.id)) },
+                            log: {
+                                logging = LogSheet.Target(section: section, tracker: tracker.id)
+                            }
+                        )
+                    }
+                    .onMove { offsets, destination in
+                        store.move(trackers, fromOffsets: offsets, toOffset: destination)
+                    }
+                } header: {
+                    // The ungrouped trackers get no heading. "No section" is a
+                    // true statement nobody needs read back to them, and
+                    // without it a home screen with no sections at all looks
+                    // exactly as it did before there were any.
+                    if !section.isEmpty { Text(section) }
                 }
             }
         }

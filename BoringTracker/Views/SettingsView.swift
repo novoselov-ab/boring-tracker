@@ -146,31 +146,16 @@ struct SettingsView: View {
 
     // MARK: - Order and sections
 
-    private var rows: [Row] {
-        let trackers = store.activeTrackers
-        var result: [Row] = []
-        for section in sectionOrder(of: trackers) {
-            result.append(.heading(section))
-            result.append(contentsOf: trackers.lazy.filter { $0.section == section }.map(Row.tracker))
-        }
-        return result
-    }
-
-    /// Sections in the order their first tracker appears, with the unsectioned
+    /// Headings in the order their first tracker appears, with the unsectioned
     /// ones gathered at the end. Nothing is stored: a section is a string on a
     /// tracker, so the headings are computed from the trackers every time.
-    private func sectionOrder(of trackers: [Tracker]) -> [String] {
-        var seen = Set<String>()
-        var named: [String] = []
-        var anyUnsectioned = false
-        for tracker in trackers {
-            if tracker.section.isEmpty {
-                anyUnsectioned = true
-            } else if seen.insert(tracker.section).inserted {
-                named.append(tracker.section)
-            }
+    private var rows: [Row] {
+        var result: [Row] = []
+        for section in store.activeSections {
+            result.append(.heading(section))
+            result.append(contentsOf: store.trackers(inSection: section).map(Row.tracker))
         }
-        return anyUnsectioned ? named + [""] : named
+        return result
     }
 
     /// Reads the new order back off the list: each tracker belongs to the last

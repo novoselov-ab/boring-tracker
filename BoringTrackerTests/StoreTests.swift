@@ -392,6 +392,26 @@ struct StoreTests {
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2, 3])
     }
 
+    @Test("Reordering inside one section leaves the others where they were")
+    func reorderingWithinASection() {
+        // What the home screen hands back: it draws a list per section, so a
+        // drag reports offsets into that section alone.
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Protein", sortIndex: 1, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 2, section: "Weight", modified: time(1)),
+        ]))
+
+        store.move(store.trackers(inSection: "Food"),
+                   fromOffsets: IndexSet(integer: 1), toOffset: 0)
+
+        #expect(store.trackers.map(\.name) == ["Protein", "Calories", "Weight"])
+        #expect(store.trackers.map(\.section) == ["Food", "Food", "Weight"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
+        // Nothing moved sections, so nothing counts as edited.
+        #expect(store.trackers.allSatisfy { $0.modified == time(1) })
+    }
+
     @Test("Dropping a tracker under another heading moves it to that section")
     func reorderCarriesSectionChanges() {
         let store = makeStore(StoreDocument(trackers: [
@@ -444,6 +464,50 @@ struct StoreTests {
         // No empty string for the unsectioned tracker, and the archived one's
         // section is still offered — unarchiving it must not invent a new one.
         #expect(store.sections == ["Food", "Weight"])
+    }
+
+    @Test("The sections you can log into are the visible ones, ungrouped ones last")
+    func activeSections() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Cigarettes", sortIndex: 1, modified: time(1)),
+            Tracker(name: "Protein", sortIndex: 2, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 3, section: "Weight", modified: time(1)),
+            Tracker(name: "Cat weight", sortIndex: 4, isArchived: true, section: "Cat",
+                    modified: time(1)),
+        ]))
+
+        // Unlike `sections`, this is what is on screen: the archived tracker's
+        // section is not a sheet you can log into, and the ungrouped ones are a
+        // heading of their own, gathered at the end.
+        #expect(store.activeSections == ["Food", "Weight", ""])
+        #expect(store.trackers(inSection: "Food").map(\.name) == ["Calories", "Protein"])
+        #expect(store.trackers(inSection: "").map(\.name) == ["Cigarettes"])
+        #expect(store.trackers(inSection: "Cat").isEmpty)
+    }
+
+    @Test("+ opens the last-used section, or the first one if it is gone")
+    func sectionToLog() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 1, section: "Weight", modified: time(1)),
+        ]))
+
+        #expect(store.sectionToLog(preferring: "Weight") == "Weight")
+        // Nothing remembered yet, and a section that has since been renamed,
+        // emptied or archived away: land on the first one rather than asking.
+        #expect(store.sectionToLog(preferring: "") == "Food")
+        #expect(store.sectionToLog(preferring: "Cat") == "Food")
+
+        var archived = store.trackers[0]
+        archived.isArchived = true
+        store.update(archived)
+        #expect(store.sectionToLog(preferring: "Food") == "Weight")
+
+        var alsoArchived = store.trackers[1]
+        alsoArchived.isArchived = true
+        store.update(alsoArchived)
+        #expect(store.sectionToLog(preferring: "Weight") == nil)
     }
 
     @Test("Archiving hides a tracker without touching what was logged against it")

@@ -61,7 +61,7 @@ struct TrackerDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Log", systemImage: "plus") {
-                    logging = LogSheet.Target(tracker: trackerID)
+                    logging = LogSheet.Target(section: tracker.section, tracker: trackerID)
                 }
             }
         }

@@ -315,6 +315,12 @@ So they don't get re-argued mid-build:
   correction) and rejecting them costs a validation rule and an error state.
 - **Tombstones are compacted after 180 days**, comfortably longer than any
   plausible period of a second device being offline.
+- **The last-used section is a `UserDefaults` key** (`lastLoggedSection`), and
+  the only thing the app keeps outside the store file. It is what + opens, so
+  it is UI state rather than data: it must not sync between devices, must not
+  turn up in an export, and must not be a field somebody else's history has to
+  carry. If the name it holds no longer matches a section, + falls back to the
+  first one — a stale string costs nothing.
 - **No analytics, no crash reporter, no launch screen image.** Rules 5 and the
   launch budget.
 

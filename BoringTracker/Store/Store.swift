@@ -148,6 +148,45 @@ final class Store {
         return result
     }
 
+    /// The sections you can actually log into, in the order their first tracker
+    /// appears, with the unsectioned ones gathered under `""` at the end.
+    ///
+    /// Deliberately not the same list as `sections`. That one names the sections
+    /// to offer in the tracker editor, so it counts archived trackers and has no
+    /// entry for "not grouped with anything". This one is what the home screen
+    /// draws and what the log sheet can switch between, so it counts only what
+    /// is on screen, and the ungrouped trackers are a heading like any other.
+    var activeSections: [String] {
+        var seen = Set<String>()
+        var named: [String] = []
+        var anyUnsectioned = false
+        for tracker in trackers where !tracker.isArchived {
+            if tracker.section.isEmpty {
+                anyUnsectioned = true
+            } else if seen.insert(tracker.section).inserted {
+                named.append(tracker.section)
+            }
+        }
+        return anyUnsectioned ? named + [""] : named
+    }
+
+    /// The active trackers in one section, in the order they are drawn — which
+    /// is the order their fields appear in the log sheet.
+    func trackers(inSection section: String) -> [Tracker] {
+        trackers.filter { !$0.isArchived && $0.section == section }
+    }
+
+    /// Which section tapping + opens: the one you logged into last, or the first
+    /// on the home screen if that one is gone — archived, renamed, or emptied.
+    ///
+    /// `nil` when there is nothing to log at all. Never a picker: choosing a
+    /// section is a tap on the common path, and the common path is the product
+    /// (docs/PRODUCT.md).
+    func sectionToLog(preferring remembered: String) -> String? {
+        let available = activeSections
+        return available.contains(remembered) ? remembered : available.first
+    }
+
     /// The daily total, straight out of the index.
     func total(for tracker: UUID, on day: DayKey) -> Double {
         totals[DayTotal(tracker: tracker, day: day)] ?? 0
