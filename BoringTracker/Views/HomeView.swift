@@ -68,20 +68,39 @@ struct HomeView: View {
         }
     }
 
+    /// The cards split into the blocks the list draws: consecutive trackers
+    /// that share a section, in the one order the trackers are already in.
+    ///
+    /// A run rather than a gather, so nothing jumps to the bottom of the screen
+    /// for having no section, and a heading appears where the trackers that
+    /// share one happen to sit. Drag reorders within a run; moving a tracker
+    /// between sections is a drop under another heading, which lives in
+    /// settings where there is room for it.
+    private var runs: [[Tracker]] {
+        var result: [[Tracker]] = []
+        for tracker in store.activeTrackers {
+            if result.last?.last?.section == tracker.section {
+                result[result.count - 1].append(tracker)
+            } else {
+                result.append([tracker])
+            }
+        }
+        return result
+    }
+
     private var list: some View {
         List {
             if let notice = LoadNotice(origin: store.origin, saveError: store.saveError) {
                 Section { NoticeRow(notice: notice) }
             }
-            // Grouped by section, because a section is the set of trackers
-            // logged together and the log sheet is now one of these groups.
-            // Real sections rather than the heading rows settings uses: this
-            // screen doesn't need a drag between them — that is an
-            // organisational move, and settings is where it lives.
-            ForEach(store.activeSections, id: \.self) { section in
-                let trackers = store.trackers(inSection: section)
+            // One ordered list, exactly as the trackers are ordered: a run that
+            // shares a section gets that section's heading, and everything else
+            // is a bare card (docs/PRODUCT.md). Nothing is gathered at the
+            // bottom and there is no "Other" heading — having no section is the
+            // normal state, not a leftover, and it needs no special case here.
+            ForEach(runs, id: \.self) { run in
                 Section {
-                    ForEach(trackers) { tracker in
+                    ForEach(run) { tracker in
                         TrackerCard(
                             tracker: tracker,
                             open: { path.append(.tracker(tracker.id)) },
@@ -92,14 +111,12 @@ struct HomeView: View {
                         )
                     }
                     .onMove { offsets, destination in
-                        store.move(trackers, fromOffsets: offsets, toOffset: destination)
+                        store.move(run, fromOffsets: offsets, toOffset: destination)
                     }
                 } header: {
-                    // The ungrouped trackers get no heading. "No section" is a
-                    // true statement nobody needs read back to them, and
-                    // without it a home screen with no sections at all looks
-                    // exactly as it did before there were any.
-                    if !section.isEmpty { Text(section) }
+                    if let section = run.first?.section, !section.isEmpty {
+                        Text(section)
+                    }
                 }
             }
         }
