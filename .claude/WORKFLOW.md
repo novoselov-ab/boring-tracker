@@ -1,7 +1,12 @@
 # Workflow
 
-How each item in [TODO.md](TODO.md) gets built. One item at a time, finished
-properly, before the next one starts.
+How each item in [TODO.md](../docs/TODO.md) gets built. One item at a time,
+finished properly, before the next one starts.
+
+This is about how the work gets done with agents, not about the app. It lives
+here rather than in `docs/` deliberately — `docs/` is the project, and someone
+reading it to understand or fork Boring Tracker should not have to wade through
+process.
 
 ## The loop
 
@@ -27,10 +32,8 @@ and reliably worse.
 /code-review high
 ```
 
-`high` is the normal setting here: broader coverage, and willing to raise
-things it isn't certain about. `/code-review ultra` runs a deeper multi-agent
-review in the cloud — it is billed and can only be started by the user, so ask
-for it on a step that deserves it rather than expecting an agent to launch one.
+**Always `high`, never `ultra`.** `high` gives broad coverage and will raise
+things it isn't certain about, which is what this loop wants.
 
 Add `--fix` to apply findings directly to the working tree, but read them
 first: applying everything blindly is how a review loop starts making the code

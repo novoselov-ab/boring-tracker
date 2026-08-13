@@ -4,10 +4,13 @@ In implementation order. Short by design — if it's not here, it's either done
 or in the "not now" sections of [PRODUCT.md](PRODUCT.md).
 
 The ordering follows one rule: **settle the stored document's shape before the
-app is in daily use.** Every schema change after real history exists on a phone
-costs a migration; before that it costs nothing.
+first App Store release.** That is the freeze point, not daily use on our own
+phone. Until then a schema change costs nothing real — delete the app and start
+over, or export the JSON and hand-edit it. After it, every change is a migration
+over history that belongs to somebody else, and a fresh chance to be wrong about
+their data.
 
-## 1. Settings screen and tracker editing
+## 1. Settings screen and tracker editing — done
 
 Nothing else can be tested without it — the app currently can't create a
 tracker, so it's stuck with the two it ships with. `Store` already has `add`,
@@ -15,24 +18,39 @@ tracker, so it's stuck with the two it ships with. `Store` already has `add`,
 
 Includes the `section` field, since the tracker editor is where you set it.
 
-## 2. Schema changes, all at once
+- [x] Settings, reached from the home screen. One list; the tracker editor is
+      the only subscreen, because five fields don't fit in a row.
+- [x] Create, edit, archive, and reorder by drag — within a section and between
+      them, where dropping under another heading sets the section.
+- [x] Both deletions, labelled apart and explained, in the editor where there
+      is room to say which is which.
+
+## 2. Schema changes, all at once — done
 
 One version bump, while there's no data to migrate:
 
-- [ ] **`section` on Tracker.** A plain string, not a Group entity — sections
+- [x] **`section` on Tracker.** A plain string, not a Group entity — sections
       are display grouping, so there's nothing to manage, no empty groups and
       no orphans. Pick from existing sections or type a new one.
-- [ ] **`name` on Entry**, replacing `note`. One field, used as the label, and
+- [x] **`name` on Entry**, replacing `note`. One field, used as the label, and
       the thing search looks at.
-- [ ] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
+- [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [ ] **Delete `Pin`.** Superseded by search-and-repeat (item 8), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 8), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
 
 Default sections on first launch: **Food** (Calories, Protein) and **Weight**.
+
+Schema version 2, and **no migration system, on purpose.** Nothing has been
+released, so no v1 file exists outside a development simulator; one left there
+is quarantined and started over, exactly as any unreadable file already is.
+What stays is the three-line guard that refuses a file from a *newer* build
+rather than misreading it and saving the loss back over the original — that one
+matters from the first release, and it is not a migration system. A step from N
+to N+1 gets written the day there is a released version to migrate from.
 
 ## 3. The section log sheet
 

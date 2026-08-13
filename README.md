@@ -30,7 +30,6 @@ source and ship it themselves.
 - [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
   submission.
 - [TODO](docs/TODO.md) — what's left, in implementation order.
-- [Workflow](docs/WORKFLOW.md) — how each step gets built and reviewed.
 
 ## Building it
 

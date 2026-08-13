@@ -156,7 +156,7 @@ Small enough to list completely.
   a + button. Measurement cards show the latest reading and when. Reorder by
   drag. That's the whole main screen.
 - **Log sheet** — number pad, presets/recents row, tracker(s), date/time
-  (defaults to now, tappable to change), optional note, Save. Backdating is
+  (defaults to now, tappable to change), optional name, Save. Backdating is
   first-class: you *will* forget dinner until the next morning.
 - **History** — everything you've logged, newest first, grouped by day. Today
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
@@ -177,9 +177,11 @@ Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 ## First launch
 
 The app is useful immediately or the promise is broken. On first launch there
-are already trackers: **Calories** and **Protein**, both daily totals, no goals
-set. You can log something before you've configured anything. Deleting them is
-one swipe if you're here for the cat.
+are already trackers: **Calories** and **Protein** in a **Food** section, both
+daily totals, and **Weight** in its own, no goals set. You can log something
+before you've configured anything, and the two sections mean the section log
+sheet has something to be about on day one. Deleting any of them takes a few
+taps in settings if you're here for the cat.
 
 No tour, no signup, no permission prompts (notifications aren't used at all).
 
