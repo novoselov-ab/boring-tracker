@@ -121,6 +121,30 @@ far past anything this app will see. If that were ever wrong, the fix is to
 put SQLite behind the same store interface, which is a contained change
 because nothing in the UI knows how persistence works.
 
+## Two classes of decision
+
+Worth separating, because they deserve opposite attitudes and it is easy to
+spend caution on the wrong one.
+
+**Stored decisions** change the shape of the document: a new field, a removed
+type, a changed meaning. They are nearly free right now and expensive the day
+there is real history on a phone, because then every one needs a migration and
+a way to be wrong about somebody's data. Be slow and deliberate here, and get
+them done before daily use begins.
+
+**Displayed decisions** are everything computed from the document at read time:
+ranking, ordering, what an empty state shows, whether a tap logs immediately or
+opens a sheet, how a graph aggregates. These cost nothing to change, ever. You
+can replace an entire interaction after a week of use and lose no data and owe
+no migration.
+
+Most of what feels like a big product question — how presets work, how search
+ranks, what the log sheet does first — is the second kind. Treat it as an
+experiment, ship the simplest version, and change it once you have used it.
+Only reach for the first kind when the experiment genuinely needs a fact the
+document does not already record, and when it does, say so loudly, because that
+is the expensive move.
+
 ## Mergeable by design
 
 Two devices is a stated goal (iPhone + iPad), so the document is built to merge

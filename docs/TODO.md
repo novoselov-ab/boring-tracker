@@ -83,11 +83,18 @@ typing. Typing filters past entry names. Tapping a result logs it immediately
 from that name's latest values, with a brief undo.
 
 This replaces pins, favourites and recents with one control, and it is why
-`Pin` was deleted rather than built. Ranking is a display decision: if
-latest-wins prefill turns out to annoy, change it — nothing is stored
-differently.
+`Pin` was deleted rather than built.
 
-Refine after the week of real use, not before.
+**Treat this whole item as an experiment.** It is settled enough to build, not
+settled enough to defend. Every part of it — the ranking, the prefill, what the
+empty state lists, whether a tap logs or opens a sheet — is a *displayed*
+decision computed from an append-only history (see "Two classes of decision" in
+TECH.md), so it can be reworked or thrown away after real use at no cost and
+with no migration.
+
+The one thing to watch for during the week: an experiment that needs a fact the
+document doesn't record. That's a stored decision, and it's the expensive kind —
+flag it early rather than working around it.
 
 ## 9. App icon and asset catalog
 
