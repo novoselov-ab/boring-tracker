@@ -21,6 +21,21 @@ For every TODO step:
 6. **Review again**, until a round turns up nothing worth fixing.
 7. **Push**, and tick the item off in TODO.md.
 
+### Pushing is pre-authorised — do not ask
+
+Committing and pushing to `main` is part of finishing a step, not a separate
+decision to bring back to the user. **Do not stop to ask for permission to
+push.** Push when the tests pass and the review has converged, then report what
+you did.
+
+This is a solo repo with no collaborators and no CI gate to break, everything
+lands on `main`, and anything wrong is recoverable from history. Asking each
+time costs a round trip and buys nothing.
+
+Two things still stop and ask, and they are not this: destructive git that
+rewrites or discards work (`reset --hard`, `clean -fd`, force pushes,
+history rewrites), and anything outward-facing beyond pushing to this repo.
+
 ### Why the review is a separate session
 
 An author reviewing their own work re-reads what they meant, not what they
@@ -76,8 +91,9 @@ further.
 
 Each step runs in its own agterm session with a written brief, so context
 stays scoped and the work is inspectable. A brief says what to build, what is
-explicitly out of scope, and how to verify. The out-of-scope list matters as
-much as the task: it is what stops one step quietly turning into three.
+explicitly out of scope, how to verify, and that pushing needs no permission.
+The out-of-scope list matters as much as the task: it is what stops one step
+quietly turning into three.
 
 Permission mode is **not inherited** — every spawned session is a fresh
 `claude` process — so it is passed explicitly:
