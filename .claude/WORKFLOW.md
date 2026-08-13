@@ -78,3 +78,24 @@ Each step runs in its own agterm session with a written brief, so context
 stays scoped and the work is inspectable. A brief says what to build, what is
 explicitly out of scope, and how to verify. The out-of-scope list matters as
 much as the task: it is what stops one step quietly turning into three.
+
+Permission mode is **not inherited** — every spawned session is a fresh
+`claude` process — so it is passed explicitly:
+
+```sh
+agtermctl session new --cwd "$(git rev-parse --show-toplevel)" \
+  --name "<step>" --after "$AGTERM_SESSION_ID" \
+  --command 'zsh -lc "claude --permission-mode auto '\''Read <brief-path> and carry out the task it describes.'\''"'
+```
+
+The brief is passed **by path, not by value** — a long brief inlined into a
+nested shell quote is where the quoting breaks.
+
+After spawning, check `agtermctl tree --json` and confirm the new session's
+`foreground` is `claude`. A malformed `--command` fails silently into a bare
+shell, and the session looks perfectly fine in the sidebar.
+
+`.claude/settings.local.json` carries the allowlist for what these sessions
+routinely run — xcodegen, xcodebuild, the git subcommands, agtermctl, read-only
+inspection. It is machine-local and gitignored. Destructive git (`reset --hard`,
+`clean -fd`) is deliberately absent, so it still stops and asks.
