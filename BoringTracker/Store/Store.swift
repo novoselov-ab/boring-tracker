@@ -277,7 +277,11 @@ final class Store {
     /// wherever they are drawn, not in the stored order.
     func add(_ tracker: Tracker) {
         var tracker = tracker
-        tracker.modified = .stamp()
+        let now = Date.stamp()
+        tracker.modified = now
+        // Both stamps: it is a new record and it is taking a place in the list
+        // for the first time, so neither is inherited from anywhere.
+        tracker.orderModified = now
         tracker.sortIndex = (trackers.map(\.sortIndex).max() ?? -1) + 1
         trackers.append(tracker)
         scheduleSave()
@@ -287,6 +291,13 @@ final class Store {
         guard let index = trackers.firstIndex(where: { $0.id == tracker.id }) else { return }
         var updated = tracker
         updated.modified = .stamp()
+        // Position stays whatever the store currently says, never what the
+        // caller is holding. The editor snapshots a tracker when it opens and a
+        // swipe action captures one when the row is built, so saving a rename
+        // would otherwise quietly undo a drag — or an import — that happened in
+        // between, and put the stale position back under a fresh timestamp.
+        updated.sortIndex = trackers[index].sortIndex
+        updated.orderModified = trackers[index].orderModified
         let kindChanged = trackers[index].kind != updated.kind
         trackers[index] = updated
         if kindChanged { rebuildTotals() }
@@ -342,13 +353,26 @@ final class Store {
         for (slot, tracker) in zip(slots, ordered) { updated[slot] = tracker }
         for index in updated.indices { updated[index].sortIndex = index }
 
-        // Stamped by comparison rather than by assumption: a tracker dropped
-        // under another heading can keep its position in the list and still
-        // have changed, and one that was only pushed along by someone else's
-        // move has not.
+        // Two stamps, because a drag does two different things. Moving a row
+        // renumbers every row it passed, and none of those were edited — they
+        // get `orderModified`, which merges on its own so a reorder here cannot
+        // outrank a rename made on another device. Being dropped under a
+        // different heading *is* an edit, to `section`, and gets `modified`.
+        let previous = Dictionary(trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let now = Date.stamp()
-        for index in updated.indices where updated[index] != trackers[index] {
-            updated[index].modified = now
+        for index in updated.indices {
+            // Every row, not just the ones whose number changed. A drag settles
+            // the order of the whole list, and stamping only the rows that moved
+            // leaves the rest carrying an older stamp — so merging two devices
+            // that each reordered would take some rows from one and some from
+            // the other, landing on duplicate indices and an order neither of
+            // them chose. Stamped whole, the later reorder simply wins whole.
+            updated[index].orderModified = now
+            guard let before = previous[updated[index].id] else { continue }
+            var withoutPosition = updated[index]
+            withoutPosition.sortIndex = before.sortIndex
+            withoutPosition.orderModified = before.orderModified
+            if withoutPosition != before { updated[index].modified = now }
         }
         trackers = updated
         scheduleSave()

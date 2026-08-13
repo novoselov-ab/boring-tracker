@@ -226,19 +226,111 @@ struct StoreTests {
         #expect(store.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 0)
     }
 
-    @Test("Reordering renumbers the trackers and stamps the ones that moved")
+    @Test("Reordering renumbers the trackers and stamps the move, not the record")
     func reordering() {
         let store = makeStore(StoreDocument(trackers: [
-            Tracker(name: "A", sortIndex: 0, modified: time(1)),
-            Tracker(name: "B", sortIndex: 1, modified: time(1)),
-            Tracker(name: "C", sortIndex: 2, modified: time(1)),
+            Tracker(name: "A", sortIndex: 0, modified: time(1), orderModified: time(1)),
+            Tracker(name: "B", sortIndex: 1, modified: time(1), orderModified: time(1)),
+            Tracker(name: "C", sortIndex: 2, modified: time(1), orderModified: time(1)),
         ]))
 
         store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
 
         #expect(store.trackers.map(\.name) == ["C", "A", "B"])
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
-        #expect(store.trackers.allSatisfy { $0.modified > time(1) })
+        // All three moved, so all three carry a new position stamp — but none
+        // of them was edited, so `modified` is untouched and cannot outrank
+        // a real edit made on another device.
+        #expect(store.trackers.allSatisfy { $0.orderModified > time(1) })
+        #expect(store.trackers.allSatisfy { $0.modified == time(1) })
+    }
+
+    @Test("A drag on one device and a rename on another both survive the merge")
+    func reorderAndRenameDoNotCompete() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, section: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, section: "Food",
+                              modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, sortIndex: 2,
+                             section: "Weight", modified: time(1), orderModified: time(1))
+        let phone = makeStore(StoreDocument(trackers: [calories, protein, weight]))
+
+        // The iPad renamed Weight at 10:00 and moved nothing.
+        var renamed = weight
+        renamed.name = "Bodyweight"
+        renamed.unit = "lb"
+        renamed.modified = time(2)
+        let tablet = StoreDocument(trackers: [calories, protein, renamed])
+
+        // At 10:05 the phone dragged Weight to the top and renamed nothing.
+        phone.move(phone.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        let merged = phone.document.merged(with: tablet)
+        let result = merged.trackers.first { $0.id == weight.id }
+
+        // The edit is not lost to the drag, and the drag is not lost to the
+        // edit. This is the entire reason `orderModified` exists.
+        #expect(result?.name == "Bodyweight")
+        #expect(result?.unit == "lb")
+        #expect(merged.trackers.map(\.name) == ["Bodyweight", "Calories", "Protein"])
+    }
+
+    @Test("Two devices that each reorder: the later drag wins the whole list")
+    func concurrentReordersResolveWhole() {
+        let x = Tracker(name: "X", modified: time(1))
+        let y = Tracker(name: "Y", modified: time(1))
+        let z = Tracker(name: "Z", modified: time(1))
+
+        // Both devices started from X, Y, Z. The phone pulled Y to the top, and
+        // the iPad — separately, five minutes later — pulled Z above Y. Each
+        // drag settles the whole list, so it stamps every row, which is what
+        // lets the later one win outright instead of the two interleaving.
+        let phone = StoreDocument(trackers: [
+            placed(y, 0, at: time(10)), placed(x, 1, at: time(10)), placed(z, 2, at: time(10)),
+        ])
+        let tablet = StoreDocument(trackers: [
+            placed(x, 0, at: time(20)), placed(z, 1, at: time(20)), placed(y, 2, at: time(20)),
+        ])
+
+        let merged = phone.merged(with: tablet)
+
+        // Stamping only the rows whose number changed left the rest carrying an
+        // older stamp, so a merge took some rows from one device and some from
+        // the other — two trackers at one index, in an order neither had shown.
+        #expect(Set(merged.trackers.map(\.sortIndex)).count == merged.trackers.count)
+        #expect(merged.trackers.map(\.name) == ["X", "Z", "Y"])
+        #expect(phone.merged(with: tablet) == tablet.merged(with: phone))
+    }
+
+    /// A tracker as a reorder leaves it: at this index, stamped at this moment.
+    private func placed(_ tracker: Tracker, _ index: Int, at time: Date) -> Tracker {
+        var copy = tracker
+        copy.sortIndex = index
+        copy.orderModified = time
+        return copy
+    }
+
+    @Test("A reorder merged against an untouched copy keeps the positions distinct")
+    func mergeKeepsPositionsDistinct() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, modified: time(1),
+                               orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, modified: time(1),
+                              orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 2, modified: time(1),
+                             orderModified: time(1))
+        let phone = makeStore(StoreDocument(trackers: [calories, protein, weight]))
+        let tablet = StoreDocument(trackers: [calories, protein, weight])
+
+        phone.move(phone.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        let merged = phone.document.merged(with: tablet)
+
+        // Resolving position per record rather than per field is what used to
+        // produce two trackers at index 2, and an order neither device had ever
+        // seen. Two devices that each add a tracker can still land on the same
+        // index — nothing renumbers across a merge — and the `(sortIndex, id)`
+        // sort settles that deterministically; this is the case that used to
+        // break for trackers both sides already had.
+        #expect(Set(merged.trackers.map(\.sortIndex)).count == merged.trackers.count)
+        #expect(merged.trackers.map(\.name) == ["Weight", "Calories", "Protein"])
     }
 
     @Test("Adding a tracker leaves every other record untouched")

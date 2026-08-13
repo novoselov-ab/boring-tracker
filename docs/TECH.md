@@ -168,6 +168,31 @@ entries come back from the dead.
 Two cheap additions make it work:
 
 - **`modified: Date` on every record.** Last write wins on a conflicting edit.
+- **`orderModified: Date` on Tracker**, covering `sortIndex` and nothing else.
+  A merge compares whole records, and dragging one row renumbers every row it
+  passed — so under a single stamp a reorder on the phone silently discarded a
+  rename made on the iPad an hour earlier. Dropping the stamp instead was
+  worse: the two copies then differed only in `sortIndex` with equal
+  timestamps, the tie-break fell to comparing the records as text — which is to
+  say comparing `sortIndex` — and each tracker took its highest index
+  independently, giving duplicate indices and an order neither device chose.
+  A field that gets rewritten without anyone editing it needs its own stamp.
+
+  Two consequences worth stating, because both were got wrong first. A drag
+  stamps **every** row, not only the ones whose number changed: a reorder is a
+  decision about the whole list, and stamping it in part let two devices' drags
+  interleave into an order neither had shown. And the conflict tie-break reads
+  **content only** — `sortIndex` and `orderModified` are blanked before records
+  are compared as text — because the merge rewrites those fields on the
+  survivor, so a tie-break that could see them would depend on what had already
+  been merged. Position and content are reduced as two independent joins, which
+  is what keeps the merge commutative and associative; the fuzz tests hold it to
+  all three over 400 seeds.
+
+  Not claimed: unique `sortIndex` after every merge. Two devices that each add a
+  tracker can still pick the same index, and nothing renumbers across a merge.
+  The `(sortIndex, id)` sort settles that deterministically, and the list is
+  drawn from it either way.
 - **Tombstones.** Deleting records the id and time of deletion instead of
   dropping the row. Tombstones older than a generous window get compacted away.
 
@@ -200,6 +225,8 @@ struct Tracker: Codable, Identifiable, Hashable {
     var sortIndex: Int
     var isArchived: Bool
     var section: String     // "" when the tracker isn't grouped
+    var modified: Date      // every field but sortIndex
+    var orderModified: Date // sortIndex only — see "Mergeable by design"
 }
 
 struct Entry: Codable, Identifiable, Hashable {

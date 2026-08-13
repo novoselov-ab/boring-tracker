@@ -202,13 +202,13 @@ struct MergeTests {
         }
     }
 
-    @Test("Merge is commutative", arguments: 1...40 as ClosedRange<UInt64>)
+    @Test("Merge is commutative", arguments: 1...400 as ClosedRange<UInt64>)
     func commutative(seed: UInt64) {
         let pair = documents(seed: seed &* 977, count: 2)
         #expect(pair[0].merged(with: pair[1]) == pair[1].merged(with: pair[0]))
     }
 
-    @Test("Merge is associative", arguments: 1...40 as ClosedRange<UInt64>)
+    @Test("Merge is associative", arguments: 1...400 as ClosedRange<UInt64>)
     func associative(seed: UInt64) {
         let triple = documents(seed: seed &* 613, count: 3)
         let left = triple[0].merged(with: triple[1]).merged(with: triple[2])
@@ -217,7 +217,7 @@ struct MergeTests {
     }
 
     @Test("Importing the same file twice changes nothing the second time",
-          arguments: 1...40 as ClosedRange<UInt64>)
+          arguments: 1...400 as ClosedRange<UInt64>)
     func idempotent(seed: UInt64) {
         let pair = documents(seed: seed &* 331, count: 2)
         let once = pair[0].merged(with: pair[1])
@@ -226,7 +226,7 @@ struct MergeTests {
     }
 
     @Test("Merging loses no record that neither side deleted",
-          arguments: 1...40 as ClosedRange<UInt64>)
+          arguments: 1...400 as ClosedRange<UInt64>)
     func nothingVanishes(seed: UInt64) {
         let pair = documents(seed: seed &* 89, count: 2)
         let merged = pair[0].merged(with: pair[1])
@@ -241,7 +241,7 @@ struct MergeTests {
     }
 
     @Test("Every surviving record is the newest version either side had",
-          arguments: 1...40 as ClosedRange<UInt64>)
+          arguments: 1...400 as ClosedRange<UInt64>)
     func survivorsAreTheNewestVersion(seed: UInt64) {
         let pair = documents(seed: seed &* 47, count: 2)
         let merged = pair[0].merged(with: pair[1])

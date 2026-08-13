@@ -7,9 +7,30 @@ import Foundation
 protocol MergeableRecord: Codable, Hashable, Identifiable, Sendable where ID == UUID {
     var id: UUID { get }
     var modified: Date { get }
+    /// The part of the record that `modified` actually speaks for.
+    ///
+    /// Anything carrying its own timestamp is blanked here, because the
+    /// conflict tie-break compares records as text and `combining` rewrites
+    /// those fields on the survivor. A tie-break that could read them would
+    /// depend on what had already been merged, which costs associativity: the
+    /// same three documents would resolve differently depending on the order
+    /// they were combined in.
+    var contentOnly: Self { get }
 }
 
-extension Tracker: MergeableRecord {}
+extension MergeableRecord {
+    var contentOnly: Self { self }
+}
+
+extension Tracker: MergeableRecord {
+    var contentOnly: Tracker {
+        var copy = self
+        copy.sortIndex = 0
+        copy.orderModified = .distantPast
+        return copy
+    }
+}
+
 extension Entry: MergeableRecord {}
 
 /// Everything the app owns, in one value.
@@ -19,17 +40,21 @@ extension Entry: MergeableRecord {}
 /// schema and no mapping layer between the three.
 struct StoreDocument: Codable, Hashable, Sendable {
 
-    /// Bumped only when the shape of the file changes. Migration is a function
-    /// from N to N+1, run at load; see `StoreMigration`.
+    /// What a released build would use to recognise a file it cannot safely
+    /// read. Migration is a function from N to N+1, run at load; see
+    /// `StoreMigration`.
     ///
-    /// 2: `section` on Tracker; `note` renamed to `name` on Entry; `batchID`
-    /// added; `Pin` and its `pins` array removed. All in one bump, because a
-    /// stored decision is free before release and a migration over somebody's
-    /// real history after it.
+    /// **Not bumped for every shape change while this is a prototype.** The
+    /// number's whole job is compatibility with a build that exists somewhere
+    /// else, and no such build exists: nothing has shipped, so the only older
+    /// files are on our own simulators. One of those is quarantined and started
+    /// over rather than converted — and it is the decoder that catches it, on
+    /// the first field that isn't there, not this number. Bumping it now would
+    /// be bookkeeping that implies a migration story the app hasn't earned yet.
     ///
-    /// No step reads version 1, deliberately. Nothing has shipped, so no v1
-    /// file exists outside a development simulator, and one left there is
-    /// quarantined and started over rather than converted.
+    /// It starts being maintained when there is a first release to be
+    /// compatible with. That is also when the shape freezes, and when a step
+    /// from N to N+1 earns its keep.
     static let currentSchemaVersion = 2
 
     /// How long a deletion is remembered. Long enough that a second device can
@@ -124,7 +149,8 @@ extension StoreDocument {
 
         var result = StoreDocument()
         result.schemaVersion = Self.currentSchemaVersion
-        result.trackers = Self.union(trackers, other.trackers, deleted: deleted)
+        result.trackers = Self.union(trackers, other.trackers, deleted: deleted,
+                                     combining: Tracker.keepingNewerOrder)
             .sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         result.entries = Self.sorted(Self.union(entries, other.entries, deleted: deleted))
         result.tombstones = deleted
@@ -140,8 +166,13 @@ extension StoreDocument {
         entries.sorted { ($0.date, $0.id) < ($1.date, $1.id) }
     }
 
+    /// `combining` gets the winner and the loser, in that order, and returns
+    /// the record to keep. It exists for fields that carry their own timestamp
+    /// and therefore have to survive their record losing — today that is a
+    /// tracker's `sortIndex`. The default keeps the winner whole.
     private static func union<T: MergeableRecord>(
-        _ mine: [T], _ theirs: [T], deleted: [UUID: Date]
+        _ mine: [T], _ theirs: [T], deleted: [UUID: Date],
+        combining: (T, T) -> T = { winner, _ in winner }
     ) -> [T] {
         var winners: [UUID: T] = [:]
         winners.reserveCapacity(mine.count + theirs.count)
@@ -153,7 +184,9 @@ extension StoreDocument {
                 winners[record.id] = record
                 continue
             }
-            if beats(record, existing) { winners[record.id] = record }
+            winners[record.id] = beats(record, existing)
+                ? combining(record, existing)
+                : combining(existing, record)
         }
         return Array(winners.values)
     }
@@ -168,8 +201,12 @@ extension StoreDocument {
         if candidate.modified != existing.modified {
             return candidate.modified > existing.modified
         }
-        if candidate == existing { return false }
-        return canonicalText(candidate) > canonicalText(existing)
+        // Content only. Two copies of a tracker that differ solely in where it
+        // sits are not a conflict at all — they tie here, and `combining`
+        // settles the position separately on its own timestamp.
+        let (mine, theirs) = (candidate.contentOnly, existing.contentOnly)
+        if mine == theirs { return false }
+        return canonicalText(mine) > canonicalText(theirs)
     }
 
     private static func canonicalText<T: Encodable>(_ record: T) -> String {

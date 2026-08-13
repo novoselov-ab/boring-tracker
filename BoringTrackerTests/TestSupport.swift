@@ -72,9 +72,19 @@ extension StoreDocument {
                     name: "T\(Int.random(in: 0...9, using: &random))",
                     unit: ["kcal", "g", ""].randomElement(using: &random)!,
                     kind: Bool.random(using: &random) ? .dailyTotal : .measurement,
-                    sortIndex: index,
+                    // Not the position in the shared pool: that gave every
+                    // document the same index for the same id, so two of them
+                    // could never disagree about where a tracker sits and the
+                    // whole position-merge path went untested.
+                    sortIndex: Int.random(in: 0...5, using: &random),
                     section: ["Food", "Weight", ""].randomElement(using: &random)!,
-                    modified: time(Int.random(in: 0...20, using: &random))
+                    modified: time(Int.random(in: 0...20, using: &random)),
+                    // Drawn independently of `modified`, because the whole
+                    // point of the second stamp is that the two move apart:
+                    // a document can hold a tracker renamed late and moved
+                    // early, or the reverse, and the merge has to take one
+                    // field from each side.
+                    orderModified: time(Int.random(in: 0...20, using: &random))
                 )
             )
         }

@@ -44,6 +44,17 @@ One version bump, while there's no data to migrate:
 
 Default sections on first launch: **Food** (Calories, Protein) and **Weight**.
 
+- [x] **`orderModified` on Tracker**, added after review. `sortIndex` is
+      rewritten for every row a drag passes, so under one timestamp a reorder on
+      one device silently discarded an edit made on another. The field that
+      moves without being edited needs its own stamp.
+
+No version bump for that one, and none for the next either: the number is for
+recognising a file some *other* build wrote, and while this is a prototype there
+is no other build. An older file on a simulator is caught by the decoder on the
+first field it is missing, and quarantined. The number starts being maintained
+at the first release, which is the same moment the shape freezes.
+
 Schema version 2, and **no migration system, on purpose.** Nothing has been
 released, so no v1 file exists outside a development simulator; one left there
 is quarantined and started over, exactly as any unreadable file already is.
