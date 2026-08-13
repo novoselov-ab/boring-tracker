@@ -27,6 +27,10 @@ One version bump, while there's no data to migrate:
 - [ ] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
+- [ ] **Delete `Pin`.** Superseded by search-and-repeat (item 8), which needs
+      no stored preset at all. Not merely an unused struct — it sits in the
+      serialized document with merge and tombstone handling, so removing it is
+      a schema change and belongs in this window.
 
 Default sections on first launch: **Food** (Calories, Protein) and **Weight**.
 
@@ -71,13 +75,19 @@ The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 8. Search and pinning
+## 8. Search and repeat
 
-Designed after the week, not before. Search over entry names; starring a past
-entry keeps it around as a one-tap preset. **Presets are named entries you
-liked** — not a separate thing you create and maintain.
+A search field at the **bottom** of the log sheet, in thumb reach. Empty query
+lists your most-used foods by frequency and recency — the common case, with no
+typing. Typing filters past entry names. Tapping a result logs it immediately
+from that name's latest values, with a brief undo.
 
-Call them presets, never *recipes*. See PHILOSOPHY.md.
+This replaces pins, favourites and recents with one control, and it is why
+`Pin` was deleted rather than built. Ranking is a display decision: if
+latest-wins prefill turns out to annoy, change it — nothing is stored
+differently.
+
+Refine after the week of real use, not before.
 
 ## 9. App icon and asset catalog
 

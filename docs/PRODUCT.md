@@ -103,24 +103,37 @@ from the fact that **you eat the same things over and over.**
 
 So, in order of importance:
 
-1. **Presets are named entries you liked.** You never create a preset. You log
-   a food, you give it a name, and that name makes it findable forever: search
-   it, star it, log it again in one tap.
+1. **Naming is saving. Search is how you get it back.** There are no presets to
+   create, no star button, no favourites list. You log a food and name it —
+   that name makes it findable forever. Type "chicken", see "chicken rice",
+   tap it, logged again.
 
-   This is why naming matters more than it looks. It collapses two features
-   into one — there is no preset library to build, no management screen to
-   maintain, and no separate thing that can drift out of sync with reality.
-   The raw material is simply your own history.
+   This is the design that finally answers the preset question, and it answers
+   it by **removing a model type** rather than adding one. Nothing to curate,
+   nothing to keep in sync with reality, nothing that can rot. Your history is
+   the library.
 
-   Call them **presets**, never *recipes*. A preset is a saved set of numbers
-   with a label. A recipe is ingredients, and ingredients are permanently out
-   of scope — see PHILOSOPHY.md. The word matters because it's the direction
-   this feature would drift if allowed to.
+   Two details carry the whole thing:
 
-   Exact behaviour deferred on purpose until the basics are in daily use.
-   Building it earlier means guessing.
-2. **Recents.** Recently logged foods, offered without being asked for. No
-   setup at all, and the natural raw material for whatever pinning becomes.
+   - **The empty search field is the feature.** With no query typed, the list
+     shows your most-used foods, ranked by frequency and recency. You eat the
+     same five things most days, and typing four letters for those would be
+     slower than a button — so the common case needs no typing at all, and
+     search is only for reaching past it. One control replaces recents,
+     favourites and search, and none of them need to exist as concepts.
+   - **Tapping a result logs it immediately**, prefilled from that name's most
+     recent values. Not a prefilled sheet you then confirm — that's three taps
+     to do a one-tap thing. Mistaps become possible, which is precisely why
+     undo has to be trivial (see PHILOSOPHY.md). A brief undo after logging is
+     the right trade; a confirmation on every repeat is not.
+
+   It lives at the **bottom** of the log sheet, in thumb reach, results rising
+   above it.
+
+   Call these **presets** if they need a name at all, and never *recipes*. A
+   recipe is ingredients, and ingredients are permanently out of scope — see
+   PHILOSOPHY.md. The word matters because it's the direction this would drift
+   if allowed to.
 3. **One food, one sheet, one save.** Calories and protein come from the same
    meal. Typing them in two separate flows is the single most annoying thing
    this app could do — so the sheet takes the whole section at once, plus a
