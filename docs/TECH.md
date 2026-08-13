@@ -158,6 +158,40 @@ Only reach for the first kind when the experiment genuinely needs a fact the
 document does not already record, and when it does, say so loudly, because that
 is the expensive move.
 
+## Why a group is a string, not an entity
+
+Settled, but it is a real trade rather than an obvious call, so the reasoning
+is recorded — including the part that argues the other way.
+
+**The UI is identical either way**, which is worth saying because it is easy to
+assume otherwise. You add a tracker and pick or type a group name; with an
+entity it would be created implicitly when the name is new. No user could tell
+which model is underneath, and neither design implies a management screen.
+
+**For the string.** A group is a label some trackers share, not a thing with an
+existence of its own. An entity can exist with nothing in it, and that one fact
+forces questions that currently cannot even be asked: is an empty group kept or
+deleted, shown or hidden, and what does a tracker pointing at a deleted group
+mean? Every answer is a rule, and some become UI. With a string, delete both
+tire pressures and `Honda wheels` is simply gone, because it was never more
+than what those trackers said about themselves. That tax is permanent and paid
+on every future screen.
+
+**Against the string, honestly.** Renaming a group is N record edits. Rename it
+on the iPad while offline, add a third tracker to it on the phone, and the
+merge yields *two* groups: the renamed ones, and the newcomer still carrying
+the old name. Silently split. An entity renames in one record and merges
+exactly. This is the same shape as the `sortIndex` bug the review caught, and
+it should not be waved away.
+
+**Why the string still wins.** A rename is rare, the split is immediately
+visible, and the fix is to rename again. The editor also offers existing group
+names rather than free text, so the common path never retypes one. A rare
+visible annoyance beats a permanent invisible tax.
+
+This is a *stored* decision (see below), so it wants settling before the first
+release. Until then, switching costs nothing.
+
 ## Mergeable by design
 
 Two devices is a stated goal (iPhone + iPad), so the document is built to merge

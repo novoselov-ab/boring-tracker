@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 8), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 9), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -85,14 +85,32 @@ Measure the result in taps and milliseconds, not in whether it looks tidy.
       keypad never goes down. Nothing stands in front of the sheet.
 - [x] The last-used group lives in `UserDefaults`, not the document: it is UI
       state, so it must not sync, export, or appear in the store file.
-- [x] Home groups its cards by section, since that is where the sheet is
-      launched from. Loose trackers sit together at the bottom under no
-      heading — a display grouping, not a claim that they log together.
+- [x] Home is one ordered list of cards, since that is where the sheet is
+      launched from: a run of trackers sharing a section gets that heading,
+      everything else is a bare card, and nothing is gathered under "Other".
 
 **Two taps and a number** on the common path: + , type, Save. Three from a cold
 launch, counting the icon — the target in PRODUCT.md.
 
-## 4. History screen
+## 4. Terminology pass
+
+Rename `section` to **group** everywhere — model, `Store`, views, tests, docs
+— and check `tracker` and `favourite` read right while in there. The reasoning
+is in the Vocabulary part of PRODUCT.md; this item is just the execution.
+
+Its own session, with a test run: `section` reaches the model, the store, the
+tracker editor, the log sheet and the tests, so it is mechanical but wide.
+
+**The rename must not smuggle in an entity.** "Group" sounds more like a noun
+than "section" did, and the next reasonable-seeming step is a `Group` type with
+an id and an ordering — which is the management screen this app has twice
+decided against. It stays a plain string on the tracker. See "Why a group is a
+string, not an entity" in TECH.md.
+
+Cheap now, pre-release. Worth doing before step 5 writes the word into a
+history screen too.
+
+## 5. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.
 A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited
@@ -102,7 +120,7 @@ Without it, fixing a mistyped food means opening each tracker's detail
 separately and deleting a row in each. It's the natural consumer of `batchID`,
 and it comes right after the log sheet that starts writing them.
 
-## 5. Export, import, CSV
+## 6. Export, import, CSV
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit
@@ -110,18 +128,18 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 6. CI
+## 7. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 7. Use it on a real phone for a week
+## 8. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 8. Search and repeat
+## 9. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -142,7 +160,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 9. App icon and asset catalog
+## 10. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 

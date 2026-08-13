@@ -6,7 +6,7 @@ statute.
 
 ## The model
 
-There are exactly two nouns.
+Three nouns, and the third is only a string.
 
 ### Tracker
 
@@ -125,6 +125,72 @@ differently.
 
 It also means names never cause sync conflicts. Entries are identified by
 UUID, so two devices logging "chicken rice" merge as a plain union.
+
+## Vocabulary
+
+The words the app uses in public, and why. Checked against how the category
+actually speaks: ~140 App Store descriptions of tracking apps were scanned for
+which nouns they use for these concepts.
+
+| concept | word | apps using it |
+|---|---|---|
+| the thing you track | **tracker** | 12 (top result excluding *habit*, which is domain-specific) |
+| trackers logged together | **group** | see below |
+| a thing you repeat | **favourite** | 7 (*preset* and *template*: 0) |
+
+**Tracker.** "Metric", "variable", "measure" and "field" appear in **zero**
+consumer descriptions — they are engineer words, however natural they feel
+while writing the model. "Tracker" is the word people arrive already knowing.
+That the app is itself called Boring Tracker is fine: Notes holds notes,
+Reminders holds reminders, and an app named for what it holds is ordinary.
+
+Use the word **rarely**. The concrete names carry it — the home screen and the
+settings list just say Calories, Protein, Weight. The empty state asks *"What
+do you want to track?"* rather than announcing that you have no trackers. That
+leaves roughly one button and the App Store description, which is the right
+amount of exposure for a word we are not certain about.
+
+**Group, not section.** "Section" describes a UI accident — a part of a list on
+one screen. "Group" describes the intent: these things belong together. It is
+also the verb people reach for unprompted ("I want to *group* them as Honda
+wheels"). "Section" scores zero in consumer descriptions.
+
+The example that settles it: left and right tire pressure, grouped as `Honda
+wheels`. That is not a *category* of tracker and not a section of anything —
+it is one event that produces two numbers. Which is what a group means, and why
+it earns its place at all: **some measurements only make sense taken together.**
+Logging half of a pair is nearly useless, so the app must never make you do it
+in two trips.
+
+Like "tracker", the word barely appears: the home screen shows the heading
+`Honda wheels`, and the only visible use of the noun is one field label in the
+tracker editor.
+
+**Favourite**, if a label is ever needed for search-and-repeat. It is the word
+people already have for "the thing I log again", and it beats "preset", which
+no consumer app uses. Not needed yet — see the search-and-repeat design below,
+which deliberately has no button to name.
+
+**Never *recipe*.** Food apps do have this concept — MyFitnessPal keeps Foods,
+Meals and Recipes as three separate things to manage — and it is precisely the
+bloat this project exists to reject: an ingredient editor, a library, per-
+serving maths. Naming an entry and finding it again gets the same benefit with
+none of the machinery.
+
+## Adding a group
+
+There is no "create a group" screen, and there never will be. A group comes
+into being because a tracker says it belongs to one.
+
+In the tracker editor the group field offers **None**, every group that already
+exists, and **New Group…**, which reveals a text field. Picking and typing are
+the same field wearing two hats.
+
+They are kept as *distinct choices* rather than one free-text box with
+autocomplete for a specific reason: a plain text field lets a mistyped `Foood`
+silently fork a group in two, and the two look identical in a list while
+behaving nothing alike. Choosing from what exists makes the common path
+typo-proof.
 
 ## How logging gets fast
 
