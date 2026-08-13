@@ -66,6 +66,31 @@ should exist. Sort order is therefore per section, not global.
 
 First launch starts with **Food** and **Weight**.
 
+### A tracker with no section
+
+Most trackers don't belong with anything. You want to count sneezes per day and
+that is the entire requirement — there is nothing to log it alongside.
+
+**So no section is not a state with a name.** Such a tracker is simply a card
+with no heading above it, and its + opens a sheet with one field.
+
+There is no *Ungrouped* or *Other* heading, ever. That would be filing
+bureaucracy appearing for the person who least asked for it: someone tracking
+one number has no organisational problem to solve, and a heading called "Other"
+tells them they failed to file something. It also frames the plain case as the
+exception, which is backwards — having no section is the normal state, and a
+section is what gets earned when two numbers genuinely come from one event.
+
+The home screen therefore needs no special case: it is **one ordered list of
+cards**, where a run of trackers sharing a section gets a heading above it and
+everything else is a bare card. Drag to reorder, drop under a heading to join
+that section, drop outside to leave it alone.
+
+Nor does the code: **the log sheet always takes a set of trackers.** A section
+is a named set; a lone tracker is a set of one. Same sheet, same one-save-one-
+batch, no branching — and + returning to whatever you last logged works the
+same either way.
+
 ### Entry
 
 A number, a tracker, a timestamp, an optional **name**, and a **batch id**.
