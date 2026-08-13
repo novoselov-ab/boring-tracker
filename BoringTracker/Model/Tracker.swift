@@ -20,6 +20,15 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     var decimals: Int = 0
     var sortIndex: Int = 0
     var isArchived: Bool = false
+    /// Which trackers get logged at the same time. `Food` holds Calories and
+    /// Protein; `Weight` holds your weight, and later the cat's.
+    ///
+    /// Deliberately a string rather than an entity: there is nothing to create,
+    /// nothing to manage, no empty sections and no orphans. Empty means the
+    /// tracker isn't grouped with anything. See docs/PRODUCT.md — the moment
+    /// sections get their own screen, this app has grown the management UI it
+    /// exists to avoid.
+    var section: String = ""
     /// When this record last changed. Used to resolve edits made on two
     /// devices — newer wins. See "Mergeable by design" in docs/TECH.md.
     var modified: Date = .stamp()
@@ -52,8 +61,12 @@ extension Tracker {
     /// has been configured at all.
     static var starterSet: [Tracker] {
         [
-            Tracker(name: "Calories", unit: "kcal", kind: .dailyTotal, sortIndex: 0),
-            Tracker(name: "Protein", unit: "g", kind: .dailyTotal, sortIndex: 1),
+            Tracker(name: "Calories", unit: "kcal", kind: .dailyTotal, sortIndex: 0,
+                    section: "Food"),
+            Tracker(name: "Protein", unit: "g", kind: .dailyTotal, sortIndex: 1,
+                    section: "Food"),
+            Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 2,
+                    section: "Weight"),
         ]
     }
 }

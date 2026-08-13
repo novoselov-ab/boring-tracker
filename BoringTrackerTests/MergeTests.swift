@@ -120,19 +120,19 @@ struct MergeTests {
         #expect(inconsistent.merged(with: .init()).entries.isEmpty)
     }
 
-    @Test("Trackers and pins are tombstoned by the same rules as entries")
+    @Test("Trackers are tombstoned by the same rules as entries")
     func tombstonesCoverEveryRecordKind() {
         let trackerRecord = Tracker(name: "Calories", modified: time(5))
-        let pin = Pin(label: "Coffee", amounts: [.init(trackerID: tracker, value: 5)], modified: time(5))
-        var mine = StoreDocument(trackers: [trackerRecord], pins: [pin])
+        let entry = Entry(trackerID: trackerRecord.id, value: 600, date: time(10), modified: time(5))
+        var mine = StoreDocument(trackers: [trackerRecord], entries: [entry])
         mine.delete(id: trackerRecord.id, at: time(10))
-        mine.delete(id: pin.id, at: time(10))
+        mine.delete(id: entry.id, at: time(10))
 
-        let theirs = StoreDocument(trackers: [trackerRecord], pins: [pin])
+        let theirs = StoreDocument(trackers: [trackerRecord], entries: [entry])
         let merged = mine.merged(with: theirs)
 
         #expect(merged.trackers.isEmpty)
-        #expect(merged.pins.isEmpty)
+        #expect(merged.entries.isEmpty)
     }
 
     // MARK: - Compaction

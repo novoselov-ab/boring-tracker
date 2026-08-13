@@ -134,12 +134,19 @@ struct StoreFile: Sendable {
     }
 }
 
-/// Version N to N+1, run at load.
+/// The version probe, and the refusal of a file this build does not understand.
 ///
-/// There is only version 1, so there is nothing to migrate yet — but the probe
-/// and the refusal of a newer file are needed from the first release, because
-/// they are what protects a document this build does not understand. When a
-/// breaking change actually arrives, its step goes here.
+/// There is no migration step, and that is a statement about the app rather
+/// than an omission: nothing has been released, so no version 1 document exists
+/// anywhere to be migrated. Writing a step now would mean maintaining and
+/// testing a path from a file that has never been on anyone's phone.
+///
+/// What does have to work from the first release is the other direction —
+/// meeting a file from a *newer* build and refusing it. Decoding that with
+/// today's rules would drop whatever is new and then save the loss back over
+/// the original, so it is left alone and reported instead. The first shipped
+/// version is the first one whose shape anyone can be holding, and a step from
+/// N to N+1 goes here when that day comes.
 enum StoreMigration {
 
     private struct VersionProbe: Decodable { var schemaVersion: Int }

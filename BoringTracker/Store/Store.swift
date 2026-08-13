@@ -16,7 +16,6 @@ final class Store {
     private(set) var trackers: [Tracker]
     /// Oldest first. Every screen wants chronological order.
     private(set) var entries: [Entry]
-    private(set) var pins: [Pin]
     private(set) var tombstones: [Tombstone]
 
     /// Today, in the calendar the user is currently living in. Stored rather
@@ -73,7 +72,6 @@ final class Store {
         let document = document.compactingTombstones()
         self.trackers = document.trackers.sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         self.entries = StoreDocument.sorted(document.entries)
-        self.pins = document.pins
         self.tombstones = document.tombstones
         self.origin = origin
         self.calendar = calendar ?? .current
@@ -97,7 +95,6 @@ final class Store {
             schemaVersion: StoreDocument.currentSchemaVersion,
             trackers: trackers,
             entries: entries,
-            pins: pins,
             tombstones: tombstones
         )
     }
@@ -129,6 +126,26 @@ final class Store {
 
     var activeTrackers: [Tracker] {
         trackers.filter { !$0.isArchived }
+    }
+
+    var archivedTrackers: [Tracker] {
+        trackers.filter(\.isArchived)
+    }
+
+    /// The sections that exist, in the order their trackers appear.
+    ///
+    /// Derived every time rather than stored, because there is no list of
+    /// sections anywhere — a section is a string on a tracker (docs/PRODUCT.md),
+    /// so this cannot go stale, leave an empty section behind, or orphan one.
+    /// Archived trackers count: their section should still be offered rather
+    /// than reappearing as a new one the moment something is unarchived.
+    var sections: [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        for tracker in trackers where !tracker.section.isEmpty {
+            if seen.insert(tracker.section).inserted { result.append(tracker.section) }
+        }
+        return result
     }
 
     /// The daily total, straight out of the index.
@@ -181,10 +198,16 @@ final class Store {
 
     /// Logs the same moment against several trackers at once, because calories
     /// and protein come from the same meal.
-    func add(values: [UUID: Double], at date: Date = .stamp(), note: String? = nil) {
+    ///
+    /// They share a `batchID`, which is what makes them one logged food rather
+    /// than two rows that happen to agree on the clock. Assigned even for a
+    /// single value: what was saved together is a property of the save, not of
+    /// how many trackers it happened to touch.
+    func add(values: [UUID: Double], at date: Date = .stamp(), name: String? = nil) {
         let date = date.canonicalized
+        let batch = UUID()
         for (tracker, value) in values.sorted(by: { $0.key < $1.key }) {
-            add(Entry(trackerID: tracker, value: value, date: date, note: note))
+            add(Entry(trackerID: tracker, value: value, date: date, name: name, batchID: batch))
         }
     }
 
@@ -272,15 +295,46 @@ final class Store {
         delete(tracker)
     }
 
-    func move(fromOffsets offsets: IndexSet, toOffset destination: Int) {
-        var ordered = trackers
-        ordered.move(fromOffsets: offsets, toOffset: destination)
+    /// Reorders trackers the way they were drawn on screen.
+    ///
+    /// Takes the list the user was actually looking at, because a `List` reports
+    /// offsets into what it drew — and every screen that reorders hides the
+    /// archived ones. Applying those offsets to `trackers` directly moves the
+    /// wrong rows the moment anything is archived.
+    func move(_ visible: [Tracker], fromOffsets offsets: IndexSet, toOffset destination: Int) {
+        var reordered = visible
+        reordered.move(fromOffsets: offsets, toOffset: destination)
+        reorder(reordered)
+    }
+
+    /// Puts these trackers in this order, taking whatever section each of them
+    /// now carries.
+    ///
+    /// Section comes along for the ride because dragging a tracker under a
+    /// different heading is how you move it between sections (docs/PRODUCT.md).
+    /// The caller has already worked out where each row landed, so this is one
+    /// operation rather than a move and then an edit that could half-apply.
+    ///
+    /// Trackers not in `ordered` — the archived ones, normally — keep the slots
+    /// they already occupied, so sorting the visible list never disturbs them.
+    func reorder(_ ordered: [Tracker]) {
+        let ids = Set(ordered.map(\.id))
+        let slots = trackers.indices.filter { ids.contains(trackers[$0].id) }
+        guard slots.count == ordered.count else { return }
+
+        var updated = trackers
+        for (slot, tracker) in zip(slots, ordered) { updated[slot] = tracker }
+        for index in updated.indices { updated[index].sortIndex = index }
+
+        // Stamped by comparison rather than by assumption: a tracker dropped
+        // under another heading can keep its position in the list and still
+        // have changed, and one that was only pushed along by someone else's
+        // move has not.
         let now = Date.stamp()
-        for index in ordered.indices where ordered[index].sortIndex != index {
-            ordered[index].sortIndex = index
-            ordered[index].modified = now
+        for index in updated.indices where updated[index] != trackers[index] {
+            updated[index].modified = now
         }
-        trackers = ordered
+        trackers = updated
         scheduleSave()
     }
 
@@ -326,7 +380,6 @@ final class Store {
     private func replaceState(with document: StoreDocument) {
         trackers = document.trackers.sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         entries = StoreDocument.sorted(document.entries)
-        pins = document.pins
         tombstones = document.tombstones
         rebuildTotals()
         scheduleSave()

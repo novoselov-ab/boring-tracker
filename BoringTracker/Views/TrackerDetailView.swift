@@ -75,8 +75,8 @@ struct TrackerDetailView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tracker.format(entry.value))
                         .font(.body.monospacedDigit())
-                    if let note = entry.note, !note.isEmpty {
-                        Text(note)
+                    if let name = entry.name, !name.isEmpty {
+                        Text(name)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -159,7 +159,7 @@ struct TrackerDetailView: View {
             trackers: [calories],
             entries: [
                 Entry(trackerID: calories.id, value: 450, date: .now.addingTimeInterval(-3_600),
-                      note: "usual breakfast"),
+                      name: "usual breakfast"),
                 Entry(trackerID: calories.id, value: 620, date: .now.addingTimeInterval(-7_200)),
                 Entry(trackerID: calories.id, value: 1_830, date: .now.addingTimeInterval(-100_000)),
             ]

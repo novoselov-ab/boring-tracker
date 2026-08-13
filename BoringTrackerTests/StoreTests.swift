@@ -174,13 +174,28 @@ struct StoreTests {
         let protein = Tracker(name: "Protein")
         let store = makeStore(StoreDocument(trackers: [calories, protein]))
 
-        store.add(values: [calories.id: 450, protein.id: 30], at: date(2026, 3, 14, 8), note: "eggs")
+        store.add(values: [calories.id: 450, protein.id: 30], at: date(2026, 3, 14, 8), name: "eggs")
 
         #expect(store.entries.count == 2)
         #expect(Set(store.entries.map(\.date)).count == 1)
         #expect(store.total(for: calories.id, on: DayKey(year: 2026, month: 3, day: 14)) == 450)
         #expect(store.total(for: protein.id, on: DayKey(year: 2026, month: 3, day: 14)) == 30)
-        #expect(store.entries.allSatisfy { $0.note == "eggs" })
+        #expect(store.entries.allSatisfy { $0.name == "eggs" })
+        // One logged food, so one batch — that is what makes these two rows a
+        // single thing to edit or delete later rather than two coincidences.
+        #expect(Set(store.entries.map(\.batchID)).count == 1)
+        #expect(store.entries.allSatisfy { $0.batchID != nil })
+    }
+
+    @Test("Two separate saves are two separate batches")
+    func batchesAreNotShared() {
+        let calories = Tracker(name: "Calories")
+        let store = makeStore(StoreDocument(trackers: [calories]))
+
+        store.add(values: [calories.id: 450], at: date(2026, 3, 14, 8), name: "eggs")
+        store.add(values: [calories.id: 200], at: date(2026, 3, 14, 8), name: "toast")
+
+        #expect(Set(store.entries.compactMap(\.batchID)).count == 2)
     }
 
     @Test("Deleting a tracker keeps its history by default")
@@ -219,11 +234,99 @@ struct StoreTests {
             Tracker(name: "C", sortIndex: 2, modified: time(1)),
         ]))
 
-        store.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
 
         #expect(store.trackers.map(\.name) == ["C", "A", "B"])
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
         #expect(store.trackers.allSatisfy { $0.modified > time(1) })
+    }
+
+    @Test("Dragging a row moves that row, even with archived trackers in between")
+    func reorderingIgnoresHiddenTrackers() {
+        // The list only drew A, C and D, so offset 2 means D — not the third
+        // element of `trackers`, which is the archived one nobody can see.
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "A", sortIndex: 0, modified: time(1)),
+            Tracker(name: "B", sortIndex: 1, isArchived: true, modified: time(1)),
+            Tracker(name: "C", sortIndex: 2, modified: time(1)),
+            Tracker(name: "D", sortIndex: 3, modified: time(1)),
+        ]))
+
+        store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+
+        #expect(store.activeTrackers.map(\.name) == ["D", "A", "C"])
+        // The archived one keeps the slot it had rather than being dragged along.
+        #expect(store.trackers.map(\.name) == ["D", "B", "A", "C"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2, 3])
+    }
+
+    @Test("Dropping a tracker under another heading moves it to that section")
+    func reorderCarriesSectionChanges() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Protein", sortIndex: 1, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 2, section: "Weight", modified: time(1)),
+        ]))
+
+        // What the settings list hands back after Protein is dragged under the
+        // Weight heading: the same trackers, in their new order, each carrying
+        // the section it was dropped into.
+        var moved = store.trackers[1]
+        moved.section = "Weight"
+        store.reorder([store.trackers[0], store.trackers[2], moved])
+
+        #expect(store.trackers.map(\.name) == ["Calories", "Weight", "Protein"])
+        #expect(store.trackers.map(\.section) == ["Food", "Weight", "Weight"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
+        #expect(store.sections == ["Food", "Weight"])
+    }
+
+    @Test("A tracker that only changed section is still stamped as modified")
+    func reorderStampsASectionChangeInPlace() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 1, section: "Weight", modified: time(1)),
+        ]))
+
+        // Position unchanged, section changed. Stamping on position alone would
+        // miss this, and the other device would never learn about the move.
+        var moved = store.trackers[1]
+        moved.section = "Food"
+        store.reorder([store.trackers[0], moved])
+
+        #expect(store.trackers.map(\.section) == ["Food", "Food"])
+        #expect(store.trackers[0].modified == time(1))
+        #expect(store.trackers[1].modified > time(1))
+    }
+
+    @Test("Sections are whatever the trackers say they are, in order, without repeats")
+    func sectionsAreDerived() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Protein", sortIndex: 1, section: "Food", modified: time(1)),
+            Tracker(name: "Cigarettes", sortIndex: 2, modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 3, isArchived: true, section: "Weight",
+                    modified: time(1)),
+        ]))
+
+        // No empty string for the unsectioned tracker, and the archived one's
+        // section is still offered — unarchiving it must not invent a new one.
+        #expect(store.sections == ["Food", "Weight"])
+    }
+
+    @Test("Archiving hides a tracker without touching what was logged against it")
+    func archiving() {
+        var tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [tracker]))
+        store.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
+
+        tracker.isArchived = true
+        store.update(tracker)
+
+        #expect(store.activeTrackers.isEmpty)
+        #expect(store.archivedTrackers.map(\.name) == ["Calories"])
+        #expect(store.entries.count == 1)
+        #expect(store.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 600)
     }
 
     @Test("Measurement trackers show the last reading")
@@ -247,7 +350,7 @@ struct StoreTests {
                              modified: time(1))
         let source = makeStore(StoreDocument(trackers: [calories, weight]))
         source.add(Entry(trackerID: calories.id, value: 600, date: date(2026, 3, 14, 8),
-                         note: "breakfast"))
+                         name: "breakfast"))
         source.add(Entry(trackerID: weight.id, value: 78.4, date: date(2026, 3, 14, 7)))
         source.delete(source.entries[0])
         source.add(Entry(trackerID: calories.id, value: 250, date: date(2026, 3, 14, 13)))

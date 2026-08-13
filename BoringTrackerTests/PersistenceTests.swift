@@ -6,21 +6,21 @@ import Testing
 struct PersistenceTests {
 
     private func sampleDocument() -> StoreDocument {
-        let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 0, modified: time(1))
+        let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 0, section: "Food",
+                               modified: time(1))
         let weight = Tracker(
             name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
-            sortIndex: 1, modified: time(1)
+            sortIndex: 1, section: "Weight", modified: time(1)
         )
+        let breakfast = UUID()
         return StoreDocument(
             trackers: [calories, weight],
             entries: [
-                Entry(trackerID: calories.id, value: 600, date: time(10), note: "breakfast",
-                      modified: time(10)),
+                Entry(trackerID: calories.id, value: 600, date: time(10), name: "breakfast",
+                      batchID: breakfast, modified: time(10)),
                 Entry(trackerID: calories.id, value: 250.5, date: time(400), modified: time(400)),
                 Entry(trackerID: weight.id, value: 78.4, date: time(500), modified: time(500)),
             ],
-            pins: [Pin(label: "Coffee", amounts: [.init(trackerID: calories.id, value: 5)],
-                       modified: time(1))],
             tombstones: [Tombstone(id: UUID(), deleted: time(20))]
         )
     }
@@ -50,8 +50,7 @@ struct PersistenceTests {
 
         #expect(text.contains("\n  \"entries\" : ["))
         // Keys in alphabetical order.
-        let keyOrder = ["\"entries\"", "\"pins\"", "\"schemaVersion\"", "\"tombstones\"",
-                        "\"trackers\""]
+        let keyOrder = ["\"entries\"", "\"schemaVersion\"", "\"tombstones\"", "\"trackers\""]
         let positions = keyOrder.compactMap { text.range(of: $0)?.lowerBound }
         #expect(positions == positions.sorted())
         #expect(text.contains("\"date\" : \"2026-01-01T00:10:00Z\""))
@@ -86,7 +85,8 @@ struct PersistenceTests {
         let loaded = file.load()
 
         #expect(loaded.origin == .fresh)
-        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein"])
+        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
+        #expect(loaded.document.trackers.map(\.section) == ["Food", "Food", "Weight"])
     }
 
     @Test("A normal launch reads the file it wrote")
@@ -149,7 +149,7 @@ struct PersistenceTests {
         #expect(try Data(contentsOf: quarantine.appendingPathComponent("store.json")) == garbage)
         #expect(try Data(contentsOf: quarantine.appendingPathComponent("store.backup.json")) == garbage)
         #expect(!FileManager.default.fileExists(atPath: file.url.path))
-        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein"])
+        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
     }
 
     // MARK: - Writing safely

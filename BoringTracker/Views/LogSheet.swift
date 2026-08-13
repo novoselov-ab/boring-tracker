@@ -21,7 +21,7 @@ struct LogSheet: View {
 
     @State private var typed: [UUID: String] = [:]
     @State private var date = Date()
-    @State private var note = ""
+    @State private var name = ""
     @FocusState private var focused: UUID?
 
     var body: some View {
@@ -35,10 +35,10 @@ struct LogSheet: View {
 
                 Section {
                     DatePicker("When", selection: $date)
-                    TextField("Note", text: $note, axis: .vertical)
-                        .lineLimit(1...3)
+                    TextField("Name", text: $name)
                 } footer: {
-                    Text("Defaults to now. Change it to log something you forgot.")
+                    Text("The name is what you ate, not what it counts towards. "
+                        + "The time defaults to now — change it to log something you forgot.")
                 }
             }
             .navigationTitle("Log")
@@ -118,11 +118,8 @@ struct LogSheet: View {
     private func save() {
         let amounts = amounts
         guard !amounts.isEmpty else { return }
-        store.add(
-            values: amounts,
-            at: date,
-            note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note
-        )
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        store.add(values: amounts, at: date, name: trimmed.isEmpty ? nil : trimmed)
         dismiss()
     }
 }

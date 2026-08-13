@@ -4,23 +4,33 @@ import SwiftUI
 struct HomeView: View {
     @Environment(Store.self) private var store
     @State private var logging: LogSheet.Target?
-    @State private var path: [UUID] = []
+    @State private var path: [Route] = []
+
+    /// Everything reachable from here. An enum rather than a bare `UUID` so
+    /// settings can be pushed onto the same stack instead of arriving as a
+    /// second sheet over the top of the log sheet.
+    enum Route: Hashable {
+        case tracker(UUID)
+        case settings
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
             Group {
                 if store.activeTrackers.isEmpty {
-                    ContentUnavailableView(
-                        "No trackers",
-                        systemImage: "number",
-                        description: Text("Add one to start counting whatever you like.")
-                    )
+                    empty
                 } else {
                     list
                 }
             }
             .navigationTitle("Boring Tracker")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink(value: Route.settings) {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Log", systemImage: "plus") {
                         logging = LogSheet.Target(tracker: store.activeTrackers.first?.id)
@@ -28,12 +38,28 @@ struct HomeView: View {
                     .disabled(store.activeTrackers.isEmpty)
                 }
             }
-            .navigationDestination(for: UUID.self) { trackerID in
-                TrackerDetailView(trackerID: trackerID)
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .tracker(let id): TrackerDetailView(trackerID: id)
+                case .settings: SettingsView()
+                }
             }
             .sheet(item: $logging) { target in
                 LogSheet(target: target)
             }
+        }
+    }
+
+    /// A dead end otherwise: with every tracker deleted or archived there is
+    /// nothing to log against and nothing on screen that says how to fix that.
+    private var empty: some View {
+        ContentUnavailableView {
+            Label("No trackers", systemImage: "number")
+        } description: {
+            Text("Add one to start counting whatever you like.")
+        } actions: {
+            NavigationLink("Add Tracker", value: Route.settings)
+                .buttonStyle(.borderedProminent)
         }
     }
 
@@ -46,12 +72,12 @@ struct HomeView: View {
                 ForEach(store.activeTrackers) { tracker in
                     TrackerCard(
                         tracker: tracker,
-                        open: { path.append(tracker.id) },
+                        open: { path.append(.tracker(tracker.id)) },
                         log: { logging = LogSheet.Target(tracker: tracker.id) }
                     )
                 }
                 .onMove { offsets, destination in
-                    store.move(fromOffsets: offsets, toOffset: destination)
+                    store.move(store.activeTrackers, fromOffsets: offsets, toOffset: destination)
                 }
             }
         }

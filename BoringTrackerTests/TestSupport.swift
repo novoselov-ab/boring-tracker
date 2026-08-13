@@ -65,6 +65,7 @@ extension StoreDocument {
                     unit: ["kcal", "g", ""].randomElement(using: &random)!,
                     kind: Bool.random(using: &random) ? .dailyTotal : .measurement,
                     sortIndex: index,
+                    section: ["Food", "Weight", ""].randomElement(using: &random)!,
                     modified: time(Int.random(in: 0...20, using: &random))
                 )
             )
@@ -77,7 +78,7 @@ extension StoreDocument {
                     trackerID: trackerIDs.randomElement(using: &random)!,
                     value: Double(Int.random(in: -50...500, using: &random)),
                     date: time(Int.random(in: 0...5_000, using: &random)),
-                    note: Bool.random(using: &random) ? "n\(Int.random(in: 0...5, using: &random))" : nil,
+                    name: Bool.random(using: &random) ? "n\(Int.random(in: 0...5, using: &random))" : nil,
                     modified: time(Int.random(in: 0...20, using: &random))
                 )
             )

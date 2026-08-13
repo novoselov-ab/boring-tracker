@@ -11,7 +11,6 @@ protocol MergeableRecord: Codable, Hashable, Identifiable, Sendable where ID == 
 
 extension Tracker: MergeableRecord {}
 extension Entry: MergeableRecord {}
-extension Pin: MergeableRecord {}
 
 /// Everything the app owns, in one value.
 ///
@@ -22,7 +21,16 @@ struct StoreDocument: Codable, Hashable, Sendable {
 
     /// Bumped only when the shape of the file changes. Migration is a function
     /// from N to N+1, run at load; see `StoreMigration`.
-    static let currentSchemaVersion = 1
+    ///
+    /// 2: `section` on Tracker; `note` renamed to `name` on Entry; `batchID`
+    /// added; `Pin` and its `pins` array removed. All in one bump, because a
+    /// stored decision is free before release and a migration over somebody's
+    /// real history after it.
+    ///
+    /// No step reads version 1, deliberately. Nothing has shipped, so no v1
+    /// file exists outside a development simulator, and one left there is
+    /// quarantined and started over rather than converted.
+    static let currentSchemaVersion = 2
 
     /// How long a deletion is remembered. Long enough that a second device can
     /// be off for half a year and still learn about it; short enough that the
@@ -36,7 +44,6 @@ struct StoreDocument: Codable, Hashable, Sendable {
     /// chronological order, so paying for it once at the mutation is cheaper
     /// than sorting per screen.
     var entries: [Entry] = []
-    var pins: [Pin] = []
     var tombstones: [Tombstone] = []
 
     /// A brand new install: useful before it has been configured at all.
@@ -45,7 +52,7 @@ struct StoreDocument: Codable, Hashable, Sendable {
     }
 
     var isEmpty: Bool {
-        trackers.isEmpty && entries.isEmpty && pins.isEmpty && tombstones.isEmpty
+        trackers.isEmpty && entries.isEmpty && tombstones.isEmpty
     }
 }
 
@@ -74,7 +81,6 @@ extension StoreDocument {
     mutating func delete(id: UUID, at time: Date = .stamp()) {
         trackers.removeAll { $0.id == id }
         entries.removeAll { $0.id == id }
-        pins.removeAll { $0.id == id }
         if let index = tombstones.firstIndex(where: { $0.id == id }) {
             tombstones[index].deleted = max(tombstones[index].deleted, time)
         } else {
@@ -121,8 +127,6 @@ extension StoreDocument {
         result.trackers = Self.union(trackers, other.trackers, deleted: deleted)
             .sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         result.entries = Self.sorted(Self.union(entries, other.entries, deleted: deleted))
-        result.pins = Self.union(pins, other.pins, deleted: deleted)
-            .sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         result.tombstones = deleted
             .map { Tombstone(id: $0.key, deleted: $0.value) }
             .sorted { ($0.deleted, $0.id) < ($1.deleted, $1.id) }
