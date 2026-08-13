@@ -18,3 +18,8 @@ xcuserdata/
 
 # macOS
 .DS_Store
+
+# Per-user agent permissions. WORKFLOW.md is shared on purpose; this is not —
+# it is one machine's allowlist, and it is the kind of file a `git add -A`
+# sweeps in without anyone deciding to.
+.claude/settings.local.json
