@@ -242,6 +242,13 @@ struct Entry: Codable, Identifiable, Hashable {
 Entries reference trackers by id rather than nesting, so deleting a tracker
 and keeping its history is a decision rather than a cascade.
 
+What one save writes is a **log group** — a section when the trackers are logged
+together, a single tracker when it isn't in one. It is an enum computed from
+`Tracker.section` at read time, never stored, so it is a displayed decision and
+free to rework. It exists because the alternative was to treat "no section" as a
+section, which puts unrelated trackers in one sheet and claims something untrue
+about them.
+
 `section` is a string and `name` is a label, both for the same reason: the
 alternative is a record to create, clean up and merge. PRODUCT.md says what
 each one means. Sort order is read per section rather than stored that way —
@@ -315,12 +322,13 @@ So they don't get re-argued mid-build:
   correction) and rejecting them costs a validation rule and an error state.
 - **Tombstones are compacted after 180 days**, comfortably longer than any
   plausible period of a second device being offline.
-- **The last-used section is a `UserDefaults` key** (`lastLoggedSection`), and
+- **The last-used log group is a `UserDefaults` key** (`lastLoggedGroup`), and
   the only thing the app keeps outside the store file. It is what + opens, so
   it is UI state rather than data: it must not sync between devices, must not
   turn up in an export, and must not be a field somebody else's history has to
-  carry. If the name it holds no longer matches a section, + falls back to the
-  first one — a stale string costs nothing.
+  carry. It holds a `LogGroup` in string form — `section:Food` or
+  `tracker:<uuid>` — and anything that no longer resolves means + falls back to
+  the first group on the home screen. A stale string costs nothing.
 - **No analytics, no crash reporter, no launch screen image.** Rules 5 and the
   launch budget.
 

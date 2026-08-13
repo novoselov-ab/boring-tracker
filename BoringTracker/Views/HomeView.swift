@@ -3,7 +3,7 @@ import SwiftUI
 /// Your trackers as cards. That's the whole main screen.
 struct HomeView: View {
     @Environment(Store.self) private var store
-    @AppStorage(LogSheet.lastSectionKey) private var lastSection = ""
+    @AppStorage(LogSheet.lastGroupKey) private var lastGroup = ""
     @State private var logging: LogSheet.Target?
     @State private var path: [Route] = []
 
@@ -33,12 +33,12 @@ struct HomeView: View {
                     .accessibilityLabel("Settings")
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    // Straight into the section you logged into last, with the
-                    // keypad up. No picker in between — that would be a tap on
-                    // the common path, every time, forever.
+                    // Straight into whatever you logged last, with the keypad
+                    // up. No picker in between — that would be a tap on the
+                    // common path, every time, forever.
                     Button("Log", systemImage: "plus") {
-                        guard let section = store.sectionToLog(preferring: lastSection) else { return }
-                        logging = LogSheet.Target(section: section)
+                        guard let group = store.groupToLog(preferring: lastGroup) else { return }
+                        logging = LogSheet.Target(group: group)
                     }
                     .disabled(store.activeTrackers.isEmpty)
                 }
@@ -86,7 +86,8 @@ struct HomeView: View {
                             tracker: tracker,
                             open: { path.append(.tracker(tracker.id)) },
                             log: {
-                                logging = LogSheet.Target(section: section, tracker: tracker.id)
+                                logging = LogSheet.Target(group: LogGroup(of: tracker),
+                                                          tracker: tracker.id)
                             }
                         )
                     }

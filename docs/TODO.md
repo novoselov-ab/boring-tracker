@@ -77,16 +77,17 @@ sheet, for the log that isn't the usual one.
 
 Measure the result in taps and milliseconds, not in whether it looks tidy.
 
-- [x] The sheet shows one section's trackers, in section order, and writes
-      whatever was typed as a single batch.
-- [x] + opens the last-used section straight away, keypad up and the first
-      field focused; a card's + opens that card's section, focused on it.
-- [x] Section switching is the sheet's title — one tap to open, one to switch,
-      and the keypad never goes down. Nothing stands in front of the sheet.
-- [x] The last-used section lives in `UserDefaults`, not the document: it is UI
+- [x] The sheet shows one log group — a section's trackers, or one loose
+      tracker on its own — and writes what was typed as a single batch.
+- [x] + opens the last-used group straight away, keypad up and the first field
+      focused; a card's + opens that card's group, focused on it.
+- [x] Switching is the sheet's title — one tap to open, one to switch, and the
+      keypad never goes down. Nothing stands in front of the sheet.
+- [x] The last-used group lives in `UserDefaults`, not the document: it is UI
       state, so it must not sync, export, or appear in the store file.
 - [x] Home groups its cards by section, since that is where the sheet is
-      launched from.
+      launched from. Loose trackers sit together at the bottom under no
+      heading — a display grouping, not a claim that they log together.
 
 **Two taps and a number** on the common path: + , type, Save. Three from a cold
 launch, counting the icon — the target in PRODUCT.md.

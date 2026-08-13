@@ -466,7 +466,7 @@ struct StoreTests {
         #expect(store.sections == ["Food", "Weight"])
     }
 
-    @Test("The sections you can log into are the visible ones, ungrouped ones last")
+    @Test("The section headings on screen are the visible ones, ungrouped last")
     func activeSections() {
         let store = makeStore(StoreDocument(trackers: [
             Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
@@ -478,36 +478,82 @@ struct StoreTests {
         ]))
 
         // Unlike `sections`, this is what is on screen: the archived tracker's
-        // section is not a sheet you can log into, and the ungrouped ones are a
-        // heading of their own, gathered at the end.
+        // section is not drawn, and the ungrouped ones are gathered at the end.
         #expect(store.activeSections == ["Food", "Weight", ""])
         #expect(store.trackers(inSection: "Food").map(\.name) == ["Calories", "Protein"])
         #expect(store.trackers(inSection: "").map(\.name) == ["Cigarettes"])
         #expect(store.trackers(inSection: "Cat").isEmpty)
     }
 
-    @Test("+ opens the last-used section, or the first one if it is gone")
-    func sectionToLog() {
+    @Test("A loose tracker is logged on its own, not lumped in with the other loose ones")
+    func logGroups() {
+        let cigarettes = Tracker(name: "Cigarettes", sortIndex: 1, modified: time(1))
+        let pushups = Tracker(name: "Pushups", sortIndex: 4, modified: time(1))
         let store = makeStore(StoreDocument(trackers: [
             Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
-            Tracker(name: "Weight", sortIndex: 1, section: "Weight", modified: time(1)),
+            cigarettes,
+            Tracker(name: "Protein", sortIndex: 2, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 3, section: "Weight", modified: time(1)),
+            pushups,
+            Tracker(name: "Cat weight", sortIndex: 5, isArchived: true, modified: time(1)),
         ]))
 
-        #expect(store.sectionToLog(preferring: "Weight") == "Weight")
-        // Nothing remembered yet, and a section that has since been renamed,
-        // emptied or archived away: land on the first one rather than asking.
-        #expect(store.sectionToLog(preferring: "") == "Food")
-        #expect(store.sectionToLog(preferring: "Cat") == "Food")
+        // Home order, each section once, and every ungrouped tracker as itself.
+        // Cigarettes and Pushups share no section, so they share no sheet.
+        #expect(store.logGroups == [
+            .section("Food"),
+            .tracker(cigarettes.id),
+            .section("Weight"),
+            .tracker(pushups.id),
+        ])
+        #expect(store.trackers(in: .section("Food")).map(\.name) == ["Calories", "Protein"])
+        #expect(store.trackers(in: .tracker(cigarettes.id)).map(\.name) == ["Cigarettes"])
+    }
+
+    @Test("+ opens what you logged last, or the first group if it is gone")
+    func groupToLog() {
+        let cigarettes = Tracker(name: "Cigarettes", sortIndex: 1, modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            cigarettes,
+        ]))
+
+        #expect(store.groupToLog(preferring: LogGroup.tracker(cigarettes.id).rawValue)
+            == .tracker(cigarettes.id))
+        // Nothing remembered yet, a section since renamed or emptied, and a
+        // tracker since deleted: land on the first group rather than asking.
+        #expect(store.groupToLog(preferring: "") == .section("Food"))
+        #expect(store.groupToLog(preferring: "section:Cat") == .section("Food"))
+        #expect(store.groupToLog(preferring: "tracker:\(UUID())") == .section("Food"))
+
+        // Dropped into a section, it stops being a group of its own.
+        var grouped = cigarettes
+        grouped.section = "Food"
+        store.update(grouped)
+        #expect(store.logGroups == [.section("Food")])
+        #expect(store.groupToLog(preferring: LogGroup.tracker(cigarettes.id).rawValue)
+            == .section("Food"))
 
         var archived = store.trackers[0]
         archived.isArchived = true
         store.update(archived)
-        #expect(store.sectionToLog(preferring: "Food") == "Weight")
-
         var alsoArchived = store.trackers[1]
         alsoArchived.isArchived = true
         store.update(alsoArchived)
-        #expect(store.sectionToLog(preferring: "Weight") == nil)
+        #expect(store.groupToLog(preferring: "section:Food") == nil)
+    }
+
+    @Test("A log group survives the round trip through UserDefaults")
+    func logGroupRawValues() {
+        let id = UUID()
+        for group in [LogGroup.section("Food"), .section("tracker:odd"), .tracker(id)] {
+            #expect(LogGroup(rawValue: group.rawValue) == group)
+        }
+        // Anything else is not a group, and callers treat that as "no memory".
+        #expect(LogGroup(rawValue: "") == nil)
+        #expect(LogGroup(rawValue: "Food") == nil)
+        #expect(LogGroup(rawValue: "section:") == nil)
+        #expect(LogGroup(rawValue: "tracker:not-a-uuid") == nil)
     }
 
     @Test("Archiving hides a tracker without touching what was logged against it")

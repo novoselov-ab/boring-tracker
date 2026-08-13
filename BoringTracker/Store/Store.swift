@@ -148,14 +148,17 @@ final class Store {
         return result
     }
 
-    /// The sections you can actually log into, in the order their first tracker
-    /// appears, with the unsectioned ones gathered under `""` at the end.
+    /// The section headings the home screen draws, in the order their first
+    /// tracker appears, with the unsectioned ones gathered under `""` at the end.
     ///
     /// Deliberately not the same list as `sections`. That one names the sections
     /// to offer in the tracker editor, so it counts archived trackers and has no
-    /// entry for "not grouped with anything". This one is what the home screen
-    /// draws and what the log sheet can switch between, so it counts only what
-    /// is on screen, and the ungrouped trackers are a heading like any other.
+    /// entry for "not grouped with anything". This one is what is on screen, and
+    /// the ungrouped trackers are drawn together at the bottom.
+    ///
+    /// It is a *display* grouping and nothing more. What gets logged together is
+    /// `logGroups`, where an ungrouped tracker stands on its own — being in no
+    /// section is not a section.
     var activeSections: [String] {
         var seen = Set<String>()
         var named: [String] = []
@@ -176,15 +179,46 @@ final class Store {
         trackers.filter { !$0.isArchived && $0.section == section }
     }
 
-    /// Which section tapping + opens: the one you logged into last, or the first
-    /// on the home screen if that one is gone — archived, renamed, or emptied.
+    /// Everything you can log in one go, in the order the home screen draws it:
+    /// each section once, and every ungrouped tracker on its own.
     ///
-    /// `nil` when there is nothing to log at all. Never a picker: choosing a
-    /// section is a tap on the common path, and the common path is the product
+    /// This is the list the log sheet switches between. It is longer than
+    /// `activeSections` for anyone whose trackers are mostly loose, and that is
+    /// the point — the list belongs *behind* the sheet, never in front of it
     /// (docs/PRODUCT.md).
-    func sectionToLog(preferring remembered: String) -> String? {
-        let available = activeSections
-        return available.contains(remembered) ? remembered : available.first
+    var logGroups: [LogGroup] {
+        var seen = Set<String>()
+        var result: [LogGroup] = []
+        for tracker in trackers where !tracker.isArchived {
+            let group = LogGroup(of: tracker)
+            if seen.insert(group.rawValue).inserted { result.append(group) }
+        }
+        return result
+    }
+
+    /// The trackers one save writes to: a section's, or the single ungrouped
+    /// tracker, in the order they are drawn.
+    func trackers(in group: LogGroup) -> [Tracker] {
+        switch group {
+        case .section(let name): trackers(inSection: name)
+        case .tracker(let id): tracker(id).map { $0.isArchived ? [] : [$0] } ?? []
+        }
+    }
+
+    /// What tapping + opens: what you logged last, or the first thing on the
+    /// home screen if that is gone — archived, deleted, or moved into a section.
+    ///
+    /// Takes the remembered group as the plain string it is stored as, because
+    /// what comes back out of `UserDefaults` is exactly that, and deciding
+    /// whether it still means anything is this method's job. `nil` when there is
+    /// nothing to log at all. Never a picker: choosing what to log is a tap on
+    /// the common path, and the common path is the product (docs/PRODUCT.md).
+    func groupToLog(preferring remembered: String) -> LogGroup? {
+        let available = logGroups
+        if let group = LogGroup(rawValue: remembered), available.contains(group) {
+            return group
+        }
+        return available.first
     }
 
     /// The daily total, straight out of the index.
@@ -561,5 +595,61 @@ final class Store {
         } else {
             tombstones.append(Tombstone(id: id, deleted: now))
         }
+    }
+}
+
+// MARK: - What one save covers
+
+/// The trackers one trip through the log sheet writes to.
+///
+/// A section when the trackers are logged together — calories and protein from
+/// the same meal — and a single tracker when it isn't in one. Being in no
+/// section is *not* a section: your cigarettes and your pushups share nothing
+/// but the absence of a name, so putting them in one sheet would claim they are
+/// logged at the same time. One field is the honest sheet for either of them.
+///
+/// Nothing about this is stored. It is computed from `Tracker.section` at read
+/// time, which makes it a displayed decision (docs/TECH.md) — it can be
+/// reworked after a week of real use with no migration and nothing to convert.
+/// The one exception is the string form below, which is small on purpose.
+enum LogGroup: Hashable, Sendable {
+    /// Never empty — an empty section string is the ungrouped case.
+    case section(String)
+    case tracker(UUID)
+
+    /// Where this tracker gets logged.
+    init(of tracker: Tracker) {
+        self = tracker.section.isEmpty ? .tracker(tracker.id) : .section(tracker.section)
+    }
+}
+
+extension LogGroup: RawRepresentable {
+
+    /// A string, because the last-used group lives in `UserDefaults` and that is
+    /// what fits there. Prefixed so a section named like a UUID cannot be read
+    /// back as a tracker; the value is never inspected anywhere else, and a
+    /// string that no longer resolves just means + opens the first group.
+    init?(rawValue: String) {
+        if let name = rawValue.dropPrefix("section:") {
+            guard !name.isEmpty else { return nil }
+            self = .section(name)
+        } else if let id = rawValue.dropPrefix("tracker:").flatMap(UUID.init(uuidString:)) {
+            self = .tracker(id)
+        } else {
+            return nil
+        }
+    }
+
+    var rawValue: String {
+        switch self {
+        case .section(let name): "section:\(name)"
+        case .tracker(let id): "tracker:\(id.uuidString)"
+        }
+    }
+}
+
+private extension String {
+    func dropPrefix(_ prefix: String) -> String? {
+        hasPrefix(prefix) ? String(dropFirst(prefix.count)) : nil
     }
 }

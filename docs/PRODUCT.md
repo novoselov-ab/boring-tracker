@@ -51,12 +51,20 @@ a dozen-item list to scroll, which breaks rule 7. A section collapses that to
 one sheet with a handful of fields — the same "one sheet, both numbers, one
 save" requirement below, reached from the other direction.
 
-**Critically, choosing a section must not cost a tap.** Tapping + opens the
-last-used section's sheet immediately, keyboard already up. Switching sections
-happens *inside* the sheet, for the rare log that isn't the usual one. If
-sections ever add a step to the common path, they have failed and should be
-removed — a picker in front of every log is precisely the friction this app
-exists to delete.
+**A tracker with no section is logged on its own.** Being in no section is not
+itself a section: your cigarettes and your pushups share nothing but the absence
+of a name, so one sheet holding both would claim they are logged at the same
+time, which is the one thing a section means. Tapping + on a loose tracker gives
+you one field. Sections are for the trackers that genuinely arrive together, and
+most people will have one or two of them and a pile of loose trackers.
+
+**Critically, choosing what to log must not cost a tap.** Tapping + opens the
+last-used sheet immediately, keyboard already up — a section's, or a single
+tracker's. Switching happens *inside* the sheet, from its title, for the rare
+log that isn't the usual one. The list behind that title is the dozen-item list
+this design exists to avoid putting *in front* of you; a picker before every log
+is precisely the friction this app exists to delete. If sections ever add a step
+to the common path, they have failed and should be removed.
 
 Ordering works two ways, both by dragging: **within** a section to choose which
 tracker comes first, and **between** sections, where dropping a tracker under a
@@ -181,8 +189,9 @@ Small enough to list completely.
   a + button. Measurement cards show the latest reading and when. Reorder by
   drag. That's the whole main screen.
 - **Log sheet** — number pad, presets/recents row, tracker(s), date/time
-  (defaults to now, tappable to change), optional name, Save. Backdating is
-  first-class: you *will* forget dinner until the next morning.
+  (defaults to now, tappable to change), optional name, Save. One section's
+  trackers, or one loose tracker; its title is how you switch between them.
+  Backdating is first-class: you *will* forget dinner until the next morning.
 - **History** — everything you've logged, newest first, grouped by day. Today
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
   10 g", deleted or edited once, not once per tracker. Without this screen,
