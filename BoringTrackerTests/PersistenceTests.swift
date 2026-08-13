@@ -219,6 +219,43 @@ struct PersistenceTests {
         #expect(throws: StoreError.self) { try StoreMigration.migrate(data) }
     }
 
+    @Test("A file from an older version is refused too, because no step reads it")
+    func olderSchemaIsRefused() throws {
+        // Deliberately a document that is otherwise perfectly readable: the
+        // version alone has to be enough to stop it. Letting one through would
+        // drop every field that has since been renamed — `note` became `name` —
+        // and the next save would write that loss back over the original.
+        var document = sampleDocument()
+        document.schemaVersion = 1
+        let data = try StoreCoding.encoder().encode(document)
+
+        #expect(throws: StoreError.olderSchema(
+            found: 1, supported: StoreDocument.currentSchemaVersion
+        )) {
+            try StoreMigration.migrate(data)
+        }
+    }
+
+    @Test("An older-schema file is kept, not converted in place")
+    func olderSchemaSurvivesOnDisk() throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        try file.prepareDirectory()
+        var document = sampleDocument()
+        document.schemaVersion = 1
+        let data = try StoreCoding.encoder().encode(document)
+        try data.write(to: file.url)
+
+        let loaded = file.load()
+
+        guard case let .unreadable(quarantine) = loaded.origin else {
+            Issue.record("expected quarantine, got \(loaded.origin)")
+            return
+        }
+        #expect(try Data(contentsOf: quarantine.appendingPathComponent("store.json")) == data)
+        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
+    }
+
     @Test("A future-schema file is kept, not replaced")
     func futureSchemaSurvivesOnDisk() throws {
         let file = temporaryStoreFile()

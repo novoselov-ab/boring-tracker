@@ -5,6 +5,11 @@ enum StoreError: Error, Equatable {
     /// guessing: decoding it with today's rules would drop whatever is new and
     /// then save that loss back over the original.
     case futureSchema(found: Int, supported: Int)
+    /// The file was written by an older version, and this build has no step
+    /// that reads it. Refused for the same reason and with the same danger:
+    /// today's decoder would silently ignore every field that has since been
+    /// renamed or removed, and the next save would write that loss back.
+    case olderSchema(found: Int, supported: Int)
 }
 
 /// Where the document came from, so the app can be honest about it.
@@ -141,22 +146,36 @@ struct StoreFile: Sendable {
 /// anywhere to be migrated. Writing a step now would mean maintaining and
 /// testing a path from a file that has never been on anyone's phone.
 ///
-/// What does have to work from the first release is the other direction —
-/// meeting a file from a *newer* build and refusing it. Decoding that with
-/// today's rules would drop whatever is new and then save the loss back over
-/// the original, so it is left alone and reported instead. The first shipped
-/// version is the first one whose shape anyone can be holding, and a step from
-/// N to N+1 goes here when that day comes.
+/// What does have to work from the first release is the refusal itself: meeting
+/// a document this build cannot read and declining to guess. Decoding one with
+/// today's rules would drop whatever it holds under a key that has since been
+/// renamed or removed, and then save that loss back over the original. So the
+/// probe accepts exactly the current version and nothing else — a *newer* file
+/// because it is from a build that knows more, an *older* one because there is
+/// no step that reads it. Both are moved aside intact rather than overwritten.
+/// The first shipped version is the first one whose shape anyone can be
+/// holding, and a step from N to N+1 goes here when that day comes.
 enum StoreMigration {
 
     private struct VersionProbe: Decodable { var schemaVersion: Int }
 
     static func migrate(_ data: Data) throws -> StoreDocument {
+        let supported = StoreDocument.currentSchemaVersion
         let probe = try StoreCoding.decoder().decode(VersionProbe.self, from: data)
-        guard probe.schemaVersion <= StoreDocument.currentSchemaVersion else {
-            throw StoreError.futureSchema(
-                found: probe.schemaVersion, supported: StoreDocument.currentSchemaVersion
-            )
+        // Equality, not `<=`. With no migration step, every version but this one
+        // is a version this build cannot read, and both directions fail the same
+        // way if allowed through: the decoder ignores keys it doesn't know, so a
+        // document quietly loses whatever it carried under a name that has since
+        // changed. Today a v1 file happens to fail anyway — `section` is
+        // non-optional, and a synthesized decoder does not fall back to a
+        // property's default — but that is an accident of this bump's fields,
+        // not a guarantee. A bump that only added optional fields would decode
+        // and lose data. When a step from N to N+1 is written, it goes here and
+        // takes the older versions it can actually handle.
+        guard probe.schemaVersion == supported else {
+            throw probe.schemaVersion > supported
+                ? StoreError.futureSchema(found: probe.schemaVersion, supported: supported)
+                : StoreError.olderSchema(found: probe.schemaVersion, supported: supported)
         }
         var document = try StoreCoding.decode(data)
         document.schemaVersion = StoreDocument.currentSchemaVersion

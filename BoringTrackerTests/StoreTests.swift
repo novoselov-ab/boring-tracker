@@ -241,6 +241,46 @@ struct StoreTests {
         #expect(store.trackers.allSatisfy { $0.modified > time(1) })
     }
 
+    @Test("Adding a tracker leaves every other record untouched")
+    func addingATrackerStampsNothingElse() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 1, section: "Weight", modified: time(1)),
+        ]))
+        let before = store.trackers
+
+        store.add(Tracker(name: "Steps"))
+
+        // `modified` is what decides a merge, so a record nobody edited must not
+        // come out looking edited. Restamping these — which is what slotting the
+        // new tracker in beside its own section would cost — makes adding a
+        // tracker here silently beat a rename made on another device earlier.
+        #expect(Array(store.trackers.prefix(2)) == before)
+        #expect(store.trackers.map(\.name) == ["Calories", "Weight", "Steps"])
+    }
+
+    @Test("Adding a tracker on one device cannot undo an edit made on another")
+    func addingATrackerDoesNotClobberARemoteEdit() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1))
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, sortIndex: 1,
+                             section: "Weight", modified: time(1))
+        let phone = makeStore(StoreDocument(trackers: [calories, weight]))
+
+        // The iPad renamed Weight first; the phone then merely added something.
+        var renamed = weight
+        renamed.name = "Bodyweight"
+        renamed.unit = "lb"
+        renamed.modified = time(2)
+        let tablet = StoreDocument(trackers: [calories, renamed])
+
+        phone.add(Tracker(name: "Steps"))
+        let merged = phone.document.merged(with: tablet)
+
+        #expect(merged.trackers.first { $0.id == weight.id }?.name == "Bodyweight")
+        #expect(merged.trackers.first { $0.id == weight.id }?.unit == "lb")
+        #expect(merged.trackers.map(\.name).contains("Steps"))
+    }
+
     @Test("Dragging a row moves that row, even with archived trackers in between")
     func reorderingIgnoresHiddenTrackers() {
         // The list only drew A, C and D, so offset 2 means D — not the third

@@ -259,6 +259,22 @@ final class Store {
 
     // MARK: - Trackers
 
+    /// Appends, and touches nothing else.
+    ///
+    /// It is tempting to slot a new tracker in beside the rest of its section,
+    /// because settings draws this one flat run grouped under headings and the
+    /// home screen draws it flat — so a new `Food` tracker appears in a
+    /// different place on each. Doing it here costs more than it fixes.
+    /// Inserting means renumbering `sortIndex`, renumbering means restamping
+    /// `modified` on trackers the user never touched, and `modified` is what
+    /// decides a merge: adding a tracker on this phone would then beat, and
+    /// silently discard, a rename made on the iPad an hour earlier. A record
+    /// nobody edited must not look edited.
+    ///
+    /// Nor would it work. `update` leaves a tracker where it is when its section
+    /// changes, so the same disagreement returns by the other door. The two
+    /// screens agreeing is a *displayed* decision (docs/TECH.md) and belongs
+    /// wherever they are drawn, not in the stored order.
     func add(_ tracker: Tracker) {
         var tracker = tracker
         tracker.modified = .stamp()

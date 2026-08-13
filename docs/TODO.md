@@ -47,10 +47,12 @@ Default sections on first launch: **Food** (Calories, Protein) and **Weight**.
 Schema version 2, and **no migration system, on purpose.** Nothing has been
 released, so no v1 file exists outside a development simulator; one left there
 is quarantined and started over, exactly as any unreadable file already is.
-What stays is the three-line guard that refuses a file from a *newer* build
-rather than misreading it and saving the loss back over the original — that one
-matters from the first release, and it is not a migration system. A step from N
-to N+1 gets written the day there is a released version to migrate from.
+What stays is the three-line guard that accepts the current version and nothing
+else — a *newer* file because it comes from a build that knows more, an *older*
+one because no step reads it — rather than misreading either and saving the loss
+back over the original. That one matters from the first release, and it is not a
+migration system. A step from N to N+1 gets written the day there is a released
+version to migrate from, and it takes the older versions with it.
 
 ## 3. The section log sheet
 

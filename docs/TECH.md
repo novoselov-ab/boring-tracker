@@ -82,10 +82,14 @@ serialization format *and* the mapping between them, forever, for no benefit.
 - **There is no migration step yet, deliberately.** Nothing has been released,
   so no older file exists outside a development simulator, and one left there
   is quarantined and started over like any file that won't decode. What does
-  exist is the guard that refuses a file from a *newer* build rather than
-  decoding it with today's rules and saving the loss back over the original —
-  three lines, and needed from the first release. The first shipped version is
-  the first shape someone can be holding; that is when a step earns its keep.
+  exist is the guard that accepts the current version and nothing else, rather
+  than decoding an unfamiliar file with today's rules and saving the loss back
+  over the original — three lines, and needed from the first release. A *newer*
+  file is refused because it comes from a build that knows more; an *older* one
+  because there is no step that reads it, and letting it through would silently
+  drop whatever it holds under a key that has since been renamed. The first
+  shipped version is the first shape someone can be holding; that is when a
+  step earns its keep, and it takes the older versions with it.
 
 ### Writing safely
 
@@ -295,7 +299,8 @@ bug destroys data or trust, not UI:
 - day-boundary and aggregation math, including the DST and time zone cases
 - export → import round trip preserving everything exactly
 - schema migration from every past version, once any exist to migrate from —
-  today that is only the refusal of a file from a newer build
+  today that is only the refusal of any version but the current one, in both
+  directions
 - decode failure falling back to the backup file
 - atomic write leaving a valid file when interrupted
 
@@ -311,8 +316,8 @@ project.yml
 BoringTracker/
   App/            entry point, root view
   Model/          Tracker, Entry, StoreDocument
-  Store/          Store, persistence, migration
-  Views/          Home, LogSheet, TrackerDetail, Graph, Settings
+  Store/          Store, persistence, the version guard
+  Views/          Home, LogSheet, TrackerDetail, Graph, Settings, editors
   Support/        date math, formatting
 BoringTrackerTests/
 docs/

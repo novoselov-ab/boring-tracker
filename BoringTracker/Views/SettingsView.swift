@@ -51,7 +51,14 @@ struct SettingsView: View {
 
             Section {
                 Button("Add Tracker", systemImage: "plus") {
-                    editing = Tracker(name: "", section: store.sections.first ?? "")
+                    // No section by default. A section means "logged at the
+                    // same time as these", which is a claim about the new
+                    // tracker that nobody has made yet, and defaulting to
+                    // whichever one happened to be first makes it silently.
+                    // It costs nothing to say: the picker is right there, and
+                    // once the log sheet is section-scoped (docs/TODO.md item
+                    // 3) a wrong guess here puts Steps in your meal sheet.
+                    editing = Tracker(name: "")
                 }
             }
 

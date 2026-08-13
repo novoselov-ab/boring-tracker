@@ -47,6 +47,14 @@ struct SeededRandom: RandomNumberGenerator {
 }
 
 extension StoreDocument {
+    /// A small fixed pool of batch ids, in its own namespace rather than drawn
+    /// from the record ids. Shared by every generated document and deliberately
+    /// short, so several entries land in the same batch and two documents can
+    /// genuinely agree about one.
+    private static let batchIDs: [UUID] = (0..<4).map {
+        UUID(uuidString: "00000000-0000-4000-8000-00000000000\($0)")!
+    }
+
     /// Builds a document out of a shared pool of ids, so two generated
     /// documents genuinely conflict rather than merging as disjoint sets.
     static func random(
@@ -79,6 +87,12 @@ extension StoreDocument {
                     value: Double(Int.random(in: -50...500, using: &random)),
                     date: time(Int.random(in: 0...5_000, using: &random)),
                     name: Bool.random(using: &random) ? "n\(Int.random(in: 0...5, using: &random))" : nil,
+                    // Its own small pool, not the record ids: a batch id shares
+                    // no namespace with entries or tombstones, and drawing from
+                    // a handful means several entries land in one batch. The
+                    // point is that the field is carried through the round trip
+                    // and the merge tie-break instead of being nil everywhere.
+                    batchID: Bool.random(using: &random) ? batchIDs.randomElement(using: &random) : nil,
                     modified: time(Int.random(in: 0...20, using: &random))
                 )
             )
