@@ -42,7 +42,17 @@ sheet, for the log that isn't the usual one.
 
 Measure the result in taps and milliseconds, not in whether it looks tidy.
 
-## 4. Export, import, CSV
+## 4. History screen
+
+Everything logged, newest first, grouped by day — today is just the top of it.
+A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited
+once rather than once per tracker.
+
+Without it, fixing a mistyped food means opening each tracker's detail
+separately and deleting a row in each. It's the natural consumer of `batchID`,
+and it comes right after the log sheet that starts writing them.
+
+## 5. Export, import, CSV
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit
@@ -50,18 +60,18 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 5. CI
+## 6. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 6. Use it on a real phone for a week
+## 7. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 7. Search and pinning
+## 8. Search and pinning
 
 Designed after the week, not before. Search over entry names; starring a past
 entry keeps it around as a one-tap preset. **Presets are named entries you
@@ -69,7 +79,7 @@ liked** — not a separate thing you create and maintain.
 
 Call them presets, never *recipes*. See PHILOSOPHY.md.
 
-## 8. App icon and asset catalog
+## 9. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 

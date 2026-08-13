@@ -58,6 +58,12 @@ sections ever add a step to the common path, they have failed and should be
 removed — a picker in front of every log is precisely the friction this app
 exists to delete.
 
+Ordering works two ways, both by dragging: **within** a section to choose which
+tracker comes first, and **between** sections, where dropping a tracker under a
+different heading is what changes its section. Editing the string in the
+tracker editor does the same thing, but dragging is the obvious gesture and
+should exist. Sort order is therefore per section, not global.
+
 First launch starts with **Food** and **Weight**.
 
 ### Entry
@@ -71,7 +77,21 @@ out for free — a preset is simply a past entry you liked (see below).
 
 One logged food is two entries — 100 kcal and 10 g protein — so they share a
 `batchID`. That's what makes them a single thing to edit or delete later,
-rather than two rows that happen to have the same timestamp.
+rather than two rows that happen to have the same timestamp. The name is
+stored on **each** entry in the batch, duplicated on purpose: a Batch entity
+to hold one string would add orphan cleanup and a merge case to save twenty
+bytes.
+
+**A name is a label, never a key.** Nothing is ever overwritten. Log "chicken
+rice" ten times with ten different values and you keep ten entries — that is
+what makes the graph true. The only place "the latest one wins" applies is
+which values get *prefilled* when you type that name again, and that is a
+ranking decision, not a data one: it can become most-frequent, or a short list
+of recent variants, at any time, with no migration and nothing stored
+differently.
+
+It also means names never cause sync conflicts. Entries are identified by
+UUID, so two devices logging "chicken rice" merge as a plain union.
 
 ## How logging gets fast
 
@@ -125,8 +145,13 @@ Small enough to list completely.
 - **Log sheet** — number pad, presets/recents row, tracker(s), date/time
   (defaults to now, tappable to change), optional note, Save. Backdating is
   first-class: you *will* forget dinner until the next morning.
-- **Tracker detail** — the graph on top, the list of entries below, grouped by
-  day. Swipe to delete, tap to edit.
+- **History** — everything you've logged, newest first, grouped by day. Today
+  is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
+  10 g", deleted or edited once, not once per tracker. Without this screen,
+  fixing a mistyped food means visiting each tracker's detail separately and
+  deleting a row in each, which is absurd.
+- **Tracker detail** — the graph on top, that tracker's entries below, grouped
+  by day. Swipe to delete, tap to edit.
 - **Graph** — daily totals as bars, measurements as a line with a moving
   average. Range switch: week / month / year / all. Nothing interactive beyond
   scrubbing for a value.
