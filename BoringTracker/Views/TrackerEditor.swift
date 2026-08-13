@@ -15,7 +15,7 @@ struct TrackerEditor: View {
     @State private var draft: Tracker?
     @State private var section: SectionChoice = .none
     @State private var typedSection = ""
-    @State private var confirmingFullDelete = false
+    @State private var confirming: Deletion?
     @FocusState private var nameFocused: Bool
 
     /// A section is a string, so "pick one" and "type one" are the same field
@@ -111,6 +111,9 @@ struct TrackerEditor: View {
         let count = store.entries(for: tracker.id).count
         Section {
             if count == 0 {
+                // Nothing to weigh up: no history to keep or lose, and the four
+                // fields above are a few seconds to type again. A confirmation
+                // here would be ceremony, not protection.
                 Button("Delete Tracker", systemImage: "trash", role: .destructive) {
                     store.delete(tracker)
                     dismiss()
@@ -118,12 +121,11 @@ struct TrackerEditor: View {
             } else {
                 Button("Delete Tracker, Keep History",
                        systemImage: "trash", role: .destructive) {
-                    store.delete(tracker)
-                    dismiss()
+                    confirming = .keepingHistory
                 }
                 Button("Delete Tracker and \(count.formatted()) \(count == 1 ? "Entry" : "Entries")",
                        systemImage: "trash.fill", role: .destructive) {
-                    confirmingFullDelete = true
+                    confirming = .withHistory
                 }
             }
         } footer: {
@@ -135,17 +137,62 @@ struct TrackerEditor: View {
                     + "Deleting the history removes them for good.")
             }
         }
+        // Both are asked about, because neither can be undone: there is no undo
+        // for a tracker the way there is for an entry, and a new one made with
+        // the same name is a different tracker with a new id, which the old
+        // entries do not belong to. The two dialogs say plainly what survives,
+        // which is the part the labels alone cannot carry.
         .confirmationDialog(
-            "Delete \(displayName) and its \(count.formatted()) entries?",
-            isPresented: $confirmingFullDelete,
-            titleVisibility: .visible
-        ) {
-            Button("Delete Everything", role: .destructive) {
-                store.deleteWithHistory(tracker)
+            confirming.map { $0.title(name: displayName, count: count) } ?? "",
+            isPresented: Binding(get: { confirming != nil },
+                                 set: { if !$0 { confirming = nil } }),
+            titleVisibility: .visible,
+            presenting: confirming
+        ) { choice in
+            Button(choice.confirmation, role: .destructive) {
+                switch choice {
+                case .keepingHistory: store.delete(tracker)
+                case .withHistory: store.deleteWithHistory(tracker)
+                }
                 dismiss()
             }
-        } message: {
-            Text("This cannot be undone.")
+        } message: { choice in
+            Text(choice.consequence(count: count))
+        }
+    }
+
+    /// Which of the two deletions is being confirmed. One type rather than two
+    /// flags, so the pair cannot both be true and the wording cannot drift out
+    /// of step with the button that opened it.
+    private enum Deletion: Identifiable {
+        case keepingHistory
+        case withHistory
+
+        var id: Self { self }
+
+        var confirmation: String {
+            switch self {
+            case .keepingHistory: "Delete Tracker"
+            case .withHistory: "Delete Everything"
+            }
+        }
+
+        func title(name: String, count: Int) -> String {
+            switch self {
+            case .keepingHistory: "Delete \(name)?"
+            case .withHistory: "Delete \(name) and its \(count.formatted()) entries?"
+            }
+        }
+
+        func consequence(count: Int) -> String {
+            let entries = "\(count.formatted()) \(count == 1 ? "entry" : "entries")"
+            switch self {
+            case .keepingHistory:
+                return "The \(entries) stay in your data and in any export, but nothing in "
+                    + "the app will show them once the tracker is gone. This cannot be undone."
+            case .withHistory:
+                return "The \(entries) are removed for good. This cannot be undone."
+            }
         }
     }
 
