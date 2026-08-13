@@ -73,12 +73,19 @@ serialization format *and* the mapping between them, forever, for no benefit.
 ### The file
 
 - Location: app container, `Application Support/boring-tracker/store.json`.
-- Contains everything: schema version, trackers, entries, pinned values.
+- Contains everything: schema version, trackers, entries, tombstones.
 - Pretty-printed with sorted keys — it's meant to be opened and read, and it
   diffs cleanly if someone keeps it in a git repo or Dropbox.
 - `schemaVersion` is an integer. Migration is a function from version N to
   N+1, run at load. This is simpler than any framework's migration system and
   it's ours.
+- **There is no migration step yet, deliberately.** Nothing has been released,
+  so no older file exists outside a development simulator, and one left there
+  is quarantined and started over like any file that won't decode. What does
+  exist is the guard that refuses a file from a *newer* build rather than
+  decoding it with today's rules and saving the loss back over the original —
+  three lines, and needed from the first release. The first shipped version is
+  the first shape someone can be holding; that is when a step earns its keep.
 
 ### Writing safely
 
@@ -128,9 +135,11 @@ spend caution on the wrong one.
 
 **Stored decisions** change the shape of the document: a new field, a removed
 type, a changed meaning. They are nearly free right now and expensive the day
-there is real history on a phone, because then every one needs a migration and
-a way to be wrong about somebody's data. Be slow and deliberate here, and get
-them done before daily use begins.
+somebody else's history depends on them, because then every one needs a
+migration and a way to be wrong about their data. Be slow and deliberate here,
+and get them done before the **first App Store release** — that is the freeze
+point, not daily use on our own phone, where a schema change still costs only
+deleting the app or hand-editing the JSON.
 
 **Displayed decisions** are everything computed from the document at read time:
 ranking, ordering, what an empty state shows, whether a tap logs immediately or
@@ -186,6 +195,7 @@ struct Tracker: Codable, Identifiable, Hashable {
     var decimals: Int
     var sortIndex: Int
     var isArchived: Bool
+    var section: String     // "" when the tracker isn't grouped
 }
 
 struct Entry: Codable, Identifiable, Hashable {
@@ -193,12 +203,24 @@ struct Entry: Codable, Identifiable, Hashable {
     var trackerID: UUID
     var value: Double
     var date: Date
-    var note: String?
+    var name: String?       // the food, not the tracker
+    var batchID: UUID?      // the other entries saved with it
 }
 ```
 
 Entries reference trackers by id rather than nesting, so deleting a tracker
 and keeping its history is a decision rather than a cascade.
+
+`section` is a string and `name` is a label, both for the same reason: the
+alternative is a record to create, clean up and merge. PRODUCT.md says what
+each one means. Sort order is read per section rather than stored that way —
+`sortIndex` stays one run over all trackers, and the section a tracker carries
+decides which heading that run is drawn under, so moving between sections needs
+no second ordering to keep in step.
+
+There is no `Pin`. Saved presets were replaced by searching your own named
+entries, which is a feature delivered by removing a type rather than adding
+one.
 
 ## The store object
 
@@ -272,7 +294,8 @@ bug destroys data or trust, not UI:
 
 - day-boundary and aggregation math, including the DST and time zone cases
 - export → import round trip preserving everything exactly
-- schema migration from every past version
+- schema migration from every past version, once any exist to migrate from —
+  today that is only the refusal of a file from a newer build
 - decode failure falling back to the backup file
 - atomic write leaving a valid file when interrupted
 
