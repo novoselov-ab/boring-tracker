@@ -82,6 +82,21 @@ struct LogSheet: View {
             focused = target.tracker ?? trackers.first?.id
         }
         .onChange(of: group) { _, _ in
+            // What was typed belonged to the group that was on screen when it
+            // was typed, so it goes with it. Keeping it looked like the kinder
+            // option — switch back and it is still there — but a save writes
+            // only the group in front of you and then dismisses, so a number
+            // typed into the group you switched away from was discarded in
+            // silence, with the sheet closing over it. The name is the same
+            // mistake wearing the other hat, and louder: carried across, it
+            // files your weight under "chicken rice", which is exactly what
+            // this field's own footer says it is not.
+            //
+            // The date stays. "When it happened" is a property of the trip
+            // through the sheet, not of which trackers it lands on, so
+            // backdating and then switching is not a mistake to undo.
+            typed.removeAll()
+            name = ""
             // Switching is not a reason to have to tap a field again.
             focused = trackers.first?.id
         }
@@ -189,9 +204,8 @@ struct LogSheet: View {
         )
     }
 
-    /// Only what this sheet is showing. Switching keeps what was typed in the
-    /// other group, so switching back doesn't lose it — but a save writes what
-    /// is in front of you and nothing else. One save, one batch.
+    /// Only what this sheet is showing — one save, one batch. Switching clears
+    /// the fields, so there is nothing else it could be hiding.
     private var amounts: [UUID: Double] {
         trackers.reduce(into: [:]) { result, tracker in
             if let value = NumberInput.parse(typed[tracker.id] ?? "") {

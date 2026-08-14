@@ -90,17 +90,24 @@ exception, which is backwards — having no section is the normal state, and a
 section is what gets earned when two numbers genuinely come from one event.
 
 The home screen therefore needs no special case: it is **one ordered list of
-cards**, where a run of trackers sharing a section gets a heading above it and
-everything else is a bare card.
+cards**, where a section gets a heading above its trackers and every other
+tracker is a bare card where it already sits.
 
-**Arranging that list happens in settings, not here.** Drawing the runs as
-separate blocks is what makes the grouping readable, and a `List` confines a
-drag to the block it started in — so on home a card alone under its own heading
-could not be dragged at all, which is most of the screen for anyone whose
-trackers are mostly loose. A drag that works on some cards and not others is
-worse than one that isn't offered. Settings draws the same trackers with the
-headings as rows, where every card can reach every position and a drop under
-another heading is what changes a section.
+The blocks are the things you log in one go, so what is drawn as one block is
+exactly what one + opens. A section's trackers are drawn together even if they
+aren't next to each other in the list — a section appearing twice under two
+identical headings would be claiming a grouping the sheet then contradicts.
+Only a section's stragglers move, up to where that section already is; nothing
+is gathered at the bottom.
+
+**Arranging that list happens in settings, not here.** Drawing the blocks
+separately is what makes the grouping readable, and a `List` confines a drag to
+the block it started in — so on home a card alone under its own heading could
+not be dragged at all, which is most of the screen for anyone whose trackers
+are mostly loose. A drag that works on some cards and not others is worse than
+one that isn't offered. Settings draws the same trackers with the headings as
+rows, so a card can be dragged past one, and a drop under another heading is
+what changes a section.
 
 Nor does the code: **the log sheet always takes a set of trackers.** A section
 is a named set; a lone tracker is a set of one. Same sheet, same one-save-one-

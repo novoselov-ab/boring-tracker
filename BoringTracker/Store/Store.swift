@@ -148,17 +148,18 @@ final class Store {
         return result
     }
 
-    /// The section headings the home screen draws, in the order their first
-    /// tracker appears, with the unsectioned ones gathered under `""` at the end.
+    /// The headings the settings list draws, in the order their first tracker
+    /// appears, with the unsectioned ones gathered under `""` at the end.
     ///
     /// Deliberately not the same list as `sections`. That one names the sections
     /// to offer in the tracker editor, so it counts archived trackers and has no
-    /// entry for "not grouped with anything". This one is what is on screen, and
-    /// the ungrouped trackers are drawn together at the bottom.
+    /// entry for "not grouped with anything". This one is what settings puts on
+    /// screen, where the trailing `""` is the "No section" heading you drop a
+    /// tracker under to take it out of one.
     ///
-    /// It is a *display* grouping and nothing more. What gets logged together is
-    /// `logGroups`, where an ungrouped tracker stands on its own — being in no
-    /// section is not a section.
+    /// Not what the home screen draws: home has no such heading, because being
+    /// in no section is not a section. It draws `logGroups`, where an ungrouped
+    /// tracker stands on its own — which is also what gets logged together.
     var activeSections: [String] {
         var seen = Set<String>()
         var named: [String] = []

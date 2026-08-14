@@ -1,0 +1,11 @@
+// Signing, kept out of project.yml so the repo stays clone-and-run.
+//
+// A clone with no Apple account gets no DEVELOPMENT_TEAM and builds for the
+// simulator, which needs no signing. To install on a real device, create an
+// untracked Local.xcconfig next to this file containing your own team:
+//
+//     DEVELOPMENT_TEAM = XXXXXXXXXX
+//
+// `#include?` is the OPTIONAL form: when Local.xcconfig is absent Xcode carries
+// on silently, which is what keeps a fresh clone building.
+#include? "Local.xcconfig"

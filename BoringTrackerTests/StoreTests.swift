@@ -394,8 +394,9 @@ struct StoreTests {
 
     @Test("Reordering inside one section leaves the others where they were")
     func reorderingWithinASection() {
-        // What the home screen hands back: it draws a list per section, so a
-        // drag reports offsets into that section alone.
+        // `move` takes the list as it was drawn, so offsets into a subset of
+        // the trackers have to land on the right rows — which is what makes it
+        // safe for a screen that hides the archived ones.
         let store = makeStore(StoreDocument(trackers: [
             Tracker(name: "Calories", sortIndex: 0, section: "Food", modified: time(1)),
             Tracker(name: "Protein", sortIndex: 1, section: "Food", modified: time(1)),

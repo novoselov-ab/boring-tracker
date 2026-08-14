@@ -16,6 +16,13 @@ settings:
     CODE_SIGN_STYLE: Automatic
     # No DEVELOPMENT_TEAM on purpose: the project must build and run in the
     # simulator for anyone who clones it, with no Apple developer account.
+    # A device build needs one, so it comes from an untracked Local.xcconfig
+    # picked up by Signing.xcconfig below — present on a machine that installs
+    # to hardware, absent everywhere else.
+
+configFiles:
+  Debug: Signing.xcconfig
+  Release: Signing.xcconfig
 
 targets:
   BoringTracker:
@@ -38,7 +45,10 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        CODE_SIGNING_ALLOWED: NO
+        # Scoped to the simulator only. Unconditional NO also blocks device
+        # builds, which must be signed; the simulator needs no signature, so
+        # keeping it off there preserves the no-account clone-and-run path.
+        CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]: NO
 
   BoringTrackerTests:
     type: bundle.unit-test

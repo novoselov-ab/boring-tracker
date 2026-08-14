@@ -23,3 +23,6 @@ xcuserdata/
 # it is one machine's allowlist, and it is the kind of file a `git add -A`
 # sweeps in without anyone deciding to.
 .claude/settings.local.json
+
+# Per-machine signing (team id). See Signing.xcconfig.
+Local.xcconfig

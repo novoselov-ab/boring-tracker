@@ -90,7 +90,7 @@ struct HomeView: View {
     /// heading — which is most of this screen for anyone whose trackers are
     /// mostly loose. A drag that silently works on some cards and not others is
     /// worse than one that isn't offered, so ordering lives in settings, where
-    /// the headings are rows and every card can reach every position.
+    /// the headings are rows a card can be dragged past.
     private var runs: [[Tracker]] {
         store.logGroups.map(store.trackers(in:))
     }
@@ -100,11 +100,12 @@ struct HomeView: View {
             if let notice = LoadNotice(origin: store.origin, saveError: store.saveError) {
                 Section { NoticeRow(notice: notice) }
             }
-            // One ordered list, exactly as the trackers are ordered: a run that
-            // shares a section gets that section's heading, and everything else
-            // is a bare card (docs/PRODUCT.md). Nothing is gathered at the
-            // bottom and there is no "Other" heading — having no section is the
-            // normal state, not a leftover, and it needs no special case here.
+            // One ordered list, in the order the groups first appear: a section
+            // gets its heading over its trackers, and every loose tracker is a
+            // bare card where it already sits (docs/PRODUCT.md). Nothing is
+            // gathered at the bottom and there is no "Other" heading — having
+            // no section is the normal state, not a leftover, and it needs no
+            // special case here.
             // Keyed on the first card, not on the run itself: `Tracker` hashes
             // over every stored property, including the two timestamps and the
             // sort index that a reorder rewrites on every row. Keyed by value,
