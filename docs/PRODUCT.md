@@ -66,10 +66,15 @@ this design exists to avoid putting *in front* of you; a picker before every log
 is precisely the friction this app exists to delete. If groups ever add a step
 to the common path, they have failed and should be removed.
 
-Ordering and membership are deliberately separate. Settings is one flat list
-of every active tracker; dragging changes only the global order. A tracker's
-group changes only in its editor, using **None**, an existing group, or **New
-Group…**. Position never implies membership.
+Ordering and membership are deliberately separate. Dragging in settings changes
+only order; a tracker's group changes only in its editor, using **None**, an
+existing group, or **New Group…**. Position never implies membership.
+
+But settings **draws the same shape home does** — headings above runs, bare
+rows for loose trackers — because a settings screen showing an order home won't
+honour is simply lying. Within a run, dragging reorders that group's members;
+a group moves as a unit. The two screens agree by construction, which is the
+only way they can be relied on to agree at all.
 
 First launch starts with **Food** and **Weight**.
 
@@ -99,11 +104,12 @@ identical headings would be claiming a grouping the sheet then contradicts.
 Only a group's stragglers move, up to where that group already is; nothing
 is gathered at the bottom.
 
-**Arranging that list happens in settings, not here.** Settings draws every
-active tracker in one flat reorderable list, without headings. Each grouped
-tracker shows its group as a subtitle. Dragging changes only order; membership
-changes only in the tracker editor, so a loose tracker can sit anywhere and no
-drop gesture needs to mean "remove from group."
+**Arranging that list happens in settings, not here.** Settings draws the same
+shape as this screen — a heading above each run of trackers sharing a group,
+bare rows for loose ones — so what you arrange there is what you get here.
+Dragging within a run reorders that group's members; a group moves as a unit.
+Membership still changes only in the tracker editor, so no drop gesture ever
+has to mean "remove from group."
 
 Nor does the code: **the log sheet always takes a set of trackers.** A group
 is a named set; a lone tracker is a set of one. Same sheet, same one-save-one-
@@ -279,8 +285,8 @@ Small enough to list completely.
 - **Graph** — daily totals as bars, measurements as a line with a moving
   average. Range switch: week / month / year / all. Nothing interactive beyond
   scrubbing for a value.
-- **Settings** — one flat list of trackers (add/edit/archive/reorder), with a
-  group subtitle where there is one; export, import,
+- **Settings** — the trackers (add/edit/archive/reorder), drawn in the same
+  shape as home so the two cannot disagree; export, import,
   appearance, about + link to the GitHub repo. One screen, no subscreens if
   avoidable.
 

@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 10), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 11), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -134,9 +134,14 @@ So separate the two jobs:
 - [x] **Home is unchanged**: still one ordered list drawing a heading above each
       run of trackers that share a group.
 
-This kills the forbidden heading, the drop-target ambiguity, the two
-conflicting loose-tracker orderings, and the whole broken-drag class of bug at
-once — and costs nothing on the common path, because settings is not on it.
+This killed the forbidden heading, the drop-target ambiguity and the whole
+broken-drag class of bug, at no cost to the common path.
+
+**But it over-corrected, and the claim above was only true for loose
+trackers.** Separating ordering from membership was right; also discarding the
+*shape* was not. A flat settings list and a home screen that gathers a group at
+its first member disagree — see item 6, which keeps the fix and drops the part
+that didn't work.
 
 Two loose ends it resolves in passing: `Store.move` gets a production caller
 again (the flat list), so it stops being dead code; and `Store.add`'s comment
@@ -170,7 +175,35 @@ being called done.
       is the shortest travel there is. Cancel may not need to exist at all —
       a sheet already dismisses by swiping down.
 
-## 6. History screen
+## 6. Make settings and home agree
+
+Found by the item 4 review. Settings and home can disagree about where a
+grouped tracker sits, and a settings drag can be a **visible no-op**: with the
+starter set, drag Weight between Calories and Protein and settings shows
+Calories, Weight, Protein while home still draws Food(Calories, Protein) then
+Weight — identical to before you dragged. Drag Calories to the bottom and it
+returns second from top, because home gathers a group at its first member.
+
+A settings screen showing an order home will not honour is lying, and no amount
+of care in one screen fixes a disagreement between two.
+
+- [ ] **Settings draws the same shape as home** — a heading above each run of
+      trackers sharing a group, bare rows for loose ones. The two agree by
+      construction, which is the only way they can be relied on to agree.
+- [ ] **Dragging within a run reorders that group's members; a group moves as a
+      unit.**
+- [ ] **Membership still changes only in the tracker editor.** The *No group*
+      heading and drop-target semantics stay gone — that part of item 4 was
+      right and is not being reversed.
+
+The two rejected alternatives, so they don't get re-proposed: letting home
+follow the flat order means a group can be drawn split under two identical
+headings, which one commit already fixed; and accepting the disagreement means
+a control that visibly does nothing.
+
+Not on the common path, so it is judged by correctness rather than taps.
+
+## 7. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.
 A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited
@@ -180,7 +213,7 @@ Without it, fixing a mistyped food means opening each tracker's detail
 separately and deleting a row in each. It's the natural consumer of `batchID`,
 and it comes right after the log sheet that starts writing them.
 
-## 7. Export, import, CSV
+## 8. Export, import, CSV
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit
@@ -188,18 +221,18 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 8. CI
+## 9. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 9. Use it on a real phone for a week
+## 10. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 10. Search and repeat
+## 11. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -220,7 +253,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 11. App icon and asset catalog
+## 12. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
