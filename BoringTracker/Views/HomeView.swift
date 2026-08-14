@@ -68,30 +68,31 @@ struct HomeView: View {
         }
     }
 
-    /// The cards split into the blocks the list draws: consecutive trackers
-    /// that share a section, in the one order the trackers are already in.
+    /// The cards split into the blocks the list draws: one block per log group,
+    /// in the order the groups first appear.
     ///
-    /// A run rather than a gather, so nothing jumps to the bottom of the screen
-    /// for having no section, and a heading appears where the trackers that
-    /// share one happen to sit.
+    /// Blocks are `LogGroup`s rather than runs of adjacent trackers, so what is
+    /// drawn as one block is exactly what one + opens. A section's trackers need
+    /// not sit next to each other — `Store.add` appends a new one at the end and
+    /// `update` leaves a tracker's position alone when its section changes — and
+    /// grouping by adjacency drew a section under two identical headings while
+    /// the sheet behind either one held all of it. The screen was contradicting
+    /// the sheet it launches.
+    ///
+    /// Still not a gather: every loose tracker is its own group, so nothing
+    /// jumps to the bottom of the screen for having no section and there is no
+    /// "Other" heading. Only a section's stragglers move, up to where that
+    /// section already is.
     ///
     /// Nothing here reorders. A `List` confines a drag to the `ForEach` it
-    /// started in, so drawn as a section per run a card alone under its own
+    /// started in, so drawn as a section per block a card alone under its own
     /// heading cannot be moved at all and nothing can be dragged past a
     /// heading — which is most of this screen for anyone whose trackers are
     /// mostly loose. A drag that silently works on some cards and not others is
     /// worse than one that isn't offered, so ordering lives in settings, where
     /// the headings are rows and every card can reach every position.
     private var runs: [[Tracker]] {
-        var result: [[Tracker]] = []
-        for tracker in store.activeTrackers {
-            if result.last?.last?.section == tracker.section {
-                result[result.count - 1].append(tracker)
-            } else {
-                result.append([tracker])
-            }
-        }
-        return result
+        store.logGroups.map(store.trackers(in:))
     }
 
     private var list: some View {
