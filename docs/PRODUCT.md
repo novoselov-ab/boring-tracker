@@ -91,8 +91,16 @@ section is what gets earned when two numbers genuinely come from one event.
 
 The home screen therefore needs no special case: it is **one ordered list of
 cards**, where a run of trackers sharing a section gets a heading above it and
-everything else is a bare card. Drag to reorder, drop under a heading to join
-that section, drop outside to leave it alone.
+everything else is a bare card.
+
+**Arranging that list happens in settings, not here.** Drawing the runs as
+separate blocks is what makes the grouping readable, and a `List` confines a
+drag to the block it started in — so on home a card alone under its own heading
+could not be dragged at all, which is most of the screen for anyone whose
+trackers are mostly loose. A drag that works on some cards and not others is
+worse than one that isn't offered. Settings draws the same trackers with the
+headings as rows, where every card can reach every position and a drop under
+another heading is what changes a section.
 
 Nor does the code: **the log sheet always takes a set of trackers.** A section
 is a named set; a lone tracker is a set of one. Same sheet, same one-save-one-
@@ -252,8 +260,8 @@ and a number** to log an arbitrary value from a cold launch.
 Small enough to list completely.
 
 - **Home** — your trackers as cards. Daily-total cards show today's number and
-  a + button. Measurement cards show the latest reading and when. Reorder by
-  drag. That's the whole main screen.
+  a + button. Measurement cards show the latest reading and when. That's the
+  whole main screen — arranging the list is a settings job.
 - **Log sheet** — number pad, presets/recents row, tracker(s), date/time
   (defaults to now, tappable to change), optional name, Save. One section's
   trackers, or one loose tracker; its title is how you switch between them.
