@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 9), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 10), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -144,7 +144,32 @@ arguing against slotting a new tracker beside its group is stale — renumbering
 restamps `orderModified`, which exists precisely so a reorder cannot outrank an
 edit.
 
-## 5. History screen
+## 5. Log sheet polish, from first real use
+
+Three things that only showed up once the app was on a phone. All small, all on
+the common path, and all wanting judgement on the device rather than in a
+simulator — so they go in as one focused pass, then get used for a day before
+being called done.
+
+- [ ] **"Save" becomes "Log".** You are not saving a document, you are recording
+      that something happened, and *log* is the verb the whole product already
+      uses. Keep **Save** in the entry editor, where you genuinely are saving an
+      edit to something that already exists — different action, different word.
+- [ ] **Kill the presentation animation, or shorten it.** What is left after the
+      half-height fix is the standard sheet slide plus the keyboard behind it:
+      roughly half a second of watching before you can type, several times a
+      day, forever. Measure time-to-typeable before and after, the way the
+      step-3 review measured the detent. It is a displayed decision, so if
+      instant feels abrupt after a few days, reverting costs nothing.
+- [ ] **Move the confirm out of the nav bar and into the thumb.** See "Where a
+      tap lands matters as much as how many" in PHILOSOPHY.md. The best spot is
+      not the bottom of the sheet but **directly above the keyboard**, as a
+      keyboard toolbar item: the thumb is already on the number pad, a numeric
+      keypad has no return key to submit with, and a bar pinned above the digits
+      is the shortest travel there is. Cancel may not need to exist at all —
+      a sheet already dismisses by swiping down.
+
+## 6. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.
 A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited
@@ -154,7 +179,7 @@ Without it, fixing a mistyped food means opening each tracker's detail
 separately and deleting a row in each. It's the natural consumer of `batchID`,
 and it comes right after the log sheet that starts writing them.
 
-## 6. Export, import, CSV
+## 7. Export, import, CSV
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit
@@ -162,18 +187,18 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 7. CI
+## 8. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 8. Use it on a real phone for a week
+## 9. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 9. Search and repeat
+## 10. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -194,7 +219,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 10. App icon and asset catalog
+## 11. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
