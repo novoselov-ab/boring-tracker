@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 11), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 12), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -222,7 +222,30 @@ a control that visibly does nothing.
 
 Not on the common path, so it is judged by correctness rather than taps.
 
-## 7. History screen
+## 7. Put home's + in the thumb
+
+Found by the item 5 review, and it is the same mistake that item caught one
+screen earlier. Item 5 moved the log sheet's confirm into the thumb zone, but
+**the tap that opens the common path — home's + — is still in the nav bar**, at
+roughly 63pt from the top: the least reachable point on the screen, holding the
+single most frequent action in the app.
+
+PHILOSOPHY.md's "Where a tap lands matters as much as how many" argues against
+exactly this, so the principle was already written down before the button was
+built. Worth remembering that stating a rule doesn't apply it.
+
+- [ ] Move the primary **+** into the bottom third, in the thumb's arc.
+- [ ] Check the same question for every other frequent control while there —
+      settings is fine in the nav bar (touched weekly), but anything on the
+      common path is not.
+- [ ] Measure it the way item 5 was measured, and record the real method.
+
+Known and minor, worth folding in if it is cheap: dismissing the log sheet has a
+~2-frame content jump as the recents chip disappears and the form reflows before
+the sheet slides away. Pre-existing, and it happens while the sheet is already
+leaving.
+
+## 8. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.
 A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited
@@ -232,7 +255,7 @@ Without it, fixing a mistyped food means opening each tracker's detail
 separately and deleting a row in each. It's the natural consumer of `batchID`,
 and it comes right after the log sheet that starts writing them.
 
-## 8. Export, import, CSV
+## 9. Export, import, CSV
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit
@@ -240,18 +263,18 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 9. CI
+## 10. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 10. Use it on a real phone for a week
+## 11. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 11. Search and repeat
+## 12. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -272,7 +295,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 12. App icon and asset catalog
+## 13. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
