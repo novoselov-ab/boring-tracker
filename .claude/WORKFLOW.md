@@ -74,6 +74,18 @@ The loop needs a stopping rule or it ping-pongs on taste forever.
   need.
 - Performance on the common path — launch, opening the log sheet, saving.
 
+**Always check, not just read**
+
+A claimed measurement or a cited tool is a fact, and facts get verified. Item 5
+recorded a correct timing credited to "the same XCUI tap" — in a repo that has
+never had a UI test target. The number was right and its provenance was
+invented, which is worse than no number, because it survives scrutiny it never
+earned.
+
+So when a commit or a doc says something was measured, reproduce it; when it
+names a tool, confirm the tool exists here. This is the failure a code review
+is structurally weakest against, since nothing in the diff looks wrong.
+
 **Do not fix**
 
 - Style preferences and naming taste.
