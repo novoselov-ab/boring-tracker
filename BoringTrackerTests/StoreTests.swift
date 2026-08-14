@@ -335,9 +335,14 @@ struct StoreTests {
 
     @Test("Adding a grouped tracker slots it beside its group without editing other records")
     func addingATrackerSlotsItBesideItsGroup() {
+        // `orderModified` is set explicitly: left to default it would be now,
+        // and every assertion below that a position was restamped would pass
+        // whether or not `add` stamped anything.
         let store = makeStore(StoreDocument(trackers: [
-            Tracker(name: "Calories", sortIndex: 0, group: "Food", modified: time(1)),
-            Tracker(name: "Weight", sortIndex: 1, group: "Weight", modified: time(1)),
+            Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                    modified: time(1), orderModified: time(1)),
+            Tracker(name: "Weight", sortIndex: 1, group: "Weight",
+                    modified: time(1), orderModified: time(1)),
         ]))
         let beforeModified = store.trackers.map(\.modified)
 
@@ -348,6 +353,53 @@ struct StoreTests {
         #expect(store.trackers.map(\.name) == ["Calories", "Fiber", "Weight"])
         #expect([store.trackers[0].modified, store.trackers[2].modified] == beforeModified)
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
+        // Weight was pushed down, so its position genuinely changed and has to
+        // be stamped, or the other device keeps the index this one just took.
+        #expect(store.trackers[2].orderModified > time(1))
+    }
+
+    @Test("A new tracker sits beside the visible part of its group, not an archived one")
+    func addingATrackerIgnoresArchivedGroupMembers() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, group: "Food", modified: time(1)),
+            Tracker(name: "Weight", sortIndex: 1, group: "Weight", modified: time(1)),
+            Tracker(name: "Old protein", sortIndex: 2, isArchived: true, group: "Food",
+                    modified: time(1)),
+        ]))
+
+        // Slotting beside the archived row would drop Fiber at the very end,
+        // past the whole group it was supposed to sit next to.
+        store.add(Tracker(name: "Fiber", group: "Food"))
+
+        #expect(store.activeTrackers.map(\.name) == ["Calories", "Fiber", "Weight"])
+    }
+
+    @Test("Appending a tracker cannot discard a drag made on another device")
+    func addingATrackerDoesNotClobberARemoteReorder() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let phone = makeStore(StoreDocument(trackers: [calories, protein]))
+
+        // The iPad dragged Protein above Calories and told nobody yet.
+        var movedProtein = protein
+        movedProtein.sortIndex = 0
+        movedProtein.orderModified = time(2)
+        var movedCalories = calories
+        movedCalories.sortIndex = 1
+        movedCalories.orderModified = time(2)
+        let tablet = StoreDocument(trackers: [movedProtein, movedCalories])
+
+        // The phone only appended. Nothing already in the list moved, so it has
+        // expressed no opinion about their order — restamping them here would
+        // let this add outrank the drag and quietly undo it.
+        phone.add(Tracker(name: "Steps"))
+        #expect(phone.trackers.filter { $0.name != "Steps" }
+            .allSatisfy { $0.orderModified == time(1) })
+
+        let merged = phone.document.merged(with: tablet)
+        #expect(merged.trackers.map(\.name) == ["Protein", "Calories", "Steps"])
     }
 
     @Test("Adding a tracker on one device cannot undo an edit made on another")

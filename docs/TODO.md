@@ -140,9 +140,10 @@ once — and costs nothing on the common path, because settings is not on it.
 
 Two loose ends it resolves in passing: `Store.move` gets a production caller
 again (the flat list), so it stops being dead code; and `Store.add`'s comment
-arguing against slotting a new tracker beside its group is stale — renumbering
-restamps `orderModified`, which exists precisely so a reorder cannot outrank an
-edit.
+arguing against slotting a new tracker beside its group is stale — pushing rows
+down restamps `orderModified`, which exists precisely so a position change
+cannot outrank an edit. Appending still stamps nothing else, because nothing
+moved and there is no position to claim.
 
 ## 5. Log sheet polish, from first real use
 

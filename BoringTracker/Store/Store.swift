@@ -305,13 +305,23 @@ final class Store {
 
     // MARK: - Trackers
 
-    /// Slots a grouped tracker beside the last tracker in that group, so home
-    /// never has to draw one group under two headings. A loose tracker, or one
-    /// naming a group that does not exist yet, goes at the end.
+    /// Slots a grouped tracker beside the last visible tracker in that group, so
+    /// the settings list draws a new `Food` tracker next to the rest of Food
+    /// rather than at the bottom. A loose tracker, one naming a group that does
+    /// not exist yet, and one whose group is entirely archived all go at the
+    /// end — there is nothing on screen to sit beside.
     ///
-    /// Inserting renumbers the list and stamps `orderModified`, not `modified`.
-    /// That separation exists precisely so ordering cannot outrank an edit made
-    /// on another device; records whose content was untouched stay untouched.
+    /// Home does not need this. It draws blocks from `logGroups`, so a group is
+    /// drawn once wherever it first appears no matter where the record sits.
+    ///
+    /// Only a real insertion renumbers. Pushing rows down is a decision about
+    /// the whole list, so it stamps every row's `orderModified` and merges whole
+    /// (docs/TECH.md). Appending moves nothing, so it takes the next index and
+    /// leaves every other record alone: stamping there would let adding a
+    /// tracker here outrank, and silently discard, a drag made on another
+    /// device — which is a position nobody on this one expressed an opinion
+    /// about. Neither path touches `modified`, so an add can never outrank an
+    /// edit either.
     func add(_ tracker: Tracker) {
         var tracker = tracker
         let now = Date.stamp()
@@ -321,11 +331,17 @@ final class Store {
         tracker.orderModified = now
         let insertion = tracker.group.isEmpty
             ? trackers.endIndex
-            : trackers.lastIndex { $0.group == tracker.group }.map { $0 + 1 } ?? trackers.endIndex
-        trackers.insert(tracker, at: insertion)
-        for index in trackers.indices {
-            trackers[index].sortIndex = index
-            trackers[index].orderModified = now
+            : trackers.lastIndex { !$0.isArchived && $0.group == tracker.group }
+                .map { $0 + 1 } ?? trackers.endIndex
+        if insertion == trackers.endIndex {
+            tracker.sortIndex = (trackers.map(\.sortIndex).max() ?? -1) + 1
+            trackers.append(tracker)
+        } else {
+            trackers.insert(tracker, at: insertion)
+            for index in trackers.indices {
+                trackers[index].sortIndex = index
+                trackers[index].orderModified = now
+            }
         }
         scheduleSave()
     }

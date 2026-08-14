@@ -223,6 +223,22 @@ Two cheap additions make it work:
   is what keeps the merge commutative and associative; the fuzz tests hold it to
   all three over 400 seeds.
 
+  The mirror of "stamp the whole list" is that only a real position change may
+  stamp at all. Adding a tracker appends, and an append moves nothing — so it
+  takes the next index and leaves every other record's `orderModified` alone.
+  Restamping there let adding a tracker on the phone outrank, and silently
+  discard, a drag made on the iPad, which is a claim about an order nobody on
+  the phone had touched. Only slotting a grouped tracker in among its group
+  pushes rows down, and only that renumbers and stamps.
+
+  When it does stamp, it stamps every row, including the ones above the
+  insertion whose index provably did not change — with the same consequence a
+  drag has: a tracker added to a group on the phone beats a drag made on the
+  iPad an hour earlier. That is the trade taken knowingly, because the
+  alternative is stamping in part, which is the case above that two devices
+  interleave into an order neither chose. A partial stamp is worse than a
+  coarse one, so an insertion is a whole-list decision like any other.
+
   Not claimed: unique `sortIndex` after every merge. Two devices that each add a
   tracker can still pick the same index, and nothing renumbers across a merge.
   The `(sortIndex, id)` sort settles that deterministically, and the list is
