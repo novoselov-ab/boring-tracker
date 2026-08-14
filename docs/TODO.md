@@ -175,14 +175,24 @@ being called done.
       is the shortest travel there is. Cancel may not need to exist at all —
       a sheet already dismisses by swiping down.
 
-Measured from the first pressed frame to the first frame with a settled keypad,
-using the same XCUI tap and a 60 Hz capture on the iPhone 17 simulator: **75
-frames / 1.25 s before, 39 frames / 0.65 s after**. The sheet itself now appears
-in one captured frame; the remaining motion is the synthesized press and the
-system keypad animation. SwiftUI's native `.keyboard` toolbar placement emitted
-no visible accessory in this iOS 26 sheet, so the Log action uses a bottom
-safe-area inset instead. It follows the keypad to the requested position and
-remains available if the keypad is dismissed.
+Measured from the first frame showing the press to the first settled frame, on
+the iPhone 17 simulator: **1.25 s before, 0.65 s after**. Reproduced from a
+clean build in a later session, three runs each: 1.23–1.33 s before,
+0.65–0.66 s after. Half a second back, on the one path that runs several times
+a day.
+
+The method, since there is no UI test target to point at and the number is only
+worth as much as its repeatability: a synthesized tap, `xcrun simctl io
+recordVideo`, and a frame-by-frame diff of the recording. The recorder emits a
+frame only when the screen changes, so the first frame after the tap is the
+press and the last is the screen coming to rest — no frame counting by eye. The
+sheet itself now appears in a single frame; what is left is the system keypad
+animation, which the app does not own and cannot shorten.
+
+SwiftUI's native `.keyboard` toolbar placement emitted no visible accessory in
+this iOS 26 sheet, so the Log action uses a bottom safe-area inset instead. It
+sits directly above the keypad, drops to the bottom of the sheet if the keypad
+goes down, and lands in the same place on the smallest supported phone.
 
 ## 6. Make settings and home agree
 
