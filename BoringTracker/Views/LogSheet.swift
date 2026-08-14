@@ -76,7 +76,6 @@ struct LogSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
         .onAppear {
             // The keypad should already be up: tapping + goes straight to a
             // focused numeric field, with no intermediate screen.
