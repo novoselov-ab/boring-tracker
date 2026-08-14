@@ -73,9 +73,15 @@ struct HomeView: View {
     ///
     /// A run rather than a gather, so nothing jumps to the bottom of the screen
     /// for having no section, and a heading appears where the trackers that
-    /// share one happen to sit. Drag reorders within a run; moving a tracker
-    /// between sections is a drop under another heading, which lives in
-    /// settings where there is room for it.
+    /// share one happen to sit.
+    ///
+    /// Nothing here reorders. A `List` confines a drag to the `ForEach` it
+    /// started in, so drawn as a section per run a card alone under its own
+    /// heading cannot be moved at all and nothing can be dragged past a
+    /// heading — which is most of this screen for anyone whose trackers are
+    /// mostly loose. A drag that silently works on some cards and not others is
+    /// worse than one that isn't offered, so ordering lives in settings, where
+    /// the headings are rows and every card can reach every position.
     private var runs: [[Tracker]] {
         var result: [[Tracker]] = []
         for tracker in store.activeTrackers {
@@ -98,7 +104,12 @@ struct HomeView: View {
             // is a bare card (docs/PRODUCT.md). Nothing is gathered at the
             // bottom and there is no "Other" heading — having no section is the
             // normal state, not a leftover, and it needs no special case here.
-            ForEach(runs, id: \.self) { run in
+            // Keyed on the first card, not on the run itself: `Tracker` hashes
+            // over every stored property, including the two timestamps and the
+            // sort index that a reorder rewrites on every row. Keyed by value,
+            // one drag in settings changes the identity of every run, and the
+            // list is rebuilt from scratch instead of moving the row that moved.
+            ForEach(runs, id: \.first?.id) { run in
                 Section {
                     ForEach(run) { tracker in
                         TrackerCard(
@@ -109,9 +120,6 @@ struct HomeView: View {
                                                           tracker: tracker.id)
                             }
                         )
-                    }
-                    .onMove { offsets, destination in
-                        store.move(run, fromOffsets: offsets, toOffset: destination)
                     }
                 } header: {
                     if let section = run.first?.section, !section.isEmpty {
