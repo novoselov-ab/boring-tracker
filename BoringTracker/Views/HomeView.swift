@@ -68,8 +68,8 @@ struct HomeView: View {
         }
     }
 
-    /// The cards split into the blocks the list draws: one block per log group,
-    /// in the order the groups first appear.
+    /// The cards split into the same blocks settings draws: one block per log
+    /// group, in the order the groups first appear.
     ///
     /// Blocks are `LogGroup`s rather than runs of adjacent trackers, so what is
     /// drawn as one block is exactly what one + opens. A group's trackers need
@@ -84,15 +84,10 @@ struct HomeView: View {
     /// "Other" heading. Only a group's stragglers move, up to where that
     /// group already is.
     ///
-    /// Nothing here reorders. A `List` confines a drag to the `ForEach` it
-    /// started in, so drawn as a group per block a card alone under its own
-    /// heading cannot be moved at all and nothing can be dragged past a
-    /// heading — which is most of this screen for anyone whose trackers are
-    /// mostly loose. A drag that silently works on some cards and not others is
-    /// worse than one that isn't offered, so ordering lives in settings, where
-    /// every active tracker is one row in a flat list.
+    /// Nothing here reorders. Ordering lives in settings, where member drags
+    /// stay inside a run and a run itself moves as one block.
     private var runs: [[Tracker]] {
-        store.logGroups.map(store.trackers(in:))
+        store.activeTrackerRuns
     }
 
     private var list: some View {

@@ -206,12 +206,12 @@ returns second from top, because home gathers a group at its first member.
 A settings screen showing an order home will not honour is lying, and no amount
 of care in one screen fixes a disagreement between two.
 
-- [ ] **Settings draws the same shape as home** — a heading above each run of
+- [x] **Settings draws the same shape as home** — a heading above each run of
       trackers sharing a group, bare rows for loose ones. The two agree by
       construction, which is the only way they can be relied on to agree.
-- [ ] **Dragging within a run reorders that group's members; a group moves as a
+- [x] **Dragging within a run reorders that group's members; a group moves as a
       unit.**
-- [ ] **Membership still changes only in the tracker editor.** The *No group*
+- [x] **Membership still changes only in the tracker editor.** The *No group*
       heading and drop-target semantics stay gone — that part of item 4 was
       right and is not being reversed.
 

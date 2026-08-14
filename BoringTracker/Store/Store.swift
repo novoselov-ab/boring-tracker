@@ -169,6 +169,14 @@ final class Store {
         return result
     }
 
+    /// The blocks both home and settings draw: one named group gathered at its
+    /// first active tracker, and one block for each loose tracker. Keeping the
+    /// shape here means the two screens cannot disagree about what an order
+    /// means.
+    var activeTrackerRuns: [[Tracker]] {
+        logGroups.map(trackers(in:))
+    }
+
     /// The trackers one log writes to: a group's, or the single ungrouped
     /// tracker, in the order they are drawn.
     func trackers(in group: LogGroup) -> [Tracker] {
@@ -393,6 +401,42 @@ final class Store {
         reorder(reordered)
     }
 
+    /// Drops one visible tracker onto another. Within a block, the tracker
+    /// moves to the target's position. Across blocks, its entire source block
+    /// moves there instead — position never changes membership or splits a
+    /// named group.
+    func move(_ sourceID: UUID, onto targetID: UUID) {
+        guard sourceID != targetID else { return }
+        let runs = activeTrackerRuns
+        guard let sourceRun = runs.firstIndex(where: { run in
+                  run.contains { $0.id == sourceID }
+              }),
+              let targetRun = runs.firstIndex(where: { run in
+                  run.contains { $0.id == targetID }
+              }) else { return }
+
+        if sourceRun == targetRun {
+            var run = runs[sourceRun]
+            guard let source = run.firstIndex(where: { $0.id == sourceID }),
+                  let target = run.firstIndex(where: { $0.id == targetID }) else { return }
+            let tracker = run.remove(at: source)
+            // The original target index means "before" while moving upward
+            // and "after" while moving downward, matching a row dragged onto
+            // another row without needing a hidden drop zone at either edge.
+            run.insert(tracker, at: target)
+            reorder(run)
+        } else {
+            var orderedRuns = runs
+            let moved = orderedRuns.remove(at: sourceRun)
+            guard let target = orderedRuns.firstIndex(where: { run in
+                run.contains { $0.id == targetID }
+            }) else { return }
+            let insertion = sourceRun < targetRun ? target + 1 : target
+            orderedRuns.insert(moved, at: insertion)
+            reorderRuns(orderedRuns)
+        }
+    }
+
     /// Puts these trackers in this order without changing their membership.
     /// Group membership changes only through `update`, from the tracker editor.
     ///
@@ -406,6 +450,12 @@ final class Store {
               ids.count == ordered.count,
               ordered.allSatisfy({ previous[$0.id] != nil }) else { return }
 
+        // A drop back where it started expresses no new position. In
+        // particular, it must not acquire a fresh `orderModified` and outrank
+        // a real reorder made on another device.
+        let currentIDs = slots.map { trackers[$0].id }
+        guard currentIDs != ordered.map(\.id) else { return }
+
         var updated = trackers
         for (slot, tracker) in zip(slots, ordered) {
             // The row value identifies what moved; content always comes from
@@ -413,6 +463,51 @@ final class Store {
             // a stale or hand-built caller supplies different fields.
             updated[slot] = previous[tracker.id] ?? updated[slot]
         }
+        commitReorder(updated)
+    }
+
+    /// Reorders every stored tracker. Group moves use this so members hidden by
+    /// archiving travel with their group and cannot re-anchor it elsewhere when
+    /// they are later restored.
+    private func reorderAll(_ ordered: [Tracker]) {
+        let previous = Dictionary(trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        guard ordered.count == trackers.count,
+              Set(ordered.map(\.id)).count == trackers.count,
+              ordered.allSatisfy({ previous[$0.id] != nil }) else { return }
+        let updated = ordered.compactMap { previous[$0.id] }
+        commitReorder(updated)
+    }
+
+    /// Applies the order of the blocks the two screens display to the complete
+    /// stored list. Named groups are gathered with archived members included;
+    /// blocks that are entirely archived keep their block slot because they do
+    /// not participate in active ordering at all.
+    private func reorderRuns(_ orderedRuns: [[Tracker]]) {
+        var seenGroups: Set<String> = []
+        let blocks = trackers.compactMap { tracker -> [Tracker]? in
+            guard !tracker.group.isEmpty else { return [tracker] }
+            guard seenGroups.insert(tracker.group).inserted else { return nil }
+            return trackers.filter { $0.group == tracker.group }
+        }
+        let activeSlots = blocks.indices.filter { block in
+            blocks[block].contains { !$0.isArchived }
+        }
+        let orderedBlocks = orderedRuns.compactMap { run -> [Tracker]? in
+            guard let id = run.first?.id else { return nil }
+            return blocks.first { block in block.contains { $0.id == id } }
+        }
+        guard activeSlots.count == orderedBlocks.count else { return }
+
+        var updatedBlocks = blocks
+        for (slot, block) in zip(activeSlots, orderedBlocks) {
+            updatedBlocks[slot] = block
+        }
+        reorderAll(updatedBlocks.flatMap { $0 })
+    }
+
+    private func commitReorder(_ order: [Tracker]) {
+        guard order.map(\.id) != trackers.map(\.id) else { return }
+        var updated = order
         for index in updated.indices { updated[index].sortIndex = index }
 
         // A drag stamps ordering only. None of these records were edited, so

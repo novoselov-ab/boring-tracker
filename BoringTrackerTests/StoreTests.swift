@@ -443,37 +443,162 @@ struct StoreTests {
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2, 3])
     }
 
-    @Test("A flat-list reorder preserves group membership")
-    func reorderingPreservesGroups() {
+    @Test("Dragging within a run reorders its members without changing membership")
+    func reorderingWithinAGroup() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 2, group: "Food",
+                              modified: time(1), orderModified: time(1))
         let store = makeStore(StoreDocument(trackers: [
-            Tracker(name: "Calories", sortIndex: 0, group: "Food", modified: time(1)),
-            Tracker(name: "Protein", sortIndex: 1, group: "Food", modified: time(1)),
-            Tracker(name: "Weight", sortIndex: 2, group: "Weight", modified: time(1)),
+            calories,
+            Tracker(name: "Steps", sortIndex: 1,
+                    modified: time(1), orderModified: time(1)),
+            protein,
+            Tracker(name: "Weight", sortIndex: 3, group: "Weight",
+                    modified: time(1), orderModified: time(1)),
         ]))
 
-        store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        store.move(protein.id, onto: calories.id)
 
-        #expect(store.trackers.map(\.name) == ["Weight", "Calories", "Protein"])
-        #expect(store.trackers.map(\.group) == ["Weight", "Food", "Food"])
-        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
+        #expect(store.trackers.map(\.name) == ["Protein", "Steps", "Calories", "Weight"])
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [
+            ["Protein", "Calories"], ["Steps"], ["Weight"],
+        ])
+        #expect(store.trackers.map(\.group) == ["Food", "", "Food", "Weight"])
         // Nothing moved groups, so nothing counts as edited.
         #expect(store.trackers.allSatisfy { $0.modified == time(1) })
+        #expect(store.trackers.allSatisfy { $0.orderModified > time(1) })
     }
 
-    @Test("A loose tracker can be reordered above the first group")
-    func looseTrackerCanLeadTheList() {
+    @Test("Dragging a multi-member group downward keeps every member together")
+    func movingAGroupDownAsAUnit() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 2, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let cat = Tracker(name: "Cat weight", sortIndex: 3, group: "Weight",
+                          modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [calories, protein, weight, cat]))
+
+        store.move(calories.id, onto: weight.id)
+
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [
+            ["Weight", "Cat weight"], ["Calories", "Protein"],
+        ])
+        #expect(store.trackers.map(\.group) == ["Weight", "Weight", "Food", "Food"])
+        #expect(store.trackers.allSatisfy { $0.modified == time(1) })
+        #expect(store.trackers.allSatisfy { $0.orderModified > time(1) })
+    }
+
+    @Test("Dragging between runs moves a whole group past archived members")
+    func movingAGroupAsAUnit() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 3, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 4, group: "Weight",
+                             modified: time(1), orderModified: time(1))
         let store = makeStore(StoreDocument(trackers: [
-            Tracker(name: "Calories", sortIndex: 0, group: "Food", modified: time(1)),
-            Tracker(name: "Steps", sortIndex: 1, modified: time(1)),
-            Tracker(name: "Weight", sortIndex: 2, group: "Weight", modified: time(1)),
+            calories,
+            Tracker(name: "Old", sortIndex: 1, isArchived: true, group: "Food",
+                    modified: time(1), orderModified: time(1)),
+            Tracker(name: "Steps", sortIndex: 2,
+                    modified: time(1), orderModified: time(1)),
+            protein,
+            weight,
         ]))
 
-        store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 1), toOffset: 0)
+        // This is the old visible no-op: Weight is dropped on a member of Food.
+        // It cannot split Food now, so the Weight block moves before it.
+        store.move(weight.id, onto: protein.id)
 
-        #expect(store.trackers.map(\.name) == ["Steps", "Calories", "Weight"])
-        #expect(store.trackers.map(\.group) == ["", "Food", "Weight"])
-        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
-        #expect(store.groups == ["Food", "Weight"])
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [
+            ["Weight"], ["Calories", "Protein"], ["Steps"],
+        ])
+        #expect(store.trackers.map(\.name) == ["Weight", "Calories", "Old", "Protein", "Steps"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2, 3, 4])
+        #expect(store.trackers.allSatisfy { $0.modified == time(1) })
+        #expect(store.trackers.allSatisfy { $0.orderModified > time(1) })
+    }
+
+    @Test("A downward group move follows displayed order when the target is split in storage")
+    func movingDownOntoASplitGroupDoesNotSkipTheNextRun() {
+        let weight = Tracker(name: "Weight", sortIndex: 0, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let calories = Tracker(name: "Calories", sortIndex: 1, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let steps = Tracker(name: "Steps", sortIndex: 2,
+                            modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 3, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [weight, calories, steps, protein]))
+
+        store.move(weight.id, onto: calories.id)
+
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [
+            ["Calories", "Protein"], ["Weight"], ["Steps"],
+        ])
+        #expect(store.trackers.map(\.name) == ["Calories", "Protein", "Weight", "Steps"])
+    }
+
+    @Test("An archived member cannot re-anchor a group after the group moves")
+    func movingAGroupCarriesItsArchivedMembers() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, isArchived: true, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 2, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [calories, protein, weight]))
+
+        store.move(protein.id, onto: weight.id)
+
+        #expect(store.trackers.map(\.name) == ["Weight", "Calories", "Protein"])
+        var restored = store.trackers.first { $0.id == calories.id }!
+        restored.isArchived = false
+        store.update(restored)
+
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [
+            ["Weight"], ["Calories", "Protein"],
+        ])
+    }
+
+    @Test("Dropping where a tracker already sits does not claim a new order")
+    func reorderingNoOpDoesNotStamp() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [calories, protein]))
+
+        store.move(store.activeTrackerRuns[0], fromOffsets: IndexSet(integer: 0), toOffset: 1)
+        store.move(calories.id, onto: calories.id)
+
+        #expect(store.revision == 0)
+        #expect(store.trackers.map(\.orderModified) == [time(1), time(1)])
+    }
+
+    @Test("A group move and a rename on another device both survive the merge")
+    func groupMoveAndRenameDoNotCompete() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 2, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let phone = makeStore(StoreDocument(trackers: [calories, protein, weight]))
+        var renamed = protein
+        renamed.name = "Protein grams"
+        renamed.modified = time(2)
+        let tablet = StoreDocument(trackers: [calories, renamed, weight])
+
+        phone.move(weight.id, onto: protein.id)
+        let merged = phone.document.merged(with: tablet)
+
+        #expect(merged.trackers.map(\.name) == ["Weight", "Calories", "Protein grams"])
+        #expect(merged.trackers.first { $0.id == protein.id }?.group == "Food")
     }
 
     @Test("Editing a tracker is the only operation that changes its group")
