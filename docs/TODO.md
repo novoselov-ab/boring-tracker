@@ -1,7 +1,7 @@
 # TODO
 
 In implementation order. Short by design — if it's not here, it's either done
-or in the "not now" sections of [PRODUCT.md](PRODUCT.md).
+or in the "not now" parts of [PRODUCT.md](PRODUCT.md).
 
 The ordering follows one rule: **settle the stored document's shape before the
 first App Store release.** That is the freeze point, not daily use on our own
@@ -16,12 +16,12 @@ Nothing else can be tested without it — the app currently can't create a
 tracker, so it's stuck with the two it ships with. `Store` already has `add`,
 `update`, `delete`, `deleteWithHistory` and `move`, all tested and unreachable.
 
-Includes the `section` field, since the tracker editor is where you set it.
+Includes the `group` field, since the tracker editor is where you set it.
 
 - [x] Settings, reached from the home screen. One list; the tracker editor is
       the only subscreen, because five fields don't fit in a row.
-- [x] Create, edit, archive, and reorder by drag — within a section and between
-      them, where dropping under another heading sets the section.
+- [x] Create, edit, archive, and reorder by drag in one flat list. Group
+      membership is edited only in the tracker editor.
 - [x] Both deletions, labelled apart and explained, in the editor where there
       is room to say which is which.
 
@@ -29,9 +29,9 @@ Includes the `section` field, since the tracker editor is where you set it.
 
 One version bump, while there's no data to migrate:
 
-- [x] **`section` on Tracker.** A plain string, not a Group entity — sections
+- [x] **`group` on Tracker.** A plain string, not a Group entity — groups
       are display grouping, so there's nothing to manage, no empty groups and
-      no orphans. Pick from existing sections or type a new one.
+      no orphans. Pick from existing groups or type a new one.
 - [x] **`name` on Entry**, replacing `note`. One field, used as the label, and
       the thing search looks at.
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
@@ -42,7 +42,7 @@ One version bump, while there's no data to migrate:
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
 
-Default sections on first launch: **Food** (Calories, Protein) and **Weight**.
+Default groups on first launch: **Food** (Calories, Protein) and **Weight**.
 
 - [x] **`orderModified` on Tracker**, added after review. `sortIndex` is
       rewritten for every row a drag passes, so under one timestamp a reorder on
@@ -65,19 +65,19 @@ back over the original. That one matters from the first release, and it is not a
 migration system. A step from N to N+1 gets written the day there is a released
 version to migrate from, and it takes the older versions with it.
 
-## 3. The section log sheet — done
+## 3. The group log sheet — done
 
 The core loop, and the reason for all of the above: tap +, land straight in the
-last-used section's sheet with the keypad already up. Type 100 and 10,
+last-used group's sheet with the keypad already up. Type 100 and 10,
 optionally name it, save. One save, one batch.
 
-**+ must not open a section picker.** Choosing a section is a tap on the common
-path, and the common path is the product. Section switching lives inside the
+**+ must not open a group picker.** Choosing a group is a tap on the common
+path, and the common path is the product. Group switching lives inside the
 sheet, for the log that isn't the usual one.
 
 Measure the result in taps and milliseconds, not in whether it looks tidy.
 
-- [x] The sheet shows one log group — a section's trackers, or one loose
+- [x] The sheet shows one log group — a group's trackers, or one loose
       tracker on its own — and writes what was typed as a single batch.
 - [x] + opens the last-used group straight away, keypad up and the first field
       focused; a card's + opens that card's group, focused on it.
@@ -86,23 +86,24 @@ Measure the result in taps and milliseconds, not in whether it looks tidy.
 - [x] The last-used group lives in `UserDefaults`, not the document: it is UI
       state, so it must not sync, export, or appear in the store file.
 - [x] Home is one ordered list of cards, since that is where the sheet is
-      launched from: a run of trackers sharing a section gets that heading,
+      launched from: a run of trackers sharing a group gets that heading,
       everything else is a bare card, and nothing is gathered under "Other".
 
 **Two taps and a number** on the common path: + , type, Save. Three from a cold
 launch, counting the icon — the target in PRODUCT.md.
 
-## 4. Terminology pass
+## 4. Terminology pass — done
 
-Rename `section` to **group** everywhere — model, `Store`, views, tests, docs
-— and check `tracker` and `favourite` read right while in there. The reasoning
-is in the Vocabulary part of PRODUCT.md; this item is just the execution.
+Renamed the old grouping term to **group** everywhere — model, `Store`, views,
+tests, docs — and checked `tracker` and `favourite` while in there. The
+reasoning is in the Vocabulary part of PRODUCT.md; this item is just the
+execution.
 
-Its own session, with a test run: `section` reaches the model, the store, the
+Its own session, with a test run: `group` reaches the model, the store, the
 tracker editor, the log sheet and the tests, so it is mechanical but wide.
 
 **The rename must not smuggle in an entity.** "Group" sounds more like a noun
-than "section" did, and the next reasonable-seeming step is a `Group` type with
+than the old term did, and the next reasonable-seeming step is a `Group` type with
 an id and an ordering — which is the management screen this app has twice
 decided against. It stays a plain string on the tracker. See "Why a group is a
 string, not an entity" in TECH.md.
@@ -123,14 +124,14 @@ placed above the first group.
 
 So separate the two jobs:
 
-- [ ] **Settings becomes one flat, reorderable list** of every tracker — a
+- [x] **Settings becomes one flat, reorderable list** of every tracker — a
       single `ForEach`, no headings — with each row showing its group as a
       subtitle. Ordering only.
-- [ ] **Membership changes only in the editor's group field**, where it already
+- [x] **Membership changes only in the editor's group field**, where it already
       works and is typo-proof (None / existing / New…).
-- [ ] The *No section* heading disappears with nothing to replace it, and no
+- [x] The *No group* heading disappears with nothing to replace it, and no
       drop-target semantics are needed anywhere.
-- [ ] **Home is unchanged**: still one ordered list drawing a heading above each
+- [x] **Home is unchanged**: still one ordered list drawing a heading above each
       run of trackers that share a group.
 
 This kills the forbidden heading, the drop-target ambiguity, the two

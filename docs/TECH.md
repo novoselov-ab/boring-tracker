@@ -258,7 +258,7 @@ struct Tracker: Codable, Identifiable, Hashable {
     var decimals: Int
     var sortIndex: Int
     var isArchived: Bool
-    var section: String     // "" when the tracker isn't grouped
+    var group: String       // "" when the tracker isn't grouped
     var modified: Date      // every field but sortIndex
     var orderModified: Date // sortIndex only — see "Mergeable by design"
 }
@@ -276,19 +276,18 @@ struct Entry: Codable, Identifiable, Hashable {
 Entries reference trackers by id rather than nesting, so deleting a tracker
 and keeping its history is a decision rather than a cascade.
 
-What one save writes is a **log group** — a section when the trackers are logged
+What one save writes is a **log group** — a group when the trackers are logged
 together, a single tracker when it isn't in one. It is an enum computed from
-`Tracker.section` at read time, never stored, so it is a displayed decision and
-free to rework. It exists because the alternative was to treat "no section" as a
-section, which puts unrelated trackers in one sheet and claims something untrue
+`Tracker.group` at read time, never stored, so it is a displayed decision and
+free to rework. It exists because the alternative was to treat "no group" as a
+group, which puts unrelated trackers in one sheet and claims something untrue
 about them.
 
-`section` is a string and `name` is a label, both for the same reason: the
+`group` is a string and `name` is a label, both for the same reason: the
 alternative is a record to create, clean up and merge. PRODUCT.md says what
-each one means. Sort order is read per section rather than stored that way —
-`sortIndex` stays one run over all trackers, and the section a tracker carries
-decides which heading that run is drawn under, so moving between sections needs
-no second ordering to keep in step.
+each one means. `sortIndex` is one global run over all trackers. Ordering and
+membership are independent: settings changes `sortIndex`; the tracker editor
+changes `group`.
 
 There is no `Pin`. Saved presets were replaced by searching your own named
 entries, which is a feature delivered by removing a type rather than adding
@@ -360,7 +359,7 @@ So they don't get re-argued mid-build:
   the only thing the app keeps outside the store file. It is what + opens, so
   it is UI state rather than data: it must not sync between devices, must not
   turn up in an export, and must not be a field somebody else's history has to
-  carry. It holds a `LogGroup` in string form — `section:Food` or
+  carry. It holds a `LogGroup` in string form — `group:Food` or
   `tracker:<uuid>` — and anything that no longer resolves means + falls back to
   the first group on the home screen. A stale string costs nothing.
 - **No analytics, no crash reporter, no launch screen image.** Rules 5 and the

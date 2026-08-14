@@ -35,81 +35,77 @@ A tracker has:
 
 No goal field. See "Decided against" below — the number is the feature.
 
-### Section
+### Group
 
-Trackers that get logged **at the same time** share a section. `Food` holds
+Trackers that get logged **at the same time** share a group. `Food` holds
 Calories and Protein; `Weight` holds your weight, and later your cat's.
 
-A section is **a string on the tracker, not an entity.** There is nothing to
-create, nothing to manage, no empty sections and no orphans — you pick an
+A group is **a string on the tracker, not an entity.** There is nothing to
+create, nothing to manage, no empty groups and no orphans — you pick an
 existing one or type a new one while editing a tracker. That's deliberate: the
-moment sections get their own screen, this app has grown the management UI it
+moment groups get their own screen, this app has grown the management UI it
 exists to avoid.
 
 It earns its place for one reason. With a dozen trackers, tapping + would open
-a dozen-item list to scroll, which breaks rule 7. A section collapses that to
+a dozen-item list to scroll, which breaks rule 7. A group collapses that to
 one sheet with a handful of fields — the same "one sheet, both numbers, one
 save" requirement below, reached from the other direction.
 
-**A tracker with no section is logged on its own.** Being in no section is not
-itself a section: your cigarettes and your pushups share nothing but the absence
+**A tracker with no group is logged on its own.** Being in no group is not
+itself a group: your cigarettes and your pushups share nothing but the absence
 of a name, so one sheet holding both would claim they are logged at the same
-time, which is the one thing a section means. Tapping + on a loose tracker gives
-you one field. Sections are for the trackers that genuinely arrive together, and
+time, which is the one thing a group means. Tapping + on a loose tracker gives
+you one field. Groups are for the trackers that genuinely arrive together, and
 most people will have one or two of them and a pile of loose trackers.
 
 **Critically, choosing what to log must not cost a tap.** Tapping + opens the
-last-used sheet immediately, keyboard already up — a section's, or a single
+last-used sheet immediately, keyboard already up — a group's, or a single
 tracker's. Switching happens *inside* the sheet, from its title, for the rare
 log that isn't the usual one. The list behind that title is the dozen-item list
 this design exists to avoid putting *in front* of you; a picker before every log
-is precisely the friction this app exists to delete. If sections ever add a step
+is precisely the friction this app exists to delete. If groups ever add a step
 to the common path, they have failed and should be removed.
 
-Ordering works two ways, both by dragging: **within** a section to choose which
-tracker comes first, and **between** sections, where dropping a tracker under a
-different heading is what changes its section. Editing the string in the
-tracker editor does the same thing, but dragging is the obvious gesture and
-should exist. Sort order is therefore per section, not global.
+Ordering and membership are deliberately separate. Settings is one flat list
+of every active tracker; dragging changes only the global order. A tracker's
+group changes only in its editor, using **None**, an existing group, or **New
+Group…**. Position never implies membership.
 
 First launch starts with **Food** and **Weight**.
 
-### A tracker with no section
+### A tracker with no group
 
 Most trackers don't belong with anything. You want to count sneezes per day and
 that is the entire requirement — there is nothing to log it alongside.
 
-**So no section is not a state with a name.** Such a tracker is simply a card
+**So no group is not a state with a name.** Such a tracker is simply a card
 with no heading above it, and its + opens a sheet with one field.
 
 There is no *Ungrouped* or *Other* heading, ever. That would be filing
 bureaucracy appearing for the person who least asked for it: someone tracking
 one number has no organisational problem to solve, and a heading called "Other"
 tells them they failed to file something. It also frames the plain case as the
-exception, which is backwards — having no section is the normal state, and a
-section is what gets earned when two numbers genuinely come from one event.
+exception, which is backwards — having no group is the normal state, and a
+group is what gets earned when two numbers genuinely come from one event.
 
 The home screen therefore needs no special case: it is **one ordered list of
-cards**, where a section gets a heading above its trackers and every other
+cards**, where a group gets a heading above its trackers and every other
 tracker is a bare card where it already sits.
 
 The blocks are the things you log in one go, so what is drawn as one block is
-exactly what one + opens. A section's trackers are drawn together even if they
-aren't next to each other in the list — a section appearing twice under two
+exactly what one + opens. A group's trackers are drawn together even if they
+aren't next to each other in the list — a group appearing twice under two
 identical headings would be claiming a grouping the sheet then contradicts.
-Only a section's stragglers move, up to where that section already is; nothing
+Only a group's stragglers move, up to where that group already is; nothing
 is gathered at the bottom.
 
-**Arranging that list happens in settings, not here.** Drawing the blocks
-separately is what makes the grouping readable, and a `List` confines a drag to
-the block it started in — so on home a card alone under its own heading could
-not be dragged at all, which is most of the screen for anyone whose trackers
-are mostly loose. A drag that works on some cards and not others is worse than
-one that isn't offered. Settings draws the same trackers with the headings as
-rows, so a card can be dragged past one, and a drop under another heading is
-what changes a section.
+**Arranging that list happens in settings, not here.** Settings draws every
+active tracker in one flat reorderable list, without headings. Each grouped
+tracker shows its group as a subtitle. Dragging changes only order; membership
+changes only in the tracker editor, so a loose tracker can sit anywhere and no
+drop gesture needs to mean "remove from group."
 
-Nor does the code: **the log sheet always takes a set of trackers.** A section
+Nor does the code: **the log sheet always takes a set of trackers.** A group
 is a named set; a lone tracker is a set of one. Same sheet, same one-save-one-
 batch, no branching — and + returning to whatever you last logged works the
 same either way.
@@ -165,13 +161,13 @@ do you want to track?"* rather than announcing that you have no trackers. That
 leaves roughly one button and the App Store description, which is the right
 amount of exposure for a word we are not certain about.
 
-**Group, not section.** "Section" describes a UI accident — a part of a list on
-one screen. "Group" describes the intent: these things belong together. It is
+**Group.** The old term described a UI accident — a part of a list on one
+screen. "Group" describes the intent: these things belong together. It is
 also the verb people reach for unprompted ("I want to *group* them as Honda
-wheels"). "Section" scores zero in consumer descriptions.
+wheels"). The old term scores zero in consumer descriptions.
 
 The example that settles it: left and right tire pressure, grouped as `Honda
-wheels`. That is not a *category* of tracker and not a section of anything —
+wheels`. That is not a *category* of tracker or merely a part of a list —
 it is one event that produces two numbers. Which is what a group means, and why
 it earns its place at all: **some measurements only make sense taken together.**
 Logging half of a pair is nearly useless, so the app must never make you do it
@@ -250,7 +246,7 @@ So, in order of importance:
    if allowed to.
 3. **One food, one sheet, one save.** Calories and protein come from the same
    meal. Typing them in two separate flows is the single most annoying thing
-   this app could do — so the sheet takes the whole section at once, plus a
+   this app could do — so the sheet takes the whole group at once, plus a
    name, and writes it as one batch.
 4. **The keypad is already up.** Tapping + goes straight to a numeric field
    with focus. No intermediate screen, no picker, no "choose a category".
@@ -270,7 +266,7 @@ Small enough to list completely.
   a + button. Measurement cards show the latest reading and when. That's the
   whole main screen — arranging the list is a settings job.
 - **Log sheet** — number pad, presets/recents row, tracker(s), date/time
-  (defaults to now, tappable to change), optional name, Save. One section's
+  (defaults to now, tappable to change), optional name, Save. One group's
   trackers, or one loose tracker; its title is how you switch between them.
   Backdating is first-class: you *will* forget dinner until the next morning.
 - **History** — everything you've logged, newest first, grouped by day. Today
@@ -283,7 +279,8 @@ Small enough to list completely.
 - **Graph** — daily totals as bars, measurements as a line with a moving
   average. Range switch: week / month / year / all. Nothing interactive beyond
   scrubbing for a value.
-- **Settings** — trackers (add/edit/archive/reorder), export, import,
+- **Settings** — one flat list of trackers (add/edit/archive/reorder), with a
+  group subtitle where there is one; export, import,
   appearance, about + link to the GitHub repo. One screen, no subscreens if
   avoidable.
 
@@ -292,9 +289,9 @@ Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 ## First launch
 
 The app is useful immediately or the promise is broken. On first launch there
-are already trackers: **Calories** and **Protein** in a **Food** section, both
+are already trackers: **Calories** and **Protein** in a **Food** group, both
 daily totals, and **Weight** in its own, no goals set. You can log something
-before you've configured anything, and the two sections mean the section log
+before you've configured anything, and the two groups mean the group log
 sheet has something to be about on day one. Deleting any of them takes a few
 taps in settings if you're here for the cat.
 

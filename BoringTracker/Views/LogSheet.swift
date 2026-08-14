@@ -3,8 +3,8 @@ import SwiftUI
 /// One log group's number pad: the trackers you write at the same time, a name,
 /// when it happened, save.
 ///
-/// The sheet covers a `LogGroup` — a section when the trackers are logged
-/// together, and one tracker on its own when it isn't in a section. Calories and
+/// The sheet covers a `LogGroup` — a group when the trackers are logged
+/// together, and one tracker on its own when it isn't in a group. Calories and
 /// protein come from the same meal, so they are one sheet and one save; your
 /// weight is not, and your cigarettes are not, so neither is in the way. Filling
 /// in a second field costs one extra tap, not a second trip through the sheet.
@@ -112,7 +112,7 @@ struct LogSheet: View {
     /// use for the rare log that isn't the usual one. A picker in *front* of the
     /// sheet would cost that tap every single time.
     ///
-    /// The menu lists every section and every loose tracker — with a dozen
+    /// The menu lists every group and every loose tracker — with a dozen
     /// trackers that is a dozen rows, which is exactly the list PRODUCT.md says
     /// must never be in the way. Behind the title it isn't: the common path
     /// never opens it.
@@ -146,11 +146,11 @@ struct LogSheet: View {
         }
     }
 
-    /// What to call a group on screen: the section's name, or the tracker's own.
-    /// A loose tracker is not "Other" or "No section" — it is Cigarettes.
+    /// What to call a group on screen: the group's name, or the tracker's own.
+    /// A loose tracker is not "Other" or "No group" — it is Cigarettes.
     private func label(_ group: LogGroup) -> String {
         switch group {
-        case .section(let name): name
+        case .group(let name): name
         case .tracker(let id): store.tracker(id)?.name ?? "Log"
         }
     }
@@ -227,10 +227,10 @@ struct LogSheet: View {
 }
 
 #Preview {
-    let calories = Tracker(name: "Calories", unit: "kcal", section: "Food")
-    let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, section: "Food")
+    let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+    let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food")
     let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
-                         sortIndex: 2, section: "Weight")
+                         sortIndex: 2, group: "Weight")
     // Loose, so its sheet is one field — the case the menu has to name properly.
     let cigarettes = Tracker(name: "Cigarettes", sortIndex: 3)
     let store = Store(
@@ -243,6 +243,6 @@ struct LogSheet: View {
         ),
         file: StoreFile(directory: URL.temporaryDirectory.appending(path: "preview-log"))
     )
-    return LogSheet(target: .init(group: .section("Food"), tracker: calories.id))
+    return LogSheet(target: .init(group: .group("Food"), tracker: calories.id))
         .environment(store)
 }

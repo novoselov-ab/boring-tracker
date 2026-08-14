@@ -77,7 +77,7 @@ extension StoreDocument {
                     // could never disagree about where a tracker sits and the
                     // whole position-merge path went untested.
                     sortIndex: Int.random(in: 0...5, using: &random),
-                    section: ["Food", "Weight", ""].randomElement(using: &random)!,
+                    group: ["Food", "Weight", ""].randomElement(using: &random)!,
                     modified: time(Int.random(in: 0...20, using: &random)),
                     // Drawn independently of `modified`, because the whole
                     // point of the second stamp is that the two move apart:

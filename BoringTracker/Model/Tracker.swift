@@ -24,11 +24,11 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     /// Protein; `Weight` holds your weight, and later the cat's.
     ///
     /// Deliberately a string rather than an entity: there is nothing to create,
-    /// nothing to manage, no empty sections and no orphans. Empty means the
+    /// nothing to manage, no empty groups and no orphans. Empty means the
     /// tracker isn't grouped with anything. See docs/PRODUCT.md — the moment
-    /// sections get their own screen, this app has grown the management UI it
+    /// groups get their own screen, this app has grown the management UI it
     /// exists to avoid.
-    var section: String = ""
+    var group: String = ""
     /// When this record last changed. Used to resolve edits made on two
     /// devices — newer wins. See "Mergeable by design" in docs/TECH.md.
     ///
@@ -106,11 +106,11 @@ extension Tracker {
     static var starterSet: [Tracker] {
         [
             Tracker(name: "Calories", unit: "kcal", kind: .dailyTotal, sortIndex: 0,
-                    section: "Food"),
+                    group: "Food"),
             Tracker(name: "Protein", unit: "g", kind: .dailyTotal, sortIndex: 1,
-                    section: "Food"),
+                    group: "Food"),
             Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 2,
-                    section: "Weight"),
+                    group: "Weight"),
         ]
     }
 }

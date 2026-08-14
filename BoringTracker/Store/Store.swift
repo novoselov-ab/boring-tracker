@@ -132,61 +132,33 @@ final class Store {
         trackers.filter(\.isArchived)
     }
 
-    /// The sections that exist, in the order their trackers appear.
+    /// The groups that exist, in the order their trackers appear.
     ///
     /// Derived every time rather than stored, because there is no list of
-    /// sections anywhere — a section is a string on a tracker (docs/PRODUCT.md),
-    /// so this cannot go stale, leave an empty section behind, or orphan one.
-    /// Archived trackers count: their section should still be offered rather
+    /// groups anywhere — a group is a string on a tracker (docs/PRODUCT.md),
+    /// so this cannot go stale, leave an empty group behind, or orphan one.
+    /// Archived trackers count: their group should still be offered rather
     /// than reappearing as a new one the moment something is unarchived.
-    var sections: [String] {
+    var groups: [String] {
         var seen = Set<String>()
         var result: [String] = []
-        for tracker in trackers where !tracker.section.isEmpty {
-            if seen.insert(tracker.section).inserted { result.append(tracker.section) }
+        for tracker in trackers where !tracker.group.isEmpty {
+            if seen.insert(tracker.group).inserted { result.append(tracker.group) }
         }
         return result
     }
 
-    /// The headings the settings list draws, in the order their first tracker
-    /// appears, with the unsectioned ones gathered under `""` at the end.
-    ///
-    /// Deliberately not the same list as `sections`. That one names the sections
-    /// to offer in the tracker editor, so it counts archived trackers and has no
-    /// entry for "not grouped with anything". This one is what settings puts on
-    /// screen, where the trailing `""` is the "No section" heading you drop a
-    /// tracker under to take it out of one.
-    ///
-    /// Not what the home screen draws: home has no such heading, because being
-    /// in no section is not a section. It draws `logGroups`, where an ungrouped
-    /// tracker stands on its own — which is also what gets logged together.
-    var activeSections: [String] {
-        var seen = Set<String>()
-        var named: [String] = []
-        var anyUnsectioned = false
-        for tracker in trackers where !tracker.isArchived {
-            if tracker.section.isEmpty {
-                anyUnsectioned = true
-            } else if seen.insert(tracker.section).inserted {
-                named.append(tracker.section)
-            }
-        }
-        return anyUnsectioned ? named + [""] : named
-    }
-
-    /// The active trackers in one section, in the order they are drawn — which
+    /// The active trackers in one group, in the order they are drawn — which
     /// is the order their fields appear in the log sheet.
-    func trackers(inSection section: String) -> [Tracker] {
-        trackers.filter { !$0.isArchived && $0.section == section }
+    func trackers(inGroup group: String) -> [Tracker] {
+        trackers.filter { !$0.isArchived && $0.group == group }
     }
 
     /// Everything you can log in one go, in the order the home screen draws it:
-    /// each section once, and every ungrouped tracker on its own.
+    /// each group once, and every ungrouped tracker on its own.
     ///
-    /// This is the list the log sheet switches between. It is longer than
-    /// `activeSections` for anyone whose trackers are mostly loose, and that is
-    /// the point — the list belongs *behind* the sheet, never in front of it
-    /// (docs/PRODUCT.md).
+    /// This is the list the log sheet switches between. The list belongs
+    /// *behind* the sheet, never in front of it (docs/PRODUCT.md).
     var logGroups: [LogGroup] {
         var seen = Set<String>()
         var result: [LogGroup] = []
@@ -197,17 +169,17 @@ final class Store {
         return result
     }
 
-    /// The trackers one save writes to: a section's, or the single ungrouped
+    /// The trackers one save writes to: a group's, or the single ungrouped
     /// tracker, in the order they are drawn.
     func trackers(in group: LogGroup) -> [Tracker] {
         switch group {
-        case .section(let name): trackers(inSection: name)
+        case .group(let name): trackers(inGroup: name)
         case .tracker(let id): tracker(id).map { $0.isArchived ? [] : [$0] } ?? []
         }
     }
 
     /// What tapping + opens: what you logged last, or the first thing on the
-    /// home screen if that is gone — archived, deleted, or moved into a section.
+    /// home screen if that is gone — archived, deleted, or moved into a group.
     ///
     /// Takes the remembered group as the plain string it is stored as, because
     /// what comes back out of `UserDefaults` is exactly that, and deciding
@@ -333,22 +305,13 @@ final class Store {
 
     // MARK: - Trackers
 
-    /// Appends, and touches nothing else.
+    /// Slots a grouped tracker beside the last tracker in that group, so home
+    /// never has to draw one group under two headings. A loose tracker, or one
+    /// naming a group that does not exist yet, goes at the end.
     ///
-    /// It is tempting to slot a new tracker in beside the rest of its section,
-    /// because settings draws this one flat run grouped under headings and the
-    /// home screen draws it flat — so a new `Food` tracker appears in a
-    /// different place on each. Doing it here costs more than it fixes.
-    /// Inserting means renumbering `sortIndex`, renumbering means restamping
-    /// `modified` on trackers the user never touched, and `modified` is what
-    /// decides a merge: adding a tracker on this phone would then beat, and
-    /// silently discard, a rename made on the iPad an hour earlier. A record
-    /// nobody edited must not look edited.
-    ///
-    /// Nor would it work. `update` leaves a tracker where it is when its section
-    /// changes, so the same disagreement returns by the other door. The two
-    /// screens agreeing is a *displayed* decision (docs/TECH.md) and belongs
-    /// wherever they are drawn, not in the stored order.
+    /// Inserting renumbers the list and stamps `orderModified`, not `modified`.
+    /// That separation exists precisely so ordering cannot outrank an edit made
+    /// on another device; records whose content was untouched stay untouched.
     func add(_ tracker: Tracker) {
         var tracker = tracker
         let now = Date.stamp()
@@ -356,8 +319,14 @@ final class Store {
         // Both stamps: it is a new record and it is taking a place in the list
         // for the first time, so neither is inherited from anywhere.
         tracker.orderModified = now
-        tracker.sortIndex = (trackers.map(\.sortIndex).max() ?? -1) + 1
-        trackers.append(tracker)
+        let insertion = tracker.group.isEmpty
+            ? trackers.endIndex
+            : trackers.lastIndex { $0.group == tracker.group }.map { $0 + 1 } ?? trackers.endIndex
+        trackers.insert(tracker, at: insertion)
+        for index in trackers.indices {
+            trackers[index].sortIndex = index
+            trackers[index].orderModified = now
+        }
         scheduleSave()
     }
 
@@ -408,31 +377,31 @@ final class Store {
         reorder(reordered)
     }
 
-    /// Puts these trackers in this order, taking whatever section each of them
-    /// now carries.
-    ///
-    /// Section comes along for the ride because dragging a tracker under a
-    /// different heading is how you move it between sections (docs/PRODUCT.md).
-    /// The caller has already worked out where each row landed, so this is one
-    /// operation rather than a move and then an edit that could half-apply.
+    /// Puts these trackers in this order without changing their membership.
+    /// Group membership changes only through `update`, from the tracker editor.
     ///
     /// Trackers not in `ordered` — the archived ones, normally — keep the slots
     /// they already occupied, so sorting the visible list never disturbs them.
     func reorder(_ ordered: [Tracker]) {
         let ids = Set(ordered.map(\.id))
         let slots = trackers.indices.filter { ids.contains(trackers[$0].id) }
-        guard slots.count == ordered.count else { return }
+        let previous = Dictionary(trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        guard slots.count == ordered.count,
+              ids.count == ordered.count,
+              ordered.allSatisfy({ previous[$0.id] != nil }) else { return }
 
         var updated = trackers
-        for (slot, tracker) in zip(slots, ordered) { updated[slot] = tracker }
+        for (slot, tracker) in zip(slots, ordered) {
+            // The row value identifies what moved; content always comes from
+            // the store. This keeps reorder an ordering-only operation even if
+            // a stale or hand-built caller supplies different fields.
+            updated[slot] = previous[tracker.id] ?? updated[slot]
+        }
         for index in updated.indices { updated[index].sortIndex = index }
 
-        // Two stamps, because a drag does two different things. Moving a row
-        // renumbers every row it passed, and none of those were edited — they
-        // get `orderModified`, which merges on its own so a reorder here cannot
-        // outrank a rename made on another device. Being dropped under a
-        // different heading *is* an edit, to `section`, and gets `modified`.
-        let previous = Dictionary(trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        // A drag stamps ordering only. None of these records were edited, so
+        // `modified` must stay put and a reorder cannot outrank a rename made
+        // on another device.
         let now = Date.stamp()
         for index in updated.indices {
             // Every row, not just the ones whose number changed. A drag settles
@@ -442,11 +411,6 @@ final class Store {
             // the other, landing on duplicate indices and an order neither of
             // them chose. Stamped whole, the later reorder simply wins whole.
             updated[index].orderModified = now
-            guard let before = previous[updated[index].id] else { continue }
-            var withoutPosition = updated[index]
-            withoutPosition.sortIndex = before.sortIndex
-            withoutPosition.orderModified = before.orderModified
-            if withoutPosition != before { updated[index].modified = now }
         }
         trackers = updated
         scheduleSave()
@@ -603,37 +567,37 @@ final class Store {
 
 /// The trackers one trip through the log sheet writes to.
 ///
-/// A section when the trackers are logged together — calories and protein from
+/// A group when the trackers are logged together — calories and protein from
 /// the same meal — and a single tracker when it isn't in one. Being in no
-/// section is *not* a section: your cigarettes and your pushups share nothing
+/// group is *not* a group: your cigarettes and your pushups share nothing
 /// but the absence of a name, so putting them in one sheet would claim they are
 /// logged at the same time. One field is the honest sheet for either of them.
 ///
-/// Nothing about this is stored. It is computed from `Tracker.section` at read
+/// Nothing about this is stored. It is computed from `Tracker.group` at read
 /// time, which makes it a displayed decision (docs/TECH.md) — it can be
 /// reworked after a week of real use with no migration and nothing to convert.
 /// The one exception is the string form below, which is small on purpose.
 enum LogGroup: Hashable, Sendable {
-    /// Never empty — an empty section string is the ungrouped case.
-    case section(String)
+    /// Never empty — an empty group string is the ungrouped case.
+    case group(String)
     case tracker(UUID)
 
     /// Where this tracker gets logged.
     init(of tracker: Tracker) {
-        self = tracker.section.isEmpty ? .tracker(tracker.id) : .section(tracker.section)
+        self = tracker.group.isEmpty ? .tracker(tracker.id) : .group(tracker.group)
     }
 }
 
 extension LogGroup: RawRepresentable {
 
     /// A string, because the last-used group lives in `UserDefaults` and that is
-    /// what fits there. Prefixed so a section named like a UUID cannot be read
+    /// what fits there. Prefixed so a group named like a UUID cannot be read
     /// back as a tracker; the value is never inspected anywhere else, and a
     /// string that no longer resolves just means + opens the first group.
     init?(rawValue: String) {
-        if let name = rawValue.dropPrefix("section:") {
+        if let name = rawValue.dropPrefix("group:") {
             guard !name.isEmpty else { return nil }
-            self = .section(name)
+            self = .group(name)
         } else if let id = rawValue.dropPrefix("tracker:").flatMap(UUID.init(uuidString:)) {
             self = .tracker(id)
         } else {
@@ -643,7 +607,7 @@ extension LogGroup: RawRepresentable {
 
     var rawValue: String {
         switch self {
-        case .section(let name): "section:\(name)"
+        case .group(let name): "group:\(name)"
         case .tracker(let id): "tracker:\(id.uuidString)"
         }
     }

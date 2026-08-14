@@ -72,25 +72,25 @@ struct HomeView: View {
     /// in the order the groups first appear.
     ///
     /// Blocks are `LogGroup`s rather than runs of adjacent trackers, so what is
-    /// drawn as one block is exactly what one + opens. A section's trackers need
-    /// not sit next to each other — `Store.add` appends a new one at the end and
-    /// `update` leaves a tracker's position alone when its section changes — and
-    /// grouping by adjacency drew a section under two identical headings while
+    /// drawn as one block is exactly what one + opens. A group's trackers need
+    /// not sit next to each other — `update` leaves a tracker's position alone
+    /// when its group changes — and
+    /// grouping by adjacency drew a group under two identical headings while
     /// the sheet behind either one held all of it. The screen was contradicting
     /// the sheet it launches.
     ///
     /// Still not a gather: every loose tracker is its own group, so nothing
-    /// jumps to the bottom of the screen for having no section and there is no
-    /// "Other" heading. Only a section's stragglers move, up to where that
-    /// section already is.
+    /// jumps to the bottom of the screen for having no group and there is no
+    /// "Other" heading. Only a group's stragglers move, up to where that
+    /// group already is.
     ///
     /// Nothing here reorders. A `List` confines a drag to the `ForEach` it
-    /// started in, so drawn as a section per block a card alone under its own
+    /// started in, so drawn as a group per block a card alone under its own
     /// heading cannot be moved at all and nothing can be dragged past a
     /// heading — which is most of this screen for anyone whose trackers are
     /// mostly loose. A drag that silently works on some cards and not others is
     /// worse than one that isn't offered, so ordering lives in settings, where
-    /// the headings are rows a card can be dragged past.
+    /// every active tracker is one row in a flat list.
     private var runs: [[Tracker]] {
         store.logGroups.map(store.trackers(in:))
     }
@@ -100,11 +100,11 @@ struct HomeView: View {
             if let notice = LoadNotice(origin: store.origin, saveError: store.saveError) {
                 Section { NoticeRow(notice: notice) }
             }
-            // One ordered list, in the order the groups first appear: a section
+            // One ordered list, in the order the groups first appear: a group
             // gets its heading over its trackers, and every loose tracker is a
             // bare card where it already sits (docs/PRODUCT.md). Nothing is
             // gathered at the bottom and there is no "Other" heading — having
-            // no section is the normal state, not a leftover, and it needs no
+            // no group is the normal state, not a leftover, and it needs no
             // special case here.
             // Keyed on the first card, not on the run itself: `Tracker` hashes
             // over every stored property, including the two timestamps and the
@@ -124,8 +124,8 @@ struct HomeView: View {
                         )
                     }
                 } header: {
-                    if let section = run.first?.section, !section.isEmpty {
-                        Text(section)
+                    if let group = run.first?.group, !group.isEmpty {
+                        Text(group)
                     }
                 }
             }

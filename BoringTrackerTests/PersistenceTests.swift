@@ -6,11 +6,11 @@ import Testing
 struct PersistenceTests {
 
     private func sampleDocument() -> StoreDocument {
-        let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 0, section: "Food",
+        let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 0, group: "Food",
                                modified: time(1))
         let weight = Tracker(
             name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
-            sortIndex: 1, section: "Weight", modified: time(1)
+            sortIndex: 1, group: "Weight", modified: time(1)
         )
         let breakfast = UUID()
         return StoreDocument(
@@ -86,7 +86,7 @@ struct PersistenceTests {
 
         #expect(loaded.origin == .fresh)
         #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
-        #expect(loaded.document.trackers.map(\.section) == ["Food", "Food", "Weight"])
+        #expect(loaded.document.trackers.map(\.group) == ["Food", "Food", "Weight"])
     }
 
     @Test("A normal launch reads the file it wrote")

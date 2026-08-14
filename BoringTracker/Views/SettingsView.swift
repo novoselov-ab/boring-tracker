@@ -12,51 +12,31 @@ struct SettingsView: View {
     @Environment(Store.self) private var store
     @State private var editing: Tracker?
 
-    /// Headings are rows rather than real `Section`s so that one ordinary drag
-    /// does both jobs the product asks of it: moving a tracker within its
-    /// section, and moving it *between* sections by dropping it under another
-    /// heading. SwiftUI cannot drag across real sections without hand-rolled
-    /// drop targets, and a bespoke gesture on a settings screen would be a
-    /// worse trade than a list that is one flat run of rows.
-    private enum Row: Identifiable, Hashable {
-        case heading(String)
-        case tracker(Tracker)
-
-        var id: String {
-            switch self {
-            case .heading(let name): "heading:\(name)"
-            case .tracker(let tracker): "tracker:\(tracker.id)"
-            }
-        }
-    }
-
     var body: some View {
         List {
             Section {
-                ForEach(rows) { item in
-                    switch item {
-                    case .heading(let name): heading(name)
-                    case .tracker(let tracker): row(tracker)
-                    }
+                ForEach(store.activeTrackers) { tracker in
+                    row(tracker)
                 }
-                .onMove(perform: move)
+                .onMove {
+                    store.move(store.activeTrackers, fromOffsets: $0, toOffset: $1)
+                }
             } header: {
                 Text("Trackers")
             } footer: {
                 if !store.activeTrackers.isEmpty {
-                    Text("Drag to reorder. Dropping a tracker under another "
-                        + "heading is what moves it to that section.")
+                    Text("Drag to reorder. Change a tracker's group by editing it.")
                 }
             }
 
             Section {
                 Button("Add Tracker", systemImage: "plus") {
-                    // No section by default. A section means "logged at the
+                    // No group by default. A group means "logged at the
                     // same time as these", which is a claim about the new
                     // tracker that nobody has made yet, and defaulting to
                     // whichever one happened to be first makes it silently.
                     // It costs nothing to say: the picker is right there, and
-                    // once the log sheet is section-scoped (docs/TODO.md item
+                    // once the log sheet is group-scoped (docs/TODO.md item
                     // 3) a wrong guess here puts Steps in your meal sheet.
                     editing = Tracker(name: "")
                 }
@@ -90,18 +70,6 @@ struct SettingsView: View {
 
     // MARK: - Rows
 
-    private func heading(_ name: String) -> some View {
-        Text(name.isEmpty ? "No section" : name)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .textCase(.uppercase)
-            .listRowSeparator(.hidden)
-            // A heading is a landmark to drop things under, so it has to stay
-            // where it is. Dragging one would mean dragging a whole section,
-            // which is a second gesture nobody asked for.
-            .moveDisabled(true)
-    }
-
     private func row(_ tracker: Tracker) -> some View {
         Button {
             editing = tracker
@@ -109,9 +77,11 @@ struct SettingsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tracker.name.isEmpty ? "Untitled" : tracker.name)
-                    Text(caption(tracker))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    if !tracker.group.isEmpty {
+                        Text(tracker.group)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
@@ -134,56 +104,6 @@ struct SettingsView: View {
         }
     }
 
-    /// The two things a name doesn't tell you: what it counts, and what it gets
-    /// logged alongside.
-    private func caption(_ tracker: Tracker) -> String {
-        let kind = switch tracker.kind {
-        case .dailyTotal: "Daily total"
-        case .measurement: "Measurement"
-        }
-        return tracker.unit.isEmpty ? kind : "\(kind) · \(tracker.unit)"
-    }
-
-    // MARK: - Order and sections
-
-    /// Headings in the order their first tracker appears, with the unsectioned
-    /// ones gathered at the end. Nothing is stored: a section is a string on a
-    /// tracker, so the headings are computed from the trackers every time.
-    private var rows: [Row] {
-        var result: [Row] = []
-        for section in store.activeSections {
-            result.append(.heading(section))
-            result.append(contentsOf: store.trackers(inSection: section).map(Row.tracker))
-        }
-        return result
-    }
-
-    /// Reads the new order back off the list: each tracker belongs to the last
-    /// heading above it. That single rule covers both kinds of drag, so there
-    /// is no separate "changed section" case to get wrong.
-    private func move(fromOffsets offsets: IndexSet, toOffset destination: Int) {
-        var moved = rows
-        moved.move(fromOffsets: offsets, toOffset: destination)
-
-        // Anything dropped above the very first heading joins that first
-        // section, rather than becoming unsectioned and jumping to the bottom
-        // of the screen — which is never what the drag meant.
-        var current = moved.compactMap { row -> String? in
-            if case .heading(let name) = row { name } else { nil }
-        }.first ?? ""
-
-        var ordered: [Tracker] = []
-        for row in moved {
-            switch row {
-            case .heading(let name):
-                current = name
-            case .tracker(var tracker):
-                tracker.section = current
-                ordered.append(tracker)
-            }
-        }
-        store.reorder(ordered)
-    }
 }
 
 #Preview {

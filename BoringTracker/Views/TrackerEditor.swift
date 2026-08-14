@@ -13,15 +13,15 @@ struct TrackerEditor: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft: Tracker?
-    @State private var section: SectionChoice = .none
-    @State private var typedSection = ""
+    @State private var group: GroupChoice = .none
+    @State private var typedGroup = ""
     @State private var confirming: Deletion?
     @FocusState private var nameFocused: Bool
 
-    /// A section is a string, so "pick one" and "type one" are the same field
+    /// A group is a string, so "pick one" and "type one" are the same field
     /// wearing two hats. Keeping them apart in the picker is what stops a
-    /// mistyped `Foood` from quietly forking a section.
-    private enum SectionChoice: Hashable {
+    /// mistyped `Foood` from quietly forking a group.
+    private enum GroupChoice: Hashable {
         case none
         case existing(String)
         case new
@@ -86,18 +86,18 @@ struct TrackerEditor: View {
         }
 
         Section {
-            Picker("Section", selection: $section) {
-                Text("None").tag(SectionChoice.none)
-                ForEach(offeredSections, id: \.self) { name in
-                    Text(name).tag(SectionChoice.existing(name))
+            Picker("Group", selection: $group) {
+                Text("None").tag(GroupChoice.none)
+                ForEach(offeredGroups, id: \.self) { name in
+                    Text(name).tag(GroupChoice.existing(name))
                 }
-                Text("New Section…").tag(SectionChoice.new)
+                Text("New Group…").tag(GroupChoice.new)
             }
-            if section == .new {
-                TextField("Section name", text: $typedSection)
+            if group == .new {
+                TextField("Group name", text: $typedGroup)
             }
         } footer: {
-            Text("Trackers in a section are logged together, in one sheet — "
+            Text("Trackers in a group are logged together, in one sheet — "
                 + "calories and protein come from the same meal.")
         }
     }
@@ -212,20 +212,20 @@ struct TrackerEditor: View {
         return trimmed.isEmpty ? "this tracker" : trimmed
     }
 
-    /// Every section that exists, plus this tracker's own — which is not in the
+    /// Every group that exists, plus this tracker's own — which is not in the
     /// store's list yet if the tracker is being created.
-    private var offeredSections: [String] {
-        var names = store.sections
-        let mine = tracker.section
+    private var offeredGroups: [String] {
+        var names = store.groups
+        let mine = tracker.group
         if !mine.isEmpty, !names.contains(mine) { names.append(mine) }
         return names
     }
 
-    private var resolvedSection: String {
-        switch section {
+    private var resolvedGroup: String {
+        switch group {
         case .none: ""
         case .existing(let name): name
-        case .new: typedSection.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .new: typedGroup.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
 
@@ -234,9 +234,9 @@ struct TrackerEditor: View {
         guard !draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return false
         }
-        // A half-typed new section is not a section. Picking "New Section…" and
-        // leaving it blank would otherwise save as no section at all, silently.
-        return section != .new || !resolvedSection.isEmpty
+        // A half-typed new group is not a group. Picking "New Group…" and
+        // leaving it blank would otherwise save as no group at all, silently.
+        return group != .new || !resolvedGroup.isEmpty
     }
 
     private func preview(_ tracker: Tracker) -> String {
@@ -245,7 +245,7 @@ struct TrackerEditor: View {
 
     private func load() {
         draft = tracker
-        section = tracker.section.isEmpty ? .none : .existing(tracker.section)
+        group = tracker.group.isEmpty ? .none : .existing(tracker.group)
         nameFocused = isNew
     }
 
@@ -253,7 +253,7 @@ struct TrackerEditor: View {
         guard var draft, canSave else { return }
         draft.name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
         draft.unit = draft.unit.trimmingCharacters(in: .whitespacesAndNewlines)
-        draft.section = resolvedSection
+        draft.group = resolvedGroup
         if isNew {
             store.add(draft)
         } else {

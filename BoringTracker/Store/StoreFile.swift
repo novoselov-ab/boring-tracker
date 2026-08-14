@@ -166,7 +166,7 @@ enum StoreMigration {
         // is a version this build cannot read, and both directions fail the same
         // way if allowed through: the decoder ignores keys it doesn't know, so a
         // document quietly loses whatever it carried under a name that has since
-        // changed. Today a v1 file happens to fail anyway — `section` is
+        // changed. Today a v1 file happens to fail anyway — `group` is
         // non-optional, and a synthesized decoder does not fall back to a
         // property's default — but that is an accident of this bump's fields,
         // not a guarantee. A bump that only added optional fields would decode
