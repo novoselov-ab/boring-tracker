@@ -80,6 +80,14 @@ If you need those, other apps do them, and they'd love your subscription.
   300ms has cost you more than every clever feature has saved.
 - **The number pad is the interface.** For the common case the keyboard should
   already be up and it should be numeric.
+- **Where a tap lands matters as much as how many.** A phone is held in one
+  hand and driven by one thumb. The bottom third of the screen is in that
+  thumb's arc; the top of a modern iPhone is not, and reaching it means
+  shuffling your grip or invoking Reachability — which costs more than the
+  extra tap you saved by putting the button up there. So **frequent actions
+  live low.** Rare ones may live high, and the nav bar is a fine home for
+  things you touch once a week. Minimal is not the same as optimal: count the
+  taps, then look at where they land.
 - **Count the taps, out loud.** The common path — open, log a food, done — has
   a tap budget and every feature is measured against it. A feature that is
   merely *good* does not get to spend a tap. Anything that adds a step in front
