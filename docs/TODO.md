@@ -110,6 +110,39 @@ string, not an entity" in TECH.md.
 Cheap now, pre-release. Worth doing before step 5 writes the word into a
 history screen too.
 
+### And: stop using position to mean membership
+
+The step-3 review found that the two leftovers it was told to skip share one
+root, and it is a design problem rather than a code one. **Position on a screen
+is currently doing two jobs: order, and which group you belong to.** Because
+there is no "drop outside" gesture, membership cannot be read back from
+position on a screen that has no *Ungrouped* heading — so settings still needs
+the very heading PRODUCT.md forbids, home cannot offer regrouping drags at all,
+a settings drag silently reshuffles home, and a loose tracker can never be
+placed above the first group.
+
+So separate the two jobs:
+
+- [ ] **Settings becomes one flat, reorderable list** of every tracker — a
+      single `ForEach`, no headings — with each row showing its group as a
+      subtitle. Ordering only.
+- [ ] **Membership changes only in the editor's group field**, where it already
+      works and is typo-proof (None / existing / New…).
+- [ ] The *No section* heading disappears with nothing to replace it, and no
+      drop-target semantics are needed anywhere.
+- [ ] **Home is unchanged**: still one ordered list drawing a heading above each
+      run of trackers that share a group.
+
+This kills the forbidden heading, the drop-target ambiguity, the two
+conflicting loose-tracker orderings, and the whole broken-drag class of bug at
+once — and costs nothing on the common path, because settings is not on it.
+
+Two loose ends it resolves in passing: `Store.move` gets a production caller
+again (the flat list), so it stops being dead code; and `Store.add`'s comment
+arguing against slotting a new tracker beside its group is stale — renumbering
+restamps `orderModified`, which exists precisely so a reorder cannot outrank an
+edit.
+
 ## 5. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.
