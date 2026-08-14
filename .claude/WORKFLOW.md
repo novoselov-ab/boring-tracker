@@ -21,6 +21,18 @@ For every TODO step:
 6. **Review again**, until a round turns up nothing worth fixing.
 7. **Push**, and tick the item off in TODO.md.
 
+### Commit messages carry the reasoning
+
+The subject line says what changed; **the body says why, and the body is the
+point.** Several decisions in this project have been recovered from commit
+messages months after the code stopped explaining itself — what was tried and
+rejected, what a number was measured against, which alternative looked better
+and wasn't.
+
+A subject line with no body is not a finished commit here, however tidy the
+diff. And never claim a measurement, a tool or a test run that did not happen:
+see "Always check, not just read" below.
+
 ### Pushing is pre-authorised — do not ask
 
 Committing and pushing to `main` is part of finishing a step, not a separate
