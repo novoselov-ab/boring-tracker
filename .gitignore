@@ -26,3 +26,7 @@ xcuserdata/
 
 # Per-machine signing (team id). See Signing.xcconfig.
 Local.xcconfig
+
+# Task briefs handed to agent sessions. Per-task scratch, not project history —
+# the reasoning that matters ends up in the commit message instead.
+.claude/briefs/
