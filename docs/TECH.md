@@ -292,7 +292,7 @@ struct Entry: Codable, Identifiable, Hashable {
 Entries reference trackers by id rather than nesting, so deleting a tracker
 and keeping its history is a decision rather than a cascade.
 
-What one save writes is a **log group** — a group when the trackers are logged
+What one log writes is a **log group** — a group when the trackers are logged
 together, a single tracker when it isn't in one. It is an enum computed from
 `Tracker.group` at read time, never stored, so it is a displayed decision and
 free to rework. It exists because the alternative was to treat "no group" as a
@@ -348,9 +348,10 @@ Numbers to hold the design to, measured on the oldest supported device:
   the UI draws. Loading the store is a synchronous decode of a small file
   because doing it asynchronously would flash an empty state for longer than
   the decode takes.
-- **Tap + to keyboard up: one frame.** The log sheet is trivial and pre-warmed;
-  nothing is fetched when it opens.
-- **Save to dismissed: instant.** Memory is updated synchronously, the sheet
+- **Tap + to sheet visible: one frame.** The log sheet is trivial and pre-warmed;
+  nothing is fetched when it opens. The app adds no presentation animation;
+  the numeric keypad's system animation is the remaining wait before typing.
+- **Log to dismissed: instant.** Memory is updated synchronously, the sheet
   closes, the disk write happens later and off the main actor.
 - **Graph redraw: 60fps while scrubbing** over a year of data. Points are
   aggregated once when the range changes, not per frame.

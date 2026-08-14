@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// One log group's number pad: the trackers you write at the same time, a name,
-/// when it happened, save.
+/// when it happened, log.
 ///
 /// The sheet covers a `LogGroup` — a group when the trackers are logged
 /// together, and one tracker on its own when it isn't in a group. Calories and
-/// protein come from the same meal, so they are one sheet and one save; your
+/// protein come from the same meal, so they are one sheet and one log; your
 /// weight is not, and your cigarettes are not, so neither is in the way. Filling
 /// in a second field costs one extra tap, not a second trip through the sheet.
 ///
@@ -13,6 +13,11 @@ import SwiftUI
 /// immediately, with the keypad up, and switching groups happens *here*, from
 /// the title, for the log that isn't the usual one.
 struct LogSheet: View {
+
+    /// `nil` makes the common-path presentation instant. This is deliberately
+    /// one displayed decision in one place: if real-device use calls for a
+    /// little spatial context, give it a short animation here.
+    private static let presentationAnimation: Animation? = nil
 
     /// Where the last-used group is remembered.
     ///
@@ -48,6 +53,15 @@ struct LogSheet: View {
         _group = State(initialValue: target.group)
     }
 
+    /// Present without making the user wait for the standard sheet slide.
+    static func present(_ target: Target, using binding: Binding<Target?>) {
+        var transaction = Transaction(animation: presentationAnimation)
+        transaction.disablesAnimations = presentationAnimation == nil
+        withTransaction(transaction) {
+            binding.wrappedValue = target
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -68,15 +82,27 @@ struct LogSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) { title }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                // A native `.keyboard` toolbar did not render an accessory in
+                // this iOS 26 sheet. The keyboard-following safe-area inset
+                // keeps the action in the same thumb-reachable position.
+                HStack {
+                    Spacer()
+                    Button("Log", action: log)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(amounts.isEmpty)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(amounts.isEmpty)
-                }
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .background(.bar)
             }
         }
-        .onAppear {
+        .task {
+            // Presentation deliberately has animations disabled. Let that
+            // transaction finish before asking the system to animate in the
+            // keypad; focusing inside it suppresses the keypad altogether.
+            await Task.yield()
             // The keypad should already be up: tapping + goes straight to a
             // focused numeric field, with no intermediate screen.
             focused = target.tracker ?? trackers.first?.id
@@ -84,7 +110,7 @@ struct LogSheet: View {
         .onChange(of: group) { _, _ in
             // What was typed belonged to the group that was on screen when it
             // was typed, so it goes with it. Keeping it looked like the kinder
-            // option — switch back and it is still there — but a save writes
+            // option — switch back and it is still there — but a log writes
             // only the group in front of you and then dismisses, so a number
             // typed into the group you switched away from was discarded in
             // silence, with the sheet closing over it. The name is the same
@@ -204,7 +230,7 @@ struct LogSheet: View {
         )
     }
 
-    /// Only what this sheet is showing — one save, one batch. Switching clears
+    /// Only what this sheet is showing — one log, one batch. Switching clears
     /// the fields, so there is nothing else it could be hiding.
     private var amounts: [UUID: Double] {
         trackers.reduce(into: [:]) { result, tracker in
@@ -214,12 +240,12 @@ struct LogSheet: View {
         }
     }
 
-    private func save() {
+    private func log() {
         let amounts = amounts
         guard !amounts.isEmpty else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         store.add(values: amounts, at: date, name: trimmed.isEmpty ? nil : trimmed)
-        // Written on save rather than on open, so cancelling out of a group you
+        // Written on log rather than on open, so dismissing a group you
         // only went to look at doesn't move where + lands tomorrow.
         lastGroup = group.rawValue
         dismiss()

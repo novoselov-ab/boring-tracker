@@ -69,7 +69,7 @@ version to migrate from, and it takes the older versions with it.
 
 The core loop, and the reason for all of the above: tap +, land straight in the
 last-used group's sheet with the keypad already up. Type 100 and 10,
-optionally name it, save. One save, one batch.
+optionally name it, log. One log, one batch.
 
 **+ must not open a group picker.** Choosing a group is a tap on the common
 path, and the common path is the product. Group switching lives inside the
@@ -89,7 +89,7 @@ Measure the result in taps and milliseconds, not in whether it looks tidy.
       launched from: a run of trackers sharing a group gets that heading,
       everything else is a bare card, and nothing is gathered under "Other".
 
-**Two taps and a number** on the common path: + , type, Save. Three from a cold
+**Two taps and a number** on the common path: + , type, Log. Three from a cold
 launch, counting the icon — the target in PRODUCT.md.
 
 ## 4. Terminology pass — done
@@ -150,30 +150,39 @@ down restamps `orderModified`, which exists precisely so a position change
 cannot outrank an edit. Appending still stamps nothing else, because nothing
 moved and there is no position to claim.
 
-## 5. Log sheet polish, from first real use
+## 5. Log sheet polish, from first real use — done
 
 Three things that only showed up once the app was on a phone. All small, all on
 the common path, and all wanting judgement on the device rather than in a
 simulator — so they go in as one focused pass, then get used for a day before
 being called done.
 
-- [ ] **"Save" becomes "Log".** You are not saving a document, you are recording
+- [x] **"Save" becomes "Log".** You are not saving a document, you are recording
       that something happened, and *log* is the verb the whole product already
       uses. Keep **Save** in the entry editor, where you genuinely are saving an
       edit to something that already exists — different action, different word.
-- [ ] **Kill the presentation animation, or shorten it.** What is left after the
+- [x] **Kill the presentation animation, or shorten it.** What is left after the
       half-height fix is the standard sheet slide plus the keyboard behind it:
       roughly half a second of watching before you can type, several times a
       day, forever. Measure time-to-typeable before and after, the way the
       step-3 review measured the detent. It is a displayed decision, so if
       instant feels abrupt after a few days, reverting costs nothing.
-- [ ] **Move the confirm out of the nav bar and into the thumb.** See "Where a
+- [x] **Move the confirm out of the nav bar and into the thumb.** See "Where a
       tap lands matters as much as how many" in PHILOSOPHY.md. The best spot is
       not the bottom of the sheet but **directly above the keyboard**, as a
       keyboard toolbar item: the thumb is already on the number pad, a numeric
       keypad has no return key to submit with, and a bar pinned above the digits
       is the shortest travel there is. Cancel may not need to exist at all —
       a sheet already dismisses by swiping down.
+
+Measured from the first pressed frame to the first frame with a settled keypad,
+using the same XCUI tap and a 60 Hz capture on the iPhone 17 simulator: **75
+frames / 1.25 s before, 39 frames / 0.65 s after**. The sheet itself now appears
+in one captured frame; the remaining motion is the synthesized press and the
+system keypad animation. SwiftUI's native `.keyboard` toolbar placement emitted
+no visible accessory in this iOS 26 sheet, so the Log action uses a bottom
+safe-area inset instead. It follows the keypad to the requested position and
+remains available if the keypad is dismissed.
 
 ## 6. Make settings and home agree
 

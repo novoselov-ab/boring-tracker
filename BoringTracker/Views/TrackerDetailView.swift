@@ -61,7 +61,10 @@ struct TrackerDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Log", systemImage: "plus") {
-                    logging = LogSheet.Target(group: LogGroup(of: tracker), tracker: trackerID)
+                    LogSheet.present(
+                        .init(group: LogGroup(of: tracker), tracker: trackerID),
+                        using: $logging
+                    )
                 }
             }
         }

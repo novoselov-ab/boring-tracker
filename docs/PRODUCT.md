@@ -49,7 +49,7 @@ exists to avoid.
 It earns its place for one reason. With a dozen trackers, tapping + would open
 a dozen-item list to scroll, which breaks rule 7. A group collapses that to
 one sheet with a handful of fields — the same "one sheet, both numbers, one
-save" requirement below, reached from the other direction.
+log" requirement below, reached from the other direction.
 
 **A tracker with no group is logged on its own.** Being in no group is not
 itself a group: your cigarettes and your pushups share nothing but the absence
@@ -112,7 +112,7 @@ Membership still changes only in the tracker editor, so no drop gesture ever
 has to mean "remove from group."
 
 Nor does the code: **the log sheet always takes a set of trackers.** A group
-is a named set; a lone tracker is a set of one. Same sheet, same one-save-one-
+is a named set; a lone tracker is a set of one. Same sheet, same one-log-one-
 batch, no branching — and + returning to whatever you last logged works the
 same either way.
 
@@ -250,7 +250,7 @@ So, in order of importance:
    recipe is ingredients, and ingredients are permanently out of scope — see
    PHILOSOPHY.md. The word matters because it's the direction this would drift
    if allowed to.
-3. **One food, one sheet, one save.** Calories and protein come from the same
+3. **One food, one sheet, one log.** Calories and protein come from the same
    meal. Typing them in two separate flows is the single most annoying thing
    this app could do — so the sheet takes the whole group at once, plus a
    name, and writes it as one batch.
@@ -272,7 +272,7 @@ Small enough to list completely.
   a + button. Measurement cards show the latest reading and when. That's the
   whole main screen — arranging the list is a settings job.
 - **Log sheet** — number pad, presets/recents row, tracker(s), date/time
-  (defaults to now, tappable to change), optional name, Save. One group's
+  (defaults to now, tappable to change), optional name, Log. One group's
   trackers, or one loose tracker; its title is how you switch between them.
   Backdating is first-class: you *will* forget dinner until the next morning.
 - **History** — everything you've logged, newest first, grouped by day. Today

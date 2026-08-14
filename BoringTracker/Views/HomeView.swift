@@ -38,7 +38,7 @@ struct HomeView: View {
                     // common path, every time, forever.
                     Button("Log", systemImage: "plus") {
                         guard let group = store.groupToLog(preferring: lastGroup) else { return }
-                        logging = LogSheet.Target(group: group)
+                        LogSheet.present(.init(group: group), using: $logging)
                     }
                     .disabled(store.activeTrackers.isEmpty)
                 }
@@ -118,8 +118,10 @@ struct HomeView: View {
                             tracker: tracker,
                             open: { path.append(.tracker(tracker.id)) },
                             log: {
-                                logging = LogSheet.Target(group: LogGroup(of: tracker),
-                                                          tracker: tracker.id)
+                                LogSheet.present(
+                                    .init(group: LogGroup(of: tracker), tracker: tracker.id),
+                                    using: $logging
+                                )
                             }
                         )
                     }

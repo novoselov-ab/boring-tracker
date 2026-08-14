@@ -169,7 +169,7 @@ final class Store {
         return result
     }
 
-    /// The trackers one save writes to: a group's, or the single ungrouped
+    /// The trackers one log writes to: a group's, or the single ungrouped
     /// tracker, in the order they are drawn.
     func trackers(in group: LogGroup) -> [Tracker] {
         switch group {
@@ -247,7 +247,7 @@ final class Store {
     ///
     /// They share a `batchID`, which is what makes them one logged food rather
     /// than two rows that happen to agree on the clock. Assigned even for a
-    /// single value: what was saved together is a property of the save, not of
+    /// single value: what was logged together is a property of the log, not of
     /// how many trackers it happened to touch.
     func add(values: [UUID: Double], at date: Date = .stamp(), name: String? = nil) {
         let date = date.canonicalized
@@ -579,7 +579,7 @@ final class Store {
     }
 }
 
-// MARK: - What one save covers
+// MARK: - What one log covers
 
 /// The trackers one trip through the log sheet writes to.
 ///

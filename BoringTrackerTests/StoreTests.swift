@@ -187,7 +187,7 @@ struct StoreTests {
         #expect(store.entries.allSatisfy { $0.batchID != nil })
     }
 
-    @Test("Two separate saves are two separate batches")
+    @Test("Two separate logs are two separate batches")
     func batchesAreNotShared() {
         let calories = Tracker(name: "Calories")
         let store = makeStore(StoreDocument(trackers: [calories]))

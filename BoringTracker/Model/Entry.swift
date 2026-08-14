@@ -1,6 +1,6 @@
 import Foundation
 
-/// A number, a tracker, a time, a name and the batch it was saved in. That is
+/// A number, a tracker, a time, a name and the batch it was logged in. That is
 /// all an entry ever gets to be — no categories, no tags, no meal types, no
 /// photos.
 struct Entry: Codable, Identifiable, Hashable, Sendable {
@@ -16,7 +16,7 @@ struct Entry: Codable, Identifiable, Hashable, Sendable {
     /// don't log protein, you log a food; naming it is what lets you find it
     /// again. See docs/PRODUCT.md.
     var name: String?
-    /// The other entries written by the same save.
+    /// The other entries written by the same log.
     ///
     /// One logged food is 100 kcal and 10 g of protein, and this is what makes
     /// those two rows a single thing to edit or delete rather than two that
