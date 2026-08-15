@@ -49,6 +49,7 @@ final class Store {
     /// False when a test pinned the calendar, so system time-zone changes do
     /// not yank it back to the device's.
     private let followsSystemCalendar: Bool
+    private let file: StoreFile
     private let saver: StoreSaver
     /// Counts mutations. The saver uses it to tell a late-arriving old document
     /// from the current one, and the graph uses it to know when its aggregated
@@ -80,6 +81,7 @@ final class Store {
         self.calendar = calendar ?? .current
         self.followsSystemCalendar = calendar == nil
         self.today = DayKey(Date(), calendar: calendar ?? .current)
+        self.file = file
         self.saver = StoreSaver(file: file, window: saveWindow)
         rebuildTotals()
         watchForTimeChanges()
@@ -406,8 +408,20 @@ final class Store {
             : trackers.lastIndex { !$0.isArchived && $0.group == tracker.group }
                 .map { $0 + 1 } ?? trackers.endIndex
         if insertion == trackers.endIndex {
-            tracker.sortIndex = (trackers.map(\.sortIndex).max() ?? -1) + 1
-            trackers.append(tracker)
+            let maximum = trackers.map(\.sortIndex).max() ?? -1
+            if maximum >= Int.max - 1 {
+                // An imported file can carry a very large but still valid
+                // index. Renumber before arithmetic reaches Int.max; the
+                // alternative is a trap on this or the next addition.
+                trackers.append(tracker)
+                for index in trackers.indices {
+                    trackers[index].sortIndex = index
+                    trackers[index].orderModified = now
+                }
+            } else {
+                tracker.sortIndex = maximum + 1
+                trackers.append(tracker)
+            }
         } else {
             trackers.insert(tracker, at: insertion)
             for index in trackers.indices {
@@ -601,7 +615,8 @@ final class Store {
     // MARK: - Export and import
 
     enum ImportMode: String, CaseIterable, Sendable {
-        /// Union by id — nothing you already have is lost.
+        /// Converge by id. Distinct records survive; a deletion recorded in
+        /// either document stays deleted, and newer edits win conflicts.
         case merge
         /// Throw away what is here and take the file as gospel.
         case replace
@@ -617,16 +632,110 @@ final class Store {
         try StoreCoding.encode(document)
     }
 
+    func exportCSV() -> Data {
+        CSVExport.data(document: document)
+    }
+
+    var hasImportBackup: Bool { file.hasImportBackup }
+
     @discardableResult
     func importData(_ data: Data, mode: ImportMode) throws -> ImportSummary {
         let incoming = try StoreMigration.migrate(data)
+        try validateImport(incoming)
         let before = document
         let result = switch mode {
         case .merge: before.merged(with: incoming)
         case .replace: incoming.compactingTombstones()
         }
+        if mode == .replace {
+            // Decode and validate the incoming file first. Once it is known to
+            // be usable, preserving the exact current document must succeed or
+            // the destructive import does not happen.
+            try file.writeImportBackup(before)
+        }
         replaceState(with: result)
+        return importSummary(before: before, after: result)
+    }
 
+    /// Restores the document saved before the last replace, leaving the
+    /// current document in that recovery slot. This is an async transaction
+    /// because every delayed save must finish before the two files are swapped;
+    /// otherwise an older queued write could land after the restore.
+    @discardableResult
+    func restoreImportBackup() async throws -> ImportSummary {
+        while true {
+            let incoming = try StoreMigration.migrate(file.importBackupData())
+            try validateImport(incoming)
+            // The filesystem swap installs these exact bytes as the live file.
+            // Keep memory exact too; compaction belongs to ordinary import,
+            // where the transformed document is subsequently saved.
+            let result = incoming
+
+            let before = document
+            let startingRevision = revision
+            await saver.flush(before, revision: startingRevision)
+            if let error = await saver.lastError {
+                saveError = Self.describe(error)
+                throw error
+            }
+
+            // Main-actor methods are reentrant at `await`. If anything changed
+            // while the saver drained, start again with the new current state
+            // and recovery file rather than swapping a stale snapshot.
+            guard revision == startingRevision else { continue }
+
+            // `revision == 0` can mean the saver has never written this Store
+            // instance. Put its exact current document in the live slot first;
+            // failure leaves the recovery document untouched.
+            try file.write(before)
+            try file.swapWithImportBackup()
+            replaceState(with: result, saving: false)
+            revision += 1
+            saveError = nil
+            return importSummary(before: before, after: result)
+        }
+    }
+
+    /// Import has to be idempotent. A decodable document containing duplicate
+    /// live ids, duplicate tombstones, or a record that is simultaneously live
+    /// and deleted changes meaning after the next merge and can double-count
+    /// totals or duplicate SwiftUI identity. Loading remains tolerant of old
+    /// bad local files; crossing the explicit import boundary does not.
+    private func validateImport(_ document: StoreDocument) throws {
+        var live = Set<UUID>()
+        for id in document.trackers.map(\.id) + document.entries.map(\.id) {
+            guard live.insert(id).inserted else {
+                throw StoreError.invalidDocument("record id \(id.uuidString) appears more than once.")
+            }
+        }
+        var deleted = Set<UUID>()
+        for tombstone in document.tombstones {
+            guard deleted.insert(tombstone.id).inserted else {
+                throw StoreError.invalidDocument(
+                    "deletion id \(tombstone.id.uuidString) appears more than once."
+                )
+            }
+            guard !live.contains(tombstone.id) else {
+                throw StoreError.invalidDocument(
+                    "id \(tombstone.id.uuidString) is both present and deleted."
+                )
+            }
+        }
+        for tracker in document.trackers {
+            guard (0...3).contains(tracker.decimals) else {
+                throw StoreError.invalidDocument(
+                    "tracker \(tracker.id.uuidString) has decimals outside 0 through 3."
+                )
+            }
+            guard tracker.sortIndex >= 0, tracker.sortIndex < Int.max else {
+                throw StoreError.invalidDocument(
+                    "tracker \(tracker.id.uuidString) has an invalid sort index."
+                )
+            }
+        }
+    }
+
+    private func importSummary(before: StoreDocument, after result: StoreDocument) -> ImportSummary {
         let oldEntries = Set(before.entries.map(\.id))
         let newEntries = Set(result.entries.map(\.id))
         return ImportSummary(
@@ -637,7 +746,7 @@ final class Store {
         )
     }
 
-    private func replaceState(with document: StoreDocument) {
+    private func replaceState(with document: StoreDocument, saving: Bool = true) {
         trackers = document.trackers.sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         entries = StoreDocument.sorted(document.entries)
         tombstones = document.tombstones
@@ -646,7 +755,7 @@ final class Store {
         // it, or duplicate an id the imported file already restored.
         lastDeletedEntries = []
         rebuildTotals()
-        scheduleSave()
+        if saving { scheduleSave() }
     }
 
     // MARK: - The day boundary

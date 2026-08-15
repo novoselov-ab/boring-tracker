@@ -309,8 +309,10 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
 - **Export** writes one file containing everything: trackers, entries,
   presets, goals. Human-readable JSON, with the format documented in the repo
   so anyone can write a converter.
-- **CSV export** as well, per tracker, because that's what people actually
-  paste into a spreadsheet.
+- **CSV export** as well: one whole-history file with one row per entry,
+  including batch and tracker IDs plus the tracker's current name, unit and
+  kind. Keeping a batch's rows together makes the file useful in a spreadsheet
+  without throwing away the relationship between values logged at once.
 - **Import** restores from an export file. Merge or replace, stated clearly
   before it happens, because this is the one destructive action in the app.
 - Backup and cross-device is the user's business: save the export to Files,

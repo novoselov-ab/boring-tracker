@@ -91,6 +91,30 @@ serialization format *and* the mapping between them, forever, for no benefit.
   shipped version is the first shape someone can be holding; that is when a
   step earns its keep, and it takes the older versions with it.
 
+### The CSV view
+
+JSON is the complete document and the only import format. CSV is a flat,
+spreadsheet-friendly view of the history: **one row per entry**, oldest first,
+with these columns:
+
+| column | meaning |
+|---|---|
+| `entry_id` | stable UUID of the entry |
+| `batch_id` | shared UUID for values written by one log; blank when absent |
+| `date` | ISO 8601 timestamp |
+| `tracker_id` | referenced tracker UUID, retained even if the tracker was deleted |
+| `tracker_name` | current tracker name, blank if the tracker was deleted |
+| `tracker_unit` | current unit, blank if unavailable |
+| `tracker_kind` | `dailyTotal` or `measurement`, blank if unavailable |
+| `value` | the stored number |
+| `name` | entry label, blank when absent |
+
+Fields containing commas, quotes, or line breaks use ordinary RFC 4180-style
+quoting, and rows use CRLF endings. Tracker records with no entries and
+tombstones are not rows, so CSV is not lossless and is intentionally not
+importable. `batch_id` is present specifically so a logged food can be rebuilt
+as one event rather than mistaken for unrelated tracker values at the same time.
+
 ### Writing safely
 
 Whole-file rewrite is the obvious risk, and it's fully solvable:
@@ -107,6 +131,13 @@ Whole-file rewrite is the obvious risk, and it's fully solvable:
    backgrounding or force-quitting can lose at most the last moment of typing.
 4. **Never partial.** There is no such thing as a half-saved store. Every
    write is the entire, valid document.
+
+A replace import has a separate one-step safety net. Before changing memory it
+writes the exact current document — including edits still inside the save
+debounce — to `store.before-import.json`. Settings exposes **Restore Data Before
+Last Replace…** whenever that file exists. Restoring swaps the documents: the
+current one becomes the recoverable backup, so a mistaken restore can be
+reversed too. A later replace intentionally advances this one-step backup.
 
 ### Surviving a new phone
 

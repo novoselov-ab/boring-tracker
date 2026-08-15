@@ -915,6 +915,20 @@ struct StoreTests {
         #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 0, entriesRemoved: 0))
     }
 
+    @Test("A deletion recorded in an imported document removes the matching local entry")
+    func mergeImportAppliesIncomingDeletions() throws {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let entry = Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))
+        let phone = makeStore(StoreDocument(trackers: [tracker], entries: [entry]))
+        var imported = StoreDocument(trackers: [tracker], entries: [entry])
+        imported.delete(id: entry.id, at: time(20))
+
+        let summary = try phone.importData(StoreCoding.encode(imported), mode: .merge)
+
+        #expect(phone.entries.isEmpty)
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 0, entriesRemoved: 1))
+    }
+
     @Test("Merging a second device's export adds its entries and keeps yours")
     func mergeImportUnionsTwoDevices() throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
@@ -929,6 +943,39 @@ struct StoreTests {
         #expect(phone.entries.count == 2)
         #expect(phone.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 850)
         #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 1, entriesRemoved: 0))
+    }
+
+    @Test("Import grouping does not change equal-stamp tracker ordering")
+    func mergeImportIsAssociative() throws {
+        func id(_ suffix: String) -> UUID {
+            UUID(uuidString: "00000000-0000-0000-0000-0000000000\(suffix)")!
+        }
+        let stamp = time(1)
+        let a = Tracker(id: id("01"), name: "A", sortIndex: 0,
+                        modified: stamp, orderModified: stamp)
+        let b = Tracker(id: id("02"), name: "B", sortIndex: 1,
+                        modified: stamp, orderModified: stamp)
+        let c = Tracker(id: id("03"), name: "C", sortIndex: 2,
+                        modified: stamp, orderModified: stamp)
+        let abc = StoreDocument(trackers: [a, b, c])
+        var movedC = c
+        movedC.sortIndex = 0
+        var movedA = a
+        movedA.sortIndex = 1
+        var movedB = b
+        movedB.sortIndex = 2
+        let cab = StoreDocument(trackers: [movedC, movedA, movedB])
+
+        let left = makeStore(abc)
+        try left.importData(StoreCoding.encode(abc), mode: .merge)
+        try left.importData(StoreCoding.encode(cab), mode: .merge)
+
+        let grouped = makeStore(abc)
+        try grouped.importData(StoreCoding.encode(cab), mode: .merge)
+        let right = makeStore(abc)
+        try right.importData(try grouped.exportData(), mode: .merge)
+
+        #expect(left.document == right.document)
     }
 
     @Test("Replace really replaces, and says how much it removed")
@@ -948,6 +995,97 @@ struct StoreTests {
         #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 1, entriesRemoved: 2))
     }
 
+    @Test("Replace keeps the exact current document in a separate backup first")
+    func replaceImportKeepsBackup() throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let current = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))]
+        )
+        let store = makeStore(current, file: file)
+        let incoming = StoreDocument(trackers: [tracker])
+
+        try store.importData(StoreCoding.encode(incoming), mode: .replace)
+
+        #expect(try file.read(file.importBackupURL) == current)
+        #expect(store.entries.isEmpty)
+    }
+
+    @Test("A replace does not happen when its safety backup cannot be written")
+    func replaceStopsWhenBackupFails() throws {
+        let base = temporaryStoreFile()
+        defer { base.removeDirectory() }
+        try base.prepareDirectory()
+        let blocker = base.directory.appending(path: "not-a-directory")
+        try Data("occupied".utf8).write(to: blocker)
+        let file = StoreFile(directory: blocker)
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let current = StoreDocument(trackers: [tracker])
+        let store = makeStore(current, file: file)
+
+        #expect(throws: (any Error).self) {
+            try store.importData(StoreCoding.encode(StoreDocument()), mode: .replace)
+        }
+        #expect(store.document == current)
+    }
+
+    @Test("Restore is durable immediately, and the replaced data stays recoverable")
+    func replaceBackupCanBeRestored() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        var second = Tracker(name: "Protein", sortIndex: 2, modified: time(1))
+        second.orderModified = time(1)
+        let original = StoreDocument(
+            trackers: [tracker, second],
+            entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))],
+            tombstones: [Tombstone(id: UUID(), deleted: time(-400_000))]
+        )
+        let replacement = StoreDocument(trackers: [tracker])
+        let store = makeStore(original, file: file, window: .seconds(60))
+        try store.importData(StoreCoding.encode(replacement), mode: .replace)
+        store.add(Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20)))
+        let currentAtRestore = store.document
+        // Exercise recovery bytes that an older replace could legitimately
+        // contain: a safe ordering gap and a tombstone now old enough that a
+        // normal import would compact it.
+        try file.writeImportBackup(original)
+
+        #expect(store.hasImportBackup)
+        try await store.restoreImportBackup()
+
+        #expect(store.document == original)
+        #expect(try file.read(file.importBackupURL) == currentAtRestore)
+        // No flush or debounce wait: the restore itself must make the recovered
+        // document the durable main file before it reports success.
+        #expect(file.load().document == original)
+    }
+
+    @Test("A damaged recovery file cannot disturb the current durable document")
+    func damagedReplaceBackupCannotBeRestored() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let original = StoreDocument(trackers: [tracker])
+        let replacement = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20))]
+        )
+        let store = makeStore(original, file: file, window: .seconds(60))
+        try store.importData(StoreCoding.encode(replacement), mode: .replace)
+        await store.flush()
+        try Data("damaged".utf8).write(to: file.importBackupURL, options: .atomic)
+
+        await #expect(throws: (any Error).self) {
+            try await store.restoreImportBackup()
+        }
+
+        #expect(store.document == replacement)
+        #expect(file.load().document == replacement)
+    }
+
     @Test("A junk file is refused without touching what is already there")
     func importRejectsJunk() throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
@@ -959,6 +1097,91 @@ struct StoreTests {
             try store.importData(Data("nope".utf8), mode: .replace)
         }
         #expect(store.document == before)
+    }
+
+    @Test("A future-schema import is refused without touching current data")
+    func importRejectsFutureSchema() throws {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [tracker]))
+        let before = store.document
+        var future = StoreDocument()
+        future.schemaVersion = StoreDocument.currentSchemaVersion + 1
+
+        #expect(throws: StoreError.futureSchema(
+            found: future.schemaVersion,
+            supported: StoreDocument.currentSchemaVersion
+        )) {
+            try store.importData(StoreCoding.encode(future), mode: .replace)
+        }
+        #expect(store.document == before)
+    }
+
+    @Test("Import rejects duplicate live ids instead of double-counting them")
+    func importRejectsDuplicateIDs() throws {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let entry = Entry(trackerID: tracker.id, value: 100, date: time(10), modified: time(10))
+        let store = makeStore(StoreDocument(trackers: [tracker]))
+        let before = store.document
+        let duplicate = StoreDocument(trackers: [tracker], entries: [entry, entry])
+
+        #expect(throws: StoreError.self) {
+            try store.importData(StoreCoding.encode(duplicate), mode: .replace)
+        }
+        #expect(store.document == before)
+    }
+
+    @Test("Import rejects an id that is both live and tombstoned so repeat imports converge")
+    func importRejectsLiveDeletionCollision() throws {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let entry = Entry(trackerID: tracker.id, value: 100, date: time(10), modified: time(10))
+        let store = makeStore(StoreDocument(trackers: [tracker]))
+        let before = store.document
+        let inconsistent = StoreDocument(
+            trackers: [tracker], entries: [entry],
+            tombstones: [Tombstone(id: entry.id, deleted: time(20))]
+        )
+
+        #expect(throws: StoreError.self) {
+            try store.importData(StoreCoding.encode(inconsistent), mode: .replace)
+        }
+        #expect(store.document == before)
+    }
+
+    @Test("Import rejects tracker display precision that can crash formatting")
+    func importRejectsInvalidDecimals() throws {
+        let current = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [current]))
+        var malformed = Tracker(name: "Broken", modified: time(1))
+        malformed.decimals = -1
+
+        #expect(throws: StoreError.self) {
+            try store.importData(
+                StoreCoding.encode(StoreDocument(trackers: [malformed])), mode: .replace
+            )
+        }
+        #expect(store.trackers == [current])
+    }
+
+    @Test("Import rejects an overflowing sort index and preserves safe positions")
+    func importValidatesSortIndices() throws {
+        let store = makeStore()
+        var unsafe = Tracker(name: "Unsafe", sortIndex: Int.max, modified: time(1))
+        #expect(throws: StoreError.self) {
+            try store.importData(
+                StoreCoding.encode(StoreDocument(trackers: [unsafe])), mode: .replace
+            )
+        }
+
+        unsafe.sortIndex = Int.max - 1
+        let first = Tracker(name: "First", sortIndex: 20, modified: time(1))
+        try store.importData(
+            StoreCoding.encode(StoreDocument(trackers: [unsafe, first])), mode: .replace
+        )
+        #expect(store.trackers.map(\.name) == ["First", "Unsafe"])
+        #expect(store.trackers.map(\.sortIndex) == [20, Int.max - 1])
+
+        store.add(Tracker(name: "Still safe"))
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
     }
 
     // MARK: - Saving

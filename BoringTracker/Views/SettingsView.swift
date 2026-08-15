@@ -78,6 +78,8 @@ struct SettingsView: View {
                     Text("Hidden from the home screen. Nothing logged against them is lost.")
                 }
             }
+
+            DataTransferView()
         }
         // Both ends of the comparison a drop makes — every row's frame and the
         // finger's location — are read in `.global`, and nothing else. A named

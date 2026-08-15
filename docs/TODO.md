@@ -358,7 +358,7 @@ Without it, fixing a mistyped food means opening each tracker's detail
 separately and deleting a row in each. It's the natural consumer of `batchID`,
 and it comes right after the log sheet that starts writing them.
 
-## 10. Export, import, CSV
+## 10. Export, import, CSV — done
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit

@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 enum StoreError: Error, Equatable {
     /// The file was written by a newer version of the app. Refusing beats
@@ -10,6 +11,22 @@ enum StoreError: Error, Equatable {
     /// today's decoder would silently ignore every field that has since been
     /// renamed or removed, and the next save would write that loss back.
     case olderSchema(found: Int, supported: Int)
+    /// Structurally decodable, but not a document the merge rules can handle
+    /// consistently (for example, the same id both live and deleted).
+    case invalidDocument(String)
+}
+
+extension StoreError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .futureSchema(let found, let supported):
+            "This export uses schema version \(found). This app supports version \(supported); update the app before importing it. Nothing was changed."
+        case .olderSchema(let found, let supported):
+            "This export uses schema version \(found), but this app supports version \(supported) and has no safe migration for it. Nothing was changed."
+        case .invalidDocument(let reason):
+            "This export is internally inconsistent: \(reason) Nothing was changed."
+        }
+    }
 }
 
 /// Where the document came from, so the app can be honest about it.
@@ -38,10 +55,12 @@ struct StoreFile: Sendable {
 
     let url: URL
     let backupURL: URL
+    let importBackupURL: URL
 
     init(directory: URL) {
         self.url = directory.appendingPathComponent("store.json")
         self.backupURL = directory.appendingPathComponent("store.backup.json")
+        self.importBackupURL = directory.appendingPathComponent("store.before-import.json")
     }
 
     var directory: URL { url.deletingLastPathComponent() }
@@ -121,6 +140,37 @@ struct StoreFile: Sendable {
         // Writes a temporary file and renames it, so a reader — or a crash —
         // sees either the whole old document or the whole new one.
         try data.write(to: url, options: .atomic)
+    }
+
+    /// Keeps the exact in-memory document that a replace import is about to
+    /// discard. This is separate from the rolling save backup: recent edits
+    /// may not have reached that file yet when the user imports.
+    func writeImportBackup(_ document: StoreDocument) throws {
+        try prepareDirectory()
+        try StoreCoding.encode(document).write(to: importBackupURL, options: .atomic)
+    }
+
+    var hasImportBackup: Bool {
+        FileManager.default.fileExists(atPath: importBackupURL.path)
+    }
+
+    func importBackupData() throws -> Data {
+        try Data(contentsOf: importBackupURL)
+    }
+
+    /// Exchanges the live document and the pre-import recovery document in
+    /// one filesystem operation. There is deliberately no sequence of two
+    /// moves here: a crash must leave either the old pair or the new pair,
+    /// never two copies of the document the user was trying to get away from.
+    func swapWithImportBackup() throws {
+        let result = renameatx_np(
+            AT_FDCWD, url.path,
+            AT_FDCWD, importBackupURL.path,
+            UInt32(RENAME_SWAP)
+        )
+        guard result == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
     }
 
     func prepareDirectory() throws {
