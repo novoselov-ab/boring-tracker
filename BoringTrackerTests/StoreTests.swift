@@ -1,4 +1,9 @@
 import Foundation
+// For `move(fromOffsets:toOffset:)`, which is SwiftUI's, not the stdlib's.
+// These tests build the order a `List` would have produced and hand it to
+// `reorder`; without the import they compile only by borrowing the module
+// through another one, which a future language mode stops allowing.
+import SwiftUI
 import Testing
 @testable import BoringTracker
 

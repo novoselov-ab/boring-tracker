@@ -84,13 +84,17 @@ struct SettingsView: View {
         // coordinate space declared on the `List` is not reachable from inside
         // its rows: each side silently falls back to a different default, which
         // is how every drop landed on a row nobody dropped anything on.
+        //
+        // The band a drop may land in is this frame as reported, with nothing
+        // added to it. Measured on an iPhone 17: the proxy says
+        // `(0, 116, 402, 724)` with `safeAreaInsets` of 116 and 34, so the
+        // frame is *already* the safe area and the insets describe what has
+        // been taken off it. Adding `insets.top` back on counted it twice, put
+        // the band at 232...806, and left the first row — 166 to 210, the
+        // handle's own 44pt box — outside it, so letting go squarely on that
+        // row dropped the tracker below it instead.
         .onGeometryChange(for: CGRect.self) { proxy in
-            let frame = proxy.frame(in: .global)
-            let insets = proxy.safeAreaInsets
-            return CGRect(x: frame.minX,
-                          y: frame.minY + insets.top,
-                          width: frame.width,
-                          height: frame.height - insets.top - insets.bottom)
+            proxy.frame(in: .global)
         } action: {
             visibleBounds = $0
         }
@@ -263,24 +267,37 @@ struct SettingsView: View {
         return Set(store.trackersCarried(moving: drag.source, onto: target))
     }
 
-    /// The visible row whose middle is closest to this point. Rows scrolled out
-    /// of sight are not candidates: their frames are still recorded, and a drop
-    /// belongs on something the finger could see. The comparison is against the
-    /// list's *safe* area, not its layout frame — a `List` is laid out full
-    /// height underneath the navigation bar, so rows tucked behind the bar are
-    /// inside the frame and still invisible, and dragging to the top edge is
-    /// exactly where a finger goes.
     private func row(nearest y: CGFloat) -> UUID? {
-        runs.flatMap { $0 }
-            .compactMap { tracker -> (UUID, CGFloat)? in
-                guard let frame = rowFrames[tracker.id],
-                      frame.maxY >= visibleBounds.minY,
-                      frame.minY <= visibleBounds.maxY else { return nil }
-                return (tracker.id, frame.midY)
-            }
-            .min { abs($0.1 - y) < abs($1.1 - y) }?
-            .0
+        dropTarget(at: y,
+                   rows: runs.flatMap { $0 }.compactMap { tracker in
+                       rowFrames[tracker.id].map { (tracker.id, $0) }
+                   },
+                   visible: visibleBounds)
     }
+}
+
+/// The visible row whose middle is closest to `y`. Rows scrolled out of sight
+/// are not candidates: their frames are still recorded, and a drop belongs on
+/// something the finger could see. Overlapping the band is enough — a row half
+/// under the navigation bar is half on screen, and dragging to the top edge to
+/// reach the first row is exactly where a finger goes.
+///
+/// Pulled out of the view and free of SwiftUI so it can be tested without a
+/// simulator. Settings has now got this answer wrong twice, in two different
+/// ways, and neither showed up in a screenshot of the list at rest: the first
+/// compared two coordinate spaces that were never the same one, the second
+/// shrank the band by a safe-area inset that had already been applied and made
+/// the first row impossible to drop on. Both silently rewrote the stored order
+/// and stamped it as a decision (docs/TECH.md, "Mergeable by design"), which is
+/// the kind of wrong this app cannot afford to find out about by eye.
+///
+/// Rows are passed in the order they are drawn, so equidistant rows resolve to
+/// the higher one rather than to whatever the layout happened to hand over.
+func dropTarget(at y: CGFloat, rows: [(id: UUID, frame: CGRect)], visible: CGRect) -> UUID? {
+    rows.lazy
+        .filter { $0.frame.maxY >= visible.minY && $0.frame.minY <= visible.maxY }
+        .min { abs($0.frame.midY - y) < abs($1.frame.midY - y) }?
+        .id
 }
 
 #Preview {

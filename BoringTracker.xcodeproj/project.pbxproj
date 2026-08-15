@@ -13,6 +13,7 @@
 		1C2B371CCBA2CADD3137DAD2 /* ChartDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D8B76258CC2F88D6E08D935 /* ChartDataTests.swift */; };
 		29208FB2BDFAC0D3ABE68B97 /* StoreSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AACECDA0A3B2528BE4DEDF5 /* StoreSaver.swift */; };
 		41C44088FB8828A51019C675 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECB67213A9E9B62A18C2139 /* HomeView.swift */; };
+		47D615BD2BCD965EA88496D2 /* DropTargetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AA4F04D4E1E7F598E1E3B4 /* DropTargetTests.swift */; };
 		4A014E4818154348886F5C75 /* Tracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FAA4710A9AAAE2578DFBA8 /* Tracker.swift */; };
 		54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448B1DFA3C2C0226744A5DD7 /* NumberInput.swift */; };
 		57FD846D7584CBB6511F05B5 /* DayBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */; };
@@ -70,11 +71,12 @@
 		9C0ADCD149B1C513DBDA3274 /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
 		9FEF582BB28BAC2425B52542 /* TrackerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerDetailView.swift; sourceTree = "<group>"; };
 		A459D3E53C6D189A1607B841 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		A7AA4F04D4E1E7F598E1E3B4 /* DropTargetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropTargetTests.swift; sourceTree = "<group>"; };
 		A969A39BC7CB25B3D09CCB18 /* StoreDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDocument.swift; sourceTree = "<group>"; };
 		B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartData.swift; sourceTree = "<group>"; };
 		CECB67213A9E9B62A18C2139 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayBoundaryTests.swift; sourceTree = "<group>"; };
-		"TEMP_12B8FD02-EF86-400A-81E2-BE32441BB0BF" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		"TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -95,6 +97,7 @@
 			children = (
 				6D8B76258CC2F88D6E08D935 /* ChartDataTests.swift */,
 				CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */,
+				A7AA4F04D4E1E7F598E1E3B4 /* DropTargetTests.swift */,
 				9294BF10816F1BD93987BC0B /* MergeTests.swift */,
 				5F34ADAEE0EB8F446DDF5A80 /* NumberInputTests.swift */,
 				9C0ADCD149B1C513DBDA3274 /* PersistenceTests.swift */,
@@ -176,10 +179,10 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		"TEMP_CDB8A463-F6AA-49B6-99DB-242E67617BDB" /* whatever-tracker */ = {
+		"TEMP_A9566619-F57F-4E50-A601-E4C17B144E5D" /* whatever-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_12B8FD02-EF86-400A-81E2-BE32441BB0BF" /* Signing.xcconfig */,
+				"TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */,
 			);
 			path = "whatever-tracker";
 			sourceTree = "<group>";
@@ -291,6 +294,7 @@
 			files = (
 				1C2B371CCBA2CADD3137DAD2 /* ChartDataTests.swift in Sources */,
 				57FD846D7584CBB6511F05B5 /* DayBoundaryTests.swift in Sources */,
+				47D615BD2BCD965EA88496D2 /* DropTargetTests.swift in Sources */,
 				FC7CEDE59CFB7B5247178990 /* MergeTests.swift in Sources */,
 				89E8D750F3D2ED2586B5E816 /* NumberInputTests.swift in Sources */,
 				949CC7AB41FE6C6546BCBD70 /* PersistenceTests.swift in Sources */,
@@ -352,7 +356,7 @@
 		};
 		84E36E9438E1A596A58CE3EA /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_12B8FD02-EF86-400A-81E2-BE32441BB0BF" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -452,7 +456,7 @@
 		};
 		C4D6BC27C60125D6365F7A59 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_12B8FD02-EF86-400A-81E2-BE32441BB0BF" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

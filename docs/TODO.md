@@ -240,6 +240,20 @@ that shows what it will do is what makes that class of bug visible in one
 screenshot. Known cost, accepted: there is no edge autoscroll, so on a list
 longer than the screen a tracker moves a long way in more than one drag.
 
+**A drop candidate is filtered against the list's plain frame, and nothing is
+added to it.** The second version of this drag narrowed that band by
+`safeAreaInsets.top`, on the reasoning that a `List` runs full height under the
+navigation bar and rows behind the bar must not win a drop. Measured on an
+iPhone 17, the proxy reports `(0, 116, 402, 724)` with insets of 116 and 34:
+the frame is *already* the safe area, so the inset was being counted twice and
+the first row — 166 to 210 — fell outside a band starting at 232. Letting go
+squarely on the first row dropped the tracker below it instead, and an
+accidental nudge that should have moved nothing moved a row and stamped the
+whole list's `orderModified`. `DropTargetTests` pins the row-picking rule
+against the geometry the device actually reports; the band is one expression in
+the view and is still held only by that measurement, so change it by measuring
+again rather than by reasoning about where a `List` is laid out.
+
 Not on the common path, so it is judged by correctness rather than taps.
 
 ## 7. Put home's + in the thumb
