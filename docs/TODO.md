@@ -220,6 +220,26 @@ follow the flat order means a group can be drawn split under two identical
 headings, which one commit already fixed; and accepting the disagreement means
 a control that visibly does nothing.
 
+**Settings' drag is hand-rolled, and that is a decision.** A `List` confines a
+drag to the `ForEach` it starts in, so a section per run gives within-run
+reordering for free but leaves a loose tracker — the common case — unable to
+move at all. Reordering therefore uses an explicit handle, a `DragGesture` in
+`.global`, and a nearest-row drop, with the moving rows faded and the target
+tinted while the finger is down. The review offered a native `.onMove` over one
+flat `ForEach`, with group names drawn inside each run's first row instead of
+as section headers; it was **declined**, because settings drawing literally the
+same shape as home is the whole point of this item. Don't re-propose it, and
+don't quietly convert it while working in a neighbouring file.
+
+The feedback is not decoration. The first version drew nothing at all while
+dragging, and compared row frames against touch locations resolved in two
+different coordinate spaces — so every drop landed on the first row, and the
+reproduction that was supposed to prove it worked passed by coincidence,
+because in the starter order the wrong target gives the right answer. A drag
+that shows what it will do is what makes that class of bug visible in one
+screenshot. Known cost, accepted: there is no edge autoscroll, so on a list
+longer than the screen a tracker moves a long way in more than one drag.
+
 Not on the common path, so it is judged by correctness rather than taps.
 
 ## 7. Put home's + in the thumb
