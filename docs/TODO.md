@@ -302,6 +302,33 @@ frames extracted with AVAssetImageGenerator show the settled form unchanged
 through 13.083 s and the sheet/keyboard dismissal beginning together at
 13.100 s. The repository still has no UI-test target.
 
+Review reproduced all three positions from simulators created for the run —
+95.31%, 93.18%, 95.91%, against the 95.28 / 93.17 / 95.89 above — and measured
+the snapshot against its own counterfactual, which is the more durable number
+than a single run's clock. Building the parent revision's `LogSheet` and
+driving the identical flow gives **two frames of form motion, a coarse-grid
+mean pixel difference of 7.74 then 7.85 over the form region, before the sheet
+begins to leave**. With the snapshot in place the same two frames read 0.28 and
+0.00. That is the "~2-frame content jump" this item set out to remove, and it
+is what earns the two pieces of frozen state their place.
+
+Clearance below the button, which is the thing a 95% position actually risks:
+40pt on iPhone 17 Pro Max and 31pt on iPad Pro 13, both clear of the home
+indicator and its swipe region. The SE's 6pt is the tightest and the safest —
+it has a Home button, so no bottom gesture region exists to collide with.
+
+Two defects in the new code came out of the review and are fixed here. The
+`.bar` material was drawn behind only the width-constrained button, so on a
+regular-width screen the list scrolled through untinted gutters either side of
+it with rows sitting half-clipped at the screen edge; the background now spans
+the inset while the button keeps its 440pt cap. And the recents snapshot built
+its dictionary with `uniqueKeysWithValues`, which traps: a store file holding
+two trackers with the same id loads, draws home and opens the sheet, then
+killed the app on the Log button — confirmed by seeding such a file and reading
+the crash report. It now uses `uniquingKeysWith`, the form `Store.reorderAll`
+already uses, so bad data stays survivable the way the rest of the store layer
+intends.
+
 ## 8. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.

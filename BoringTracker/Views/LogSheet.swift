@@ -32,7 +32,9 @@ struct LogSheet: View {
         var id = UUID()
         /// Which trackers the sheet shows.
         var group: LogGroup
-        /// Which field starts focused when the sheet opens.
+        /// Which field starts focused — the tracker whose + was tapped. `nil`
+        /// from the primary action, which has no particular tracker in mind
+        /// and lands on the first field of whatever group it opened.
         var tracker: UUID?
     }
 
@@ -251,8 +253,13 @@ struct LogSheet: View {
         // leaving. Freeze what is on screen so a first chip cannot insert a
         // row (or a new value reorder it) during the dismissal frames.
         frozenRecentsTracker = focused
+        // `uniquingKeysWith`, not `uniqueKeysWithValues`: nothing on the load
+        // path rejects a store file with two trackers sharing an id, and every
+        // other reader here tolerates one. Trapping would turn a file the app
+        // otherwise opens and draws into a crash on the Log button.
         frozenRecents = Dictionary(
-            uniqueKeysWithValues: trackers.map { ($0.id, store.recentValues(for: $0.id)) }
+            trackers.map { ($0.id, store.recentValues(for: $0.id)) },
+            uniquingKeysWith: { first, _ in first }
         )
         store.add(values: amounts, at: date, name: trimmed.isEmpty ? nil : trimmed)
         // Written on log rather than on open, so dismissing a group you

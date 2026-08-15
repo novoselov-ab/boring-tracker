@@ -41,6 +41,11 @@ struct HomeView: View {
                     .controlSize(.large)
                     .padding(.horizontal)
                     .padding(.vertical, 6)
+                    // The inset is reserved across the full width, so the bar
+                    // has to span it. Backing only the constrained button left
+                    // the list scrolling through untinted gutters either side
+                    // of it on a regular-width screen.
+                    .frame(maxWidth: .infinity)
                     .background(.bar)
                 }
             }
@@ -68,10 +73,10 @@ struct HomeView: View {
     /// in between — that would be a tap on the common path, every time.
     private func logLastGroup() {
         guard let group = store.groupToLog(preferring: lastGroup) else { return }
-        LogSheet.present(
-            .init(group: group, tracker: store.trackers(in: group).first?.id),
-            using: $logging
-        )
+        // No `tracker:` — the sheet already lands on the first field of the
+        // group when none is named, and it resolves that from the store as it
+        // opens rather than from a snapshot taken here.
+        LogSheet.present(.init(group: group), using: $logging)
     }
 
     /// A dead end otherwise: with every tracker deleted or archived there is
