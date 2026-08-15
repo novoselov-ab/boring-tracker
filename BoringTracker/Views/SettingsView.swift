@@ -12,79 +12,87 @@ struct SettingsView: View {
     @Environment(Store.self) private var store
     @State private var editing: Tracker?
     @State private var rowFrames: [UUID: CGRect] = [:]
-    @State private var orderingHeight: CGFloat = 0
-    @State private var autoScrollDirection = 0
+    @State private var visibleBounds: CGRect = .zero
+    /// A drag in flight: what is held, and what letting go would drop it on.
+    private struct Drag: Equatable {
+        var source: UUID
+        var target: UUID?
+    }
+
+    /// One `@GestureState` rather than two pieces of `@State`, because SwiftUI
+    /// puts it back on its own when a drag is cancelled — the list rebuilt, the
+    /// row torn down — and `onEnded` does not run in that case. Held as plain
+    /// state, a cancelled drag would leave rows faded and tinted with nothing
+    /// being dragged, and only the next completed drag would clear it.
+    @GestureState private var drag: Drag?
 
     var body: some View {
-        ScrollViewReader { scrollProxy in
-            List {
-                ForEach(runs, id: \.first?.id) { run in
-                    Section {
-                        ForEach(run) { tracker in
-                            reorderableRow(tracker, scrollProxy: scrollProxy)
-                                .id(tracker.id)
-                                .onGeometryChange(for: CGRect.self) {
-                                    $0.frame(in: .named("tracker-ordering"))
-                                } action: { frame in
-                                    rowFrames[tracker.id] = frame
-                                }
-                        }
-                    } header: {
-                        if let group = run.first?.group, !group.isEmpty {
-                            Text(group)
-                        }
-                    }
-                }
-
-                if !store.activeTrackers.isEmpty {
-                    Section {
-                        EmptyView()
-                    } footer: {
-                        Text("Drag a tracker's handle to reorder. Between sections, its whole group moves with it. Change membership by editing a tracker.")
-                    }
-                }
-
+        let carried = carriedByDrop
+        return List {
+            ForEach(runs, id: \.first?.id) { run in
                 Section {
-                    Button("Add Tracker", systemImage: "plus") {
-                        // No group by default. A group means "logged at the
-                        // same time as these", which is a claim about the new
-                        // tracker that nobody has made yet, and defaulting to
-                        // whichever one happened to be first makes it silently.
-                        // It costs nothing to say: the picker is right there, and
-                        // once the log sheet is group-scoped (docs/TODO.md item
-                        // 3) a wrong guess here puts Steps in your meal sheet.
-                        editing = Tracker(name: "")
+                    ForEach(run) { tracker in
+                        reorderableRow(tracker, carried: carried)
+                            .onGeometryChange(for: CGRect.self) {
+                                $0.frame(in: .global)
+                            } action: { frame in
+                                rowFrames[tracker.id] = frame
+                            }
+                    }
+                } header: {
+                    if let group = run.first?.group, !group.isEmpty {
+                        Text(group)
                     }
                 }
+            }
 
-                if !store.archivedTrackers.isEmpty {
-                    Section {
-                        ForEach(store.archivedTrackers) { tracker in
-                            row(tracker)
-                        }
-                    } header: {
-                        Text("Archived")
-                    } footer: {
-                        Text("Hidden from the home screen. Nothing logged against them is lost.")
-                    }
+            if !store.activeTrackers.isEmpty {
+                Section {
+                    EmptyView()
+                } footer: {
+                    Text("Drag a tracker's handle to reorder. Between sections, its whole group moves with it. Change membership by editing a tracker.")
                 }
             }
-            .coordinateSpace(name: "tracker-ordering")
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
-                orderingHeight = $0
-            }
-            .task(id: autoScrollDirection) {
-                let direction = autoScrollDirection
-                guard direction != 0 else { return }
-                while !Task.isCancelled {
-                    scrollOneStep(direction, using: scrollProxy)
-                    do {
-                        try await Task.sleep(for: .milliseconds(150))
-                    } catch {
-                        return
-                    }
+
+            Section {
+                Button("Add Tracker", systemImage: "plus") {
+                    // No group by default. A group means "logged at the
+                    // same time as these", which is a claim about the new
+                    // tracker that nobody has made yet, and defaulting to
+                    // whichever one happened to be first makes it silently.
+                    // It costs nothing to say: the picker is right there, and
+                    // once the log sheet is group-scoped (docs/TODO.md item
+                    // 3) a wrong guess here puts Steps in your meal sheet.
+                    editing = Tracker(name: "")
                 }
             }
+
+            if !store.archivedTrackers.isEmpty {
+                Section {
+                    ForEach(store.archivedTrackers) { tracker in
+                        row(tracker)
+                    }
+                } header: {
+                    Text("Archived")
+                } footer: {
+                    Text("Hidden from the home screen. Nothing logged against them is lost.")
+                }
+            }
+        }
+        // Both ends of the comparison a drop makes — every row's frame and the
+        // finger's location — are read in `.global`, and nothing else. A named
+        // coordinate space declared on the `List` is not reachable from inside
+        // its rows: each side silently falls back to a different default, which
+        // is how every drop landed on a row nobody dropped anything on.
+        .onGeometryChange(for: CGRect.self) { proxy in
+            let frame = proxy.frame(in: .global)
+            let insets = proxy.safeAreaInsets
+            return CGRect(x: frame.minX,
+                          y: frame.minY + insets.top,
+                          width: frame.width,
+                          height: frame.height - insets.top - insets.bottom)
+        } action: {
+            visibleBounds = $0
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -106,28 +114,37 @@ struct SettingsView: View {
             }
     }
 
-    private func reorderableRow(_ tracker: Tracker, scrollProxy: ScrollViewProxy) -> some View {
+    private func reorderableRow(_ tracker: Tracker, carried: Set<UUID>) -> some View {
         HStack(spacing: 12) {
             rowButton(tracker)
             Image(systemName: "line.3.horizontal")
                 .foregroundStyle(.tertiary)
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
-                .highPriorityGesture(reorderGesture(for: tracker.id, scrollProxy: scrollProxy))
-                .accessibilityLabel("Reorder \(tracker.name.isEmpty ? "Untitled" : tracker.name)")
+                .highPriorityGesture(reorderGesture(for: tracker.id))
+                .accessibilityLabel("Reorder \(name(of: tracker))")
                 .accessibilityHint("Drag onto another tracker")
                 .accessibilityActions {
-                    if canMove(tracker.id, by: -1) {
-                        Button("Move earlier") { move(tracker.id, by: -1) }
-                    }
-                    if canMove(tracker.id, by: 1) {
-                        Button("Move later") { move(tracker.id, by: 1) }
-                    }
+                    reorderActions(for: tracker)
                 }
         }
+        // What a drop would do, while the finger is still down: the rows that
+        // would move fade, and the row being dropped onto is tinted. Without
+        // it the gesture is invisible — you find out where a tracker landed
+        // only after letting go, which is how a drop target that resolved to
+        // the wrong row survived a hand-run reproduction.
+        .opacity(carried.contains(tracker.id) ? 0.4 : 1)
+        .background(drag?.target == tracker.id && !carried.isEmpty
+                    ? Color.accentColor.opacity(0.18)
+                    : .clear,
+                    in: .rect(cornerRadius: 8))
         .swipeActions(edge: .trailing) {
             archiveButton(tracker)
         }
+    }
+
+    private func name(of tracker: Tracker) -> String {
+        tracker.name.isEmpty ? "Untitled" : tracker.name
     }
 
     private func rowButton(_ tracker: Tracker) -> some View {
@@ -136,7 +153,15 @@ struct SettingsView: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(tracker.name.isEmpty ? "Untitled" : tracker.name)
+                    Text(name(of: tracker))
+                    // Only in the archived list, which has no group headings of
+                    // its own. Which group a tracker rejoins when it comes back
+                    // is the one thing this row would otherwise not say.
+                    if tracker.isArchived, !tracker.group.isEmpty {
+                        Text(tracker.group)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
@@ -161,65 +186,101 @@ struct SettingsView: View {
         .tint(tracker.isArchived ? .green : .orange)
     }
 
-    private func canMove(_ sourceID: UUID, by distance: Int) -> Bool {
-        let ids = runs.flatMap { $0 }.map(\.id)
-        guard let source = ids.firstIndex(of: sourceID) else { return false }
-        return ids.indices.contains(source + distance)
-    }
+    // MARK: - Reordering
 
-    private func move(_ sourceID: UUID, by distance: Int) {
-        let ids = runs.flatMap { $0 }.map(\.id)
-        guard let source = ids.firstIndex(of: sourceID),
-              ids.indices.contains(source + distance) else { return }
-        withAnimation {
-            store.move(sourceID, onto: ids[source + distance])
+    /// Two actions rather than one, because one row's neighbour can be another
+    /// tracker or another whole group and "Move later" cannot honestly mean
+    /// both. Said apart, each is its own inverse; said together, moving a
+    /// member later and then earlier lands somewhere neither step asked for.
+    @ViewBuilder
+    private func reorderActions(for tracker: Tracker) -> some View {
+        if let neighbour = memberNeighbour(of: tracker.id, by: -1) {
+            Button("Move earlier") { apply(tracker.id, onto: neighbour) }
+        }
+        if let neighbour = memberNeighbour(of: tracker.id, by: 1) {
+            Button("Move later") { apply(tracker.id, onto: neighbour) }
+        }
+        if let neighbour = runNeighbour(of: tracker.id, by: -1) {
+            Button("Move \(blockName(of: tracker)) earlier") { apply(tracker.id, onto: neighbour) }
+        }
+        if let neighbour = runNeighbour(of: tracker.id, by: 1) {
+            Button("Move \(blockName(of: tracker)) later") { apply(tracker.id, onto: neighbour) }
         }
     }
 
-    private func reorderGesture(for sourceID: UUID, scrollProxy: ScrollViewProxy) -> some Gesture {
-        DragGesture(minimumDistance: 4, coordinateSpace: .named("tracker-ordering"))
-            .onChanged { value in
-                autoScrollDirection = edgeDirection(at: value.location.y)
+    /// What moves when this row crosses a run boundary: the group by name, or
+    /// a loose tracker, which is a block of one and travels as itself.
+    private func blockName(of tracker: Tracker) -> String {
+        tracker.group.isEmpty ? name(of: tracker) : tracker.group
+    }
+
+    /// The tracker one place away inside the same run, if there is one.
+    private func memberNeighbour(of sourceID: UUID, by distance: Int) -> UUID? {
+        guard let run = runs.first(where: { $0.contains { $0.id == sourceID } }),
+              let index = run.firstIndex(where: { $0.id == sourceID }),
+              run.indices.contains(index + distance) else { return nil }
+        return run[index + distance].id
+    }
+
+    /// Any tracker in the run one place away, which is what a drop needs to
+    /// name in order to move this whole block past it.
+    private func runNeighbour(of sourceID: UUID, by distance: Int) -> UUID? {
+        guard let index = runs.firstIndex(where: { $0.contains { $0.id == sourceID } }),
+              runs.indices.contains(index + distance) else { return nil }
+        return runs[index + distance].first?.id
+    }
+
+    private func apply(_ sourceID: UUID, onto targetID: UUID) {
+        withAnimation {
+            store.move(sourceID, onto: targetID)
+        }
+    }
+
+    private func reorderGesture(for sourceID: UUID) -> some Gesture {
+        DragGesture(minimumDistance: 4, coordinateSpace: .global)
+            .updating($drag) { value, drag, _ in
+                // Only when the answer changes. Every write here rebuilds the
+                // list, and a finger reports a new position far more often
+                // than it crosses from one row to the next.
+                let next = Drag(source: sourceID, target: row(nearest: value.location.y))
+                if drag != next { drag = next }
             }
             .onEnded { value in
-                autoScrollDirection = 0
-                let targetID = visibleRows
-                    .min { abs($0.1 - value.location.y) < abs($1.1 - value.location.y) }?
-                    .0
-                guard let targetID else { return }
-                withAnimation {
-                    store.move(sourceID, onto: targetID)
-                }
+                guard let targetID = row(nearest: value.location.y) else { return }
+                apply(sourceID, onto: targetID)
             }
     }
 
-    private var visibleRows: [(UUID, CGFloat)] {
-        runs.flatMap { $0 }.compactMap { tracker in
-            guard let frame = rowFrames[tracker.id],
-                  frame.maxY >= 0, frame.minY <= orderingHeight else { return nil }
-            return (tracker.id, frame.midY)
-        }
+    /// The rows a drop right now would carry, which is the same question
+    /// `Store.move` answers: one tracker inside its run, the whole group
+    /// across a boundary. Empty when nothing is being dragged, and empty over
+    /// the dragged row itself, where letting go moves nothing.
+    ///
+    /// Read once per body pass and handed to the rows, rather than asked again
+    /// by every row: it is the same answer for all of them.
+    private var carriedByDrop: Set<UUID> {
+        guard let drag, let target = drag.target, target != drag.source else { return [] }
+        return Set(store.trackersCarried(moving: drag.source, onto: target))
     }
 
-    private func edgeDirection(at y: CGFloat) -> Int {
-        guard orderingHeight > 0 else { return 0 }
-        if y < 60 { return -1 }
-        if y > orderingHeight - 60 { return 1 }
-        return 0
+    /// The visible row whose middle is closest to this point. Rows scrolled out
+    /// of sight are not candidates: their frames are still recorded, and a drop
+    /// belongs on something the finger could see. The comparison is against the
+    /// list's *safe* area, not its layout frame — a `List` is laid out full
+    /// height underneath the navigation bar, so rows tucked behind the bar are
+    /// inside the frame and still invisible, and dragging to the top edge is
+    /// exactly where a finger goes.
+    private func row(nearest y: CGFloat) -> UUID? {
+        runs.flatMap { $0 }
+            .compactMap { tracker -> (UUID, CGFloat)? in
+                guard let frame = rowFrames[tracker.id],
+                      frame.maxY >= visibleBounds.minY,
+                      frame.minY <= visibleBounds.maxY else { return nil }
+                return (tracker.id, frame.midY)
+            }
+            .min { abs($0.1 - y) < abs($1.1 - y) }?
+            .0
     }
-
-    private func scrollOneStep(_ direction: Int, using scrollProxy: ScrollViewProxy) {
-        let ids = runs.flatMap { $0 }.map(\.id)
-        let visible = visibleRows.sorted { $0.1 < $1.1 }
-        if direction < 0, let first = visible.first?.0,
-           let index = ids.firstIndex(of: first), index > ids.startIndex {
-            scrollProxy.scrollTo(ids[index - 1], anchor: .top)
-        } else if direction > 0, let last = visible.last?.0,
-                  let index = ids.firstIndex(of: last), index < ids.index(before: ids.endIndex) {
-            scrollProxy.scrollTo(ids[index + 1], anchor: .bottom)
-        }
-    }
-
 }
 
 #Preview {

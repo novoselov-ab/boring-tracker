@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI  // only for `move(fromOffsets:toOffset:)`, which lives there
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -389,16 +388,26 @@ final class Store {
         delete(tracker)
     }
 
-    /// Reorders trackers the way they were drawn on screen.
-    ///
-    /// Takes the list the user was actually looking at, because a `List` reports
-    /// offsets into what it drew — and every screen that reorders hides the
-    /// archived ones. Applying those offsets to `trackers` directly moves the
-    /// wrong rows the moment anything is archived.
-    func move(_ visible: [Tracker], fromOffsets offsets: IndexSet, toOffset destination: Int) {
-        var reordered = visible
-        reordered.move(fromOffsets: offsets, toOffset: destination)
-        reorder(reordered)
+    /// The trackers a drop would carry: the dragged one alone inside its own
+    /// block, its whole block across a boundary. Settings shows this while the
+    /// finger is still down, so the rule lives here rather than being restated
+    /// by the screen that draws it — the two answering differently is a bug
+    /// nobody would see until after the drop.
+    func trackersCarried(moving sourceID: UUID, onto targetID: UUID) -> [UUID] {
+        let runs = activeTrackerRuns
+        guard let (source, target) = runIndices(runs, from: sourceID, to: targetID) else { return [] }
+        return source == target ? [sourceID] : runs[source].map(\.id)
+    }
+
+    private func runIndices(_ runs: [[Tracker]], from sourceID: UUID, to targetID: UUID) -> (Int, Int)? {
+        guard sourceID != targetID,
+              let source = runs.firstIndex(where: { run in
+                  run.contains { $0.id == sourceID }
+              }),
+              let target = runs.firstIndex(where: { run in
+                  run.contains { $0.id == targetID }
+              }) else { return nil }
+        return (source, target)
     }
 
     /// Drops one visible tracker onto another. Within a block, the tracker
@@ -406,14 +415,8 @@ final class Store {
     /// moves there instead — position never changes membership or splits a
     /// named group.
     func move(_ sourceID: UUID, onto targetID: UUID) {
-        guard sourceID != targetID else { return }
         let runs = activeTrackerRuns
-        guard let sourceRun = runs.firstIndex(where: { run in
-                  run.contains { $0.id == sourceID }
-              }),
-              let targetRun = runs.firstIndex(where: { run in
-                  run.contains { $0.id == targetID }
-              }) else { return }
+        guard let (sourceRun, targetRun) = runIndices(runs, from: sourceID, to: targetID) else { return }
 
         if sourceRun == targetRun {
             var run = runs[sourceRun]

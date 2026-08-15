@@ -234,7 +234,9 @@ struct StoreTests {
             Tracker(name: "C", sortIndex: 2, modified: time(1), orderModified: time(1)),
         ]))
 
-        store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        var order = store.activeTrackers
+        order.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        store.reorder(order)
 
         #expect(store.trackers.map(\.name) == ["C", "A", "B"])
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
@@ -263,7 +265,9 @@ struct StoreTests {
         let tablet = StoreDocument(trackers: [calories, protein, renamed])
 
         // At 10:05 the phone dragged Weight to the top and renamed nothing.
-        phone.move(phone.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        var order = phone.activeTrackers
+        order.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        phone.reorder(order)
         let merged = phone.document.merged(with: tablet)
         let result = merged.trackers.first { $0.id == weight.id }
 
@@ -320,7 +324,9 @@ struct StoreTests {
         let phone = makeStore(StoreDocument(trackers: [calories, protein, weight]))
         let tablet = StoreDocument(trackers: [calories, protein, weight])
 
-        phone.move(phone.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        var order = phone.activeTrackers
+        order.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        phone.reorder(order)
         let merged = phone.document.merged(with: tablet)
 
         // Resolving position per record rather than per field is what used to
@@ -435,7 +441,9 @@ struct StoreTests {
             Tracker(name: "D", sortIndex: 3, modified: time(1)),
         ]))
 
-        store.move(store.activeTrackers, fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        var order = store.activeTrackers
+        order.move(fromOffsets: IndexSet(integer: 2), toOffset: 0)
+        store.reorder(order)
 
         #expect(store.activeTrackers.map(\.name) == ["D", "A", "C"])
         // The archived one keeps the slot it had rather than being dragged along.
@@ -565,6 +573,101 @@ struct StoreTests {
         ])
     }
 
+    @Test("What a drop says it will carry is what it carries")
+    func carriedMatchesWhatTheMoveActuallyMoves() {
+        let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 1, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 2, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [calories, protein, weight]))
+
+        // Settings dims these rows while the finger is down, so a preview that
+        // disagreed with the drop would be a promise the release breaks.
+        #expect(store.trackersCarried(moving: calories.id, onto: protein.id) == [calories.id])
+        #expect(store.trackersCarried(moving: calories.id, onto: weight.id) == [calories.id, protein.id])
+        #expect(store.trackersCarried(moving: weight.id, onto: protein.id) == [weight.id])
+        // Nothing moves onto itself, and nothing moves onto a row that is gone.
+        #expect(store.trackersCarried(moving: calories.id, onto: calories.id).isEmpty)
+        #expect(store.trackersCarried(moving: calories.id, onto: UUID()).isEmpty)
+    }
+
+    @Test("A group with only archived members is not drawn and is not reordered")
+    func anEntirelyArchivedGroupStaysOutOfTheWay() {
+        let steps = Tracker(name: "Steps", sortIndex: 0,
+                            modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 3, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [
+            steps,
+            Tracker(name: "Calories", sortIndex: 1, isArchived: true, group: "Food",
+                    modified: time(1), orderModified: time(1)),
+            Tracker(name: "Protein", sortIndex: 2, isArchived: true, group: "Food",
+                    modified: time(1), orderModified: time(1)),
+            weight,
+        ]))
+
+        // Food is drawn nowhere, so it is not one of the runs a drop counts.
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [["Steps"], ["Weight"]])
+
+        // A drag straight across it: Weight is dropped on Steps, above Food.
+        store.move(weight.id, onto: steps.id)
+
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [["Weight"], ["Steps"]])
+        // Food kept its slot between them rather than being shuffled by a move
+        // nobody could see it take part in, and its two members stayed adjacent.
+        #expect(store.trackers.map(\.name) == ["Weight", "Calories", "Protein", "Steps"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2, 3])
+    }
+
+    @Test("A group anchored by an archived member still moves by what is drawn")
+    func aGroupAnchoredByAnArchivedMemberFollowsTheDrawnOrder() {
+        // Stored, Food comes first — but its first member is archived, so the
+        // first thing *drawn* is Steps. The blocks and the runs are therefore
+        // in different orders, and a drop has to follow the drawn one.
+        let steps = Tracker(name: "Steps", sortIndex: 1,
+                            modified: time(1), orderModified: time(1))
+        let protein = Tracker(name: "Protein", sortIndex: 2, group: "Food",
+                              modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, isArchived: true, group: "Food",
+                    modified: time(1), orderModified: time(1)),
+            steps,
+            protein,
+        ]))
+
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [["Steps"], ["Protein"]])
+
+        store.move(steps.id, onto: protein.id)
+
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [["Protein"], ["Steps"]])
+        #expect(store.trackers.map(\.name) == ["Calories", "Protein", "Steps"])
+    }
+
+    @Test("Unarchiving a group's last member brings it back where it was left")
+    func anEntirelyArchivedGroupComesBackInPlace() {
+        let steps = Tracker(name: "Steps", sortIndex: 0,
+                            modified: time(1), orderModified: time(1))
+        let calories = Tracker(name: "Calories", sortIndex: 1, isArchived: true, group: "Food",
+                               modified: time(1), orderModified: time(1))
+        let weight = Tracker(name: "Weight", sortIndex: 2, group: "Weight",
+                             modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [steps, calories, weight]))
+
+        store.move(weight.id, onto: steps.id)
+
+        var restored = store.trackers.first { $0.id == calories.id }!
+        restored.isArchived = false
+        store.update(restored)
+
+        // Food sat between the two blocks and stays between them: a block that
+        // took no part in the drag has no reason to come back somewhere else.
+        #expect(store.activeTrackerRuns.map { $0.map(\.name) } == [
+            ["Weight"], ["Calories"], ["Steps"],
+        ])
+    }
+
     @Test("Dropping where a tracker already sits does not claim a new order")
     func reorderingNoOpDoesNotStamp() {
         let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",
@@ -573,7 +676,9 @@ struct StoreTests {
                               modified: time(1), orderModified: time(1))
         let store = makeStore(StoreDocument(trackers: [calories, protein]))
 
-        store.move(store.activeTrackerRuns[0], fromOffsets: IndexSet(integer: 0), toOffset: 1)
+        var order = store.activeTrackerRuns[0]
+        order.move(fromOffsets: IndexSet(integer: 0), toOffset: 1)
+        store.reorder(order)
         store.move(calories.id, onto: calories.id)
 
         #expect(store.revision == 0)
