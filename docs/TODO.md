@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 12), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 13), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -329,7 +329,26 @@ the crash report. It now uses `uniquingKeysWith`, the form `Store.reorderAll`
 already uses, so bad data stays survivable the way the rest of the store layer
 intends.
 
-## 8. History screen
+## 8. Can a double-tap log twice?
+
+Raised by the item 7 review and **deliberately left unresolved**: `log()` does
+not disable the button before `dismiss()`, so a fast double-tap might write two
+entries. The reviewer could not land synthetic clicks fast enough to trigger it
+and reported it as *unverified in either direction* rather than guessing —
+which is the right call, and why it gets its own item instead of a shrug in a
+commit body.
+
+- [ ] **Settle whether it reproduces**, on a real device, with a real thumb.
+- [ ] If it does, disable the action on first tap rather than debouncing by
+      time — the action is idempotent per presentation, so state is the honest
+      fix.
+- [ ] If it doesn't, say so here and close it.
+
+Pre-existing, not introduced by item 7. It matters more than its size suggests:
+a silent duplicate entry on the most frequent action in the app is exactly the
+kind of wrong number nobody notices until a graph looks strange months later.
+
+## 9. History screen
 
 Everything logged, newest first, grouped by day — today is just the top of it.
 A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited
@@ -339,7 +358,7 @@ Without it, fixing a mistyped food means opening each tracker's detail
 separately and deleting a row in each. It's the natural consumer of `batchID`,
 and it comes right after the log sheet that starts writing them.
 
-## 9. Export, import, CSV
+## 10. Export, import, CSV
 
 Rule 6 is unfulfilled until data can leave. `exportData`/`importData` already
 exist and are tested; nothing calls them. Import needs an explicit
@@ -347,18 +366,18 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 10. CI
+## 11. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 11. Use it on a real phone for a week
+## 12. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 12. Search and repeat
+## 13. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -379,7 +398,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 13. App icon and asset catalog
+## 14. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
