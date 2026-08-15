@@ -348,7 +348,7 @@ Pre-existing, not introduced by item 7. It matters more than its size suggests:
 a silent duplicate entry on the most frequent action in the app is exactly the
 kind of wrong number nobody notices until a graph looks strange months later.
 
-## 9. History screen
+## 9. History screen — done
 
 Everything logged, newest first, grouped by day — today is just the top of it.
 A batch is **one row** ("chicken rice — 100 kcal, 10 g"), deleted or edited

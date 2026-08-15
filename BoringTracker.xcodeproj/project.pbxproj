@@ -9,9 +9,12 @@
 /* Begin PBXBuildFile section */
 		09AF7BCF35A518DFC757B803 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 495A6545977B6595DAAAABF0 /* SettingsView.swift */; };
 		0AE1F1E46CC38DD6DACB2513 /* EntryEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CFCCEF33B5C6690E3B4953 /* EntryEditor.swift */; };
+		0B30E8F06998F873F10D9433 /* HistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E46836479675695F7D581EA /* HistoryTests.swift */; };
 		16DAB5EB550B24EE3D89DCDC /* StoreCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5817F8C4CA51B7DCE31DFD64 /* StoreCoding.swift */; };
 		1C2B371CCBA2CADD3137DAD2 /* ChartDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D8B76258CC2F88D6E08D935 /* ChartDataTests.swift */; };
 		29208FB2BDFAC0D3ABE68B97 /* StoreSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AACECDA0A3B2528BE4DEDF5 /* StoreSaver.swift */; };
+		2D83EFD094E34B98BAA91BF0 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721C965AFA696A46040D7D36 /* HistoryView.swift */; };
+		2F33FA871520132E396FFA90 /* HistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */; };
 		41C44088FB8828A51019C675 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECB67213A9E9B62A18C2139 /* HomeView.swift */; };
 		47D615BD2BCD965EA88496D2 /* DropTargetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AA4F04D4E1E7F598E1E3B4 /* DropTargetTests.swift */; };
 		4A014E4818154348886F5C75 /* Tracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FAA4710A9AAAE2578DFBA8 /* Tracker.swift */; };
@@ -25,6 +28,7 @@
 		9D0D944F40B37978E9DA7E9B /* DayKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B941541BF6510B5BEF12183 /* DayKey.swift */; };
 		9EFE745A11182762A8E629A2 /* SaverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69DA2DD12CE8CA21818DB024 /* SaverTests.swift */; };
 		9F4368982340D7AF8E9FCA89 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCAFC737D806B272A234023 /* TestSupport.swift */; };
+		B2B2A91BCFE51F52536FAC2D /* BatchEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F07BBECEEE911AD640084EA /* BatchEditor.swift */; };
 		BFA542335CD8266627F4299C /* TrackerEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59216142E80C1D1498852B21 /* TrackerEditor.swift */; };
 		C156CD42E49B7C468483B502 /* StoreFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00747A2D2ACDB434137D0C82 /* StoreFile.swift */; };
 		D11F5992161D57E1C95EAD4B /* ChartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */; };
@@ -50,8 +54,10 @@
 		00747A2D2ACDB434137D0C82 /* StoreFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFile.swift; sourceTree = "<group>"; };
 		04CFCCEF33B5C6690E3B4953 /* EntryEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditor.swift; sourceTree = "<group>"; };
 		084EE3BDCCB999971A7495D1 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryItem.swift; sourceTree = "<group>"; };
 		0D21F9B9F86129F67E210378 /* BoringTracker.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BoringTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCAFC737D806B272A234023 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		1F07BBECEEE911AD640084EA /* BatchEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchEditor.swift; sourceTree = "<group>"; };
 		2D3DF3ADA3E291FA72134943 /* BoringTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringTrackerApp.swift; sourceTree = "<group>"; };
 		4010498F64E2147438126D2C /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		448B1DFA3C2C0226744A5DD7 /* NumberInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberInput.swift; sourceTree = "<group>"; };
@@ -65,7 +71,9 @@
 		5F34ADAEE0EB8F446DDF5A80 /* NumberInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberInputTests.swift; sourceTree = "<group>"; };
 		69DA2DD12CE8CA21818DB024 /* SaverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaverTests.swift; sourceTree = "<group>"; };
 		6D8B76258CC2F88D6E08D935 /* ChartDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDataTests.swift; sourceTree = "<group>"; };
+		6E46836479675695F7D581EA /* HistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryTests.swift; sourceTree = "<group>"; };
 		71EEDC4A0698106FF1991C62 /* BoringTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BoringTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		721C965AFA696A46040D7D36 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		84FAA4710A9AAAE2578DFBA8 /* Tracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
 		9294BF10816F1BD93987BC0B /* MergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergeTests.swift; sourceTree = "<group>"; };
 		9C0ADCD149B1C513DBDA3274 /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
@@ -76,7 +84,7 @@
 		B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartData.swift; sourceTree = "<group>"; };
 		CECB67213A9E9B62A18C2139 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayBoundaryTests.swift; sourceTree = "<group>"; };
-		"TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		"TEMP_D546F125-ADE5-462A-996A-A22569DFC7F5" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -98,6 +106,7 @@
 				6D8B76258CC2F88D6E08D935 /* ChartDataTests.swift */,
 				CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */,
 				A7AA4F04D4E1E7F598E1E3B4 /* DropTargetTests.swift */,
+				6E46836479675695F7D581EA /* HistoryTests.swift */,
 				9294BF10816F1BD93987BC0B /* MergeTests.swift */,
 				5F34ADAEE0EB8F446DDF5A80 /* NumberInputTests.swift */,
 				9C0ADCD149B1C513DBDA3274 /* PersistenceTests.swift */,
@@ -132,6 +141,7 @@
 			children = (
 				B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */,
 				5B941541BF6510B5BEF12183 /* DayKey.swift */,
+				0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */,
 				448B1DFA3C2C0226744A5DD7 /* NumberInput.swift */,
 			);
 			path = Support;
@@ -140,7 +150,9 @@
 		8320CA02FA3F5D2CDD6F55BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				1F07BBECEEE911AD640084EA /* BatchEditor.swift */,
 				04CFCCEF33B5C6690E3B4953 /* EntryEditor.swift */,
+				721C965AFA696A46040D7D36 /* HistoryView.swift */,
 				CECB67213A9E9B62A18C2139 /* HomeView.swift */,
 				5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */,
 				495A6545977B6595DAAAABF0 /* SettingsView.swift */,
@@ -179,10 +191,10 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		"TEMP_A9566619-F57F-4E50-A601-E4C17B144E5D" /* whatever-tracker */ = {
+		"TEMP_7ED023CF-EBF9-4B0A-9C15-5F852A6564FC" /* whatever-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */,
+				"TEMP_D546F125-ADE5-462A-996A-A22569DFC7F5" /* Signing.xcconfig */,
 			);
 			path = "whatever-tracker";
 			sourceTree = "<group>";
@@ -267,11 +279,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2B2A91BCFE51F52536FAC2D /* BatchEditor.swift in Sources */,
 				90F6373A0190CF5CB7D6A78E /* BoringTrackerApp.swift in Sources */,
 				D11F5992161D57E1C95EAD4B /* ChartData.swift in Sources */,
 				9D0D944F40B37978E9DA7E9B /* DayKey.swift in Sources */,
 				D91E3EFB4B5DA1008E5D362D /* Entry.swift in Sources */,
 				0AE1F1E46CC38DD6DACB2513 /* EntryEditor.swift in Sources */,
+				2F33FA871520132E396FFA90 /* HistoryItem.swift in Sources */,
+				2D83EFD094E34B98BAA91BF0 /* HistoryView.swift in Sources */,
 				41C44088FB8828A51019C675 /* HomeView.swift in Sources */,
 				6B57D79A245A869FCD38FA05 /* LogSheet.swift in Sources */,
 				54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */,
@@ -295,6 +310,7 @@
 				1C2B371CCBA2CADD3137DAD2 /* ChartDataTests.swift in Sources */,
 				57FD846D7584CBB6511F05B5 /* DayBoundaryTests.swift in Sources */,
 				47D615BD2BCD965EA88496D2 /* DropTargetTests.swift in Sources */,
+				0B30E8F06998F873F10D9433 /* HistoryTests.swift in Sources */,
 				FC7CEDE59CFB7B5247178990 /* MergeTests.swift in Sources */,
 				89E8D750F3D2ED2586B5E816 /* NumberInputTests.swift in Sources */,
 				949CC7AB41FE6C6546BCBD70 /* PersistenceTests.swift in Sources */,
@@ -356,7 +372,7 @@
 		};
 		84E36E9438E1A596A58CE3EA /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_D546F125-ADE5-462A-996A-A22569DFC7F5" /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -456,7 +472,7 @@
 		};
 		C4D6BC27C60125D6365F7A59 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_251DE34D-00D4-40C7-9FF3-8223F3CD29C4" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_D546F125-ADE5-462A-996A-A22569DFC7F5" /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

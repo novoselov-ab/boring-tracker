@@ -25,8 +25,12 @@ final class Store {
     private(set) var origin: StoreOrigin
     /// Set when a save fails, so the app can say so instead of pretending.
     private(set) var saveError: String?
-    /// The entry deleted most recently, so it can be put straight back.
-    private(set) var lastDeletion: Entry?
+    /// The newest member of what was deleted most recently. Detail uses this
+    /// to decide whether its undo row belongs on screen; the complete deletion
+    /// is kept separately so one history-row delete can restore a whole batch.
+    var lastDeletion: Entry? { lastDeletedEntries.first }
+    var lastDeletionCount: Int { lastDeletedEntries.count }
+    private var lastDeletedEntries: [Entry] = []
 
     /// One derived index: the sum of every daily-total tracker, per local day.
     /// It backs both the home screen number and the graph, so nothing has to
@@ -238,6 +242,24 @@ final class Store {
         DayKey(entry.date, calendar: calendar)
     }
 
+    /// Every row in the complete history, newest first. `batchID` is consumed
+    /// here rather than inferred from matching times or names: those fields are
+    /// editable, while the id is the stored statement that the values were one
+    /// log. Entries without one are deliberately rows of their own.
+    var historyItems: [HistoryItem] {
+        var batches: [UUID: [Entry]] = [:]
+        var items: [HistoryItem] = []
+        for entry in entries {
+            if let batchID = entry.batchID {
+                batches[batchID, default: []].append(entry)
+            } else if let item = HistoryItem(entries: [entry]) {
+                items.append(item)
+            }
+        }
+        items.append(contentsOf: batches.values.compactMap(HistoryItem.init(entries:)))
+        return items.sorted { ($0.date, $0.sortID) > ($1.date, $1.sortID) }
+    }
+
     // MARK: - Entries
 
     func add(_ entry: Entry) {
@@ -265,24 +287,61 @@ final class Store {
     }
 
     func update(_ entry: Entry) {
-        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
-        let old = entries[index]
-        var updated = entry
-        updated.modified = .stamp()
-        apply(-1, to: old)
-        entries.remove(at: index)
-        insertSorted(updated)
-        apply(1, to: updated)
+        update([entry])
+    }
+
+    /// Saves every member edited from one history row as one mutation. If any
+    /// member disappeared while the editor was open, nothing is written: a
+    /// stale sheet must not resurrect an entry deleted elsewhere.
+    @discardableResult
+    func update(_ updatedEntries: [Entry]) -> Bool {
+        let ids = Set(updatedEntries.map(\.id))
+        guard !ids.isEmpty,
+              ids.count == updatedEntries.count,
+              entries.count(where: { ids.contains($0.id) }) == ids.count else { return false }
+
+        let oldEntries = entries.filter { ids.contains($0.id) }
+        for old in oldEntries { apply(-1, to: old) }
+        entries.removeAll { ids.contains($0.id) }
+
+        let now = Date.stamp()
+        for var updated in updatedEntries {
+            updated.modified = now
+            insertSorted(updated)
+            apply(1, to: updated)
+        }
         refreshToday()
         scheduleSave()
+        return true
     }
 
     func delete(_ entry: Entry) {
-        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
-        apply(-1, to: entries[index])
-        entries.remove(at: index)
-        recordDeletion(of: entry.id)
-        lastDeletion = entry
+        delete(entries: [entry])
+    }
+
+    /// Deletes the complete surviving batch behind one history row. A missing
+    /// `batchID`, and a batch reduced to one member by tracker detail, both
+    /// naturally delete just that ordinary single row.
+    func deleteBatch(containing entry: Entry) {
+        let matching = if let batchID = entry.batchID {
+            entries.filter { $0.batchID == batchID }
+        } else {
+            entries.filter { $0.id == entry.id }
+        }
+        delete(entries: matching)
+    }
+
+    private func delete(entries deletedEntries: [Entry]) {
+        let ids = Set(deletedEntries.map(\.id))
+        let existing = entries.filter { ids.contains($0.id) }
+        guard !existing.isEmpty else { return }
+        for entry in existing {
+            apply(-1, to: entry)
+            recordDeletion(of: entry.id)
+        }
+        entries.removeAll { ids.contains($0.id) }
+        lastDeletedEntries = existing.sorted { ($0.date, $0.id) > ($1.date, $1.id) }
+        refreshToday()
         scheduleSave()
     }
 
@@ -297,17 +356,23 @@ final class Store {
     /// again. Tombstones beat resurrections on purpose, and the alternative
     /// costs more than this corner is worth.
     func undoLastDeletion() {
-        guard let entry = lastDeletion else { return }
-        tombstones.removeAll { $0.id == entry.id }
-        insertSorted(entry)
-        apply(1, to: entry)
-        lastDeletion = nil
+        guard !lastDeletedEntries.isEmpty else { return }
+        let existingIDs = Set(entries.map(\.id))
+        let restorable = lastDeletedEntries.filter { !existingIDs.contains($0.id) }
+        let restoredIDs = Set(restorable.map(\.id))
+        tombstones.removeAll { restoredIDs.contains($0.id) }
+        for entry in restorable {
+            insertSorted(entry)
+            apply(1, to: entry)
+        }
+        lastDeletedEntries = []
+        guard !restorable.isEmpty else { return }
         refreshToday()
         scheduleSave()
     }
 
     func forgetLastDeletion() {
-        lastDeletion = nil
+        lastDeletedEntries = []
     }
 
     // MARK: - Trackers
@@ -385,6 +450,9 @@ final class Store {
             recordDeletion(of: entry.id)
         }
         entries.removeAll { $0.trackerID == tracker.id }
+        // A previous entry undo must not be allowed to put history back after
+        // this explicit, stronger deletion.
+        lastDeletedEntries = []
         delete(tracker)
     }
 
@@ -573,6 +641,10 @@ final class Store {
         trackers = document.trackers.sorted { ($0.sortIndex, $0.id) < ($1.sortIndex, $1.id) }
         entries = StoreDocument.sorted(document.entries)
         tombstones = document.tombstones
+        // Import is a new whole-document decision. An undo captured from the
+        // document it replaced must never be able to inject old entries into
+        // it, or duplicate an id the imported file already restored.
+        lastDeletedEntries = []
         rebuildTotals()
         scheduleSave()
     }

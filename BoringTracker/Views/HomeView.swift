@@ -13,6 +13,7 @@ struct HomeView: View {
     /// second sheet over the top of the log sheet.
     enum Route: Hashable {
         case tracker(UUID)
+        case history
         case settings
     }
 
@@ -56,10 +57,17 @@ struct HomeView: View {
                     }
                     .accessibilityLabel("Settings")
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: Route.history) {
+                        Label("History", systemImage: "clock")
+                    }
+                    .labelStyle(.iconOnly)
+                }
             }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .tracker(let id): TrackerDetailView(trackerID: id)
+                case .history: HistoryView()
                 case .settings: SettingsView()
                 }
             }
