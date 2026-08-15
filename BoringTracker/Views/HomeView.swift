@@ -3,6 +3,7 @@ import SwiftUI
 /// Your trackers as cards. That's the whole main screen.
 struct HomeView: View {
     @Environment(Store.self) private var store
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(LogSheet.lastGroupKey) private var lastGroup = ""
     @State private var logging: LogSheet.Target?
     @State private var path: [Route] = []
@@ -25,22 +26,30 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Boring Tracker")
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !store.activeTrackers.isEmpty {
+                    // Unlike a card's small +, this is the primary action: it
+                    // opens the last-used group instead of this row's. It is
+                    // centred so it sits inside either hand's thumb arc.
+                    Button(action: logLastGroup) {
+                        Label("Log", systemImage: "plus")
+                            .frame(
+                                maxWidth: horizontalSizeClass == .regular ? 440 : .infinity
+                            )
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
+                    .background(.bar)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink(value: Route.settings) {
                         Image(systemName: "gearshape")
                     }
                     .accessibilityLabel("Settings")
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    // Straight into whatever you logged last, with the keypad
-                    // up. No picker in between — that would be a tap on the
-                    // common path, every time, forever.
-                    Button("Log", systemImage: "plus") {
-                        guard let group = store.groupToLog(preferring: lastGroup) else { return }
-                        LogSheet.present(.init(group: group), using: $logging)
-                    }
-                    .disabled(store.activeTrackers.isEmpty)
                 }
             }
             .navigationDestination(for: Route.self) { route in
@@ -53,6 +62,16 @@ struct HomeView: View {
                 LogSheet(target: target)
             }
         }
+    }
+
+    /// Straight into whatever you logged last, with the keypad up. No picker
+    /// in between — that would be a tap on the common path, every time.
+    private func logLastGroup() {
+        guard let group = store.groupToLog(preferring: lastGroup) else { return }
+        LogSheet.present(
+            .init(group: group, tracker: store.trackers(in: group).first?.id),
+            using: $logging
+        )
     }
 
     /// A dead end otherwise: with every tracker deleted or archived there is

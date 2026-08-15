@@ -32,7 +32,7 @@ struct LogSheet: View {
         var id = UUID()
         /// Which trackers the sheet shows.
         var group: LogGroup
-        /// Which field starts focused — the card whose + was tapped.
+        /// Which field starts focused when the sheet opens.
         var tracker: UUID?
     }
 
@@ -46,6 +46,8 @@ struct LogSheet: View {
     @State private var typed: [UUID: String] = [:]
     @State private var date = Date()
     @State private var name = ""
+    @State private var frozenRecentsTracker: UUID?
+    @State private var frozenRecents: [UUID: [Double]]?
     @FocusState private var focused: UUID?
 
     init(target: Target) {
@@ -196,7 +198,8 @@ struct LogSheet: View {
             }
         }
 
-        if focused == tracker.id {
+        if focused == tracker.id
+            || frozenRecentsTracker == tracker.id {
             recents(for: tracker)
         }
     }
@@ -204,7 +207,7 @@ struct LogSheet: View {
     /// One tap for a number you have logged before.
     @ViewBuilder
     private func recents(for tracker: Tracker) -> some View {
-        let values = store.recentValues(for: tracker.id)
+        let values = frozenRecents?[tracker.id] ?? store.recentValues(for: tracker.id)
         if !values.isEmpty {
             ScrollView(.horizontal) {
                 HStack(spacing: 8) {
@@ -244,6 +247,13 @@ struct LogSheet: View {
         let amounts = amounts
         guard !amounts.isEmpty else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Saving changes the recents immediately, while the sheet is still
+        // leaving. Freeze what is on screen so a first chip cannot insert a
+        // row (or a new value reorder it) during the dismissal frames.
+        frozenRecentsTracker = focused
+        frozenRecents = Dictionary(
+            uniqueKeysWithValues: trackers.map { ($0.id, store.recentValues(for: $0.id)) }
+        )
         store.add(values: amounts, at: date, name: trimmed.isEmpty ? nil : trimmed)
         // Written on log rather than on open, so dismissing a group you
         // only went to look at doesn't move where + lands tomorrow.

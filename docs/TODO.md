@@ -268,16 +268,39 @@ PHILOSOPHY.md's "Where a tap lands matters as much as how many" argues against
 exactly this, so the principle was already written down before the button was
 built. Worth remembering that stating a rule doesn't apply it.
 
-- [ ] Move the primary **+** into the bottom third, in the thumb's arc.
-- [ ] Check the same question for every other frequent control while there —
+- [x] Move the primary **+** into the bottom third, in the thumb's arc.
+- [x] Check the same question for every other frequent control while there —
       settings is fine in the nav bar (touched weekly), but anything on the
       common path is not.
-- [ ] Measure it the way item 5 was measured, and record the real method.
+- [x] Measure it the way item 5 was measured, and record the real method.
 
-Known and minor, worth folding in if it is cheap: dismissing the log sheet has a
-~2-frame content jump as the recents chip disappears and the form reflows before
-the sheet slides away. Pre-existing, and it happens while the sheet is already
-leaving.
+The primary action is now a labelled, prominent bottom button whose target
+fills the available phone width. A card's small `+` is still attached to that
+card and opens its group; the bottom **Log** still opens the last-used group.
+Settings stays high because it is rare. Tracker detail's `+` also stays in its
+nav bar: detail is an occasional, context-specific alternate path, not the
+home → log common path. The sheet's frequent confirm remains directly above
+the keypad, where item 5 put it. Home's list, grouping and order did not move.
+
+Measured on clean iOS 26.3 simulators from `xcrun simctl io screenshot`, using
+an AppKit pixel scan to find the rendered blue button bounds and divide their
+vertical centre by the screenshot height. On the smallest supported phone,
+iPhone SE (3rd generation), the centre is **635.5 / 667 pt = 95.28%** from the
+top. On the largest phone, iPhone 17 Pro Max, it is **890.7 / 956 pt = 93.17%**.
+The project currently also targets iPad; on the largest advertised device,
+iPad Pro 13-inch (M5), the regular-width button is constrained and centred at
+**1319.5 / 1376 pt = 95.89%**. All three are inside the bottom third.
+
+The dismissal reflow was folded in too. A visible recents row and its values
+are snapshotted while saving, so losing focus or inserting the first recent
+value cannot reflow the form before it leaves. Verified on the
+first-log case with a temporary local UI-test target (created for the run and
+removed afterward): it tapped home's **Log**, confirmed the keypad and first
+numeric field, typed `123`, and tapped the sheet's **Log** while
+`xcrun simctl io recordVideo` recorded the iPhone 17 simulator. Exact 60 Hz
+frames extracted with AVAssetImageGenerator show the settled form unchanged
+through 13.083 s and the sheet/keyboard dismissal beginning together at
+13.100 s. The repository still has no UI-test target.
 
 ## 8. History screen
 
