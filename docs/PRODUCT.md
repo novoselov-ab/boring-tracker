@@ -279,7 +279,9 @@ Small enough to list completely.
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
   10 g", deleted or edited once, not once per tracker. Without this screen,
   fixing a mistyped food means visiting each tracker's detail separately and
-  deleting a row in each, which is absurd.
+  deleting a row in each, which is absurd. A batch whose members straddle
+  midnight is drawn once, under its newest surviving member — a row is a thing
+  you logged, and one thing cannot appear on two days.
 - **Tracker detail** — the graph on top, that tracker's entries below, grouped
   by day. Swipe to delete, tap to edit.
 - **Graph** — daily totals as bars, measurements as a line with a moving
