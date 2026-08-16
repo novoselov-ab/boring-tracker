@@ -179,7 +179,7 @@ struct HomeView: View {
 /// in the height of a standard list row, and the number is still the loudest
 /// thing on it.
 ///
-/// At accessibility text sizes it goes back to stacking — see `summary`. The
+/// At `.xxxLarge` and above it goes back to stacking — see `isStacked`. The
 /// row is only worth compressing while it still reads.
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
@@ -218,6 +218,16 @@ private struct TrackerCard: View {
                     )
             }
             .buttonStyle(.plain)
+            // Left on the `Button`, deliberately, though the label above had to
+            // move inside. Moving this too was tried and reverted: the claim it
+            // rested on — that these modifiers do nothing out here — is
+            // contradicted twice in this repo, by `logButton` below and by
+            // HistoryView's row, both of which label a `.plain` button from
+            // outside and are read correctly. The difference may be the
+            // `children: .ignore` above turning this button into a container,
+            // in which case the hint belongs inside after all. Unverified
+            // either way: it needs VoiceOver, not a reading of the tree, and
+            // guessing costs the hint entirely on the users who rely on it.
             .accessibilityHint("Shows the history")
             logButton
         }
@@ -226,35 +236,63 @@ private struct TrackerCard: View {
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
     }
 
-    /// One line normally, stacked at accessibility text sizes.
+    /// Whether the row has given up on fitting on one line.
+    ///
+    /// One threshold, read in both places that branch on it — the layout and
+    /// the name's line cap — because a row that stacks with its name still
+    /// capped to one line is the clipped-name bug wearing the other layout.
+    ///
+    /// `.xxxLarge`, not `isAccessibilitySize`. The fallback was pitched at the
+    /// accessibility sizes because that is where the name was first seen to
+    /// collapse, but the top of the *normal* slider is already past it: on an
+    /// SE, "Calories burned exercising" beside "1,234,567 kcal" leaves "Calo…"
+    /// at `.xxxLarge`, which does not tell that row from the "Calories" one
+    /// under it. `.xxLarge` still leaves "Calorie…" and is left alone — that
+    /// reads, and it is where the density is still worth having.
+    private var isStacked: Bool {
+        typeSize >= .xxxLarge
+    }
+
+    /// One line normally, stacked once the text outgrows it.
     ///
     /// The whole point of item 11 is that a name and a number fit on one row,
-    /// and at ordinary sizes they do. At AX3 and up they cannot: the number is
-    /// sized first, the name absorbs the entire shortfall, and the screen
-    /// becomes a column of numbers with no legible labels — "Calories" rendered
-    /// as a single clipped glyph. Density is worth having only while the row is
-    /// still readable, so above the threshold this falls back to the stacked
-    /// shape the card had before, which has room for both. Somebody reading at
-    /// AX5 is not the person counting how many cards fit on a screen.
+    /// and at ordinary sizes they do. Past `isStacked` they cannot: the number
+    /// is sized first, the name absorbs the entire shortfall, and the screen
+    /// becomes a column of numbers with no legible labels — at AX3 and up
+    /// "Calories" rendered as a single clipped glyph. Density is worth having
+    /// only while the row is still readable, so above the threshold this falls
+    /// back to the stacked shape the card had before, which has room for both.
+    /// Somebody reading at AX5 is not the person counting how many cards fit.
     @ViewBuilder
     private func summary(_ headline: String, _ caption: String?) -> some View {
-        if typeSize.isAccessibilitySize {
+        if isStacked {
             VStack(alignment: .leading, spacing: 2) {
                 nameBlock(caption)
                 headlineText(headline)
             }
         } else {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            // `spacing: 0`, with the gap coming from the `Spacer` alone. An
+            // HStack inserts its spacing on *both* sides of a spacer, so
+            // `spacing: 8` around `Spacer(minLength: 8)` reserved 24pt rather
+            // than 8 — and since the number outranks the name, all 16pt of the
+            // surplus was spent out of the name's truncation budget, which is
+            // the width this row has least of.
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
                 nameBlock(caption)
                 Spacer(minLength: 8)
                 headlineText(headline)
                     // The number gets the width it needs and the name is what
                     // gives way, because the number is the one thing on this
                     // row that has to be readable across a kitchen and a
-                    // truncated name still says which tracker it is. Measured
-                    // on an iPhone SE, the worst case in the starter shapes —
-                    // "Calories burned exercising" against "1,234,567 kcal" —
-                    // leaves "Calories b…", which still tells the rows apart.
+                    // truncated name still says which tracker it is. How far
+                    // that goes is bounded by `isStacked` rather than by
+                    // anything here: the worst case left inside this branch is
+                    // "Calorie…" beside "1,234,567 kcal", on an SE at
+                    // `.xxLarge`. A floor on the name was tried instead and
+                    // reverted — `minWidth` reserves its width whether the name
+                    // needs it or not, so "Weight" kept an 83pt blank gap and
+                    // charged it to the number, which halved. That is this
+                    // row's priority backwards, and for the common short name.
                     .layoutPriority(1)
             }
         }
@@ -275,7 +313,7 @@ private struct TrackerCard: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+        .lineLimit(isStacked ? nil : 1)
     }
 
     /// Shrunk from `.largeTitle` to `.title2`, which is the largest size that
