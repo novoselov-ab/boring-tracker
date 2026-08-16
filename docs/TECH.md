@@ -115,6 +115,22 @@ tombstones are not rows, so CSV is not lossless and is intentionally not
 importable. `batch_id` is present specifically so a logged food can be rebuilt
 as one event rather than mistaken for unrelated tracker values at the same time.
 
+That quoting test asks the *scalars*, not the Swift `Character`s. Swift treats
+CRLF as a single character, so a name holding a pasted Windows line break
+answered `false` to `contains("\r")`, went out unquoted, and split its row in
+two — shifting every column after it. A bare LF was caught only by the accident
+of being its own character.
+
+**Names are not neutralised against spreadsheet formulas**, and that is
+unsettled rather than settled. A name is free text, so it can be `=1+1`; it
+round-trips exactly through an RFC 4180 parser, but a spreadsheet that reads a
+leading `=`, `+`, `-` or `@` as a formula will show its own answer instead of
+what was typed. The usual mitigations — a leading apostrophe or tab — buy that
+back by changing the bytes, so the file stops being what the user typed, and the
+two requirements cannot both be met. Exactness holds the field for now, on the
+grounds that CSV is a read-only view and the file comes off your own phone. Not
+yet checked against a real spreadsheet.
+
 ### Writing safely
 
 Whole-file rewrite is the obvious risk, and it's fully solvable:
@@ -131,6 +147,13 @@ Whole-file rewrite is the obvious risk, and it's fully solvable:
    backgrounding or force-quitting can lose at most the last moment of typing.
 4. **Never partial.** There is no such thing as a half-saved store. Every
    write is the entire, valid document.
+
+**Import does not use the debounce.** It drains anything the debounce still
+owes, then writes the imported document itself before it reports success, so
+force-quitting the app while the "Import complete" alert is up cannot discard an
+import the app has already announced — and a write queued for the pre-import
+document cannot land on top of the imported one. Every other mutation is worth
+coalescing; the one action a person takes and then immediately quits is not.
 
 A replace import has a separate one-step safety net. Before changing memory it
 writes the exact current document — including edits still inside the save

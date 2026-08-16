@@ -32,6 +32,15 @@ final class Store {
     var lastDeletionCount: Int { lastDeletedEntries.count }
     private var lastDeletedEntries: [Entry] = []
 
+    /// The newest thing the last deletion took from this tracker, if it took
+    /// anything. Undo restores the whole deletion either way; a tracker's own
+    /// screen asks this rather than reading `lastDeletion`, because the newest
+    /// member of a deleted batch belongs to only one of the trackers involved
+    /// and the other one had just as much taken from it.
+    func lastDeletion(for tracker: UUID) -> Entry? {
+        lastDeletedEntries.first { $0.trackerID == tracker }
+    }
+
     /// One derived index: the sum of every daily-total tracker, per local day.
     /// It backs both the home screen number and the graph, so nothing has to
     /// scan the entry list to draw.
@@ -259,7 +268,17 @@ final class Store {
             }
         }
         items.append(contentsOf: batches.values.compactMap(HistoryItem.init(entries:)))
-        return items.sorted { ($0.date, $0.sortID) > ($1.date, $1.sortID) }
+        // The date decides almost every comparison, and `sortID` builds a string
+        // each time it is read — so comparing the pair outright spent 65ms of
+        // this method's 76ms on five years of data (iPhone 17 simulator, 15,000
+        // entries, 7,500 rows; an old iPhone is several times slower). Reaching
+        // for the id only when two rows share a second is the same order in 33ms.
+        // This runs on every redraw of the History screen, so it is worth the
+        // two lines.
+        return items.sorted { lhs, rhs in
+            if lhs.date != rhs.date { return lhs.date > rhs.date }
+            return lhs.sortID > rhs.sortID
+        }
     }
 
     // MARK: - Entries
@@ -303,12 +322,25 @@ final class Store {
               entries.count(where: { ids.contains($0.id) }) == ids.count else { return false }
 
         let oldEntries = entries.filter { ids.contains($0.id) }
+        let previous = Dictionary(oldEntries.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         for old in oldEntries { apply(-1, to: old) }
         entries.removeAll { ids.contains($0.id) }
 
         let now = Date.stamp()
         for var updated in updatedEntries {
-            updated.modified = now
+            // Only a member that actually changed gets a fresh stamp. The batch
+            // editor submits every member of the row whichever one you touched,
+            // so stamping them all made a no-op rewrite of the protein entry
+            // outrank — and silently discard — a real edit to it made on another
+            // device an hour earlier. Same rule, and the same reason, as the one
+            // `add(_ tracker:)` follows for `orderModified` (docs/TECH.md).
+            if let old = previous[updated.id] {
+                var withoutStamp = updated
+                withoutStamp.modified = old.modified
+                updated.modified = withoutStamp == old ? old.modified : now
+            } else {
+                updated.modified = now
+            }
             insertSorted(updated)
             apply(1, to: updated)
         }
@@ -371,10 +403,6 @@ final class Store {
         guard !restorable.isEmpty else { return }
         refreshToday()
         scheduleSave()
-    }
-
-    func forgetLastDeletion() {
-        lastDeletedEntries = []
     }
 
     // MARK: - Trackers
@@ -464,9 +492,11 @@ final class Store {
             recordDeletion(of: entry.id)
         }
         entries.removeAll { $0.trackerID == tracker.id }
-        // A previous entry undo must not be allowed to put history back after
-        // this explicit, stronger deletion.
-        lastDeletedEntries = []
+        // A previous entry undo must not be allowed to put this tracker's
+        // history back after the explicit, stronger deletion — but only this
+        // tracker's. Dropping the whole undo threw away a pending undo for a
+        // different tracker that the deletion never touched.
+        lastDeletedEntries.removeAll { $0.trackerID == tracker.id }
         delete(tracker)
     }
 
@@ -624,6 +654,7 @@ final class Store {
 
     struct ImportSummary: Equatable, Sendable {
         var trackersAdded: Int
+        var trackersRemoved: Int
         var entriesAdded: Int
         var entriesRemoved: Int
     }
@@ -638,23 +669,52 @@ final class Store {
 
     var hasImportBackup: Bool { file.hasImportBackup }
 
+    /// Takes a document in, and does not report success until the result is the
+    /// document on disk.
+    ///
+    /// Async for the same reason the restore below is: an import is the one
+    /// action a user takes and then immediately quits, and leaving it to the
+    /// save debounce meant a force-quit inside that window silently discarded an
+    /// import the app had already announced as complete. Draining the queue
+    /// first also stops a write scheduled for the pre-import document from
+    /// landing on top of the imported one.
     @discardableResult
-    func importData(_ data: Data, mode: ImportMode) throws -> ImportSummary {
+    func importData(_ data: Data, mode: ImportMode) async throws -> ImportSummary {
         let incoming = try StoreMigration.migrate(data)
         try validateImport(incoming)
-        let before = document
-        let result = switch mode {
-        case .merge: before.merged(with: incoming)
-        case .replace: incoming.compactingTombstones()
+        while true {
+            let before = document
+            let startingRevision = revision
+            await saver.flush(before, revision: startingRevision)
+            if let error = await saver.lastError {
+                saveError = Self.describe(error)
+                throw error
+            }
+
+            // Main-actor methods are reentrant at `await`. Anything that changed
+            // while the saver drained has to be part of what gets merged and
+            // backed up, so start again rather than importing onto a stale
+            // snapshot.
+            guard revision == startingRevision else { continue }
+
+            let result = switch mode {
+            case .merge: before.merged(with: incoming)
+            case .replace: incoming.compactingTombstones()
+            }
+            if mode == .replace {
+                // Decode and validate the incoming file first. Once it is known
+                // to be usable, preserving the exact current document must
+                // succeed or the destructive import does not happen.
+                try file.writeImportBackup(before)
+            }
+            // Before memory, so a failure here leaves the app exactly as it was
+            // rather than holding a document that never reached disk.
+            try file.write(result)
+            replaceState(with: result, saving: false)
+            revision += 1
+            saveError = nil
+            return importSummary(before: before, after: result)
         }
-        if mode == .replace {
-            // Decode and validate the incoming file first. Once it is known to
-            // be usable, preserving the exact current document must succeed or
-            // the destructive import does not happen.
-            try file.writeImportBackup(before)
-        }
-        replaceState(with: result)
-        return importSummary(before: before, after: result)
     }
 
     /// Restores the document saved before the last replace, leaving the
@@ -735,12 +795,20 @@ final class Store {
         }
     }
 
+    /// What the import did, in the terms the user was warned about.
+    ///
+    /// Trackers are counted in both directions like entries are. A replace that
+    /// wipes two trackers and adds none used to report "Added 0 trackers and 0
+    /// entries. Removed 0 entries" — a true sentence about entries and a
+    /// silence about the two trackers that had just been destroyed.
     private func importSummary(before: StoreDocument, after result: StoreDocument) -> ImportSummary {
+        let oldTrackers = Set(before.trackers.map(\.id))
+        let newTrackers = Set(result.trackers.map(\.id))
         let oldEntries = Set(before.entries.map(\.id))
         let newEntries = Set(result.entries.map(\.id))
         return ImportSummary(
-            trackersAdded: Set(result.trackers.map(\.id))
-                .subtracting(before.trackers.map(\.id)).count,
+            trackersAdded: newTrackers.subtracting(oldTrackers).count,
+            trackersRemoved: oldTrackers.subtracting(newTrackers).count,
             entriesAdded: newEntries.subtracting(oldEntries).count,
             entriesRemoved: oldEntries.subtracting(newEntries).count
         )

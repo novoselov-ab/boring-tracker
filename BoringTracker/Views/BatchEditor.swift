@@ -86,7 +86,12 @@ struct BatchEditor: View {
             return Draft(entry: entry, typed: text)
         }
         date = item.date
-        name = item.entries.first?.name ?? ""
+        // The same rule the row displays by, from the same place. Seeding from
+        // the newest member instead meant a batch whose newest member had its
+        // name cleared in tracker detail opened with a blank field while the row
+        // still showed the name — and saving any number wrote that blank over
+        // every member.
+        name = item.names.first ?? ""
     }
 
     private func save() {

@@ -36,9 +36,16 @@ enum CSVExport {
         return Data((lines.joined(separator: "\r\n") + "\r\n").utf8)
     }
 
+    /// Asked of the scalars, not the characters. Swift treats CRLF as a single
+    /// `Character`, so `contains("\r")` is *false* for a name holding one —
+    /// which left a pasted Windows line break unquoted, split that row in two,
+    /// and shifted every column of the remainder. A bare LF happened to be
+    /// caught only because it is its own character.
     private static func escape(_ field: String) -> String {
-        guard field.contains(",") || field.contains("\"")
-                || field.contains("\r") || field.contains("\n") else { return field }
+        let needsQuoting = field.unicodeScalars.contains { scalar in
+            scalar == "," || scalar == "\"" || scalar == "\r" || scalar == "\n"
+        }
+        guard needsQuoting else { return field }
         return "\"\(field.replacing("\"", with: "\"\""))\""
     }
 }

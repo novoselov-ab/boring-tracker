@@ -86,7 +86,7 @@ private struct HistoryRow: View {
         Button(action: edit) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    if let name {
+                    if let name = item.displayName {
                         Text(name)
                         Text(values)
                             .font(.footnote)
@@ -104,14 +104,6 @@ private struct HistoryRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
-    }
-
-    private var name: String? {
-        let names = Set(item.entries.compactMap { entry in
-            entry.name.flatMap { $0.isEmpty ? nil : $0 }
-        })
-        if names.count > 1 { return "Mixed names" }
-        return names.first
     }
 
     private var values: String {

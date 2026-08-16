@@ -878,7 +878,7 @@ struct StoreTests {
     // MARK: - Export and import
 
     @Test("Export then import into an empty store reproduces it exactly")
-    func exportImportRoundTrip() throws {
+    func exportImportRoundTrip() async throws {
         let calories = Tracker(name: "Calories", unit: "kcal", modified: time(1))
         let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
                              modified: time(1))
@@ -891,14 +891,14 @@ struct StoreTests {
 
         let exported = try source.exportData()
         let destination = makeStore()
-        try destination.importData(exported, mode: .replace)
+        try await destination.importData(exported, mode: .replace)
 
         #expect(destination.document == source.document)
         #expect(destination.totals == source.totals)
     }
 
     @Test("Importing an old backup does not resurrect what you have since deleted")
-    func mergeImportRespectsDeletions() throws {
+    func mergeImportRespectsDeletions() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let old = makeStore(StoreDocument(trackers: [tracker]))
         old.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
@@ -909,28 +909,28 @@ struct StoreTests {
         old.delete(old.entries[0])
         #expect(old.entries.count == 1)
 
-        let summary = try old.importData(backup, mode: .merge)
+        let summary = try await old.importData(backup, mode: .merge)
 
         #expect(old.entries.count == 1)
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 0, entriesRemoved: 0))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 0, entriesRemoved: 0))
     }
 
     @Test("A deletion recorded in an imported document removes the matching local entry")
-    func mergeImportAppliesIncomingDeletions() throws {
+    func mergeImportAppliesIncomingDeletions() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let entry = Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))
         let phone = makeStore(StoreDocument(trackers: [tracker], entries: [entry]))
         var imported = StoreDocument(trackers: [tracker], entries: [entry])
         imported.delete(id: entry.id, at: time(20))
 
-        let summary = try phone.importData(StoreCoding.encode(imported), mode: .merge)
+        let summary = try await phone.importData(StoreCoding.encode(imported), mode: .merge)
 
         #expect(phone.entries.isEmpty)
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 0, entriesRemoved: 1))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 0, entriesRemoved: 1))
     }
 
     @Test("Merging a second device's export adds its entries and keeps yours")
-    func mergeImportUnionsTwoDevices() throws {
+    func mergeImportUnionsTwoDevices() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let phone = makeStore(StoreDocument(trackers: [tracker]))
         phone.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
@@ -938,15 +938,15 @@ struct StoreTests {
         let tablet = makeStore(StoreDocument(trackers: [tracker]))
         tablet.add(Entry(trackerID: tracker.id, value: 250, date: date(2026, 3, 14, 13)))
 
-        let summary = try phone.importData(try tablet.exportData(), mode: .merge)
+        let summary = try await phone.importData(try tablet.exportData(), mode: .merge)
 
         #expect(phone.entries.count == 2)
         #expect(phone.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 850)
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 1, entriesRemoved: 0))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 1, entriesRemoved: 0))
     }
 
     @Test("Import grouping does not change equal-stamp tracker ordering")
-    func mergeImportIsAssociative() throws {
+    func mergeImportIsAssociative() async throws {
         func id(_ suffix: String) -> UUID {
             UUID(uuidString: "00000000-0000-0000-0000-0000000000\(suffix)")!
         }
@@ -967,19 +967,19 @@ struct StoreTests {
         let cab = StoreDocument(trackers: [movedC, movedA, movedB])
 
         let left = makeStore(abc)
-        try left.importData(StoreCoding.encode(abc), mode: .merge)
-        try left.importData(StoreCoding.encode(cab), mode: .merge)
+        try await left.importData(StoreCoding.encode(abc), mode: .merge)
+        try await left.importData(StoreCoding.encode(cab), mode: .merge)
 
         let grouped = makeStore(abc)
-        try grouped.importData(StoreCoding.encode(cab), mode: .merge)
+        try await grouped.importData(StoreCoding.encode(cab), mode: .merge)
         let right = makeStore(abc)
-        try right.importData(try grouped.exportData(), mode: .merge)
+        try await right.importData(try grouped.exportData(), mode: .merge)
 
         #expect(left.document == right.document)
     }
 
     @Test("Replace really replaces, and says how much it removed")
-    func replaceImport() throws {
+    func replaceImport() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let incoming = makeStore(StoreDocument(trackers: [tracker]))
         incoming.add(Entry(trackerID: tracker.id, value: 250, date: date(2026, 3, 14, 13)))
@@ -989,14 +989,14 @@ struct StoreTests {
         store.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
         store.add(Entry(trackerID: tracker.id, value: 700, date: date(2026, 3, 14, 9)))
 
-        let summary = try store.importData(file, mode: .replace)
+        let summary = try await store.importData(file, mode: .replace)
 
         #expect(store.entries.map(\.value) == [250])
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, entriesAdded: 1, entriesRemoved: 2))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 1, entriesRemoved: 2))
     }
 
     @Test("Replace keeps the exact current document in a separate backup first")
-    func replaceImportKeepsBackup() throws {
+    func replaceImportKeepsBackup() async throws {
         let file = temporaryStoreFile()
         defer { file.removeDirectory() }
         let tracker = Tracker(name: "Calories", modified: time(1))
@@ -1007,14 +1007,14 @@ struct StoreTests {
         let store = makeStore(current, file: file)
         let incoming = StoreDocument(trackers: [tracker])
 
-        try store.importData(StoreCoding.encode(incoming), mode: .replace)
+        try await store.importData(StoreCoding.encode(incoming), mode: .replace)
 
         #expect(try file.read(file.importBackupURL) == current)
         #expect(store.entries.isEmpty)
     }
 
     @Test("A replace does not happen when its safety backup cannot be written")
-    func replaceStopsWhenBackupFails() throws {
+    func replaceStopsWhenBackupFails() async throws {
         let base = temporaryStoreFile()
         defer { base.removeDirectory() }
         try base.prepareDirectory()
@@ -1025,8 +1025,8 @@ struct StoreTests {
         let current = StoreDocument(trackers: [tracker])
         let store = makeStore(current, file: file)
 
-        #expect(throws: (any Error).self) {
-            try store.importData(StoreCoding.encode(StoreDocument()), mode: .replace)
+        await #expect(throws: (any Error).self) {
+            try await store.importData(StoreCoding.encode(StoreDocument()), mode: .replace)
         }
         #expect(store.document == current)
     }
@@ -1045,7 +1045,7 @@ struct StoreTests {
         )
         let replacement = StoreDocument(trackers: [tracker])
         let store = makeStore(original, file: file, window: .seconds(60))
-        try store.importData(StoreCoding.encode(replacement), mode: .replace)
+        try await store.importData(StoreCoding.encode(replacement), mode: .replace)
         store.add(Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20)))
         let currentAtRestore = store.document
         // Exercise recovery bytes that an older replace could legitimately
@@ -1074,7 +1074,7 @@ struct StoreTests {
             entries: [Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20))]
         )
         let store = makeStore(original, file: file, window: .seconds(60))
-        try store.importData(StoreCoding.encode(replacement), mode: .replace)
+        try await store.importData(StoreCoding.encode(replacement), mode: .replace)
         await store.flush()
         try Data("damaged".utf8).write(to: file.importBackupURL, options: .atomic)
 
@@ -1087,51 +1087,51 @@ struct StoreTests {
     }
 
     @Test("A junk file is refused without touching what is already there")
-    func importRejectsJunk() throws {
+    func importRejectsJunk() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let store = makeStore(StoreDocument(trackers: [tracker]))
         store.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
         let before = store.document
 
-        #expect(throws: (any Error).self) {
-            try store.importData(Data("nope".utf8), mode: .replace)
+        await #expect(throws: (any Error).self) {
+            try await store.importData(Data("nope".utf8), mode: .replace)
         }
         #expect(store.document == before)
     }
 
     @Test("A future-schema import is refused without touching current data")
-    func importRejectsFutureSchema() throws {
+    func importRejectsFutureSchema() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let store = makeStore(StoreDocument(trackers: [tracker]))
         let before = store.document
         var future = StoreDocument()
         future.schemaVersion = StoreDocument.currentSchemaVersion + 1
 
-        #expect(throws: StoreError.futureSchema(
+        await #expect(throws: StoreError.futureSchema(
             found: future.schemaVersion,
             supported: StoreDocument.currentSchemaVersion
         )) {
-            try store.importData(StoreCoding.encode(future), mode: .replace)
+            try await store.importData(StoreCoding.encode(future), mode: .replace)
         }
         #expect(store.document == before)
     }
 
     @Test("Import rejects duplicate live ids instead of double-counting them")
-    func importRejectsDuplicateIDs() throws {
+    func importRejectsDuplicateIDs() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let entry = Entry(trackerID: tracker.id, value: 100, date: time(10), modified: time(10))
         let store = makeStore(StoreDocument(trackers: [tracker]))
         let before = store.document
         let duplicate = StoreDocument(trackers: [tracker], entries: [entry, entry])
 
-        #expect(throws: StoreError.self) {
-            try store.importData(StoreCoding.encode(duplicate), mode: .replace)
+        await #expect(throws: StoreError.self) {
+            try await store.importData(StoreCoding.encode(duplicate), mode: .replace)
         }
         #expect(store.document == before)
     }
 
     @Test("Import rejects an id that is both live and tombstoned so repeat imports converge")
-    func importRejectsLiveDeletionCollision() throws {
+    func importRejectsLiveDeletionCollision() async throws {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let entry = Entry(trackerID: tracker.id, value: 100, date: time(10), modified: time(10))
         let store = makeStore(StoreDocument(trackers: [tracker]))
@@ -1141,21 +1141,21 @@ struct StoreTests {
             tombstones: [Tombstone(id: entry.id, deleted: time(20))]
         )
 
-        #expect(throws: StoreError.self) {
-            try store.importData(StoreCoding.encode(inconsistent), mode: .replace)
+        await #expect(throws: StoreError.self) {
+            try await store.importData(StoreCoding.encode(inconsistent), mode: .replace)
         }
         #expect(store.document == before)
     }
 
     @Test("Import rejects tracker display precision that can crash formatting")
-    func importRejectsInvalidDecimals() throws {
+    func importRejectsInvalidDecimals() async throws {
         let current = Tracker(name: "Calories", modified: time(1))
         let store = makeStore(StoreDocument(trackers: [current]))
         var malformed = Tracker(name: "Broken", modified: time(1))
         malformed.decimals = -1
 
-        #expect(throws: StoreError.self) {
-            try store.importData(
+        await #expect(throws: StoreError.self) {
+            try await store.importData(
                 StoreCoding.encode(StoreDocument(trackers: [malformed])), mode: .replace
             )
         }
@@ -1163,18 +1163,18 @@ struct StoreTests {
     }
 
     @Test("Import rejects an overflowing sort index and preserves safe positions")
-    func importValidatesSortIndices() throws {
+    func importValidatesSortIndices() async throws {
         let store = makeStore()
         var unsafe = Tracker(name: "Unsafe", sortIndex: Int.max, modified: time(1))
-        #expect(throws: StoreError.self) {
-            try store.importData(
+        await #expect(throws: StoreError.self) {
+            try await store.importData(
                 StoreCoding.encode(StoreDocument(trackers: [unsafe])), mode: .replace
             )
         }
 
         unsafe.sortIndex = Int.max - 1
         let first = Tracker(name: "First", sortIndex: 20, modified: time(1))
-        try store.importData(
+        try await store.importData(
             StoreCoding.encode(StoreDocument(trackers: [unsafe, first])), mode: .replace
         )
         #expect(store.trackers.map(\.name) == ["First", "Unsafe"])
@@ -1246,6 +1246,119 @@ struct StoreTests {
         #expect(reloaded.document == store.document)
         #expect(reloaded.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 850)
     }
+
+    @Test("An import is on disk before it says it worked")
+    func importIsDurableWhenItReports() async throws {
+        for mode in Store.ImportMode.allCases {
+            let file = temporaryStoreFile()
+            defer { file.removeDirectory() }
+            let tracker = Tracker(name: "Calories", modified: time(1))
+            let current = StoreDocument(
+                trackers: [tracker],
+                entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))]
+            )
+            let store = makeStore(current, file: file, window: .seconds(60))
+            try file.write(current)
+            let incoming = StoreDocument(
+                trackers: [tracker],
+                entries: [Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20))]
+            )
+
+            try await store.importData(StoreCoding.encode(incoming), mode: mode)
+
+            // No flush and no waiting out the debounce: force-quitting the app
+            // while the "Import complete" alert is still up must not discard an
+            // import the app has already announced.
+            #expect(file.load().document == store.document, "\(mode)")
+        }
+    }
+
+    @Test("An import cannot be overwritten by a write queued for the document it replaced")
+    func importOutlivesAQueuedSave() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [tracker]), file: file, window: .seconds(60))
+        // An edit still sitting in the save debounce when the import runs.
+        store.add(Entry(trackerID: tracker.id, value: 600, date: time(10)))
+        let incoming = StoreDocument(trackers: [tracker])
+
+        try await store.importData(StoreCoding.encode(incoming), mode: .replace)
+        await store.flush()
+
+        #expect(store.entries.isEmpty)
+        #expect(file.load().document.entries.isEmpty)
+    }
+
+    @Test("Importing your own export twice adds nothing the second time")
+    func importingTheSameFileTwiceConverges() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food", modified: time(1))
+        var protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food",
+                              modified: time(1))
+        protein.orderModified = time(1)
+        let store = makeStore(StoreDocument(trackers: [calories, protein]), file: file)
+        store.add(values: [calories.id: 100, protein.id: 10], at: time(10), name: "chicken rice")
+        let exported = try store.exportData()
+        let before = store.document
+
+        let first = try await store.importData(exported, mode: .merge)
+        let second = try await store.importData(exported, mode: .merge)
+
+        // The whole point of the mergeable document: re-importing a file you
+        // already have is a no-op, not a second copy of every entry.
+        #expect(store.document == before)
+        #expect(store.entries.count == 2)
+        #expect(store.historyItems.count == 1)
+        #expect(first == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0,
+                                             entriesAdded: 0, entriesRemoved: 0))
+        #expect(second == first)
+    }
+
+    @Test("Export, fresh install, import: what comes back is what left")
+    func roundTripThroughAFreshInstall() async throws {
+        let original = temporaryStoreFile()
+        defer { original.removeDirectory() }
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food", modified: time(1))
+        var protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food",
+                              modified: time(1))
+        protein.orderModified = time(1)
+        let store = makeStore(StoreDocument(trackers: [calories, protein]), file: original)
+        store.add(values: [calories.id: 100, protein.id: 10], at: time(10), name: "chicken rice")
+        store.add(values: [calories.id: 620], at: time(20), name: "dinner, \"large\"")
+        let exported = try store.exportData()
+        let expected = store.document
+
+        // A fresh install: a different container with nothing in it.
+        let installed = temporaryStoreFile()
+        defer { installed.removeDirectory() }
+        let fresh = Store(document: .starter, file: installed, calendar: calendar("UTC"),
+                          saveWindow: .seconds(60))
+        try await fresh.importData(exported, mode: .replace)
+
+        #expect(fresh.document == expected)
+        #expect(fresh.historyItems.count == 2)
+        #expect(fresh.historyItems.map(\.displayName) == ["dinner, \"large\"", "chicken rice"])
+        // And it is durable, so relaunching that fresh install still has it.
+        #expect(installed.load().document == expected)
+    }
+
+    @Test("A replace says how many trackers it removed, not only how many entries")
+    func replaceReportsRemovedTrackers() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let kept = Tracker(name: "Calories", modified: time(1))
+        var dropped = Tracker(name: "Protein", sortIndex: 1, modified: time(1))
+        dropped.orderModified = time(1)
+        let store = makeStore(StoreDocument(trackers: [kept, dropped]), file: file)
+
+        let summary = try await store.importData(
+            StoreCoding.encode(StoreDocument(trackers: [kept])), mode: .replace
+        )
+
+        #expect(summary.trackersRemoved == 1)
+    }
 }
 
 /// Polls until the condition holds, rather than sleeping for a guessed
@@ -1262,4 +1375,5 @@ func confirmEventually(
         try await Task.sleep(for: .milliseconds(5))
     }
     Issue.record("timed out waiting for \(description)")
+
 }

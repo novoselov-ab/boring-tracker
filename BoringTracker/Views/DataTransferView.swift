@@ -116,18 +116,33 @@ struct DataTransferView: View {
 
     private func importPending(mode: Store.ImportMode) {
         guard let pendingImport else { return }
-        do {
-            let summary = try store.importData(pendingImport, mode: mode)
-            self.pendingImport = nil
-            let removed = summary.entriesRemoved == 1 ? "1 entry" : "\(summary.entriesRemoved) entries"
-            let backup = mode == .replace ? " A backup of the previous document was kept on this device." : ""
-            presentedAlert = .message(
-                title: "Import complete",
-                detail: "Added \(summary.trackersAdded) trackers and \(summary.entriesAdded) entries. Removed \(removed).\(backup)"
-            )
-        } catch {
-            show(error, action: "import")
+        Task {
+            do {
+                let summary = try await store.importData(pendingImport, mode: mode)
+                self.pendingImport = nil
+                let backup = mode == .replace
+                    ? " A backup of the previous document was kept on this device." : ""
+                presentedAlert = .message(
+                    title: "Import complete",
+                    detail: "\(describe(summary))\(backup)"
+                )
+            } catch {
+                show(error, action: "import")
+            }
         }
+    }
+
+    /// Both directions, for both record types. A replace that removes trackers
+    /// has to say so — see `Store.ImportSummary`.
+    private func describe(_ summary: Store.ImportSummary) -> String {
+        func phrase(_ count: Int, _ singular: String, _ plural: String) -> String {
+            "\(count) \(count == 1 ? singular : plural)"
+        }
+        let added = "Added \(phrase(summary.trackersAdded, "tracker", "trackers")) and "
+            + "\(phrase(summary.entriesAdded, "entry", "entries"))."
+        let removed = "Removed \(phrase(summary.trackersRemoved, "tracker", "trackers")) and "
+            + "\(phrase(summary.entriesRemoved, "entry", "entries"))."
+        return "\(added) \(removed)"
     }
 
     private func alert(_ alert: PresentedAlert) -> Alert {

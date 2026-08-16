@@ -24,6 +24,29 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         }
     }
 
+    /// Every name its members actually carry, newest member first, without the
+    /// blanks. Members can disagree because tracker detail edits one entry at a
+    /// time, so this is the one place that decides what a batch is called — the
+    /// row and the editor both read it. When they each had their own rule, the
+    /// editor opened blank on a batch the row showed a name for, and saving
+    /// wrote that blank over every member.
+    var names: [String] {
+        var seen = Set<String>()
+        return entries.compactMap { entry in
+            guard let name = entry.name, !name.isEmpty, seen.insert(name).inserted else {
+                return nil
+            }
+            return name
+        }
+    }
+
+    /// What to call this row: nothing, the one name, or the fact that its
+    /// members disagree.
+    var displayName: String? {
+        let names = names
+        return names.count > 1 ? "Mixed names" : names.first
+    }
+
     init?(entries: [Entry]) {
         guard let newest = entries.max(by: { ($0.date, $0.id) < ($1.date, $1.id) }) else {
             return nil

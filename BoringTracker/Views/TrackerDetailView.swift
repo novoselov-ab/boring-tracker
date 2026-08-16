@@ -30,7 +30,7 @@ struct TrackerDetailView: View {
     @ViewBuilder
     private func content(_ tracker: Tracker) -> some View {
         List {
-            if let deleted = store.lastDeletion, deleted.trackerID == trackerID {
+            if let deleted = store.lastDeletion(for: trackerID) {
                 undoRow(tracker, deleted: deleted)
             }
             if !days.isEmpty {
@@ -115,7 +115,12 @@ struct TrackerDetailView: View {
     private func undoRow(_ tracker: Tracker, deleted: Entry) -> some View {
         Section {
             HStack {
-                Text("Deleted \(tracker.format(deleted.value))")
+                // Named honestly: undo puts the whole deletion back, so a batch
+                // must not be announced as the one value that happens to be this
+                // tracker's.
+                Text(store.lastDeletionCount == 1
+                     ? "Deleted \(tracker.format(deleted.value))"
+                     : "Deleted batch")
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button("Undo") { store.undoLastDeletion() }

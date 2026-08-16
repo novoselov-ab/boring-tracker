@@ -47,4 +47,78 @@ struct CSVExportTests {
 
         #expect(text.contains(",\(trackerID.uuidString),,,,42.0,"))
     }
+
+    @Test("Free-text names survive the round trip a spreadsheet parser makes")
+    func adversarialNames() throws {
+        // Names are typed by a person, so they contain whatever people type.
+        // Every one of these must come back byte-identical through RFC 4180
+        // parsing, which is what docs/TECH.md promises the file does.
+        let names = [
+            "rice, beans", "she said \"hi\"", "two\nlines", "carriage\r\nreturn",
+            "=1+1", "+41 chicken", "-5 leftovers", "@SUM(A1:A2)", "\tleading tab",
+        ]
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let entries = names.enumerated().map { index, name in
+            Entry(trackerID: tracker.id, value: Double(index), date: time(index), name: name)
+        }
+        let text = try #require(String(
+            data: CSVExport.data(document: StoreDocument(trackers: [tracker], entries: entries)),
+            encoding: .utf8
+        ))
+
+        let rows = parseCSV(text)
+        // Structure first: a name that breaks the row apart shifts every column
+        // after it, which is worse than losing the name.
+        #expect(rows.count == names.count + 1)
+        #expect(rows.allSatisfy { $0.count == CSVExport.columns.count })
+        #expect(rows.dropFirst().map { $0[8] } == names)
+    }
+}
+
+/// A minimal RFC 4180 reader, so the escaping is checked by parsing rather than
+/// by asserting on the exact bytes the writer happened to produce.
+///
+/// Over unicode scalars, not characters: Swift treats CRLF as a single
+/// `Character`, so a character-wise reader never sees the `\r` that ends a row.
+private func parseCSV(_ text: String) -> [[String]] {
+    var rows: [[String]] = []
+    var row: [String] = []
+    var field = String.UnicodeScalarView()
+    var quoted = false
+    let scalars = Array(text.unicodeScalars)
+    var index = 0
+    while index < scalars.count {
+        let scalar = scalars[index]
+        if quoted {
+            if scalar == "\"" {
+                if index + 1 < scalars.count, scalars[index + 1] == "\"" {
+                    field.append("\"")
+                    index += 1
+                } else {
+                    quoted = false
+                }
+            } else {
+                field.append(scalar)
+            }
+        } else if scalar == "\"" {
+            quoted = true
+        } else if scalar == "," {
+            row.append(String(field))
+            field = String.UnicodeScalarView()
+        } else if scalar == "\r", index + 1 < scalars.count, scalars[index + 1] == "\n" {
+            row.append(String(field))
+            rows.append(row)
+            row = []
+            field = String.UnicodeScalarView()
+            index += 1
+        } else {
+            field.append(scalar)
+        }
+        index += 1
+    }
+    if !field.isEmpty || !row.isEmpty {
+        row.append(String(field))
+        rows.append(row)
+    }
+    return rows
 }
