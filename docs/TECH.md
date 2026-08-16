@@ -121,15 +121,33 @@ answered `false` to `contains("\r")`, went out unquoted, and split its row in
 two — shifting every column after it. A bare LF was caught only by the accident
 of being its own character.
 
-**Names are not neutralised against spreadsheet formulas**, and that is
-unsettled rather than settled. A name is free text, so it can be `=1+1`; it
-round-trips exactly through an RFC 4180 parser, but a spreadsheet that reads a
-leading `=`, `+`, `-` or `@` as a formula will show its own answer instead of
-what was typed. The usual mitigations — a leading apostrophe or tab — buy that
-back by changing the bytes, so the file stops being what the user typed, and the
-two requirements cannot both be met. Exactness holds the field for now, on the
-grounds that CSV is a read-only view and the file comes off your own phone. Not
-yet checked against a real spreadsheet.
+**Names are not neutralised against spreadsheet formulas, and that is settled.**
+A name is free text, so it can be `=1+1`. It round-trips exactly through an RFC
+4180 parser, but a spreadsheet that reads a leading `=`, `+`, `-` or `@` as a
+formula will show its own answer instead of what was typed. The usual
+mitigations — prefixing an apostrophe or a tab — buy that back by changing the
+bytes, so the file stops being what the user typed. Both requirements cannot be
+met at once, and this is which one wins.
+
+Written down because "CSV injection" is a phrase people remember, and this gets
+re-opened every time someone does:
+
+- **The attack is someone else's data landing in your spreadsheet.** That is
+  what makes the technique dangerous: a hostile string arrives through a form,
+  a shared file or a third-party feed, and a colleague opens the export. This
+  app has one user per install, no server, no sharing and no imported
+  third-party content. The only data in the file is what the person holding the
+  phone typed into it, so there is no attacker in the picture — only a user and
+  their own words.
+- **Rule 6 promises the export is your data.** Mangling a name to defend
+  someone from themselves breaks the exact round trip the format exists to
+  guarantee, and breaks it silently, in the one file that is supposed to be the
+  escape hatch when everything else has stopped being trustworthy.
+- **This is reopened the day the app can receive someone else's entries.**
+  Shared trackers, a sync service that accepts a remote document, an import
+  path that pulls from a URL — anything that puts a string into the document
+  that the user did not type brings a real attacker back, and makes
+  neutralisation worth its cost. Until then it defends against nobody.
 
 ### Writing safely
 
