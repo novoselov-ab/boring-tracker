@@ -713,10 +713,10 @@ final class Store {
             // the app was about to write anyway.
             //
             // An import that changes nothing does not advance the slot. There
-            // is nothing to recover from it, and the slot holds one document:
-            // spending it would mean a merge of a file you already have — a
-            // single unconfirmed tap, and the one import people repeat — could
-            // burn the recovery point for the replace that actually needs it.
+            // is nothing to recover from it, and the slot holds one document.
+            // Spending it there would mean that a merge of a file you already
+            // have — a single unconfirmed tap, and the import people repeat —
+            // could burn the recovery point for the replace that needed it.
             if result != before {
                 try file.writeImportBackup(before)
             }

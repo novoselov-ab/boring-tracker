@@ -191,10 +191,10 @@ document the app was about to write anyway — so merge takes the backup and
 ceremony PHILOSOPHY.md exists to refuse; the backup costs the user nothing.
 
 **An import that changes nothing does not advance the slot.** There is nothing
-to recover from it, and the slot holds exactly one document — so spending it
-there would mean re-merging a file you already have, the one import people
-repeat and the only one behind no confirmation, could burn the recovery point
-for the replace that actually needed it.
+to recover from it, and the slot holds exactly one document. Spending it there
+would mean that re-merging a file you already have — the import people repeat,
+and the only one behind no confirmation — could burn the recovery point for the
+replace that actually needed it.
 
 The price of the rest, stated: a merge that *does* change something advances the
 slot, so it can still overwrite a pre-replace copy. That is a worse trade only
