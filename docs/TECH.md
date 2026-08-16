@@ -155,12 +155,21 @@ import the app has already announced — and a write queued for the pre-import
 document cannot land on top of the imported one. Every other mutation is worth
 coalescing; the one action a person takes and then immediately quits is not.
 
-**Every import has a one-step safety net, merge included.** Before changing
-memory it writes the exact current document — including edits still inside the
-save debounce — to `store.before-import.json`. Settings exposes **Restore Data
-Before Last Import…** whenever that file exists. Restoring swaps the documents:
-the current one becomes the recoverable backup, so a mistaken restore can be
-reversed too. A later import intentionally advances this one-step backup.
+**Every import has a one-step safety net, merge included.** It writes the exact
+current document — including edits still inside the save debounce — to
+`store.before-import.json`. Settings exposes **Restore Data Before Last Import…**
+whenever that file exists. Restoring swaps the documents: the current one becomes
+the recoverable backup, so a mistaken restore can be reversed too. A later import
+intentionally advances this one-step backup.
+
+The copy is **staged beside the slot and committed only once the imported
+document is safely on disk.** The slot holds one document, so overwriting it is
+itself destructive: writing straight into it and only then writing the import
+meant a failure on that second write — a full disk being the realistic one — left
+the user with neither. The document they might still want back had already been
+replaced by the one they were importing over, under an alert that said nothing
+had changed. Staging costs one extra file and makes the pair recoverable in
+every order they can fail in.
 
 Merge gets the copy even though it is the non-destructive-sounding option,
 because it isn't one: the incoming document carries **tombstones**, and a merge
@@ -176,7 +185,15 @@ ceremony PHILOSOPHY.md exists to refuse; the backup costs the user nothing.
 to recover from it, and the slot holds exactly one document. Spending it there
 would mean that re-merging a file you already have — the import people repeat,
 and the only one behind no confirmation — could burn the recovery point for the
-replace that actually needed it.
+replace that actually needed it. "Changes nothing" is asked of the documents in
+a canonical order, because `merged` sorts tombstones by `(deleted, id)` while
+the live store appends them as deletions happen: two deletions inside one second
+carry the same timestamp, so a plain `==` called a genuine no-op a change about
+half the time, on nothing but array order.
+
+Whether a copy was actually kept is carried back in `ImportSummary` rather than
+assumed, so the completion alert cannot promise a safety net that a no-op import
+never created.
 
 The price of the rest, stated: a merge that *does* change something advances the
 slot, so it can still overwrite a pre-replace copy. That is a worse trade only

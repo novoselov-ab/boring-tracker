@@ -56,11 +56,14 @@ struct StoreFile: Sendable {
     let url: URL
     let backupURL: URL
     let importBackupURL: URL
+    let importBackupStagingURL: URL
 
     init(directory: URL) {
         self.url = directory.appendingPathComponent("store.json")
         self.backupURL = directory.appendingPathComponent("store.backup.json")
         self.importBackupURL = directory.appendingPathComponent("store.before-import.json")
+        self.importBackupStagingURL = directory
+            .appendingPathComponent("store.before-import.staging.json")
     }
 
     var directory: URL { url.deletingLastPathComponent() }
@@ -148,6 +151,44 @@ struct StoreFile: Sendable {
     func writeImportBackup(_ document: StoreDocument) throws {
         try prepareDirectory()
         try StoreCoding.encode(document).write(to: importBackupURL, options: .atomic)
+    }
+
+    /// Writes the pre-import copy *beside* the recovery slot without disturbing
+    /// what is in it.
+    ///
+    /// The slot holds one document, so overwriting it is itself destructive.
+    /// Writing straight into it and only then writing the imported document
+    /// meant a failure on that second write — a full disk is the realistic one —
+    /// left the user with neither: the document they had before the import they
+    /// regretted was already gone, replaced by the one they were importing over.
+    /// Staged here, committed once the imported document is safely down.
+    func stageImportBackup(_ document: StoreDocument) throws {
+        try prepareDirectory()
+        try StoreCoding.encode(document).write(to: importBackupStagingURL, options: .atomic)
+    }
+
+    /// Advances the recovery slot to the staged copy, reporting whether it
+    /// managed to. `rename(2)` replaces in one step, so there is never a moment
+    /// with no slot at all.
+    ///
+    /// Deliberately does not throw: by the time this runs the import is already
+    /// on disk and has succeeded. A failure here means the safety net did not
+    /// advance, which the summary then says out loud rather than turning a
+    /// completed import into an error.
+    @discardableResult
+    func commitStagedImportBackup() -> Bool {
+        guard FileManager.default.fileExists(atPath: importBackupStagingURL.path) else {
+            return false
+        }
+        guard rename(importBackupStagingURL.path, importBackupURL.path) == 0 else {
+            discardStagedImportBackup()
+            return false
+        }
+        return true
+    }
+
+    func discardStagedImportBackup() {
+        try? FileManager.default.removeItem(at: importBackupStagingURL)
     }
 
     var hasImportBackup: Bool {

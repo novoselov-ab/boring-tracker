@@ -72,7 +72,7 @@ struct DataTransferView: View {
             }
             Button("Cancel", role: .cancel) { pendingImport = nil }
         } message: {
-            Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, the current document is kept here as a recoverable backup.")
+            Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, anything this changes is kept here as a recoverable backup.")
         }
         .alert(item: $presentedAlert, content: alert)
     }
@@ -120,13 +120,16 @@ struct DataTransferView: View {
             do {
                 let summary = try await store.importData(pendingImport, mode: mode)
                 self.pendingImport = nil
-                // Said for a merge as well as a replace. A merge carries
-                // tombstones, so it can remove entries too — the sentence is
-                // only reassuring if it is true of the run that just happened.
+                // Said for a merge as well as a replace, and only when it is
+                // true of the run that just happened. An import that changed
+                // nothing does not take the recovery slot, so on a fresh
+                // install there may be no copy at all — and a reassurance the
+                // Settings list then contradicts is worse than none.
+                let backup = summary.keptBackup
+                    ? " A backup of the previous document was kept on this device." : ""
                 presentedAlert = .message(
                     title: "Import complete",
-                    detail: "\(describe(summary))"
-                        + " A backup of the previous document was kept on this device."
+                    detail: "\(describe(summary))\(backup)"
                 )
             } catch {
                 show(error, action: "import")

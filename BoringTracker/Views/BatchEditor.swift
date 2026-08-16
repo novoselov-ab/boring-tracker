@@ -86,11 +86,18 @@ struct BatchEditor: View {
             return Draft(entry: entry, typed: text)
         }
         date = item.date
-        // The same rule the row displays by, from the same place. Seeding from
-        // the newest member instead meant a batch whose newest member had its
-        // name cleared in tracker detail opened with a blank field while the row
-        // still showed the name — and saving any number wrote that blank over
-        // every member.
+        // The same list of names the row reads, so a batch whose newest member
+        // had its name cleared in tracker detail no longer opens blank while the
+        // row still shows the name — which is how saving any number used to
+        // write that blank over every member.
+        //
+        // Not the same *answer* as the row, and deliberately: where the members
+        // disagree the row says "Mixed names" and this seeds the newest one,
+        // because "Mixed names" is a description and would be saved as a literal
+        // name. Saving then does flatten the others onto this one — the footer
+        // above says so when it happens. The honest fixes are a name field per
+        // member or refusing to save, and neither is worth its cost for a batch
+        // that only acquires mixed names by being edited one entry at a time.
         name = item.names.first ?? ""
     }
 

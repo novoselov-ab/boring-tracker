@@ -926,7 +926,7 @@ struct StoreTests {
         let summary = try await phone.importData(StoreCoding.encode(imported), mode: .merge)
 
         #expect(phone.entries.isEmpty)
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 0, entriesRemoved: 1))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 0, entriesRemoved: 1, keptBackup: true))
     }
 
     @Test("Merging a second device's export adds its entries and keeps yours")
@@ -942,7 +942,7 @@ struct StoreTests {
 
         #expect(phone.entries.count == 2)
         #expect(phone.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 14)) == 850)
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 1, entriesRemoved: 0))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 1, entriesRemoved: 0, keptBackup: true))
     }
 
     @Test("Import grouping does not change equal-stamp tracker ordering")
@@ -992,7 +992,7 @@ struct StoreTests {
         let summary = try await store.importData(file, mode: .replace)
 
         #expect(store.entries.map(\.value) == [250])
-        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 1, entriesRemoved: 2))
+        #expect(summary == Store.ImportSummary(trackersAdded: 0, trackersRemoved: 0, entriesAdded: 1, entriesRemoved: 2, keptBackup: true))
     }
 
     @Test("Replace keeps the exact current document in a separate backup first")
@@ -1064,6 +1064,83 @@ struct StoreTests {
         #expect(try file.read(file.importBackupURL) == original)
         try await store.restoreImportBackup()
         #expect(store.document == original)
+    }
+
+    @Test("A failed import does not spend the recovery slot on the way down")
+    func failedImportKeepsTheOlderBackup() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let original = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))]
+        )
+        let store = makeStore(original, file: file, window: .seconds(60))
+        // The replace they regret. The slot now holds the only copy of it.
+        try await store.importData(
+            try StoreCoding.encode(StoreDocument(trackers: [tracker])), mode: .replace
+        )
+        #expect(try file.read(file.importBackupURL) == original)
+        let current = store.document
+        // So the next import's own flush has nothing left to write. Without
+        // this the saver fails first, and the import never reaches the two
+        // writes this test is about.
+        await store.flush()
+
+        // A second import whose live write cannot land, while the staged copy
+        // beside it still can — an occupied `store.json` path stands in for the
+        // full disk, which is the realistic way to fail between those two
+        // writes. Removing the directory would not do it: `write` recreates it.
+        try FileManager.default.removeItem(at: file.url)
+        try FileManager.default.createDirectory(at: file.url, withIntermediateDirectories: true)
+        let incoming = StoreDocument(trackers: [Tracker(name: "Protein", modified: time(2))])
+        await #expect(throws: (any Error).self) {
+            try await store.importData(try StoreCoding.encode(incoming), mode: .merge)
+        }
+
+        // Nothing moved: not memory, and not the copy of the document they may
+        // still want back. Writing the slot before the document meant this case
+        // destroyed the pre-replace copy and then reported "Nothing was changed".
+        #expect(store.document == current)
+        #expect(try file.read(file.importBackupURL) == original)
+        #expect(!FileManager.default.fileExists(atPath: file.importBackupStagingURL.path))
+    }
+
+    @Test("Two deletions in one second do not make a no-op merge burn the slot")
+    func noOpMergeIsNotFooledByTombstoneOrder() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        // Pinned so the two orders provably disagree rather than disagreeing
+        // about half the time: the entry deleted *second* has the smaller id,
+        // so appending by deletion and sorting by (deleted, id) cannot agree.
+        let first = Entry(id: UUID(uuidString: "FFFFFFFF-0000-4000-8000-000000000001")!,
+                          trackerID: tracker.id, value: 100, date: time(10), modified: time(10))
+        let second = Entry(id: UUID(uuidString: "00000000-0000-4000-8000-000000000002")!,
+                           trackerID: tracker.id, value: 200, date: time(20), modified: time(20))
+        let store = makeStore(
+            StoreDocument(trackers: [tracker], entries: [first, second]),
+            file: file, window: .seconds(60)
+        )
+        let original = store.document
+        try await store.importData(
+            try StoreCoding.encode(StoreDocument(trackers: [tracker])), mode: .replace
+        )
+        #expect(try file.read(file.importBackupURL) == original)
+
+        // Deleted back to back, so `Date.stamp()` rounds both to the same
+        // second and only the array order tells them apart. The store appends
+        // in deletion order; a merge sorts by (deleted, id) — so whichever way
+        // these two ids fall, re-merging our own export must still be a no-op.
+        store.add(first)
+        store.add(second)
+        store.delete(first)
+        store.delete(second)
+        let exported = try store.exportData()
+
+        try await store.importData(exported, mode: .merge)
+
+        #expect(try file.read(file.importBackupURL) == original)
     }
 
     @Test(

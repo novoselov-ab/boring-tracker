@@ -657,6 +657,11 @@ final class Store {
         var trackersRemoved: Int
         var entriesAdded: Int
         var entriesRemoved: Int
+        /// Whether a recoverable copy of the previous document was actually
+        /// kept. Carried here so the alert cannot promise a safety net that
+        /// does not exist — an import that changed nothing never takes the
+        /// slot, and on a fresh install there is then no copy at all.
+        var keptBackup: Bool = false
     }
 
     func exportData() throws -> Data {
@@ -701,11 +706,8 @@ final class Store {
             case .merge: before.merged(with: incoming)
             case .replace: incoming.compactingTombstones()
             }
-            // Both modes. Decode and validate the incoming file first; once it
-            // is known to be usable, preserving the exact current document must
-            // succeed or the import does not happen.
-            //
-            // A merge gets this too, even though it reads as the additive
+            // Both modes get a recoverable copy of what they are about to
+            // change. A merge gets it too, even though it reads as the additive
             // choice: the document it takes in carries tombstones, so an old
             // export — or someone else's — can delete entries that exist here
             // and nowhere in the file. That is the same permanent loss replace
@@ -717,16 +719,29 @@ final class Store {
             // Spending it there would mean that a merge of a file you already
             // have — a single unconfirmed tap, and the import people repeat —
             // could burn the recovery point for the replace that needed it.
-            if result != before {
-                try file.writeImportBackup(before)
+            let changesSomething = !Self.sameDocument(result, before)
+            // Staged, not written into the slot. Overwriting the slot is itself
+            // destructive, so doing it before the write below meant a failure
+            // there — a full disk — left the user with neither document: the one
+            // they might want back was already replaced by the one they were
+            // importing over, under an alert that said nothing had changed.
+            if changesSomething { try file.stageImportBackup(before) }
+            do {
+                // Before memory, so a failure here leaves the app exactly as it
+                // was rather than holding a document that never reached disk.
+                try file.write(result)
+            } catch {
+                file.discardStagedImportBackup()
+                throw error
             }
-            // Before memory, so a failure here leaves the app exactly as it was
-            // rather than holding a document that never reached disk.
-            try file.write(result)
+            // Only now, with the import durable, is the old document safe to
+            // give up. If this cannot be done the import still stands and the
+            // summary says the safety net did not advance.
+            let keptBackup = changesSomething && file.commitStagedImportBackup()
             replaceState(with: result, saving: false)
             revision += 1
             saveError = nil
-            return importSummary(before: before, after: result)
+            return importSummary(before: before, after: result, keptBackup: keptBackup)
         }
     }
 
@@ -765,7 +780,10 @@ final class Store {
             replaceState(with: result, saving: false)
             revision += 1
             saveError = nil
-            return importSummary(before: before, after: result)
+            // Always true here: the swap put the document being replaced into
+            // the recovery slot, which is what makes a mistaken restore
+            // reversible.
+            return importSummary(before: before, after: result, keptBackup: true)
         }
     }
 
@@ -814,7 +832,11 @@ final class Store {
     /// wipes two trackers and adds none used to report "Added 0 trackers and 0
     /// entries. Removed 0 entries" — a true sentence about entries and a
     /// silence about the two trackers that had just been destroyed.
-    private func importSummary(before: StoreDocument, after result: StoreDocument) -> ImportSummary {
+    private func importSummary(
+        before: StoreDocument,
+        after result: StoreDocument,
+        keptBackup: Bool
+    ) -> ImportSummary {
         let oldTrackers = Set(before.trackers.map(\.id))
         let newTrackers = Set(result.trackers.map(\.id))
         let oldEntries = Set(before.entries.map(\.id))
@@ -823,8 +845,28 @@ final class Store {
             trackersAdded: newTrackers.subtracting(oldTrackers).count,
             trackersRemoved: oldTrackers.subtracting(newTrackers).count,
             entriesAdded: newEntries.subtracting(oldEntries).count,
-            entriesRemoved: oldEntries.subtracting(newEntries).count
+            entriesRemoved: oldEntries.subtracting(newEntries).count,
+            keptBackup: keptBackup
         )
+    }
+
+    /// Whether two documents say the same thing, whatever order they say it in.
+    ///
+    /// Plain `==` is not that: `merged(with:)` rebuilds tombstones sorted by
+    /// `(deleted, id)` while the live store appends them as deletions happen,
+    /// and `Date.stamp()` rounds to whole seconds — so two deletions inside one
+    /// second land in deletion order here and id order there. Re-merging a file
+    /// you already have would then compare unequal about half the time, purely
+    /// on tombstone order, and burn the recovery slot the check exists to
+    /// protect. Trackers and entries are already in one canonical order on both
+    /// sides; tombstones were the only array without one.
+    private static func sameDocument(_ one: StoreDocument, _ other: StoreDocument) -> Bool {
+        func ordered(_ document: StoreDocument) -> StoreDocument {
+            var copy = document
+            copy.tombstones.sort { ($0.deleted, $0.id) < ($1.deleted, $1.id) }
+            return copy
+        }
+        return ordered(one) == ordered(other)
     }
 
     private func replaceState(with document: StoreDocument, saving: Bool = true) {
