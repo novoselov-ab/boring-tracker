@@ -366,34 +366,78 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 11. Home density and log feel, from real use
+## 11. Home density and log feel, from real use — done
 
 Five things noticed with four trackers on a real phone. Four are now; the
 animation on save is later.
 
-- [ ] **Home cards are too big.** Four trackers should not fill a screen —
+- [x] **Home cards are too big.** Four trackers should not fill a screen —
       aim for **6–10 visible without scrolling** on a current iPhone. Shrink
       the cards, not the numbers: "legible at a glance with one hand at the
       fridge" still holds.
-- [ ] **A card's + is too subtle and too small**, and it reads as a different
+- [x] **A card's + is too subtle and too small**, and it reads as a different
       design language from the bottom Log button. Give it a real 44pt target
       and the same idiom as Log, smaller. Tapping the card itself still opens
       that tracker's detail.
-- [ ] **Remove the recent-value bubbles from the log sheet.** People don't log
-      the same number twice — they log the same *food*, which is what item 13
+- [x] **Remove the recent-value bubbles from the log sheet.** People don't log
+      the same number twice — they log the same *food*, which is what item 14
       is for. Leave `Store.recentValues` alone; search-and-repeat will want it.
-- [ ] **Move between fields without leaving the keypad.** Typing calories then
+- [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
       in the keyboard bar beside Log.
-- [ ] **Make the sheet and the keyboard move together.** Today the sheet is
-      instant and the keyboard slides, so two things arrive at different times
-      and it reads as a glitch rather than as speed. Match the sheet to the
-      keyboard's own duration and curve so they are one movement.
+- [x] **Make the sheet and the keyboard move together** — tried, measured, and
+      **not done**, because the two cannot be made to overlap from here.
 
       This refines item 5 rather than reversing it. The rule is *nothing you
       have to wait for*, and a move that finishes exactly when the keypad does
       costs nothing extra — but **time-to-typeable must not increase**, so
       measure it before and after the way item 5 was measured.
+
+      It increases it, by a lot. iOS will not raise the keyboard while a modal
+      presentation animation is in flight, so the sheet's duration is *added* to
+      the wait rather than hidden inside it: the keypad starts ~0.22s after the
+      sheet is presented no matter what the sheet did to get there. Instant is
+      one ramp at **0.713–0.823s**; animated over the keyboard's own measured
+      0.3833s is two ramps with a stall between them at **1.270–1.278s**. Same
+      two movements, further apart, for half a second more. The instant sheet
+      stays.
+
+      **The complaint is still true and is now a known design problem**: two
+      things do arrive at two moments and it does read as a glitch. Anything
+      that fixes it has to start the keypad and the sheet in the same instant,
+      which means owning the presentation instead of asking `.sheet` for it.
+      That is a much larger change than this item was scoped for, and it wants
+      the week of real use in item 13 to say whether it is worth it.
+
+Measured on the iPhone 17 simulator with the item 5 method — a synthesized tap,
+`xcrun simctl io recordVideo`, and a frame-by-frame diff, first frame showing
+the press to the last frame above the noise floor, three runs. Time-to-typeable
+finished at **0.697–0.710s**, marginally under the 0.713–0.823s it started at:
+nothing here was allowed to cost the common path anything, and removing the
+recents row gave a little back.
+
+Cards visible without scrolling, counting a card as visible when its number and
+its + are entirely above the Log bar, against a 12-tracker file with two groups:
+**4 → 10** on the largest phone (iPhone 17 Pro Max), **4 → 8** on the iPhone 17,
+**3 → 6** on the smallest supported phone (iPhone SE 3rd generation). Read out
+of the accessibility tree rather than counted by eye — the simulator reports iOS
+element frames in device points, so the numbers above are the frames the app
+actually laid out.
+
+The row went from 118pt to 64pt without shrinking anything that matters: the
+name and the number moved onto one line instead of stacking, and most of what
+was reclaimed was never the card at all — the default inset-grouped row padding
+was 46pt, and because every loose tracker is its own section, the gap *between*
+sections was being paid once per card. The number is `.title2` rather than
+`.largeTitle`, which is the largest size that fits beside a 44pt button without
+making the row taller than that button already makes it.
+
+**The + was already a 44pt target** — that part of the complaint was wrong, and
+worth recording so the next person does not go looking for the bug. What was
+actually wrong was contrast and idiom: a bare blue glyph floating in the row,
+which is a different design language from the filled blue pill it is a smaller
+version of. It is now a 30pt filled circle in the same tint, still inside a 44pt
+frame, with `contentShape` keeping the target the frame rather than the fill.
 
 ### Later: make a save feel like it landed
 
@@ -412,6 +456,13 @@ enough to be worth protecting.
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
+
+**Carried here from item 11**, which closed with it open on purpose: the sheet
+and the keypad still arrive at two different moments, because they cannot be
+made to overlap through `.sheet` — the measurements are in item 11. Fixing it
+means owning the presentation, which is a real change and wants a week of use
+to say whether it earns one. Answer it here rather than leaving it to be
+rediscovered.
 
 ## 14. Search and repeat
 

@@ -236,9 +236,17 @@ final class Store {
 
     /// The last few distinct values logged against a tracker, newest first.
     ///
-    /// This is the whole of "recents", and eventually the raw material for
-    /// presets: you eat the same things over and over, so the number you want
-    /// is usually one you have typed before. No setup, nothing to maintain.
+    /// This is the whole of "recents": you eat the same things over and over,
+    /// so the number you want is usually one you have typed before. No setup,
+    /// nothing to maintain.
+    ///
+    /// **Uncalled on purpose — do not delete it as dead code.** Its one caller
+    /// was the row of value chips in the log sheet, removed in item 11 because
+    /// people do not log the same *number* twice; they log the same food. The
+    /// query was never the wrong idea, only the presentation was, and item 14's
+    /// search-and-repeat is the right one — it ranks past entries by name and
+    /// then needs exactly this to fill the fields in. Keeping it costs eight
+    /// lines; rediscovering it costs the reasoning above.
     func recentValues(for tracker: UUID, limit: Int = 5) -> [Double] {
         var seen = Set<Double>()
         var result: [Double] = []

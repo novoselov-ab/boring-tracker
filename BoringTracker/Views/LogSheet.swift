@@ -14,9 +14,29 @@ import SwiftUI
 /// the title, for the log that isn't the usual one.
 struct LogSheet: View {
 
-    /// `nil` makes the common-path presentation instant. This is deliberately
-    /// one displayed decision in one place: if real-device use calls for a
-    /// little spatial context, give it a short animation here.
+    /// `nil` makes the common-path presentation instant, and it stays that way.
+    ///
+    /// **Matching the keyboard was tried here, measured, and reverted.** Item 11
+    /// asked for the sheet and the keypad to arrive as one movement, on the
+    /// reasoning that a move finishing exactly when the keypad does costs
+    /// nothing extra. It costs everything extra, because the two do not
+    /// overlap: iOS will not raise the keyboard while a modal presentation
+    /// animation is in flight, so the sheet's duration is added to the wait
+    /// rather than hidden inside it.
+    ///
+    /// The recording says it plainly. The keypad always begins ~0.22s after the
+    /// sheet is *presented*, whatever the sheet did to get there, so the total
+    /// is sheet + 0.22 + keypad. Instant: one ramp, **0.713–0.823s** over three
+    /// runs. Animated for 0.3833s — the keyboard's own duration, read from
+    /// `keyboardAnimationDurationUserInfoKey` with a temporary probe rather
+    /// than assumed — two ramps with a visible stall between them, and
+    /// **1.270–1.278s**. That is not one movement that happens to take longer;
+    /// it is the same two movements, further apart, for half a second more.
+    ///
+    /// So the glitch item 11 describes is real and this is not the fix for it.
+    /// Anything that is, has to start the keypad and the sheet together, which
+    /// means owning the presentation rather than asking `.sheet` for it — a
+    /// much larger change than the one this item was scoped for.
     private static let presentationAnimation: Animation? = nil
 
     /// Where the last-used group is remembered.
@@ -43,14 +63,25 @@ struct LogSheet: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
 
+    /// Which field the keypad is attached to.
+    ///
+    /// An enum rather than a bare tracker id because the name field is part of
+    /// the same walk: the chevrons in the bar step through everything you can
+    /// type into, and the thing you reach for after the last number is what you
+    /// ate. The date is deliberately not in here — it is a wheel, not a field,
+    /// and stopping the keypad on it would be the one place the walk costs you
+    /// something instead of saving it.
+    private enum Field: Hashable {
+        case amount(UUID)
+        case name
+    }
+
     @AppStorage(LogSheet.lastGroupKey) private var lastGroup = ""
     @State private var group: LogGroup
     @State private var typed: [UUID: String] = [:]
     @State private var date = Date()
     @State private var name = ""
-    @State private var frozenRecentsTracker: UUID?
-    @State private var frozenRecents: [UUID: [Double]]?
-    @FocusState private var focused: UUID?
+    @FocusState private var focused: Field?
 
     init(target: Target) {
         self.target = target
@@ -78,6 +109,7 @@ struct LogSheet: View {
                 Section {
                     DatePicker("When", selection: $date)
                     TextField("Name", text: $name)
+                        .focused($focused, equals: .name)
                 } footer: {
                     Text("The name is what you ate, not what it counts towards. "
                         + "The time defaults to now — change it to log something you forgot.")
@@ -91,14 +123,16 @@ struct LogSheet: View {
                 // A native `.keyboard` toolbar did not render an accessory in
                 // this iOS 26 sheet. The keyboard-following safe-area inset
                 // keeps the action in the same thumb-reachable position.
-                HStack {
+                HStack(spacing: 8) {
+                    fieldStep(-1, "chevron.up", "Previous field")
+                    fieldStep(1, "chevron.down", "Next field")
                     Spacer()
                     Button("Log", action: log)
                         .buttonStyle(.borderedProminent)
                         .disabled(amounts.isEmpty)
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 6)
+                .padding(.vertical, 2)
                 .background(.bar)
             }
         }
@@ -109,7 +143,7 @@ struct LogSheet: View {
             await Task.yield()
             // The keypad should already be up: tapping + goes straight to a
             // focused numeric field, with no intermediate screen.
-            focused = target.tracker ?? trackers.first?.id
+            focused = (target.tracker ?? trackers.first?.id).map(Field.amount)
         }
         .onChange(of: group) { _, _ in
             // What was typed belonged to the group that was on screen when it
@@ -128,13 +162,68 @@ struct LogSheet: View {
             typed.removeAll()
             name = ""
             // Switching is not a reason to have to tap a field again.
-            focused = trackers.first?.id
+            focused = (trackers.first?.id).map(Field.amount)
         }
     }
 
     /// The trackers this sheet is about, in the order they are drawn.
     private var trackers: [Tracker] {
         store.trackers(in: group)
+    }
+
+    /// Everything the chevrons walk, in the order it is drawn. Every typeable
+    /// field is in it and nothing is skipped, so "next" never jumps over a
+    /// number you were about to fill in.
+    ///
+    /// Deduplicated, because the walk steps by *value*: `@FocusState` has only
+    /// the field to compare against. A store file holding two trackers with the
+    /// same id — a shape nothing on the load path rejects, and one that
+    /// `Store.reorderAll`, `CSVExport` and `HistoryView` all already tolerate
+    /// with `uniquingKeysWith` — would otherwise put the same value in twice,
+    /// `firstIndex(of:)` would keep returning the first copy, and "next" would
+    /// land back where it started. A dead chevron and an unreachable name field
+    /// is a worse way to meet bad data than one row drawn twice.
+    private var fields: [Field] {
+        var seen = Set<Field>()
+        return (trackers.map { Field.amount($0.id) } + [.name])
+            .filter { seen.insert($0).inserted }
+    }
+
+    /// One step of the walk. Wraps at both ends rather than greying out: with
+    /// two or three fields a disabled chevron is a dead control most of the
+    /// time, and wrapping means the thumb never has to check which end it is at.
+    private func fieldStep(_ offset: Int, _ symbol: String, _ label: String) -> some View {
+        Button {
+            let fields = fields
+            guard let focused, let index = fields.firstIndex(of: focused) else {
+                // Nothing focused — the keypad went down, most likely because
+                // the date picker took over. Both chevrons come back to the
+                // first field rather than to the end the arrow points at:
+                // there is no "previous" to a cursor that isn't anywhere, and
+                // sending *Previous* to the last field moved it forward, past
+                // the date the user had just left.
+                self.focused = fields.first
+                return
+            }
+            self.focused = fields[(index + offset + fields.count) % fields.count]
+        } label: {
+            Image(systemName: symbol)
+                // Fixed, not `.body`: the 44pt frame it sits in does not
+                // scale, so a text style grows the glyph out of its own target.
+                // At AX5 the two chevrons drew ~46pt wide inside 44pt frames
+                // and touched, so aiming at the *drawn* up-chevron could land
+                // in the down-chevron's rect — a previous/next control that
+                // does the opposite of what it looks like.
+                .font(.system(size: 17, weight: .medium))
+                // Tinted, like every other system form accessory: `.plain` is
+                // here for the 44pt `contentShape`, not for its colour, and it
+                // would otherwise paint these the same black as the labels.
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     /// The title is the switcher, which is the whole trick: a menu in the place
@@ -185,7 +274,6 @@ struct LogSheet: View {
         }
     }
 
-    @ViewBuilder
     private func amountRow(_ tracker: Tracker) -> some View {
         LabeledContent(tracker.name) {
             HStack(spacing: 6) {
@@ -193,40 +281,23 @@ struct LogSheet: View {
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .font(.title3.monospacedDigit())
-                    .focused($focused, equals: tracker.id)
+                    .focused($focused, equals: .amount(tracker.id))
                 if !tracker.unit.isEmpty {
                     Text(tracker.unit).foregroundStyle(.secondary)
                 }
             }
         }
-
-        if focused == tracker.id
-            || frozenRecentsTracker == tracker.id {
-            recents(for: tracker)
-        }
     }
 
-    /// One tap for a number you have logged before.
-    @ViewBuilder
-    private func recents(for tracker: Tracker) -> some View {
-        let values = frozenRecents?[tracker.id] ?? store.recentValues(for: tracker.id)
-        if !values.isEmpty {
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
-                    ForEach(values, id: \.self) { value in
-                        Button(tracker.format(value, includeUnit: false)) {
-                            typed[tracker.id] = tracker.editText(value)
-                        }
-                        .buttonStyle(.bordered)
-                        .monospacedDigit()
-                    }
-                }
-                .padding(.vertical, 2)
-            }
-            .scrollIndicators(.hidden)
-            .listRowSeparator(.hidden)
-        }
-    }
+    // There is deliberately no row of recently-used values here.
+    //
+    // It was one tap for a number you had logged before, and it turns out
+    // nobody logs the same *number* twice — they log the same food, and the
+    // number follows from the name. So the chips took up the space under the
+    // field you were typing into, moved the form around as you focused and
+    // blurred, and were tapped roughly never. `Store.recentValues` is
+    // deliberately kept: item 14's search-and-repeat is the feature these
+    // chips were a bad guess at, and it wants exactly that data.
 
     private func binding(for tracker: UUID) -> Binding<String> {
         Binding(
@@ -249,18 +320,9 @@ struct LogSheet: View {
         let amounts = amounts
         guard !amounts.isEmpty else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Saving changes the recents immediately, while the sheet is still
-        // leaving. Freeze what is on screen so a first chip cannot insert a
-        // row (or a new value reorder it) during the dismissal frames.
-        frozenRecentsTracker = focused
-        // `uniquingKeysWith`, not `uniqueKeysWithValues`: nothing on the load
-        // path rejects a store file with two trackers sharing an id, and every
-        // other reader here tolerates one. Trapping would turn a file the app
-        // otherwise opens and draws into a crash on the Log button.
-        frozenRecents = Dictionary(
-            trackers.map { ($0.id, store.recentValues(for: $0.id)) },
-            uniquingKeysWith: { first, _ in first }
-        )
+        // The two frozen snapshots that used to live here went with the recents
+        // row they existed to hold still. Nothing on this screen reflows on save
+        // any more, because nothing on it is computed from the entries.
         store.add(values: amounts, at: date, name: trimmed.isEmpty ? nil : trimmed)
         // Written on log rather than on open, so dismissing a group you
         // only went to look at doesn't move where + lands tomorrow.

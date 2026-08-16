@@ -160,52 +160,177 @@ struct HomeView: View {
             }
         }
         .listStyle(.insetGrouped)
+        // Every loose tracker is its own section (see `runs`), so the gap
+        // between sections is paid once per card rather than once per group —
+        // with ten trackers the default spacing was costing more vertical room
+        // than two whole cards. Compact is the standard shorter value; nothing
+        // here is hand-tuned.
+        .listSectionSpacing(.compact)
     }
 }
 
 /// A daily total, or the latest reading. The two kinds of tracker are the only
 /// real decision in the product, so they are the only real difference here.
+///
+/// One line, not three. The stacked name-over-number card was 118pt tall and
+/// four of them filled a phone, which made the home screen a thing you scroll
+/// rather than a thing you read (docs/TODO.md item 11). Name left, number right,
+/// caption tucked under the name for the measurement kind: the same information
+/// in the height of a standard list row, and the number is still the loudest
+/// thing on it.
+///
+/// At accessibility text sizes it goes back to stacking — see `summary`. The
+/// row is only worth compressing while it still reads.
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
     let tracker: Tracker
     let open: () -> Void
     let log: () -> Void
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
+        // Read once per pass and handed down. Both of these scan the whole
+        // entry history — `total` and `latestEntry` are linear — and they are
+        // wanted three times over between the layout and the spoken label. Six
+        // to ten of these cards are on screen by design, which is the point of
+        // this item, so a per-card constant factor is the one that shows.
+        let headline = headline
+        let caption = caption
+        return HStack(spacing: 8) {
             // Two plain buttons with disjoint frames rather than a
             // NavigationLink wrapping a button: a link would either swallow the
             // + or leave its chevron stranded in the middle of the card.
             Button(action: open) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(tracker.name)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text(headline)
-                        .font(.largeTitle.weight(.medium))
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                    if let caption {
-                        Text(caption)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(.rect)
+                summary(headline, caption)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(.rect)
+                    // Spelled out rather than composed from the child order,
+                    // which put "8 hours ago" before "78.4 kg" once the caption
+                    // moved up beside the name. The number is the reading; the
+                    // qualifier goes after it. On the label content rather than
+                    // on the `Button` — applied outside, the button still read
+                    // its children in layout order and this had no effect.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(
+                        [tracker.name, headline, caption]
+                            .compactMap { $0 }
+                            .joined(separator: ", ")
+                    )
             }
             .buttonStyle(.plain)
             .accessibilityHint("Shows the history")
-            Spacer(minLength: 12)
-            Button(action: log) {
-                Image(systemName: "plus")
-                    .font(.title2)
-                    .frame(width: 44, height: 44)
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("Log \(tracker.name)")
+            logButton
         }
-        .padding(.vertical, 6)
+        // The row is as tall as the + and no taller. The default inset-grouped
+        // row padding was adding 46pt of its own, which is most of a second row.
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
+    }
+
+    /// One line normally, stacked at accessibility text sizes.
+    ///
+    /// The whole point of item 11 is that a name and a number fit on one row,
+    /// and at ordinary sizes they do. At AX3 and up they cannot: the number is
+    /// sized first, the name absorbs the entire shortfall, and the screen
+    /// becomes a column of numbers with no legible labels — "Calories" rendered
+    /// as a single clipped glyph. Density is worth having only while the row is
+    /// still readable, so above the threshold this falls back to the stacked
+    /// shape the card had before, which has room for both. Somebody reading at
+    /// AX5 is not the person counting how many cards fit on a screen.
+    @ViewBuilder
+    private func summary(_ headline: String, _ caption: String?) -> some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 2) {
+                nameBlock(caption)
+                headlineText(headline)
+            }
+        } else {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                nameBlock(caption)
+                Spacer(minLength: 8)
+                headlineText(headline)
+                    // The number gets the width it needs and the name is what
+                    // gives way, because the number is the one thing on this
+                    // row that has to be readable across a kitchen and a
+                    // truncated name still says which tracker it is. Measured
+                    // on an iPhone SE, the worst case in the starter shapes —
+                    // "Calories burned exercising" against "1,234,567 kcal" —
+                    // leaves "Calories b…", which still tells the rows apart.
+                    .layoutPriority(1)
+            }
+        }
+    }
+
+    /// A tracker name is unbounded free text — the editor sets no limit — and
+    /// "Calories burned exercising" wrapping to three lines would put back
+    /// exactly the row height this card exists to cut. Capped on the one-line
+    /// layout, uncapped on the stacked one, which has the room.
+    private func nameBlock(_ caption: String?) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(tracker.name)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            if let caption {
+                Text(caption)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+    }
+
+    /// Shrunk from `.largeTitle` to `.title2`, which is the largest size that
+    /// fits beside the 44pt + without making the row taller than the button
+    /// already does. "Legible at a glance with one hand at the fridge" is a
+    /// floor, not a reason to spend a third of the screen on four numbers.
+    ///
+    /// One line, and it shrinks rather than truncating — on *both* layouts. The
+    /// scale factor used to live only on the one-line branch, which left the
+    /// stacked branch, the one that exists because the text is already too big,
+    /// clipping "1,234 kcal" to "1,23…" at AX5 on an iPhone SE. A clipped total
+    /// is worse than a small one, and that is no less true where the type is
+    /// large on purpose.
+    private func headlineText(_ headline: String) -> some View {
+        Text(headline)
+            .font(.title2.weight(.medium))
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+    }
+
+    /// The bottom Log button, scaled down: same fill, same tint, same meaning.
+    ///
+    /// It used to be a bare blue glyph, which is a different design language
+    /// from the thing it is a smaller version of, and low enough contrast that
+    /// people did not read it as a control at all. The filled circle is 30pt so
+    /// it stays visibly secondary to the 50pt Log pill; the 44pt frame around
+    /// it is the tap target, and `contentShape` is what makes the frame — not
+    /// the fill — the thing your thumb has to hit.
+    ///
+    /// A tinted `.bordered` fill was tried instead, on the grounds that eight
+    /// solid dots down one screen is loud. It was rejected on the original
+    /// complaint: a blue glyph on a pale blue disc is exactly the low contrast
+    /// this was meant to fix, and the size and the idiom were only two of the
+    /// three things wrong with it.
+    private var logButton: some View {
+        Button(action: log) {
+            Image(systemName: "plus")
+                // Fixed, not `.subheadline`: the disc and the 44pt target are
+                // fixed too, and a text style scales without them. At AX3 the
+                // glyph outgrew its circle and the + drew as a crosshair
+                // straddling the edge — the "doesn't read as a control"
+                // complaint this button exists to fix, arriving by another
+                // door. A control that is already a comfortable target at
+                // every size has nothing to gain by growing.
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 30, height: 30)
+                .background(Color.accentColor, in: .circle)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Log \(tracker.name)")
     }
 
     private var headline: String {
