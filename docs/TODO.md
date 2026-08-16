@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 13), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 14), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -366,18 +366,54 @@ merge-or-replace choice, since it's the only destructive action in the app.
 
 Deliberately before daily use: it's the escape hatch if anything eats data.
 
-## 11. CI
+## 11. Home density and log feel, from real use
+
+Five things noticed with four trackers on a real phone. Four are now; the
+animation on save is later.
+
+- [ ] **Home cards are too big.** Four trackers should not fill a screen —
+      aim for **6–10 visible without scrolling** on a current iPhone. Shrink
+      the cards, not the numbers: "legible at a glance with one hand at the
+      fridge" still holds.
+- [ ] **A card's + is too subtle and too small**, and it reads as a different
+      design language from the bottom Log button. Give it a real 44pt target
+      and the same idiom as Log, smaller. Tapping the card itself still opens
+      that tracker's detail.
+- [ ] **Remove the recent-value bubbles from the log sheet.** People don't log
+      the same number twice — they log the same *food*, which is what item 13
+      is for. Leave `Store.recentValues` alone; search-and-repeat will want it.
+- [ ] **Move between fields without leaving the keypad.** Typing calories then
+      reaching for protein costs a tap on the field; put previous/next chevrons
+      in the keyboard bar beside Log.
+- [ ] **Make the sheet and the keyboard move together.** Today the sheet is
+      instant and the keyboard slides, so two things arrive at different times
+      and it reads as a glitch rather than as speed. Match the sheet to the
+      keyboard's own duration and curve so they are one movement.
+
+      This refines item 5 rather than reversing it. The rule is *nothing you
+      have to wait for*, and a move that finishes exactly when the keypad does
+      costs nothing extra — but **time-to-typeable must not increase**, so
+      measure it before and after the way item 5 was measured.
+
+### Later: make a save feel like it landed
+
+Logging a number should show the number changing. Nothing acknowledges a log
+right now beyond the sheet closing. Deliberately deferred — it wants designing
+once the app has been lived with, and it is the one place this app is allowed
+a moment of motion.
+
+## 12. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 12. Use it on a real phone for a week
+## 13. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-## 13. Search and repeat
+## 14. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -398,7 +434,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 14. App icon and asset catalog
+## 15. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
