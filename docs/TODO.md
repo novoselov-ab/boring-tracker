@@ -381,7 +381,11 @@ animation on save is later.
       that tracker's detail.
 - [x] **Remove the recent-value bubbles from the log sheet.** People don't log
       the same number twice — they log the same *food*, which is what item 14
-      is for. Leave `Store.recentValues` alone; search-and-repeat will want it.
+      is for. `Store.recentValues` was kept on the grounds that
+      search-and-repeat would want it — **that reasoning looks wrong**: it keys
+      on tracker UUID and ignores names entirely, which is the opposite of what
+      item 14 needs. Decide when building item 14 whether to rewrite it around
+      names or delete it; do not keep it out of habit.
 - [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
       in the keyboard bar beside Log.
@@ -494,6 +498,18 @@ with no migration.
 The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
+
+## 14b. One VoiceOver pass, on a device
+
+Unresolved and unresolvable from the accessibility tree, so it waits for the
+same phone trip as items 8 and 13. Commit `0564080` claims `.accessibilityLabel`
+on the card's + "had no effect at all", but `logButton` a few lines below and
+`HistoryView` both do exactly that and work. Either the claim is wrong, or
+`children: .ignore` makes that button a container and the hint has to move
+inside it.
+
+- [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
+- [ ] Settle the + button's label and hint, and correct the comment either way.
 
 ## 15. App icon and asset catalog
 
