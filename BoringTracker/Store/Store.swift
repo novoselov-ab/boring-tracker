@@ -701,12 +701,17 @@ final class Store {
             case .merge: before.merged(with: incoming)
             case .replace: incoming.compactingTombstones()
             }
-            if mode == .replace {
-                // Decode and validate the incoming file first. Once it is known
-                // to be usable, preserving the exact current document must
-                // succeed or the destructive import does not happen.
-                try file.writeImportBackup(before)
-            }
+            // Both modes. Decode and validate the incoming file first; once it
+            // is known to be usable, preserving the exact current document must
+            // succeed or the import does not happen.
+            //
+            // A merge gets this too, even though it reads as the additive
+            // choice: the document it takes in carries tombstones, so an old
+            // export — or someone else's — can delete entries that exist here
+            // and nowhere in the file. That is the same permanent loss replace
+            // makes, arrived at quietly. The copy costs one write of a document
+            // the app was about to write anyway.
+            try file.writeImportBackup(before)
             // Before memory, so a failure here leaves the app exactly as it was
             // rather than holding a document that never reached disk.
             try file.write(result)
@@ -717,7 +722,7 @@ final class Store {
         }
     }
 
-    /// Restores the document saved before the last replace, leaving the
+    /// Restores the document saved before the last import, leaving the
     /// current document in that recovery slot. This is an async transaction
     /// because every delayed save must finish before the two files are swapped;
     /// otherwise an older queued write could land after the restore.

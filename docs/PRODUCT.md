@@ -317,6 +317,10 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
   without throwing away the relationship between values logged at once.
 - **Import** restores from an export file. Merge or replace, stated clearly
   before it happens, because this is the one destructive action in the app.
+  Either way the document it replaces is kept as a one-step recoverable backup:
+  merge sounds additive, but the file it takes in carries deletions, so it can
+  remove entries too. The backup is silent and automatic — no second tap for
+  the safe option.
 - Backup and cross-device is the user's business: save the export to Files,
   iCloud Drive, wherever. The app doesn't run a sync service (rule 4).
 

@@ -155,12 +155,28 @@ import the app has already announced — and a write queued for the pre-import
 document cannot land on top of the imported one. Every other mutation is worth
 coalescing; the one action a person takes and then immediately quits is not.
 
-A replace import has a separate one-step safety net. Before changing memory it
-writes the exact current document — including edits still inside the save
-debounce — to `store.before-import.json`. Settings exposes **Restore Data Before
-Last Replace…** whenever that file exists. Restoring swaps the documents: the
-current one becomes the recoverable backup, so a mistaken restore can be
-reversed too. A later replace intentionally advances this one-step backup.
+**Every import has a one-step safety net, merge included.** Before changing
+memory it writes the exact current document — including edits still inside the
+save debounce — to `store.before-import.json`. Settings exposes **Restore Data
+Before Last Import…** whenever that file exists. Restoring swaps the documents:
+the current one becomes the recoverable backup, so a mistaken restore can be
+reversed too. A later import intentionally advances this one-step backup.
+
+Merge gets the copy even though it is the non-destructive-sounding option,
+because it isn't one: the incoming document carries **tombstones**, and a merge
+honours them. An export from two months ago, or a file from someone else's
+phone, can therefore delete entries that exist here and appear nowhere in the
+file. That loss is exactly as permanent as a replace's and arrives with none of
+its warning. The fix is the cheap side of the trade — one extra write of a
+document the app was about to write anyway — so merge takes the backup and
+**does not** gain a confirmation dialog for it. A tap on a safe action is the
+ceremony PHILOSOPHY.md exists to refuse; the backup costs the user nothing.
+
+The price, stated: a merge now advances the slot, so merging after a replace
+overwrites the pre-replace copy. That is a worse trade only for someone who
+wants to undo an import two imports ago, which this one-step scheme never
+promised; it is a better trade for everyone whose merge quietly deleted
+something, who previously had no way back at all.
 
 ### Surviving a new phone
 

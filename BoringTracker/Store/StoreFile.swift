@@ -142,9 +142,9 @@ struct StoreFile: Sendable {
         try data.write(to: url, options: .atomic)
     }
 
-    /// Keeps the exact in-memory document that a replace import is about to
-    /// discard. This is separate from the rolling save backup: recent edits
-    /// may not have reached that file yet when the user imports.
+    /// Keeps the exact in-memory document that an import is about to change.
+    /// This is separate from the rolling save backup: recent edits may not have
+    /// reached that file yet when the user imports.
     func writeImportBackup(_ document: StoreDocument) throws {
         try prepareDirectory()
         try StoreCoding.encode(document).write(to: importBackupURL, options: .atomic)

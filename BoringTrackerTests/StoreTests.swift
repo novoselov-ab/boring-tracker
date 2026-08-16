@@ -1013,8 +1013,39 @@ struct StoreTests {
         #expect(store.entries.isEmpty)
     }
 
-    @Test("A replace does not happen when its safety backup cannot be written")
-    func replaceStopsWhenBackupFails() async throws {
+    @Test("A merge keeps one too, because the file it takes in carries deletions")
+    func mergeImportKeepsBackup() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let doomed = Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))
+        let current = StoreDocument(trackers: [tracker], entries: [doomed])
+        let store = makeStore(current, file: file, window: .seconds(60))
+        // The additive-sounding mode, carrying a tombstone for an entry that
+        // exists only here. Merge destroys it exactly as permanently as a
+        // replace would, and with no confirmation in front of it — so it gets
+        // the same recoverable copy.
+        let incoming = StoreDocument(
+            trackers: [tracker],
+            tombstones: [Tombstone(id: doomed.id, deleted: time(20))]
+        )
+
+        try await store.importData(StoreCoding.encode(incoming), mode: .merge)
+
+        #expect(store.entries.isEmpty)
+        #expect(store.hasImportBackup)
+        #expect(try file.read(file.importBackupURL) == current)
+
+        // And the copy is worth having: the deleted entry comes back.
+        try await store.restoreImportBackup()
+        #expect(store.entries.map(\.id) == [doomed.id])
+    }
+
+    @Test(
+        "No import happens when its safety backup cannot be written",
+        arguments: Store.ImportMode.allCases
+    )
+    func importStopsWhenBackupFails(mode: Store.ImportMode) async throws {
         let base = temporaryStoreFile()
         defer { base.removeDirectory() }
         try base.prepareDirectory()
@@ -1024,9 +1055,13 @@ struct StoreTests {
         let tracker = Tracker(name: "Calories", modified: time(1))
         let current = StoreDocument(trackers: [tracker])
         let store = makeStore(current, file: file)
+        // Something both modes would visibly do, so "nothing changed" is a real
+        // assertion for the merge case and not a document that happened to
+        // merge to itself.
+        let incoming = StoreDocument(trackers: [Tracker(name: "Protein", modified: time(2))])
 
         await #expect(throws: (any Error).self) {
-            try await store.importData(StoreCoding.encode(StoreDocument()), mode: .replace)
+            try await store.importData(StoreCoding.encode(incoming), mode: mode)
         }
         #expect(store.document == current)
     }

@@ -38,7 +38,7 @@ struct DataTransferView: View {
                 isImporting = true
             }
             if store.hasImportBackup {
-                Button("Restore Data Before Last Replace…", systemImage: "arrow.uturn.backward") {
+                Button("Restore Data Before Last Import…", systemImage: "arrow.uturn.backward") {
                     isRestoringBackup = true
                     presentedAlert = .confirmReplace
                 }
@@ -72,7 +72,7 @@ struct DataTransferView: View {
             }
             Button("Cancel", role: .cancel) { pendingImport = nil }
         } message: {
-            Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file.")
+            Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, the current document is kept here as a recoverable backup.")
         }
         .alert(item: $presentedAlert, content: alert)
     }
@@ -120,11 +120,13 @@ struct DataTransferView: View {
             do {
                 let summary = try await store.importData(pendingImport, mode: mode)
                 self.pendingImport = nil
-                let backup = mode == .replace
-                    ? " A backup of the previous document was kept on this device." : ""
+                // Said for a merge as well as a replace. A merge carries
+                // tombstones, so it can remove entries too — the sentence is
+                // only reassuring if it is true of the run that just happened.
                 presentedAlert = .message(
                     title: "Import complete",
-                    detail: "\(describe(summary))\(backup)"
+                    detail: "\(describe(summary))"
+                        + " A backup of the previous document was kept on this device."
                 )
             } catch {
                 show(error, action: "import")
@@ -151,8 +153,8 @@ struct DataTransferView: View {
             Alert(
                 title: Text(isRestoringBackup ? "Restore previous data?" : "Replace all current data?"),
                 message: Text(isRestoringBackup
-                    ? "Every current tracker and entry will be replaced by the document saved before the last replace. The current document will take its place as the recoverable backup."
-                    : "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next replace."),
+                    ? "Every current tracker and entry will be replaced by the document saved before the last import. The current document will take its place as the recoverable backup."
+                    : "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next import."),
                 primaryButton: .destructive(Text(isRestoringBackup ? "Restore Previous Data" : "Replace Everything")) {
                     if isRestoringBackup {
                         restoreBackup()
@@ -188,11 +190,14 @@ struct DataTransferView: View {
             do {
                 let summary = try await store.restoreImportBackup()
                 isRestoringBackup = false
-                let removed = summary.entriesRemoved == 1
-                    ? "1 entry" : "\(summary.entriesRemoved) entries"
+                // The same sentence import uses. Written separately, this one
+                // counted removed entries and stayed silent about removed
+                // trackers — which is exactly what a restore is most likely to
+                // remove, since it undoes an import that added them.
                 presentedAlert = .message(
                     title: "Restore complete",
-                    detail: "Added \(summary.trackersAdded) trackers and \(summary.entriesAdded) entries. Removed \(removed). The document you replaced is now the recoverable backup."
+                    detail: "\(describe(summary))"
+                        + " The document you replaced is now the recoverable backup."
                 )
             } catch is CancellationError {
                 isRestoringBackup = false
