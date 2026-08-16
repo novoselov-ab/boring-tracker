@@ -439,6 +439,16 @@ which is a different design language from the filled blue pill it is a smaller
 version of. It is now a 30pt filled circle in the same tint, still inside a 44pt
 frame, with `contentShape` keeping the target the frame rather than the fill.
 
+Left open by item 11, worth revisiting: **settings is now visibly less dense
+than home.** They still agree on order and shape, which is what item 6 required,
+but they no longer look alike.
+
+And the sheet still cannot move as one with the keyboard: iOS will not raise the
+keypad while a modal presentation is animating, so it starts ~0.22s late
+regardless, and matching the two produced a visible stall costing half a second.
+The instant sheet stays. If this keeps grating, the answer is not a different
+duration — it is not using `.sheet`.
+
 ### Later: make a save feel like it landed
 
 Logging a number should show the number changing. Nothing acknowledges a log
