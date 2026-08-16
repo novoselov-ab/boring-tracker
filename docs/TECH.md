@@ -121,15 +121,8 @@ answered `false` to `contains("\r")`, went out unquoted, and split its row in
 two — shifting every column after it. A bare LF was caught only by the accident
 of being its own character.
 
-**Names are not neutralised against spreadsheet formulas**, and that is
-unsettled rather than settled. A name is free text, so it can be `=1+1`; it
-round-trips exactly through an RFC 4180 parser, but a spreadsheet that reads a
-leading `=`, `+`, `-` or `@` as a formula will show its own answer instead of
-what was typed. The usual mitigations — a leading apostrophe or tab — buy that
-back by changing the bytes, so the file stops being what the user typed, and the
-two requirements cannot both be met. Exactness holds the field for now, on the
-grounds that CSV is a read-only view and the file comes off your own phone. Not
-yet checked against a real spreadsheet.
+Names go out exactly as typed. A CSV export is your own numbers coming off your
+own phone, so the file says what you wrote and nothing rewrites it.
 
 ### Writing safely
 
