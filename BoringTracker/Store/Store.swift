@@ -711,7 +711,15 @@ final class Store {
             // and nowhere in the file. That is the same permanent loss replace
             // makes, arrived at quietly. The copy costs one write of a document
             // the app was about to write anyway.
-            try file.writeImportBackup(before)
+            //
+            // An import that changes nothing does not advance the slot. There
+            // is nothing to recover from it, and the slot holds one document:
+            // spending it would mean a merge of a file you already have — a
+            // single unconfirmed tap, and the one import people repeat — could
+            // burn the recovery point for the replace that actually needs it.
+            if result != before {
+                try file.writeImportBackup(before)
+            }
             // Before memory, so a failure here leaves the app exactly as it was
             // rather than holding a document that never reached disk.
             try file.write(result)

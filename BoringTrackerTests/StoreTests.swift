@@ -1041,6 +1041,31 @@ struct StoreTests {
         #expect(store.entries.map(\.id) == [doomed.id])
     }
 
+    @Test("An import that changes nothing does not spend the recovery slot")
+    func noOpImportKeepsTheOlderBackup() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let original = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))]
+        )
+        let store = makeStore(original, file: file, window: .seconds(60))
+        // The replace they regret. The slot now holds the only copy of what
+        // they had before it.
+        let stripped = try StoreCoding.encode(StoreDocument(trackers: [tracker]))
+        try await store.importData(stripped, mode: .replace)
+        #expect(try file.read(file.importBackupURL) == original)
+
+        // Merging a file they already have changes nothing — one unconfirmed
+        // tap, and the one import people repeat. It must not burn the slot.
+        try await store.importData(try store.exportData(), mode: .merge)
+
+        #expect(try file.read(file.importBackupURL) == original)
+        try await store.restoreImportBackup()
+        #expect(store.document == original)
+    }
+
     @Test(
         "No import happens when its safety backup cannot be written",
         arguments: Store.ImportMode.allCases
@@ -1323,6 +1348,35 @@ struct StoreTests {
 
         #expect(store.entries.isEmpty)
         #expect(file.load().document.entries.isEmpty)
+    }
+
+    @Test("An entry logged while the import drains the save queue is not lost")
+    func importKeepsAnEditMadeWhileItWasDraining() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [tracker]), file: file, window: .seconds(60))
+        store.add(Entry(trackerID: tracker.id, value: 600, date: time(10)))
+        let incoming = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20))]
+        )
+
+        // `importData` awaits the saver, and main-actor methods are reentrant at
+        // `await` — so this runs in the middle of the import, on the snapshot it
+        // has already taken. The store notices its revision moved and starts
+        // again rather than merging onto a document that no longer exists.
+        let concurrent = Task { @MainActor in
+            store.add(Entry(trackerID: tracker.id, value: 999, date: time(30)))
+        }
+        try await store.importData(StoreCoding.encode(incoming), mode: .merge)
+        await concurrent.value
+
+        // True whichever side of the import the log lands on, which is the
+        // point: a value typed during an import is never the one that vanishes.
+        #expect(store.entries.map(\.value).sorted() == [250, 600, 999])
+        await store.flush()
+        #expect(file.load().document == store.document)
     }
 
     @Test("Importing your own export twice adds nothing the second time")

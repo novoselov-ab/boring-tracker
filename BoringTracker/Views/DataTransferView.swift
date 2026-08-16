@@ -172,15 +172,30 @@ struct DataTransferView: View {
         }
     }
 
+    /// Says what actually went wrong.
+    ///
+    /// Only a decode failure is evidence about the file. Every other error on
+    /// the import path used to be reported as a damaged export, and an import
+    /// can now fail because a *write* failed — the pre-import copy, or the
+    /// imported document itself. So a phone that had run out of storage told
+    /// its owner their backup was corrupt and sent them off to re-export a file
+    /// that was fine, while the real problem, which was also breaking every
+    /// ordinary save, went unmentioned.
+    ///
+    /// "Nothing was changed" survives the correction: import and restore both
+    /// fail before they touch memory, whichever step threw.
     private func show(_ error: any Error, action: String) {
         pendingImport = nil
+        let unchanged = action == "import" || action == "restore" ? " Nothing was changed." : ""
         let detail: String
         if let storeError = error as? StoreError {
-            detail = storeError.errorDescription ?? "The file uses a schema this version cannot read."
-        } else if action == "import" {
-            detail = "The selected file is not a valid Boring Tracker export or is damaged. Nothing was changed."
+            detail = storeError.errorDescription ?? "This file uses a schema this version cannot read.\(unchanged)"
+        } else if error is DecodingError {
+            detail = action == "restore"
+                ? "The document saved before the last import could not be read.\(unchanged)"
+                : "The selected file is not a valid Boring Tracker export or is damaged.\(unchanged)"
         } else {
-            detail = (error as NSError).localizedDescription
+            detail = "\((error as NSError).localizedDescription)\(unchanged)"
         }
         presentedAlert = .message(title: "Couldn’t \(action)", detail: detail)
     }
