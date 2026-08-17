@@ -1135,12 +1135,41 @@ It reaches further than the Data section: `.alert` and `.confirmationDialog`
 buttons take the tint too, so the import's *Merge Documents* / *Replace
 Everything…* sheet is drawn the same way.
 
+- [x] Measure mint as a `Form` button foreground, in dark and light.
 - [ ] Decide whether a form action row is chrome, like a bar button, or writing,
-      like a chart bar.
+      like a chart bar. **Blocked on item 18** — see the measurement below.
 - [ ] If chrome: it is `navBarAccent()` under a better name at five call sites,
       and the name in `OnAccent.swift` should stop saying "nav bar".
 - [ ] If writing: they need something that is not colour, and "a row that looks
       exactly like a label" is not an answer either.
+
+**The mint was measured as a form button foreground, and it splits the same way
+the nav bar does.** Built with `.tint(Color.accentFill)` on the settings action
+rows — *Share JSON…*, *Share CSV…*, *Save …to Files…*, *Import JSON*, *Add
+Tracker* — on an iPhone 17 / iOS 26.3, reading the screenshot's own IDAT bytes:
+
+    dark   text #00DAC3 on the row's #1C1C1E   9.57:1
+    light  text #00C8B3 on the row's #FFFFFF   2.12:1
+
+Against a 3:1 floor that is a pass in the appearance this app is used in and a
+clear fail in the other, so the tint is **not** restored here. It is the same
+shape of failure as the light-mode nav bar (2.05:1, item 13f) and it has the
+same fix: **item 18's colour set, a deliberate darker value for light mode.**
+One hue cannot be both a legible fill and a legible foreground on white.
+
+The light number is not a coincidence — 2.12:1 is exactly what 13b measured for
+*white on the light mint fill*, because contrast is symmetric and it is the same
+pair of colours. That is worth knowing: **the accent's foreground problem in
+light mode is the white-label problem read backwards**, and one colour set fixes
+both.
+
+**A tint would also only recolour half of each row, which nothing has said
+before.** Under iOS 26 the tinted rows draw their *text* mint and leave the SF
+Symbol at the label colour — measured on the same screenshots, the glyph is
+`#FFFFFF` in dark and `#000000` in light, both at their full 17:1 and 21:1
+against the row. So "restore the tint" does not undo 13c's change; it produces a
+two-colour row, mint word beside a label-coloured glyph. Whatever item 18
+settles has to say what the icon does too.
 
 ## 13f. The accent is a mint — done
 
@@ -1377,7 +1406,9 @@ already works.
 - [ ] An accent colour set, light and dark variants, measured on both.
 - [ ] It resolves **13e** in passing: `Form` buttons, `.alert` and
       `.confirmationDialog` all take the tint, including the import's
-      *Merge / Replace Everything…* dialog.
+      *Merge / Replace Everything…* dialog. 13e now carries the numbers this
+      has to beat — a tinted form row is **9.57:1 dark and 2.12:1 light** — and
+      the note that the tint reaches the row's text but not its icon.
 - [ ] Then the app icon.
 
 ## 18b. Get the export into the share sheet — done
