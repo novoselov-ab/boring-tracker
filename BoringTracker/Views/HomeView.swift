@@ -116,6 +116,25 @@ struct HomeView: View {
                 // it fired.
                 RepeatView { wroteRow = store.lastLoggedAgainRow }
             }
+            // And the offer expires. The store's slot deliberately never does —
+            // a repeat's undo stands until something newer is written — which
+            // was right when the bar lived on a screen you left, and is wrong on
+            // the one screen you are always on: nothing else here would clear
+            // it, so a bar could sit above the log button for the rest of the
+            // session and an idle tap on Undo twenty minutes later would remove
+            // a batch with no tombstone behind it.
+            //
+            // Ten seconds is the count-up finishing (0.8s) plus long enough to
+            // read the number, decide it was the wrong row and reach the button
+            // — and short enough that the offer belongs to the tap that made it.
+            // After that the undo is still there on History, which is where a
+            // deliberate correction goes anyway.
+            .task(id: wroteRow) {
+                guard wroteRow != nil else { return }
+                try? await Task.sleep(for: .seconds(10))
+                guard !Task.isCancelled else { return }
+                wroteRow = nil
+            }
         }
     }
 
