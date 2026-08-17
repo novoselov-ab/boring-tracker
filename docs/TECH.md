@@ -488,8 +488,17 @@ XcodeGen with `project.yml` as the source of truth, and the generated
 Xcode with nothing installed, while configuration changes stay reviewable as
 readable YAML instead of pbxproj conflicts.
 
+**A config file has to live in a folder**, which is why there is a `Config/`
+holding one file. With `createIntermediateGroups` on, an xcconfig sitting beside
+`project.yml` makes XcodeGen invent a group for the *containing directory* to
+put it in — named after whatever the clone is called, and with no deterministic
+id — so both that group and the file reference regenerated as a fresh
+`TEMP_<uuid>` every time and five lines of the committed `.xcodeproj` changed
+for nothing. Any subdirectory ends it.
+
 ```
 project.yml
+Config/           Signing.xcconfig, and the untracked Local.xcconfig it includes
 BoringTracker/
   App/            entry point, root view
   Model/          Tracker, Entry, StoreDocument

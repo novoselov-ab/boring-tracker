@@ -16,13 +16,22 @@ settings:
     CODE_SIGN_STYLE: Automatic
     # No DEVELOPMENT_TEAM on purpose: the project must build and run in the
     # simulator for anyone who clones it, with no Apple developer account.
-    # A device build needs one, so it comes from an untracked Local.xcconfig
-    # picked up by Signing.xcconfig below — present on a machine that installs
-    # to hardware, absent everywhere else.
+    # A device build needs one, so it comes from an untracked
+    # Config/Local.xcconfig picked up by Config/Signing.xcconfig below —
+    # present on a machine that installs to hardware, absent everywhere else.
 
+# In a folder rather than at the repo root, and that is the whole fix for the
+# `TEMP_…` uuid churn this project used to regenerate. With
+# createIntermediateGroups on, a config file sitting beside project.yml makes
+# XcodeGen build a group for the *containing directory* to hold it — a group
+# named after whatever the clone happens to be called, and one whose reference
+# never gets a deterministic id, so it and the file both came out as fresh
+# `TEMP_<random uuid>` every run and five lines of the committed .xcodeproj
+# changed for nothing. Any subdirectory ends it: the group is `Config`, the ids
+# hash from the path, and two regenerates in a row are byte-identical.
 configFiles:
-  Debug: Signing.xcconfig
-  Release: Signing.xcconfig
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
 
 targets:
   BoringTracker:

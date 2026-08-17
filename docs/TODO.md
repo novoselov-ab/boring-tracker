@@ -1286,9 +1286,14 @@ the numbered items is going near the same code.
       Messages, Mail and any app that takes a file, with Files still among
       them. About three lines. Give the file a dated name so a folder of
       exports is readable.
-- [ ] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Real diff noise in
-      a repo that commits its `.xcodeproj` on purpose, and noise makes review
-      worse. Pre-existing.
+- [x] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Fixed by moving
+      `Signing.xcconfig` into `Config/`. With `createIntermediateGroups` on, a
+      config file beside `project.yml` makes XcodeGen build a group for the
+      *containing directory* to hold it — a group named after whatever the
+      clone is called, and one nothing ever gives a deterministic id, so it and
+      the file reference came out as fresh `TEMP_<uuid>`s and five lines of the
+      committed `.xcodeproj` changed every run. Any subdirectory ends it; two
+      regenerates in a row are now byte-identical. See docs/TECH.md.
 - [ ] **`validateImport` never looks at a tracker's name.** It checks ids,
       `decimals` and `sortIndex`, so an imported or hand-edited file may carry
       `"name": ""` — and a nameless tracker draws a blank card on home, a blank
