@@ -443,6 +443,40 @@ who don't exist yet — the suite already runs on every change because every
 session runs it, so until this repo has someone else pushing to it, CI buys
 reassurance rather than safety.
 
+## 20. Five things from using it
+
+All from real use, all on screens looked at daily.
+
+- [ ] **"Repeat" becomes "Log again".** It says what happens rather than naming
+      a concept, and it reuses the app's own verb — the button beside it says
+      Log. Nobody has to interpret "Log again". Applies to the screen title and
+      the accessibility label; the home control stays a glyph.
+
+- [ ] **The delete button in History has no text.** Just missing.
+
+- [ ] **Log again should be a quick sheet, not a screen.** Today it is a pushed
+      screen with a list, which is what History is — so it reads as a second
+      History rather than as a fast way to log. Make it a small presentation
+      that comes up over what you were doing and goes away when you have
+      logged: the point is one tap and gone, not somewhere you arrive.
+
+      This is the item's real risk resurfacing. It was always going to be
+      judged on whether it felt distinct from History, and it does not.
+
+- [ ] **The save animation is too fast, and should count.** It currently just
+      changes. Slow it a little and let the number *count up* to its new value,
+      so you see the addition happen rather than finding a different number
+      there.
+
+      **The constraint from item 15 still holds: it delays nothing.** The sheet
+      closes immediately and the counting happens behind it. A number still
+      counting when you look away is fine; a sheet held open until it finishes
+      is not.
+
+- [ ] **Highlight the row a repeat just added.** Logging again from History
+      writes a new row, and right now nothing says which one is new — you are
+      left comparing timestamps. Mark it briefly, in a way that fades.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
