@@ -905,7 +905,7 @@ Not changed: tracker detail's own list, which draws the same shape and is not
 this item's question — there the tracker is the screen you are on, so a name
 line would repeat the title on every row.
 
-## 15. Make a save feel like it landed
+## 15. Make a save feel like it landed — done
 
 Logging a number should **show the number changing**. Today nothing
 acknowledges a log beyond the sheet closing: you tap Log, the sheet goes, and
@@ -917,14 +917,54 @@ should be deliberate rather than accidental — everything else in
 PHILOSOPHY.md's Design taste argues against animation, so this is the single
 carve-out and it needs to earn the name.
 
-- [ ] The card's number animates from old value to new, briefly.
-- [ ] It must not delay anything. The sheet still closes immediately; the
+- [x] The card's number animates from old value to new, briefly.
+- [x] It must not delay anything. The sheet still closes immediately; the
       number catching up happens behind it, and nothing waits on it.
-- [ ] No confetti, no bounce, no sound, no haptic celebration. The number moves
+- [x] No confetti, no bounce, no sound, no haptic celebration. The number moves
       because it changed, not to congratulate you.
 
 Deliberately after a week of real use: whether this is satisfying or annoying
 is exactly the kind of thing that cannot be decided from a simulator.
+
+**Three lines, and none of them is in the code that logs.** The card already
+carried `.contentTransition(.numericText())` and nothing ever animated into it,
+because nothing changed the total inside an animation. It now carries
+`.animation(.easeOut(duration: 0.3), value:)` on the number itself, so the
+motion belongs to the card rather than to the log sheet. That is what makes a
+repeat from History, an undo, an edit and a deletion all get it without a
+second implementation — and it is why `log()` is untouched: it still writes and
+dismisses in the same breath, with nothing to wait for.
+
+An ease, not a spring, because a spring is a bounce and a number that bounces
+is congratulating you. `numericText(value:)` rather than the bare form, so the
+digits roll up for a log and back down for an undo.
+
+**The dismissal is unchanged, measured rather than asserted.** Three runs each,
+on an iPhone 17, with `xcrun simctl io recordVideo` and frames pulled at exact
+60 Hz through `AVAssetImageGenerator`; the write and the dismiss are triggered
+together from a temporary launch-argument probe, because the macOS console was
+locked for this session and a locked console has no synthesized taps in it. The
+sheet is gone — its band matching the settled frame — at **+383, +400, +400 ms**
+without the animation and **+383, +400, +400 ms** with it. Everything on screen
+stops moving at +383/+400/+400 before and +400/+417/+400 after: one frame of
+difference on two runs of three, which is the animation's tail outliving the
+sheet by 16 ms.
+
+**And it is visible, which was the other thing worth checking.** The sheet
+uncovers the top of home first, so the first card is in the clear about 130 ms
+into a 400 ms dismissal: the frame at press+133 ms shows "2,830" mid-roll with
+its middle digits blurred on the way from 1,830 to 2,286, and the frame at
+press+283 ms still shows the last of it. Against the same run without the
+animation, the number's own region differs by a mean 0.078 → 0.055 → 0.031 over
+those frames while the no-animation build's own frames differ by 0.011 across
+the same span.
+
+**What a repeat from History gets is the same code and a different view of
+it.** The total does animate, but History is pushed over home, so nobody is
+looking at the card — by the time you go back it has settled. The
+acknowledgement on that screen is the undo bar item 14 put there, which appears
+in the same instant. Left as it is: the alternative is a second, screen-specific
+piece of motion, and this item exists to have exactly one.
 
 ## 16. Search and repeat
 

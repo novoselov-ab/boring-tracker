@@ -239,7 +239,7 @@ private struct TrackerCard: View {
                     // its children in layout order and this had no effect.
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(
-                        [tracker.name, headline, caption]
+                        [tracker.name, headline.text, caption]
                             .compactMap { $0 }
                             .joined(separator: ", ")
                     )
@@ -291,7 +291,7 @@ private struct TrackerCard: View {
     /// back to the stacked shape the card had before, which has room for both.
     /// Somebody reading at AX5 is not the person counting how many cards fit.
     @ViewBuilder
-    private func summary(_ headline: String, _ caption: String?) -> some View {
+    private func summary(_ headline: Headline, _ caption: String?) -> some View {
         if isStacked {
             VStack(alignment: .leading, spacing: 2) {
                 nameBlock(caption)
@@ -362,11 +362,30 @@ private struct TrackerCard: View {
     /// clipping "1,234 kcal" to "1,23…" at AX5 on an iPhone SE. A clipped total
     /// is worse than a small one, and that is no less true where the type is
     /// large on purpose.
-    private func headlineText(_ headline: String) -> some View {
-        Text(headline)
+    private func headlineText(_ headline: Headline) -> some View {
+        Text(headline.text)
             .font(.title2.weight(.medium))
             .monospacedDigit()
-            .contentTransition(.numericText())
+            // The one piece of motion in the app, and the whole of item 15:
+            // logging a number should show the number changing. Until now the
+            // only acknowledgement of a log was the sheet closing, and the card
+            // behind it already read as though it had always said that.
+            //
+            // `value:` gives the digits their direction, so a total rolls up
+            // and an undo rolls back down.
+            .contentTransition(.numericText(value: headline.amount ?? 0))
+            // On the card rather than at the place that writes, which is what
+            // keeps it honest in both directions. Nothing waits on it: `log()`
+            // still writes and dismisses in the same breath, and this animates
+            // behind the sheet on its way out. And it belongs to the number
+            // rather than to the log sheet, so a repeat from History — which
+            // changes the same total by another door — gets it for free, as
+            // does an undo, an edit and a deletion.
+            //
+            // Brief, and an ease rather than a spring: a spring is a bounce,
+            // and a number that bounces is congratulating you (docs/TODO.md
+            // item 15, docs/PHILOSOPHY.md "Quiet").
+            .animation(.easeOut(duration: 0.3), value: headline.text)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
     }
@@ -415,12 +434,27 @@ private struct TrackerCard: View {
         .accessibilityLabel("Log \(tracker.name)")
     }
 
-    private var headline: String {
+    /// What the card shows, and the number behind it.
+    ///
+    /// Both together because both come from the same linear scan of the entry
+    /// history, and the transition needs the number to know which way the
+    /// digits should roll. `nil` where there is nothing to show — a
+    /// measurement tracker nobody has logged yet, which prints an em dash.
+    private struct Headline {
+        var text: String
+        var amount: Double?
+    }
+
+    private var headline: Headline {
         switch tracker.kind {
         case .dailyTotal:
-            tracker.format(store.total(for: tracker.id, on: store.today))
+            let total = store.total(for: tracker.id, on: store.today)
+            return Headline(text: tracker.format(total), amount: total)
         case .measurement:
-            store.latestEntry(for: tracker.id).map { tracker.format($0.value) } ?? "—"
+            let latest = store.latestEntry(for: tracker.id)
+            return Headline(
+                text: latest.map { tracker.format($0.value) } ?? "—", amount: latest?.value
+            )
         }
     }
 
