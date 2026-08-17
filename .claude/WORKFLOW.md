@@ -146,6 +146,16 @@ After spawning, check `agtermctl tree --json` and confirm the new session's
 `foreground` is `claude`. A malformed `--command` fails silently into a bare
 shell, and the session looks perfectly fine in the sidebar.
 
+### Leave the repo on `main`
+
+A session that creates a branch must return to `main` before it finishes, even
+if its work is stuck. One left the repo on a proof branch after its push was
+refused, and the next two sessions — and I — spent a while reading a history
+that looked wrong because we were not standing where we thought we were.
+
+If a branch has to survive, say so in the report and switch back anyway. The
+branch keeps.
+
 ### Talking to a running session
 
 `agtermctl session type` **types, it does not submit.** A payload containing
