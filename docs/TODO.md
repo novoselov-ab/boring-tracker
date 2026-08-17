@@ -1380,7 +1380,54 @@ already works.
       *Merge / Replace Everything…* dialog.
 - [ ] Then the app icon.
 
-## 18b. Get the export into the share sheet
+## 18b. Get the export into the share sheet — done
+
+**The cheap fix was the whole fix, and no UIKit was written.** Export and import
+are now two sections, the confirmation dialog belongs to the import one, and a
+plain `ShareLink` presents from the export one. `UIActivityViewController`, the
+window hierarchy and the app's first UIKit are all still not here.
+
+- [x] Try the cheap fix first: give the confirmation dialog a different host.
+- [x] JSON and CSV both go through it, under the dated name.
+- [x] The Files exporter still works, as its own row.
+- [x] Recorded next to the code and in docs/TECH.md.
+
+**Reproduced before it was fixed, which is the half that gets skipped.** With
+the rows in one section, a `ShareLink` carrying the real export did nothing on a
+synthesized tap while *Import JSON* beside it opened the file importer on the
+same tap — so the control was dead, not the input path. Splitting the sections
+was the only change between that build and the one where the sheet presents.
+
+**Driven to a destination rather than to a sheet.** Share JSON → Save to Files →
+On My iPhone wrote `boring-tracker-2026-08-17.json`, 5,300 bytes, and it is
+`diff`-identical to the app's own `store.json`; Share CSV wrote
+`boring-tracker-entries-2026-08-17.csv` with the header row and one row per
+entry. *Save JSON to Files…* then offered the same name in the same folder and
+iOS asked whether to replace it — which is the Files exporter still working, and
+a free check that both doors write the same name. Importing the shared file back
+merged to "Added 0 trackers and 0 entries", the no-op an export of your own
+document should be.
+
+**What the share sheet is handed is a `Transferable` carrying the document, not
+the bytes** (`ExportFile`). A `ShareLink`'s item is rebuilt on every body pass —
+including during a reorder drag — so encoding there would encode the whole
+document per frame; `StoreDocument` is a struct of arrays, so carrying one is a
+retain, and the encode happens in the representation once a destination is
+chosen. One representation typed `.data` rather than one per format: the
+representation is static and cannot ask an instance what it is, so declaring
+both would let a receiver asking for JSON be handed a CSV. The extension carries
+the type, which is what sharing a file URL has always done — Reminders offered
+itself for the CSV and not for the JSON, so receivers do read it.
+
+The layout is now four export rows: *Share JSON…*, *Share CSV…*, *Save JSON to
+Files…*, *Save CSV to Files…*. **That is one more row than strictly needed and
+it is a judgement, not an oversight** — the share sheet contains "Save to Files"
+already, so the last two are a second route to the same place, kept because the
+scheduled export to the same folder is the one people repeat and the share sheet
+costs a tap to get there. If it reads as clutter, deleting the two Files rows is
+a two-line change and the exporter goes with it.
+
+---
 
 Found in `531d71c`. **`ShareLink` silently fails to present from settings' Data
 section** — no sheet, no error — while a `Button` in that same section works on
@@ -1404,13 +1451,9 @@ and rule 6 promises data leaves in one tap, where Files-only means save, find,
 then share. `UIActivityViewController` presented by hand from that screen was
 probed and does work.
 
-- [ ] Try the cheap fix first: give the confirmation dialog a different host
-      and see whether a plain `ShareLink` presents.
-- [ ] Only if that fails: isolate the UIKit in one small file, so the surface
-      is one place.
-- [ ] Record the `ShareLink` bug next to it and in TECH.md, so nobody
-      "simplifies" it back and silently loses the button again.
-- [ ] Keep the Files exporter working alongside it.
+The cheap fix was tried first and it worked, so the bridge was never written and
+this paragraph is the case that was never needed. The checklist for this item is
+at the top, ticked.
 
 ## 19. CI
 
@@ -1464,7 +1507,13 @@ Real, small, and not worth a session each — the overhead of reading the docs,
 testing and reviewing dwarfs the work. **Do them in one pass**, whenever one of
 the numbered items is going near the same code.
 
-- [ ] **Export through the share sheet.** A `ShareLink` gives AirDrop,
+- [x] **Export through the share sheet.** Done in item 18b: export and import
+      are two sections now, the confirmation dialog went with import, and a
+      plain `ShareLink` presents. No UIKit. The bisect below is what made that
+      one-line-of-structure fix findable, and it stays for the same reason the
+      wrong diagnosis above it does. Original note, unchanged:
+
+      A `ShareLink` gives AirDrop,
       Messages, Mail and any app that takes a file, with Files still among
       them. About three lines. **It is not three lines, and the three-line
       version does not work at all** — see below. The *dated name* half is

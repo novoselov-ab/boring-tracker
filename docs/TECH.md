@@ -468,6 +468,41 @@ So they don't get re-argued mid-build:
 - **No analytics, no crash reporter, no launch screen image.** Rules 5 and the
   launch budget.
 
+## A `ShareLink` will not present beside a `.confirmationDialog`
+
+The export leaves by two doors — the share sheet and the Files exporter — and
+the first one is drawn by a platform bug, so it is written down here rather than
+only in the code.
+
+**A `ShareLink` in a `Form`/`List` section whose container also carries
+`.confirmationDialog` silently does nothing when tapped.** No sheet, no error,
+no log line, and a `Button` in the same section responds to the same tap. On
+iOS 26.3 that dialog was the import merge/replace chooser, and while export and
+import shared one *Data* section it took the share sheet down with it —
+`531d71c` concluded from that that the share sheet was impossible in SwiftUI and
+would need `UIActivityViewController`. It doesn't. **The fix is that export and
+import are two sections**, so the dialog no longer sits on the container the
+`ShareLink` is in; nothing else changed, and the share sheet then presents for
+both formats.
+
+Verified on an iPhone 17 / iOS 26.3, both directions of the claim: with the
+rows in one section the tap does nothing while *Import JSON* beside it opens
+the file importer on the same synthesized tap, and with the sections split the
+same tap presents the sheet and *Save to Files* lands
+`boring-tracker-2026-08-17.json` in On My iPhone, byte-identical to the store
+file. See also the eight-way bisect in `3028257`, which is what identified the
+modifier.
+
+**So do not merge those two sections back together.** Nothing about the result
+looks broken — the rows draw, the labels are right, the button is simply dead.
+
+The item handed to the sheet is `ExportFile`, and it carries the
+**`StoreDocument`, not the encoded bytes**: a `ShareLink`'s item is rebuilt on
+every body pass of the settings list, including during a reorder drag, and
+`StoreDocument` is a struct of arrays so holding one is a retain. The encode and
+the write to a temporary file happen in its `FileRepresentation`, once a
+destination has been chosen.
+
 ## Testing
 
 Swift Testing (built in, no dependency). Tests target the parts where a silent

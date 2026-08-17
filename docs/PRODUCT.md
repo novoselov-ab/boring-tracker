@@ -327,6 +327,11 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
   including batch and tracker IDs plus the tracker's current name, unit and
   kind. Keeping a batch's rows together makes the file useful in a spreadsheet
   without throwing away the relationship between values logged at once.
+- **Either file leaves through the share sheet** — AirDrop, Messages, Mail,
+  anything that takes a file — or straight into Files, which is its own row
+  because it is the export people repeat to the same folder and the share sheet
+  costs a tap to get there. Both doors write the same bytes under the same dated
+  name, `boring-tracker-2026-08-17.json`.
 - **Import** restores from an export file. Merge or replace, stated clearly
   before it happens, because this is the one destructive action in the app.
   Either way the document it replaces is kept as a one-step recoverable backup:

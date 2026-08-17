@@ -29,59 +29,113 @@ struct DataTransferView: View {
         }
     }
 
+    /// Two sections, and the split is load-bearing rather than tidy-mindedness.
+    ///
+    /// **A `ShareLink` will not present from a container that carries a
+    /// `.confirmationDialog`.** No sheet, no error, nothing in the log; a
+    /// `Button` beside it works on the same tap. That dialog is the import
+    /// merge/replace chooser, and while export and import shared one *Data*
+    /// section it silently took the share sheet with it — which is why the
+    /// export left through Files only and why `531d71c` recorded the share
+    /// sheet as impossible in SwiftUI. It is not: give the dialog its own
+    /// section and the `ShareLink` above presents.
+    ///
+    /// So the two directions are two sections, and the import section owns
+    /// every presentation that belongs to importing. **Do not "simplify" these
+    /// back into one section** — nothing about the result looks broken, the
+    /// rows still draw, and the button just stops working (docs/TODO.md item
+    /// 18b, docs/TECH.md).
     var body: some View {
-        Section {
-            Button("Export JSON", systemImage: "square.and.arrow.up", action: exportJSON)
-            Button("Export CSV", systemImage: "tablecells", action: exportCSV)
-            Button("Import JSON", systemImage: "square.and.arrow.down") {
-                isRestoringBackup = false
-                isImporting = true
+        let json = exportFile(.json)
+        let csv = exportFile(.csv)
+        return Group {
+            Section {
+                ShareLink(item: json, preview: SharePreview(json.filename)) {
+                    Label("Share JSON…", systemImage: "square.and.arrow.up")
+                }
+                ShareLink(item: csv, preview: SharePreview(csv.filename)) {
+                    Label("Share CSV…", systemImage: "square.and.arrow.up")
+                }
+                // Kept beside the share sheet rather than replaced by the
+                // "Save to Files" inside it: this is the export people take on
+                // a schedule, to the same folder every time, and it is one tap
+                // instead of two.
+                Button("Save JSON to Files…", systemImage: "folder", action: exportJSON)
+                Button("Save CSV to Files…", systemImage: "folder", action: exportCSV)
+            } header: {
+                Text("Export")
+            } footer: {
+                Text("JSON contains the complete document and can be imported again. CSV is one row per entry for spreadsheets.")
             }
-            if store.hasImportBackup {
-                Button("Restore Data Before Last Import…", systemImage: "arrow.uturn.backward") {
-                    isRestoringBackup = true
+            .fileExporter(
+                isPresented: $isExporting,
+                document: exportDocument,
+                contentType: exportType,
+                defaultFilename: exportName,
+                onCompletion: finishExport
+            )
+
+            Section {
+                Button("Import JSON", systemImage: "square.and.arrow.down") {
+                    isRestoringBackup = false
+                    isImporting = true
+                }
+                if store.hasImportBackup {
+                    Button("Restore Data Before Last Import…", systemImage: "arrow.uturn.backward") {
+                        isRestoringBackup = true
+                        presentedAlert = .confirmReplace
+                    }
+                }
+            } header: {
+                Text("Import")
+            }
+            .fileImporter(
+                isPresented: $isImporting,
+                allowedContentTypes: [.json],
+                allowsMultipleSelection: false,
+                onCompletion: selectImport
+            )
+            .confirmationDialog(
+                "How should this file be imported?",
+                isPresented: $isChoosingImportMode,
+                titleVisibility: .visible
+            ) {
+                Button("Merge Documents") { importPending(mode: .merge) }
+                Button("Replace Everything…", role: .destructive) {
                     presentedAlert = .confirmReplace
                 }
+                Button("Cancel", role: .cancel) { pendingImport = nil }
+            } message: {
+                Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, anything this changes is kept here as a recoverable backup.")
             }
-        } header: {
-            Text("Data")
-        } footer: {
-            Text("JSON contains the complete document and can be imported again. CSV is one row per entry for spreadsheets.")
+            .alert(item: $presentedAlert, content: alert)
         }
-        .fileExporter(
-            isPresented: $isExporting,
-            document: exportDocument,
-            contentType: exportType,
-            defaultFilename: exportName,
-            onCompletion: finishExport
-        )
-        .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.json],
-            allowsMultipleSelection: false,
-            onCompletion: selectImport
-        )
-        .confirmationDialog(
-            "How should this file be imported?",
-            isPresented: $isChoosingImportMode,
-            titleVisibility: .visible
-        ) {
-            Button("Merge Documents") { importPending(mode: .merge) }
-            Button("Replace Everything…", role: .destructive) {
-                presentedAlert = .confirmReplace
-            }
-            Button("Cancel", role: .cancel) { pendingImport = nil }
-        } message: {
-            Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, anything this changes is kept here as a recoverable backup.")
-        }
-        .alert(item: $presentedAlert, content: alert)
+    }
+
+    /// What the share sheet is handed. Built on every body pass, which is why
+    /// `ExportFile` carries the document rather than the encoded bytes.
+    ///
+    /// Reading `store.document` here is also what subscribes this screen to
+    /// every entry and tombstone, where it used to watch nothing but the
+    /// recovery file. That is three array retains on a screen nobody's day runs
+    /// through, and the alternative — handing the store itself to a `Sendable`
+    /// value that is read off the main actor — is not one.
+    private func exportFile(_ format: ExportFile.Format) -> ExportFile {
+        ExportFile(stem: stem(format), format: format, document: store.document)
+    }
+
+    /// The undated stem. Both doors add the date themselves, at the moment they
+    /// are used, so a settings screen left open across midnight cannot hand the
+    /// share sheet yesterday's name while the Files exporter offers today's.
+    private func stem(_ format: ExportFile.Format) -> String {
+        format == .csv ? "boring-tracker-entries" : "boring-tracker"
     }
 
     private func exportJSON() {
         do {
             exportDocument = ExportDocument(data: try store.exportData())
             exportType = .json
-            exportName = ExportName.dated("boring-tracker")
+            exportName = ExportName.dated(stem(.json))
             isExporting = true
         } catch {
             show(error, action: "export")
@@ -91,7 +145,7 @@ struct DataTransferView: View {
     private func exportCSV() {
         exportDocument = ExportDocument(data: store.exportCSV())
         exportType = .commaSeparatedText
-        exportName = ExportName.dated("boring-tracker-entries")
+        exportName = ExportName.dated(stem(.csv))
         isExporting = true
     }
 
