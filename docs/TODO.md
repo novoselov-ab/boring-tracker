@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 15), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 16), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -384,7 +384,7 @@ animation on save is later.
       is for. `Store.recentValues` was kept on the grounds that
       search-and-repeat would want it — **that reasoning looks wrong**: it keys
       on tracker UUID and ignores names entirely, which is the opposite of what
-      item 14 needs. Decide when building item 15 whether to rewrite it around
+      item 14 needs. Decide when building item 16 whether to rewrite it around
       names or delete it; do not keep it out of habit.
 - [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
@@ -453,12 +453,9 @@ regardless, and matching the two produced a visible stall costing half a second.
 The instant sheet stays. If this keeps grating, the answer is not a different
 duration — it is not using `.sheet`.
 
-### Later: make a save feel like it landed
+**Item 12 answered it without that.** The constraint binds only while a keyboard
+is being raised, and the pad is now drawn instead. `.sheet` stayed.
 
-Logging a number should show the number changing. Nothing acknowledges a log
-right now beyond the sheet closing. Deliberately deferred — it wants designing
-once the app has been lived with, and it is the one place this app is allowed
-a moment of motion.
 
 ## 12. Draw our own number pad
 
@@ -475,21 +472,71 @@ It also deletes accumulated machinery: the `Task.yield()` before focusing, the
 `@FocusState` ordering assumption, and the "does the keypad reliably come up"
 question that two reviews have now had to re-test.
 
-- [ ] A pad drawn in the sheet: digits, the **locale** decimal separator,
+- [x] A pad drawn in the sheet: digits, the **locale** decimal separator,
       delete, previous/next field, and Log.
-- [ ] **Not** a keyboard extension, and **not** a `UITextField.inputView` swap
+- [x] **Not** a keyboard extension, and **not** a `UITextField.inputView` swap
       — an input view still goes through the keyboard presentation machinery
       and keeps the animation this item exists to remove.
-- [ ] The **name** field keeps the system keyboard. Naming is the rare path, so
+- [x] The **name** field keeps the system keyboard. Naming is the rare path, so
       it can pay for what it costs.
-- [ ] A hardware keyboard must still type digits — simulators and iPads have
+- [x] A hardware keyboard must still type digits — simulators and iPads have
       one, and losing that would make development worse.
-- [ ] Every key labelled for VoiceOver. A custom pad is the one place where
+- [x] Every key labelled for VoiceOver. A custom pad is the one place where
       rolling our own silently drops accessibility that came for free.
-- [ ] Measure time-to-typeable before and after, with the method.
+- [x] Measure time-to-typeable before and after, with the method.
 
 PHILOSOPHY.md already says the number pad is the interface. This makes that
 literally true.
+
+**It goes to roughly zero, and the recording says so in one frame.** Measured on
+the iPhone 17 simulator with the item 5 method — a synthesized tap, `xcrun
+simctl io recordVideo`, a frame-by-frame coarse-grid diff, first frame showing
+the press to the last frame above the noise floor, three runs each. Press to
+settled: **0.698–0.708 s before, 0.205–0.207 s after.** The before numbers
+reproduce item 11's recorded 0.697–0.710 s from a clean build, which is the
+check that the two are the same measurement.
+
+The clean half of that comparison is what happens *after* the sheet appears,
+since the press-to-present interval is unchanged and includes the synthetic
+click's own 110 ms hold. The sheet arrives in one frame either way; what
+followed it was **0.513–0.517 s of keypad ramp before, and nothing after** —
+the frame the sheet appears in already holds the full pad, the caret and the
+Log bar, extracted from the recording and looked at rather than inferred.
+
+Deleted with the timing they worked around: the `await Task.yield()` before
+setting focus, the `@FocusState` ordering assumption, the "nothing is focused,
+because the keypad went down" branch in the chevron walk, and the amount
+fields' `@FocusState` entirely. Where the caret is, is now resolved from the
+target and the store instead of assigned after presentation, so there is no
+moment when it is nowhere and no ordering left to get wrong.
+
+Two defects found by driving it, neither of them in the pad:
+
+- **The name field was half-hidden behind its own action bar** — at HEAD too,
+  and fully hidden once the pad changed how far the form scrolls. iOS scrolls a
+  focused field clear of the *keyboard* and knows nothing about a
+  `safeAreaInset` above it. Fixed with an explicit scroll, which has to be
+  deferred one turn: fired on the focus change it computes against the
+  pre-keyboard layout and lands short.
+- **At AX4 and AX5 a long tracker name pushed the number off screen.**
+  `LabeledContent` stacks label over value at accessibility sizes, the pad takes
+  43% of an iPhone SE, and "Calories burned exercising" ran to three lines. The
+  name is capped to two lines, the same call HomeView's card makes: a truncated
+  name still says which tracker it is, an invisible number does not.
+
+Swept default through AX5 on the smallest supported phone (iPhone SE 3rd
+generation, created for the run and deleted afterwards) with the pad open over
+a four-tracker group — all four fields, the bar and the whole pad fit without
+scrolling at the default size, and the pad's own grid holds at every size
+because its keys are fixed, exactly like the system keypad's. Checked in dark
+mode, and on an iPad Pro 13-inch, where the form sheet already constrains the
+pad to a sensible width and needs no cap.
+
+Not regressed, checked by driving it and reading `store.json` rather than by
+eye: one save still writes one batch with one `batchID`, the date picker still
+backdates, group switching still clears what was typed and moves the caret to
+the new group's first field without the pad going down, and the sheet still
+opens instantly.
 
 ## 13. CI
 
@@ -502,14 +549,34 @@ The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
 simulator.
 
-**Carried here from item 11**, which closed with it open on purpose: the sheet
-and the keypad still arrive at two different moments, because they cannot be
-made to overlap through `.sheet` — the measurements are in item 11. Fixing it
-means owning the presentation, which is a real change and wants a week of use
-to say whether it earns one. Answer it here rather than leaving it to be
-rediscovered.
+~~**Carried here from item 11**~~ — **closed by item 12 before this step was
+reached, and by the other road.** The sheet and the keypad arrived at two
+moments because a keyboard was being raised; drawing the pad means nothing is
+raised, so there is only one moment. Owning the presentation, which is what
+this was reserved to decide about, turned out not to be needed.
 
-## 15. Search and repeat
+## 15. Make a save feel like it landed
+
+Logging a number should **show the number changing**. Today nothing
+acknowledges a log beyond the sheet closing: you tap Log, the sheet goes, and
+the card behind it is already showing the new total as though it had always
+said that. The action has no result you can see happen.
+
+This is the one place the app is allowed a moment of motion, and that exception
+should be deliberate rather than accidental — everything else in
+PHILOSOPHY.md's Design taste argues against animation, so this is the single
+carve-out and it needs to earn the name.
+
+- [ ] The card's number animates from old value to new, briefly.
+- [ ] It must not delay anything. The sheet still closes immediately; the
+      number catching up happens behind it, and nothing waits on it.
+- [ ] No confetti, no bounce, no sound, no haptic celebration. The number moves
+      because it changed, not to congratulate you.
+
+Deliberately after a week of real use: whether this is satisfying or annoying
+is exactly the kind of thing that cannot be decided from a simulator.
+
+## 16. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -530,7 +597,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 15b. One VoiceOver pass, on a device
+## 16b. One VoiceOver pass, on a device
 
 Unresolved and unresolvable from the accessibility tree, so it waits for the
 same phone trip as items 8 and 14. Commit `0564080` claims `.accessibilityLabel`
@@ -542,7 +609,7 @@ inside it.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
-## 16. App icon and asset catalog
+## 17. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
