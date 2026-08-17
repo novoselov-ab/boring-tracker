@@ -905,6 +905,22 @@ Not changed: tracker detail's own list, which draws the same shape and is not
 this item's question — there the tracker is the screen you are on, so a name
 line would repeat the title on every row.
 
+## 13d. Give the nav bar its tint back
+
+Item 13c's rule — teal is a fill, not a text colour — was applied to nav bar
+buttons too, so Cancel, Save, the gear and the clock are now the plain label
+colour. The session flagged it as **the one place the rule costs rather than
+buys**, and it is right.
+
+A tinted nav bar button is not text painted in an accent; it is the standard
+iOS affordance that says *this is tappable*, on a bar background Apple has
+already tuned for it. 13c exists to stop teal being used to **write** — chart
+bars, glyphs and labels on the ordinary background. System chrome is not that.
+
+- [ ] Restore the accent on nav bar buttons only.
+- [ ] Leave the chart monochrome and every other 13c change alone. This is a
+      carve-out for system chrome, not a retreat from the rule.
+
 ## 15. Make a save feel like it landed — done
 
 Logging a number should **show the number changing**. Today nothing

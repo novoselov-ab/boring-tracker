@@ -33,6 +33,17 @@ A subject line with no body is not a finished commit here, however tidy the
 diff. And never claim a measurement, a tool or a test run that did not happen:
 see "Always check, not just read" below.
 
+### A commit that decides is not a commit that does
+
+Say which one it is in the subject line. "Make teal a fill colour everywhere"
+reads as the change; if the diff only adds a paragraph to `docs/TODO.md`, the
+subject should say **Decide**, **Note** or **Record**. Two commits on this repo
+got that wrong and a later session had to point out that no Swift had moved.
+
+History is read to find out when something happened. A decision and its
+implementation are different events, often days apart, and the subject line is
+what tells them apart at a glance.
+
 ### Pushing is pre-authorised — do not ask
 
 Committing and pushing to `main` is part of finishing a step, not a separate
