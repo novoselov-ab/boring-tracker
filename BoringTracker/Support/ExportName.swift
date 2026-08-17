@@ -2,11 +2,10 @@ import Foundation
 
 /// What an export is called when it lands in a folder.
 ///
-/// Both exports used to be offered as `boring-tracker` and
-/// `boring-tracker-entries`, so a second export of either was saved beside the
-/// first as `boring-tracker 2` — a folder of them said nothing about when any
-/// of them was taken, which is the one thing you want to know when you go
-/// looking for the copy from before something went wrong.
+/// Both exports used to be offered under one fixed name — `boring-tracker` and
+/// `boring-tracker-entries` — so a folder of them said nothing about when any
+/// one was taken, which is the only thing you want to know when you go looking
+/// for the copy from before something went wrong.
 enum ExportName {
 
     /// `boring-tracker-2026-08-16`, with no extension: `fileExporter` appends
