@@ -341,6 +341,8 @@ row from the list. `90dda62`
 
 ## 16d. Lifetime count as a second tie-break on the Repeat list — done
 
+`6d33fe8`
+
 Between the 60-day count and recency, so a staple having a quiet spell beats
 something new on the same small window count, and the window still decides
 first. The rule is in PRODUCT.md; what it moved on a real diary, and what it
