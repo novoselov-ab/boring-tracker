@@ -144,6 +144,24 @@ struct HistoryView: View {
             guard let row else { return }
             highlighted = row
         }
+        // And on arrival, if the write is seconds old. `onChange` only fires
+        // for a write made while this screen is up, which since item 20 is no
+        // longer where most repeats happen: the Log again sheet writes over
+        // home and dismisses, so coming here straight afterwards to see what
+        // landed — the exact moment this mark is for — would find nothing
+        // marked.
+        //
+        // Recent, rather than merely pending. A repeat's undo stands until
+        // something newer is written, so an hour-old repeat is still in the
+        // slot, and marking it on every visit until then would flash a mark at
+        // a row nobody just made. Five seconds is "I tapped that and opened
+        // History to look", and nothing longer.
+        .onAppear {
+            guard let row = store.lastLoggedAgainRow,
+                  let item = store.historyItems.first(where: { $0.id == row }),
+                  Date().timeIntervalSince(item.date) < 5 else { return }
+            highlighted = row
+        }
         // It fades on its own, which is the half that is a decision: a mark
         // that stays is a second state to reason about. `task(id:)` restarts
         // the clock when a second repeat marks a second row, and cancels when
