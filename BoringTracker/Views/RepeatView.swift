@@ -1,18 +1,24 @@
 import SwiftUI
 
-/// The things you have logged and named, the ones you log most often first, one
-/// tap each to log again.
+/// The things you have logged to a daily total, the ones you log most often
+/// first, one tap each to log again.
 ///
 /// A second door on home for a different job. The Log button opens an empty
 /// sheet with the keypad up, which is right when the number is new; this is for
 /// the far commoner case where you are eating the same thing again, and it
 /// never raises a keypad at all (docs/TODO.md item 16).
 ///
-/// It is History filtered to the rows that have a name and collapsed to one row
-/// per distinct thing you ate, with the day sections flattened away and a search
-/// field over the top. Not a new list built from the entries: the grouping of a
-/// batch into one row and the ordering are the same question both screens ask,
-/// and answering it twice is how they come to disagree.
+/// It is History filtered to the rows a repeat makes sense of and collapsed to
+/// one row per distinct thing you ate, with the day sections flattened away and
+/// a search field over the top. Not a new list built from the entries: the
+/// grouping of a batch into one row and the ordering are the same question both
+/// screens ask, and answering it twice is how they come to disagree.
+///
+/// **The filter is the tracker's kind, not the name** — see
+/// `HistoryItem.isRepeatable` (docs/TODO.md item 21). So an unnamed row is here,
+/// identified by its values the way History identifies it, and a weight is not.
+/// A search still only matches names, so any query empties the unnamed rows out
+/// of the list; the field says "Search names" and that is the whole of it.
 ///
 /// **A sheet, not a pushed screen, and a tap on a row closes it** (docs/TODO.md
 /// item 20). Pushed, it was a titled screen with a list and a search field —
@@ -92,14 +98,20 @@ struct RepeatView: View {
             if let items {
                 let shown = items.filter { $0.matches(query) }
                 if items.isEmpty {
+                    // Not "nothing named yet" any more, which was true of the
+                    // old filter and would now be a lie: a name has nothing to
+                    // do with what turns up here (docs/TODO.md item 21). The
+                    // one thing this state has to say is which kind of tracker
+                    // fills the list, because the other kind never will.
                     ContentUnavailableView(
-                        "Nothing named yet",
+                        "Nothing to log again yet",
                         // The same glyph the rows and home's bar draw, so the
                         // screen with nothing on it still says what it is for.
                         systemImage: RepeatDisc.symbol,
                         description: Text(
-                            "Give a log a name — \"porridge\", \"flat white\" — and it turns up "
-                                + "here to log again in one tap."
+                            "Anything you log to a daily total turns up here, named or not, to "
+                                + "log again in one tap. A measurement like weight does not: you "
+                                + "would take a new reading rather than repeat the last one."
                         )
                     )
                 } else if shown.isEmpty {
@@ -167,10 +179,19 @@ struct RepeatView: View {
 /// History draws it: it is the same action reached from the other screen, and
 /// it is what says the row is a control rather than a record.
 ///
+/// **A row nobody named leads with its tracker, or with the group the batch was
+/// logged as** — `HistoryItem.line` already answers that for History, and since
+/// item 21 those rows are here too. So the list reads "Food / 450 kcal, 30 g"
+/// and "Calories / 90 kcal" rather than a column of bare numbers, and the name a
+/// row does have still leads it where there is one.
+///
 /// Off when the row has nothing left to write — every tracker it named has been
-/// deleted or archived. Kept in the list rather than hidden: the row is still a
-/// true statement about what you ate, and a food that vanishes from the list
-/// when you archive a tracker would be a screen quietly editing your history.
+/// archived. Kept in the list rather than hidden: the row is still a true
+/// statement about what you ate, and a food that vanishes from the list when you
+/// archive a tracker would be a screen quietly editing your history. (A row
+/// whose trackers were *deleted* no longer reaches this screen at all — it has
+/// no kind left to qualify it, see `HistoryItem.isRepeatable` — so in practice
+/// this state is the archived one.)
 ///
 /// **Disabling greys the whole row here, where History greys only its disc**,
 /// because here the whole row *is* the button. Raised in review as a

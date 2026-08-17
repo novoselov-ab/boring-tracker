@@ -3,7 +3,7 @@ import Testing
 @testable import BoringTracker
 
 /// The Repeat screen's list, and the two questions it asks of a history row:
-/// does it have a name, and does it match what was typed.
+/// can this be logged again at all, and does it match what was typed.
 ///
 /// The writing half is item 14's `logAgain`, tested in `HistoryTests` — this
 /// screen calls that and nothing else, which is the point of the item.
@@ -34,8 +34,8 @@ struct RepeatTests {
         )
     }
 
-    @Test("Only named rows are listed")
-    func namedOnly() {
+    @Test("A daily total is listed named or not, and the name decides nothing")
+    func dailyTotalsAreListedWhateverTheyAreCalled() {
         let tracker = Tracker(name: "Calories")
         let store = repeatStore(
             StoreDocument(
@@ -46,13 +46,103 @@ struct RepeatTests {
                     Entry(trackerID: tracker.id, value: 3, date: time(30), name: "chicken rice"),
                     // An empty name is not a name. Nothing in the app writes
                     // one — the log sheet's field is optional and blank means
-                    // absent — but an imported file can carry it.
+                    // absent — but an imported file can carry it. It is no
+                    // longer the difference between listed and not.
                     Entry(trackerID: tracker.id, value: 4, date: time(40), name: ""),
                 ]
             )
         )
 
-        #expect(store.repeatItems.map(\.displayName) == ["chicken rice", "porridge"])
+        // All four, where the name filter listed two (docs/TODO.md item 21).
+        // The unnamed ones have no `displayName`; the screen shows their
+        // values, which is what identifies them.
+        #expect(store.repeatItems.map { $0.entries.map(\.value) } == [[4], [3], [2], [1]])
+        #expect(
+            store.repeatItems.map(\.displayName) == [nil, "chicken rice", nil, "porridge"]
+        )
+    }
+
+    @Test("A measurement is not listed, however carefully it was named")
+    func measurementsAreNeverListed() {
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1)
+        let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 1)
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [weight, calories],
+                entries: [
+                    Entry(trackerID: weight.id, value: 78.1, date: time(10)),
+                    // Named, and still not a thing to log again: repeating this
+                    // does not weigh you, it writes a reading nobody took.
+                    Entry(trackerID: weight.id, value: 77.4, date: time(20), name: "morning"),
+                    Entry(trackerID: calories.id, value: 320, date: time(30), name: "porridge"),
+                ]
+            )
+        )
+
+        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+    }
+
+    @Test("A batch mixing kinds is not listed, because one tap would write both")
+    func mixedKindBatchesAreNotListed() {
+        // The shape the app produces on its own: a measurement sharing a log
+        // group with a daily total, so one sheet writes both.
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Morning")
+        let weight = Tracker(
+            name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 1,
+            group: "Morning"
+        )
+        let batch = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, weight],
+                entries: [
+                    Entry(
+                        trackerID: calories.id, value: 200, date: time(10),
+                        name: "weigh-in", batchID: batch
+                    ),
+                    Entry(
+                        trackerID: weight.id, value: 79.2, date: time(10),
+                        name: "weigh-in", batchID: batch
+                    ),
+                    Entry(trackerID: calories.id, value: 320, date: time(20), name: "porridge"),
+                ]
+            )
+        )
+
+        // Listing it would put a false weight in the history to save retyping
+        // 200 kcal. The row is still in History, which is where a row you want
+        // to act on one member of lives.
+        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+    }
+
+    @Test("Archiving a tracker changes where a row sorts, never whether it is listed")
+    func archivingDoesNotChangeMembership() {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Morning")
+        let weight = Tracker(
+            name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 1,
+            group: "Morning"
+        )
+        let batch = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, weight],
+                entries: [
+                    Entry(trackerID: calories.id, value: 200, date: time(10), batchID: batch),
+                    Entry(trackerID: weight.id, value: 79.2, date: time(10), batchID: batch),
+                    Entry(trackerID: calories.id, value: 320, date: time(20), name: "porridge"),
+                ]
+            )
+        )
+        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+
+        var archived = weight
+        archived.isArchived = true
+        store.update(archived)
+
+        // The kind is a property of the tracker, not of what a tap would
+        // manage to write. Deciding membership on the latter would mean
+        // archiving your scale silently added weigh-in batches to this list.
+        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
     }
 
     @Test("A batch is one row, and one named member is enough to list it")
@@ -107,27 +197,46 @@ struct RepeatTests {
         #expect(store.repeatItems.map(\.displayName) == ["Mixed names"])
     }
 
-    @Test("A row whose trackers are all gone is listed, and cannot be repeated")
+    @Test("A row whose trackers are all gone drops out; a partial one stays")
     func deletedTrackers() throws {
-        let tracker = Tracker(name: "Calories")
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1)
+        let batch = UUID()
         let store = repeatStore(
             StoreDocument(
-                trackers: [tracker],
+                trackers: [calories, protein],
                 entries: [
-                    Entry(trackerID: tracker.id, value: 1, date: time(10), name: "porridge"),
+                    Entry(trackerID: protein.id, value: 12, date: time(10), name: "porridge"),
+                    Entry(
+                        trackerID: calories.id, value: 620, date: time(20),
+                        name: "chicken rice", batchID: batch
+                    ),
+                    Entry(
+                        trackerID: protein.id, value: 41, date: time(20),
+                        name: "chicken rice", batchID: batch
+                    ),
                 ]
             )
         )
         // The deletion that keeps the history — the supported choice that
         // leaves entries pointing at a tracker that is gone.
-        store.delete(tracker)
+        store.delete(protein)
 
-        // Still a true statement about what was eaten, so it stays on the list;
-        // the row draws its disc off, and the store refuses the write.
-        #expect(store.repeatItems.count == 1)
+        // A deleted tracker has no kind left to read, so it can neither
+        // qualify a row nor veto one (docs/TODO.md item 21). The lone porridge
+        // row therefore has nothing to qualify it and goes; the batch still
+        // has its calories and stays, writing what it can.
+        #expect(store.repeatItems.map(\.displayName) == ["chicken rice"])
         let item = try #require(store.repeatItems.first)
-        #expect(store.repeatableEntries(of: item).isEmpty)
-        #expect(store.logAgain(item) == false)
+        #expect(store.repeatableEntries(of: item).map(\.value) == [620])
+        #expect(store.logAgain(item))
+
+        store.delete(calories)
+
+        // With nothing left to write and no kind to read, the list is empty —
+        // where item 16's name filter kept the row greyed out forever. It is
+        // still in History, which is the screen for what you did.
+        #expect(store.repeatItems.isEmpty)
     }
 
     @Test("The same name at the same values is one row, a bigger portion is its own")
@@ -153,6 +262,69 @@ struct RepeatTests {
         // The row kept is the newest of the ones it collapsed, so its date says
         // when you last ate that — 40, not the 10 or 30 it stands for.
         #expect(items.first?.date == time(40))
+    }
+
+    @Test("Unnamed rows collapse on values alone, and take their place in the order")
+    func unnamedRowsDedupeAndSortWithEveryoneElse() {
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1)
+        let dinner = (1...4).map { _ in UUID() }
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, protein],
+                entries:
+                    // The same unnamed dinner four times, on four days.
+                    dinner.enumerated().flatMap { day, batch in
+                        [
+                            Entry(
+                                trackerID: calories.id, value: 450, date: daysAgo(day + 1),
+                                batchID: batch
+                            ),
+                            Entry(
+                                trackerID: protein.id, value: 30, date: daysAgo(day + 1),
+                                batchID: batch
+                            ),
+                        ]
+                    }
+                    + [
+                        // Named, and eaten twice: fewer logs than the unnamed
+                        // dinner, so it sorts under it. Unnamed rows join the
+                        // ordering rather than getting a bucket of their own.
+                        Entry(trackerID: calories.id, value: 320, date: daysAgo(1), name: "porridge"),
+                        Entry(trackerID: calories.id, value: 320, date: daysAgo(2), name: "porridge"),
+                    ]
+            )
+        )
+
+        let items = store.repeatItems
+        #expect(items.map(\.displayName) == [nil, "porridge"])
+        #expect(items.map { $0.entries.map(\.value).sorted() } == [[30, 450], [320]])
+        // Four logs became one row: with no name, the values are the whole key,
+        // which is `RepeatKey`'s other half doing the work on its own.
+        #expect(items.first?.date == daysAgo(1))
+    }
+
+    @Test("A query empties the unnamed rows out, because the field searches names")
+    func unnamedRowsCannotBeSearchedFor() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 450, date: time(10)),
+                    Entry(trackerID: tracker.id, value: 320, date: time(20), name: "porridge"),
+                ]
+            )
+        )
+        let items = store.repeatItems
+
+        #expect(items.count == 2)
+        // Not a gap to fill: falling back to the tracker's name would answer a
+        // different question from the one the field asks, and would return
+        // every unnamed calorie row for the query "calories".
+        #expect(items.filter { $0.matches("porridge") }.map(\.displayName) == ["porridge"])
+        #expect(items.filter { $0.matches("calories") }.isEmpty)
+        #expect(items.filter { $0.matches("450") }.isEmpty)
     }
 
     @Test("What you log most is first, and a one-off does not outrank it")
@@ -202,22 +374,25 @@ struct RepeatTests {
 
     @Test("A row that cannot be written sorts below every row that can")
     func unrepeatableRowsSinkHoweverOftenTheyWereLogged() throws {
-        let archived = Tracker(name: "Old scale", unit: "kg", kind: .measurement)
+        // A daily total, because item 21 keeps measurements off this list
+        // entirely — the row that has to sink is one that could be written if
+        // the tracker were still active.
+        let archived = Tracker(name: "Old water bottle", unit: "ml")
         let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 1)
         let store = repeatStore(
             StoreDocument(
                 trackers: [archived, calories],
                 entries: [
-                    Entry(trackerID: archived.id, value: 79, date: time(10), name: "morning"),
-                    Entry(trackerID: archived.id, value: 79, date: time(20), name: "morning"),
-                    Entry(trackerID: archived.id, value: 79, date: time(30), name: "morning"),
+                    Entry(trackerID: archived.id, value: 750, date: time(10), name: "morning"),
+                    Entry(trackerID: archived.id, value: 750, date: time(20), name: "morning"),
+                    Entry(trackerID: archived.id, value: 750, date: time(30), name: "morning"),
                     Entry(trackerID: calories.id, value: 320, date: time(40), name: "porridge"),
                 ]
             )
         )
-        var scale = archived
-        scale.isArchived = true
-        store.update(scale)
+        var bottle = archived
+        bottle.isArchived = true
+        store.update(bottle)
 
         // Three logs against one log: on count alone the archived row wins, and
         // it would hold the top of the screen greyed out for as long as the

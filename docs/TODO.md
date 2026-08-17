@@ -489,7 +489,7 @@ Left alone, recorded rather than fixed: a long tracker name re-truncates
 mid-count when the total crosses a grouping boundary (950 → 1,050). `minWidth`
 was tried in that file before and reverted, for the common short name.
 
-## 21. Repeatable is about the tracker, not the name
+## 21. Repeatable is about the tracker, not the name — done
 
 Two things from use.
 
@@ -517,7 +517,7 @@ Two things from use.
       symbol in the set that pairs a plus with a clockwise arrow. iOS 18.0,
       which is the deployment target.
 
-- [ ] **Log again lists named entries, and that is the wrong filter.** A name
+- [x] **Log again lists named entries, and that is the wrong filter.** A name
       is not what makes something repeatable — the tracker's **kind** is.
 
       A **daily total** can be logged again: you can eat 450 kcal and 30 g
@@ -535,6 +535,37 @@ Two things from use.
       **This is instead of a "show all" toggle.** A toggle would make Log again
       into History with a filter, which is the direction that blurs them; the
       right rule does the work without a control.
+
+      Done: the filter is `HistoryItem.isRepeatable(kinds:)`. Three things it
+      decided that the item did not say:
+
+      **A batch that mixes kinds is not listed.** One tap writes every member a
+      row can write, so a "weigh-in breakfast" of 200 kcal and 79.2 kg would put
+      a weight nobody took into the history to save retyping the calories.
+      Refusing the whole row is the conservative direction, and it costs nothing
+      that is gone — the row is still in History, which is the screen for a row
+      you want to act on one member of. The app produces this shape on its own,
+      whenever a measurement shares a log group with a daily total.
+
+      **A row whose trackers were all deleted drops out**, where item 16 kept it
+      greyed. A deleted tracker has no kind left to read, so it can neither
+      qualify a row nor veto one, and the row can never be written again either.
+      Archiving is untouched and still keeps the row: an archived tracker is
+      still a record with a kind, so those rows stay listed and sink to the
+      bottom, greyed, which is what item 16 was actually protecting.
+
+      **A query still matches names only, so any query empties the unnamed rows
+      out of the list.** The field says "Search names" on both screens and this
+      is it doing what it says; falling back to tracker names would answer a
+      different question and return every unnamed calorie row for "calories".
+
+      Timing, in a Debug build on the iPhone 17 simulator, the two filters
+      alternating in one binary over fixtures of four named meals, two unnamed
+      totals, a water and a weight a day: **19.0–20.2ms against 17.5–19.5ms over
+      7,644 entries and 38.1–40.0ms against 34.7–37.3ms over 15,288**. On the
+      shape where nothing collapses — 3,822 rows against 2,184 — **23.8–26.0ms
+      against 20.2–22.6ms** and **48.3–49.4ms against 40.8–42.2ms**. A list about
+      twice as long costs 2–8ms, paid once when the sheet opens.
 
 ### Why History and Log again stay separate
 

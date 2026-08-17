@@ -374,8 +374,37 @@ final class Store {
         }
     }
 
-    /// The Repeat screen's list: one row per distinct named thing you have
-    /// logged, the ones logged most often lately first.
+    /// The Repeat screen's list: one row per distinct thing you have logged to
+    /// a daily total, the ones logged most often lately first.
+    ///
+    /// **Membership is `HistoryItem.isRepeatable`, which reads the tracker's
+    /// kind and not the name** (docs/TODO.md item 21). The rule lives there,
+    /// with the reasoning; what it means here is that the list gained every
+    /// unnamed daily total — 450 kcal and 30 g is a dinner you can eat again
+    /// whether or not you typed a word — and lost every measurement, named or
+    /// not, along with the batches that mix the two.
+    ///
+    /// **That costs 2–3ms on a realistic history and 4–7ms on the worst one.**
+    /// More rows reach the collapse and the sort; the filter itself is a
+    /// dictionary lookup per entry where it used to be a name check. Measured in
+    /// a Debug build on the iPhone 17 simulator from a temporary test in this
+    /// target, ten runs each, the two filters **alternating in one binary** so a
+    /// warm-up or a thermal drift lands on both columns — fixtures of four named
+    /// meals, two unnamed totals, a water and a weight a day, ending today:
+    /// **19.0–20.2ms against 17.5–19.5ms over 7,644 entries (4,368 history rows)
+    /// and 38.1–40.0ms against 34.7–37.3ms over 15,288 (8,736)**. Those collapse
+    /// to 7 rows and 4, so they barely exercise the sort; the shape that does is
+    /// the one where every number differs — 3,822 rows against 2,184, and 7,644
+    /// against 4,368 — and it reads **23.8–26.0ms against 20.2–22.6ms** and
+    /// **48.3–49.4ms against 40.8–42.2ms**. Read the medians rather than the
+    /// ends: 19.8 against 17.9, 39.0 against 35.8, 24.6 against 20.7 and 48.8
+    /// against 41.8, so the two columns separate on every shape while their
+    /// ranges still overlap on the smallest one. It is paid once when the sheet
+    /// opens, on a list that is nearly twice as long.
+    ///
+    /// **Not comparable to the numbers further down this comment**, which were
+    /// taken on fixtures without the unnamed logs. The pair to read is the two
+    /// columns here.
     ///
     /// **Deduplicated by name *and* values** (`HistoryItem.RepeatKey`). The
     /// plain list was built first on purpose and using it is what settled this:
@@ -417,7 +446,11 @@ final class Store {
     /// passed over them, which is months of it. They stay on the list
     /// rather than disappearing, which is item 16's decision and unchanged: the
     /// row is still a true statement about what you ate, and a screen that drops
-    /// food when you archive a tracker is editing your history.
+    /// food when you archive a tracker is editing your history. **An archived
+    /// tracker is still a tracker**, so item 21's kind rule reads its kind and
+    /// keeps these rows exactly where they were; what item 21 does drop is a row
+    /// whose trackers were *deleted*, which has no kind left to qualify it and
+    /// can never be written again either.
     ///
     /// **The count is over the last `countingWindowDays` days, not over
     /// everything ever logged.** A lifetime count never falls, so eat porridge
@@ -497,7 +530,7 @@ final class Store {
     /// far fewer rows left to filter — 0.08–0.16ms against the 5.3ms and 9.9ms
     /// recorded for the plain list.
     ///
-    /// **The window is free.** One `Date` comparison per named row, no second
+    /// **The window is free.** One `Date` comparison per listed row, no second
     /// pass and nothing extra to sort. Re-measured the same way at the same two
     /// entry counts, five runs each, against a build with the window widened
     /// past the fixture's own history so the counterfactual is the same binary
@@ -516,8 +549,16 @@ final class Store {
         var index: [HistoryItem.RepeatKey: Int] = [:]
         var rows: [(item: HistoryItem, count: Int, lifetime: Int, canRepeat: Bool)] = []
         let targets = repeatTargets
+        // Built once for the walk, like `targets` above and for the same reason:
+        // `tracker(_:)` is a linear scan and this is asked of every entry of
+        // every row. Archived trackers are in here — the kind is a property of
+        // the tracker, and whether a repeat may *write* to it is `targets`'
+        // separate question (see `HistoryItem.isRepeatable`).
+        let kinds = Dictionary(
+            trackers.map { ($0.id, $0.kind) }, uniquingKeysWith: { first, _ in first }
+        )
         let windowStart = countingWindowStart
-        for item in historyItems where item.isNamed {
+        for item in historyItems where item.isRepeatable(kinds: kinds) {
             let key = item.repeatKey
             // The only thing the window touches. Every row is still built and
             // still listed; one outside it simply adds nothing to its count.

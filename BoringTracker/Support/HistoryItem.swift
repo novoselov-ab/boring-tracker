@@ -47,14 +47,51 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return names.count > 1 ? "Mixed names" : names.first
     }
 
-    /// Whether this row is one of the things you can ask for by name.
+    /// Whether this row is a thing you could do again — which is a question
+    /// about the trackers it was logged to, not about what you called it.
     ///
-    /// The Repeat screen lists these and nothing else: a name is what makes
-    /// something repeatable, and an unnamed number is a measurement rather than
-    /// a meal (docs/TODO.md item 16). *Any* named member is enough — a batch
-    /// whose members disagree is already known by `displayName` everywhere
-    /// else, and it is still a thing you typed a name for.
-    var isNamed: Bool { !names.isEmpty }
+    /// **The kind decides, and the name decides nothing** (docs/TODO.md item
+    /// 21). A **daily total** can be logged again whether or not you named it:
+    /// 450 kcal and 30 g is the same dinner however it was typed, and item 16's
+    /// rule — a name is what makes something repeatable — was hiding every one
+    /// of those. A **measurement** cannot, however carefully it was named:
+    /// repeating yesterday's weight does not weigh you, it writes a reading you
+    /// never took.
+    ///
+    /// **A batch mixing kinds is not listed, and that is the deliberate half.**
+    /// One tap writes every member the row can write, so a "weigh-in breakfast"
+    /// of 200 kcal and 79.2 kg would put a false weight in the history to save
+    /// retyping the calories. Refusing the whole row is the conservative
+    /// direction and it costs nothing that is gone: the row is still in
+    /// History, which is where a row you want to act on individually lives.
+    /// The app produces these whenever a measurement tracker shares a log group
+    /// with a daily total, so it is an ordinary shape, not an imported one.
+    ///
+    /// **A member whose tracker has been deleted is neither**, so it can
+    /// neither qualify a row nor veto one: there is no record left to read a
+    /// kind from, and nothing writes to it anyway. A row with no surviving
+    /// tracker at all therefore drops out of the list, where item 16 kept it —
+    /// a row that can never be written is a record rather than a thing to do
+    /// again, and it is still in History. Item 16's reason for keeping it was
+    /// that *archiving* a tracker must not make your food disappear, and
+    /// archiving still cannot: an archived tracker is still a record, still has
+    /// a kind, and its rows stay listed and sink to the bottom, greyed.
+    ///
+    /// **Archiving is not part of this question at all**, which is why the kind
+    /// is read from the tracker whether or not it is archived. Deciding
+    /// membership on what a tap would *write* instead would mean archiving your
+    /// scale silently added the weigh-in batches above to this list.
+    func isRepeatable(kinds: [UUID: Tracker.Kind]) -> Bool {
+        // No `compactMap` and no intermediate array: `Store.repeatItems` asks
+        // this of every row in the history, on a walk measured in milliseconds.
+        var found = false
+        for entry in entries {
+            guard let kind = kinds[entry.trackerID] else { continue }
+            if kind == .measurement { return false }
+            found = true
+        }
+        return found
+    }
 
     /// What makes two rows the same thing you ate: the names you typed, and
     /// every value against the tracker it was logged to.
@@ -116,9 +153,14 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// Whether a search for `query` keeps this row.
     ///
     /// Against the names that were typed, not against the identity line: that
-    /// line falls back to a tracker or a group for rows nobody named, and those
-    /// are not on this screen at all — so searching "weight" would otherwise
-    /// return rows whose only claim to the word is the tracker they landed on.
+    /// line falls back to a tracker or a group for rows nobody named, so
+    /// searching "weight" would otherwise return rows whose only claim to the
+    /// word is the tracker they landed on. **So a row nobody named cannot be
+    /// found by typing** — on either screen — and both fields say "Search
+    /// names" for that reason. Since item 21 the Log again list carries unnamed
+    /// rows too, and a query empties them out of it; that is the field doing
+    /// what it says rather than a gap, and a search that fell back to tracker
+    /// names would be answering a different question from the one asked.
     ///
     /// `localizedStandardContains` is the comparison the Finder uses: case- and
     /// diacritic-insensitive, so "creme" finds "Crème" and "RICE" finds "rice".
