@@ -570,7 +570,7 @@ too.
 
 ## 13b. Dark labels on the teal — done
 
-Decided, from item 13's review. **White on the teal measures 1.74:1** — and the
+Decided, from item 13's review. **White on the teal measures 1.86:1** — and the
 blue it replaced was 2.69:1, so this made a failing pairing worse rather than
 breaking a working one. Both are far below the 3:1 a UI element needs, on the
 screen this app exists to be glanced at one-handed.
@@ -585,12 +585,47 @@ ordinary current practice rather than a workaround.
       the complaint item 13 is named after.
 - [x] Measure the new ratio and record it.
 
-**`#000000` on the teal, measured at every accent-filled site: 12.07:1 in dark
-mode (`#00D9E6`) and 10.73:1 in light (`#00CDD9`).** Against 1.74:1 and 1.96:1
+**`#000000` on the teal, measured at every accent-filled site: 11.30:1 in dark
+mode (`#00D2E0`) and 9.72:1 in light (`#00C3D0`).** Against 1.86:1 and 2.16:1
 for the white iOS was drawing, and against a 3:1 floor. Sampled from
 `xcrun simctl io booted screenshot` with an AppKit pixel scan, cropped inside
 each fill so the surrounding row background could not be mistaken for the label;
 WCAG ratios computed from the sampled sRGB.
+
+**Those four numbers are corrections, and the ones they replace have no
+explanation.** This item first recorded `#00D9E6` / `#00CDD9` and 12.07:1 /
+10.73:1; item 13c sampled `#00C3D0` / `#00D2E0` and 11.30:1 / 9.72:1 an hour
+later and could not reconcile them. The item 13d review settled which one
+ships: **13c's.**
+
+The deciding run was this commit itself. `b01fe00` checked out into a worktree,
+built and screenshotted today on the same iPhone 17, renders `#00C3D0` in light
+and `#00D2E0` in dark — byte for byte what 13c measured, at both the Log pill
+and a card's +, with every pixel inside the fill identical. So the code is not
+the difference. Nor is the sample site, nor a colour-space conversion (no
+profile pair maps one hex to the other: Display P3 → sRGB of `#00C3D0` is
+`#00C7D3`), nor Increase Contrast (which gives `#3BDDEC` / `#008198`). Nor,
+crucially, **a machine that changed underneath us**: the two sets were recorded
+65 minutes apart, on one Mac, against the one runtime installed here
+(iOS 26.3.1, 23D8133). There was no update to blame.
+
+What is left is that two sessions recorded a hex this machine will not produce
+from this code by any means found, and two more reproduce the other one on
+demand. The arithmetic was never the problem — 10.73:1 follows exactly from
+`#00CDD9` — so what failed is the pixel, not the sum, which is precisely the
+failure "Always check, not just read" in WORKFLOW.md exists for: a ratio that
+survives scrutiny it never earned. Every conclusion drawn from it is unaffected
+in either case; the fill clears the 3:1 floor by six to seven times.
+
+The same doubt covers **every accent hex recorded before 13c** — the pressed
+`#36E0EB` in item 13, the `#00CBD9` / `#00CDD9` foreground pairs below, the
+`#00D9E6` in item 14's undo bar. Those are all foreground sites rather than
+fills, and 13c re-measured every one of them on the day it changed them, so its
+table is the set to read; the numbers left in place around here are kept for the
+reasoning attached to them, not for the digits. Two of 13c's have since been
+re-checked independently and land on the same pixel — the nav bar gear at
+2.13:1 light and 10.71:1 dark — so that table has now been reproduced by a
+session that did not write it.
 
 **Four sites, not two.** The item named the Log pill and a card's +, and the
 same white-on-tint pairing was also under the log sheet's own Log button and the
@@ -617,13 +652,14 @@ and the label is dark now. Worth capturing directly the next time the console is
 unlocked, but it cannot fail — pressed only moves this pairing further from the
 floor.
 
-**Reproduced by the review, on its own probe build and its own pixel scan.**
-`#000000` on `#00D9E6` at the Log pill, a card's +, the empty state's *Add
-Tracker* and (after item 14) the History repeat disc: **12.08:1** dark and
-**10.69:1** light, against the 12.07 / 10.73 above — the same measurement, the
-last digit moving with which antialiased pixels land in the crop. The exact
-ratios for those two pairs are 12.07:1 and 10.73:1, so the recorded numbers are
-the right ones. The disabled Log measured `#3C3C3C` on `#000000`, **1.92:1** —
+**Reproduced by the review, on its own probe build and its own pixel scan** —
+and then unreproduced by two later ones, which is the whole of the correction
+above. What that review recorded: `#000000` on `#00D9E6` at the Log pill, a
+card's +, the empty state's *Add Tracker* and (after item 14) the History
+repeat disc, **12.08:1** dark and **10.69:1** light. Read it now as the second
+of the two sightings of a hex nothing since has been able to draw; the numbers
+that describe what ships are 11.30:1 and 9.72:1. The disabled Log measured
+`#3C3C3C` on `#000000`, **1.92:1** —
 the system's own rendering, so `onAccentFill` did stand aside rather than paint
 black on black. **There is no fifth site:** every other `.tint` in the app is a
 foreground (the chart's line and area, the log sheet's chevrons) or the settings
@@ -834,9 +870,13 @@ same way — `xcrun simctl io booted screenshot` and an AppKit pixel scan, on a
 PNG that reports itself as `sRGB IEC61966-2.1`, cropped inside each fill.
 Black reads exactly `#000000` and white exactly `#FFFFFF` in the same crops, so
 nothing is shifting the whole image; the accent itself renders slightly darker
-on this runtime than the one those numbers were taken on. Every conclusion
-holds — the fills are six to seven times the 3:1 floor either way — but the
-hexes are worth distrusting until somebody explains them.
+on this runtime than the one those numbers were taken on.
+
+**Settled in the item 13d review: these numbers are the right ones**, and 13b
+has been corrected rather than this item. Building `b01fe00` — the commit whose
+message records the other hexes — reproduces `#00C3D0` / `#00D2E0` today, so
+the difference is not the code; the reasoning that rules out the sample site,
+the colour space and Increase Contrast is written up under item 13b.
 
 **Undo is now a fill rather than a word.** It is the one control in the app
 that exists to be found in a hurry, and "the ordinary label colour" would have
@@ -905,7 +945,29 @@ Not changed: tracker detail's own list, which draws the same shape and is not
 this item's question — there the tracker is the screen you are on, so a name
 line would repeat the title on every row.
 
-## 13d. Give the nav bar its tint back
+Checked in review against a fixture built to hold every shape at once: a named
+batch, an unnamed one, a named single, an unnamed single with no unit
+(`Cigarettes / 3`, which is the case the rule exists for), an unnamed lone
+reading (`Weight / 79.1 kg`, its tracker and not its group), an archived
+tracker, a deleted tracker alone, a deleted tracker inside a live batch, and a
+batch whose two members share a unit. Every row leads with an identity line, no
+identity line is repeated by the values under it, and every name is still the
+footnote grey.
+
+**And one shape the fixture did not hold, which is where the bug was.** Dropping
+the tracker's name from the values line was conditioned on the row having one
+entry, when the condition it meant was *the identity line is the tracker's
+name*. A typed name takes that line first, so a named lone entry on a unitless
+tracker read "after lunch / 3" — naming neither the number nor what it counts,
+where the old layout said "Cigarettes: 3" — and a named lone entry whose tracker
+had been deleted read "after lunch / 3" with no "Deleted tracker" at all, which
+is the sentence this item's own doc comment promises and the only explanation
+for the dead repeat disc beside it. `entries.count == 1 && displayName == nil`
+is the whole fix, and three more tests hold the two broken rows and the one that
+must not change: a named lone entry *with* a unit still reads "90 kcal", because
+the unit is already doing the telling-apart. Twelve tests now, not nine.
+
+## 13d. Give the nav bar its tint back — done
 
 Item 13c's rule — teal is a fill, not a text colour — was applied to nav bar
 buttons too, so Cancel, Save, the gear and the clock are now the plain label
@@ -917,9 +979,98 @@ iOS affordance that says *this is tappable*, on a bar background Apple has
 already tuned for it. 13c exists to stop teal being used to **write** — chart
 bars, glyphs and labels on the ordinary background. System chrome is not that.
 
-- [ ] Restore the accent on nav bar buttons only.
-- [ ] Leave the chart monochrome and every other 13c change alone. This is a
+- [x] Restore the accent on nav bar buttons only.
+- [x] Leave the chart monochrome and every other 13c change alone. This is a
       carve-out for system chrome, not a retreat from the rule.
+
+**Ten buttons name it; nothing inherits it.** The root tint stays `.primary`,
+and each bar button asks for the accent by calling `navBarAccent()` — the gear
+and the clock on home, tracker detail's +, Cancel and Save in the three editors,
+and the log sheet's group switcher. Per button rather than at the root because
+13c's real fix was not the
+colour but the *absence of inheritance*: with nothing left to inherit teal from,
+a foreground use of it cannot appear by accident, which is how this went wrong
+twice before. The failure mode of the explicit version is one black word beside
+a teal one on the same bar, which is visible the first time the screen is
+opened.
+
+**What it costs, measured on an iPhone 17 in both appearances**, the gear on
+home standing for all nine — glyph against the glass capsule it sits in:
+
+    light   20.34:1  →  2.13:1
+    dark    15.88:1  →  10.71:1
+
+Dark is fine and light is not: 2.13:1 is the number 13c removed, and for Cancel
+and Save it is *text* at 2.13:1 rather than a glyph. The capsule cannot make up
+for it either — `#FBFBFF` on the `#EFEFF4` bar is 1.09:1, so in light mode the
+glyph is doing nearly all the work of saying "button". This is the deliberate
+cost of the carve-out and it is recorded rather than argued with; if light mode
+ever gets a real pass, this is the first thing on its list.
+
+**The back chevron does not follow, and it turns out it never did.** It is drawn
+in the label colour whatever the app's tint is: the tint was set to `.primary`,
+to teal on the destination, to teal on the `NavigationStack` and to teal at the
+app root, and the chevron came back `#19191D` in light and `#F4F3F4` in dark
+every time — the same 466 pixels, byte for byte, in all of them.
+`UINavigationBar.appearance().tintColor` does nothing to it either, and
+`toolbarForegroundStyle(_:for:)` is unavailable on iOS.
+
+A null result is only worth as much as its proof that the experiment ran, so the
+root-teal build carries a discriminator: that same build's settings screen draws
+12,196 teal pixels where the shipping build draws none. The teal was installed,
+it was inherited, and the chevron alone declined it. A review round read this the other way — that the chevron takes the stack's
+tint and no per-button modifier can override it — and the second half is right
+for the wrong reason: nothing overrides it because it never reads a tint at all.
+
+So tracker detail's white chevron beside a teal + is what this OS draws, not
+something 13c took away, and there is nothing here to restore.
+
+**The log sheet's group switcher took two rounds to settle.** It was left out at
+first, on the argument that a `Menu` sitting where a title goes is a title, and
+a nav bar title is the label colour in every Apple app. Two review rounds read
+it the other way and they are right: the same sheet draws a *static* title —
+the same words, in the same place, for a group there is nothing to switch to —
+and the only thing separating "this is what you are logging" from "this is what
+you are logging, and you can change it" had become a 12pt chevron. It is the
+one control on that screen. It is tinted.
+
+**And the review found a second Undo that item 13c never got to.** 13c
+redesigned History's undo bar into a filled capsule on the grounds that undo is
+the one control in the app that exists to be found in a hurry — and a tracker's
+own detail screen has its own undo row, for the swipe-delete that happens there,
+which was still a bare `Button("Undo")`. With the tint at the label colour, the
+recovery for a destructive action was drawn exactly like the "Deleted batch"
+sentence beside it. Both now draw the same `UndoButton`, which is shared rather
+than copied precisely because this is what copying it produced: one screen
+redesigned, the other left behind, and nobody looking at both at once.
+
+## 13e. Form buttons lost the only thing that said they were buttons
+
+Found by the 13d review, and left for a decision rather than folded into 13d,
+whose brief says to leave every other 13c change alone.
+
+13c converted *Export JSON*, *Export CSV*, *Import JSON*, *Restore Data Before
+Last Import…* and *Add Tracker* to the label colour, and recorded it as a win —
+2.16:1 to 21:1. It is a win on contrast and a loss on affordance. Measured on
+the settings screen in light mode, the same screen built two ways: the accent
+build draws 12,196 teal pixels there, and every one of them is black in the
+shipping build. A `Button` in a `Form` has **no** disclosure chevron, so with
+its label and its icon in the label colour it is pixel-identical to a static
+row. The tracker row above it still reads as tappable, because a
+`NavigationLink` keeps its chevron.
+
+So this is the same argument 13d just accepted for the nav bar — a tint on a
+standard control is the OS saying "tappable", not the app writing in colour —
+arriving at the other place the app relies on it. The options are the 13d
+carve-out extended to `Form` action rows, or leaving them plain and giving them
+some other affordance.
+
+- [ ] Decide whether a form action row is chrome, like a bar button, or writing,
+      like a chart bar.
+- [ ] If chrome: it is `navBarAccent()` under a better name at five call sites,
+      and the name in `OnAccent.swift` should stop saying "nav bar".
+- [ ] If writing: they need something that is not colour, and "a row that looks
+      exactly like a label" is not an answer either.
 
 ## 15. Make a save feel like it landed — done
 
@@ -975,12 +1126,37 @@ animation, the number's own region differs by a mean 0.078 → 0.055 → 0.031 o
 those frames while the no-animation build's own frames differ by 0.011 across
 the same span.
 
+**Reproduced in review, by a second method that disagrees on the absolute
+number and agrees on the answer.** Three runs each again, but the moment the
+sheet is judged gone is a strip of screen it covers and home does not fill —
+the last place it leaves — rather than a band matched against the settled
+frame: **+353, +364, +356 ms with the animation and +355, +357, +365 ms
+without.** The two builds are indistinguishable; the spread within one build is
+larger than the gap between them, and both are under a frame at 60 Hz. The
+absolute numbers are ~40 ms below the ones above because the two methods draw
+the finish line in different places, which is worth knowing before someone
+tries to reconcile them. The number's own region tells the two builds apart in
+the same recordings — it is still settling at +300 to +400 ms in the animated
+build (residual 0.005 falling to 0.002) where the plain one is quiet at 0.0005
+by +314 ms — so the animation is visible, it outlives the dismissal by a few
+frames, and it holds nothing up.
+
 **What a repeat from History gets is the same code and a different view of
 it.** The total does animate, but History is pushed over home, so nobody is
 looking at the card — by the time you go back it has settled. The
 acknowledgement on that screen is the undo bar item 14 put there, which appears
 in the same instant. Left as it is: the alternative is a second, screen-specific
 piece of motion, and this item exists to have exactly one.
+
+**Confirmed wasteful-at-worst, not stuck**, since "it animates a card nobody is
+looking at" is only harmless if it also stops. Recorded a repeat fired from
+History with home underneath it: the screen is still from +2.4 s after launch
+until the write, the write costs **one** changed frame — the new row arriving,
+with the undo bar reading "Logged 1 of 2 again" — and the next six seconds are
+at the noise floor. So the covered card produces no frames at all, and there is
+nothing that could run on: `.animation(_:value:)` fires on a change and
+`.easeOut(duration: 0.3)` does not repeat, so the worst case is one bounded ease
+on one `Text` that nobody sees.
 
 ## 16. Search and repeat
 
@@ -1032,6 +1208,21 @@ settled from the accessibility tree.
 
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
+
+**Pressed states, moved here after three sessions of deferring them.** Item 13
+asked for the pressed fill to be checked alongside the disabled one, and every
+session since has recorded it as uncaptured for the same reason: pressing a
+control in the simulator needs synthesized clicks, which need the accessibility
+tree, which a locked macOS console takes away — and the console has been locked
+for three reviews running. A thumb has none of that problem.
+
+- [ ] Press and hold each accent-filled control — the two Log buttons, a card's
+      +, the repeat disc, Undo — and screenshot the held state.
+- [ ] Check the pressed fill against `Color.onAccent` in both appearances. The
+      computed answer is that it cannot fail (pressing *lightens* the teal, so
+      black on it can only improve), and the recorded `#36E0EB` is from the
+      same batch of hexes item 13b has since corrected, so it is a number to
+      re-take rather than to trust.
 
 ## 18. App icon and asset catalog
 
