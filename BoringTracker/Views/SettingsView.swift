@@ -142,11 +142,11 @@ struct SettingsView: View {
         .opacity(carried.contains(tracker.id) ? 0.4 : 1)
         // `.tint`, not `Color.accentColor`: the accent is an environment tint
         // (see `BoringTrackerApp`) and that name still resolves the catalog's
-        // blue. Boxed in `AnyShapeStyle` because the two branches are now
-        // different shape-style types.
-        .background(drag?.target == tracker.id && !carried.isEmpty
-                    ? AnyShapeStyle(.tint.opacity(0.18))
-                    : AnyShapeStyle(.clear),
+        // blue. One style with a switched opacity rather than a choice between
+        // two — `.tint` and `.clear` are different shape-style types, so the
+        // branch had to be boxed in `AnyShapeStyle` to have one type; a fill at
+        // zero opacity draws exactly what `.clear` did and needs no box.
+        .background(.tint.opacity(drag?.target == tracker.id && !carried.isEmpty ? 0.18 : 0),
                     in: .rect(cornerRadius: 8))
         .swipeActions(edge: .trailing) {
             archiveButton(tracker)

@@ -496,6 +496,15 @@ title and **10** are with the inline one, measured off the accessibility tree's
 row frames rather than counted by eye. It is also what History, Settings and
 every editor already do, so the app now has one title treatment.
 
+Reproduced in review against a different twelve-tracker fixture (two groups,
+eight loose trackers): **the list starts 52pt higher — the large title's whole
+band — and one more card is on screen.** The count itself moves with the
+fixture and the point gain does not, so 52pt is the number to check a future
+change against: a row inside a group pitches at 52pt, while a loose tracker is
+its own section and pitches at 64pt, so whether that 52pt buys a whole card
+depends on which kind of row is at the bottom edge. Item 11's iPhone 17 figure
+is not eaten back either way.
+
 **The accent is one `.tint(.teal)` on the root view**, not an asset-catalog
 colour — there is no catalog yet (item 18) — and the corollary is that
 `Color.accentColor` is now *wrong* everywhere: it resolves from the catalog and
@@ -517,6 +526,17 @@ which is the opposite of "boring and native", so it is **not** in. Sampled
 from screenshots with an AppKit pixel scan; WCAG ratios computed from the
 sampled sRGB.
 
+**There are two of these, not one, and the decision has to cover both.** The
+review found the second: a card's `+` is a white glyph the app itself paints on
+the same teal disc, so it is the same 1.74:1 pairing, six to ten times down the
+main screen. It was 2.69:1 on the old blue — already under the floor, so this
+is a worse instance of a failing pairing rather than something teal broke.
+Fixing only the small one was rejected on the spot: a dark glyph on the card
+`+` beside a white label on the Log pill is two design languages again, which
+is the complaint item 11 fixed and the complaint this whole item is named
+after. Both sites move together or neither does, and what moves them is the
+accent, which is the user's call.
+
 Disabled and pressed both checked, in dark mode: the disabled Log is a black
 pill with a grey label at 1.94:1 — **identical before and after**, because iOS
 draws a disabled prominent button from a neutral fill and never touches the
@@ -533,6 +553,15 @@ sizes `.subheadline` and `.title2` converge, so the name/number hierarchy that
 grey used to carry is left to the stacking order alone. It reads, because the
 number is on its own line under the name, but it is thinner than at default
 size.
+
+The `#Preview` blocks do not inherit the accent — it is set in the
+`WindowGroup` body and a preview never runs that — so all seven of them still
+draw the old blue. **Left alone deliberately.** Nothing in this repo has ever
+judged a colour from a preview; every recorded number came from a simulator
+screenshot and a pixel scan, and adding the modifier to seven previews would
+put the accent in eight places to protect a workflow nobody here uses. Item 18
+retires the question, since an asset-catalog accent is inherited by previews
+too.
 
 ## 14. Log it again, from History
 
