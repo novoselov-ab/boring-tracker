@@ -350,8 +350,9 @@ final class Store {
     /// worth keeping. It is a real row rather than a summary, so repeating it
     /// goes through the same `logAgain` as everything else.
     ///
-    /// **Ordered by how often you have logged it lately, newest breaking the
-    /// ties.** Recency was right for the undeduplicated list and stops being
+    /// **Ordered by how often you have logged it lately, then by how often you
+    /// have logged it ever, then by which is newest.** Recency was right for
+    /// the undeduplicated list and stops being
     /// right the moment duplicates collapse: both orderings were built and
     /// screenshotted on a 56-day fixture, and recency spent two of its first
     /// fourteen rows on one food at two portions while four rows in a row read
@@ -386,24 +387,55 @@ final class Store {
     /// frequency was chosen for: the portion you usually eat first, and a
     /// one-off that cannot reach the top merely because it was yesterday.
     ///
-    /// **What it costs is the top row's stability, for the heaviest user
-    /// only.** A count that stops at the window saturates: log porridge and a
-    /// flat white once a day each and both count 60, where a lifetime count had
-    /// them at 400 and 380 and ordered them the same way for good. Tied, the
-    /// date decides, so those two swap places as you log them. Accepted, and it
-    /// is smaller than it sounds — the rows that swap are all things you are
-    /// about to tap, where a recency list floats up a one-off you are not, and
-    /// `RepeatView` snapshots the list so nothing moves under your thumb within
-    /// a visit. The fix if it grates is a lifetime count as a *second*
-    /// tie-break, ahead of the date; it is not here because it is a third
-    /// ordering rule to explain for a case nobody has complained about yet
-    /// (docs/TODO.md item 16c).
+    /// **The lifetime count breaks the ties the window leaves**, between the
+    /// windowed count and the date. Inside 60 days most counts are small, so
+    /// ties are the common case rather than the edge one — two things each eaten
+    /// twice this month tie immediately, and the date then decides on which one
+    /// you happened to eat last, which says nothing about which you are likelier
+    /// to want. A thing eaten 200 times over two years and twice this month is a
+    /// staple having a quiet spell; a thing eaten twice ever is not. It also
+    /// settles the saturation the window came with: log porridge and a flat
+    /// white once a day each and both count 60, where the windowed count alone
+    /// let the date swap them as you logged them — at 400 lifetime against 380
+    /// they now hold their order (docs/TODO.md item 16d).
+    ///
+    /// **It does not undo the window**, because it never speaks first. The
+    /// window still decides the opening comparison, so a staple you gave up a
+    /// year ago counts zero and stays where 60 days put it however many times
+    /// you ate it — the lifetime count only reaches rows the window has already
+    /// declared a draw. What it changes underneath that draw is real, though: a
+    /// history entirely outside the window is no longer a plain recency list,
+    /// it is a lifetime-count list with recency under it.
+    ///
+    /// **Both counts come off the same walk** — one `+= 1` beside the windowed
+    /// one, no second pass over history, and one more `Int` compared per sort
+    /// comparison on a list already collapsed to rows. Ten runs each against a
+    /// counterfactual build with the tie-break removed and nothing else changed,
+    /// on fixtures of four named meals and a weight reading a day ending today:
+    /// **20.3–22.3ms against 20.4–22.9ms over 7,641 entries (4,245 history
+    /// rows), and 40.5–41.5ms against 39.9–42.1ms over 15,291 (8,495)**. Those
+    /// collapse to 10 rows, so they barely exercise the sort; the shape that
+    /// does is the one where nothing collapses — every value distinct, so 3,396
+    /// and 6,796 repeat rows — and it reads **24.2–26.9ms against 24.6–27.4ms**
+    /// and **49.5–54.2ms against 48.7–52.7ms**. Every pair overlaps, and in
+    /// three of the four the counterfactual owns the slowest run, so the honest
+    /// reading is that the cost does not register.
+    ///
+    /// **Measured from a temporary test in this target, not from items 16 and
+    /// 16c's probe root**, so these numbers are comparable to each other and not
+    /// to the ones further down this comment — the same Debug build on the same
+    /// iPhone 17 simulator, but a different harness. The pair to read is the two
+    /// columns here.
+    ///
+    /// **Rows tied on `canRepeat`, both counts and the date are still ordered**,
+    /// by `sortID`, which is unique per row. The list does not shuffle between
+    /// openings.
     ///
     /// **It changes the order, never the membership.** A row whose logs are all
     /// older than the window counts zero and sinks to the bottom of the rows
-    /// that can still be written, ordered among them by recency — it does not
-    /// disappear. Item 16 settled that a screen which drops food is editing your
-    /// history, and a count is not a filter.
+    /// that can still be written, ordered among them by the lifetime count and
+    /// then recency — it does not disappear. Item 16 settled that a screen which
+    /// drops food is editing your history, and a count is not a filter.
     ///
     /// A filter over `historyItems` rather than its own walk of `entries`: the
     /// grouping of a batch into one row is the same question both screens ask,
@@ -442,7 +474,7 @@ final class Store {
     /// compare is the two columns here, taken minutes apart on one machine.
     var repeatItems: [HistoryItem] {
         var index: [HistoryItem.RepeatKey: Int] = [:]
-        var rows: [(item: HistoryItem, count: Int, canRepeat: Bool)] = []
+        var rows: [(item: HistoryItem, count: Int, lifetime: Int, canRepeat: Bool)] = []
         let targets = repeatTargets
         let windowStart = countingWindowStart
         for item in historyItems where item.isNamed {
@@ -452,12 +484,15 @@ final class Store {
             let counted = item.date >= windowStart ? 1 : 0
             if let at = index[key] {
                 rows[at].count += counted
+                rows[at].lifetime += 1
             } else {
                 index[key] = rows.count
                 // Once per collapsed row, not once per comparison, and it is the
                 // same answer for every row the key collapsed: the key carries
                 // the tracker ids, so they all name the same trackers.
-                rows.append((item, counted, !repeatableEntries(of: item, targets: targets).isEmpty))
+                rows.append(
+                    (item, counted, 1, !repeatableEntries(of: item, targets: targets).isEmpty)
+                )
             }
         }
         // `historyItems` is newest first, so the tie-break is already in hand:
@@ -467,6 +502,7 @@ final class Store {
             .sorted { lhs, rhs in
                 if lhs.canRepeat != rhs.canRepeat { return lhs.canRepeat }
                 if lhs.count != rhs.count { return lhs.count > rhs.count }
+                if lhs.lifetime != rhs.lifetime { return lhs.lifetime > rhs.lifetime }
                 if lhs.item.date != rhs.item.date { return lhs.item.date > rhs.item.date }
                 return lhs.item.sortID > rhs.item.sortID
             }

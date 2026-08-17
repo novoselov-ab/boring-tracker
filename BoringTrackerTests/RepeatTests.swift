@@ -276,7 +276,7 @@ struct RepeatTests {
         #expect(store.repeatItems.map(\.displayName) == ["pizza", "porridge"])
     }
 
-    @Test("With nothing inside the window, the list is every row by recency")
+    @Test("With nothing inside the window, the list is lifetime count then recency")
     func countingWindowEmpty() {
         let tracker = Tracker(name: "Calories", unit: "kcal")
         let store = repeatStore(
@@ -292,9 +292,96 @@ struct RepeatTests {
         )
 
         // Come back after three months away and the screen is not empty: every
-        // count is 0, the tie-break is the whole ordering, and it degrades into
-        // the recency list rather than into nothing.
-        #expect(store.repeatItems.map(\.displayName) == ["soup", "pizza", "porridge"])
+        // windowed count is 0, so the ordering falls through to the tie-breaks
+        // under it rather than to nothing. Porridge leads on two logs against
+        // one apiece even though it is the oldest row here — before item 16d
+        // this read soup, pizza, porridge, purely by date. Recency still sorts
+        // the two rows the lifetime count leaves tied.
+        #expect(store.repeatItems.map(\.displayName) == ["porridge", "soup", "pizza"])
+    }
+
+    @Test("Tied inside the window, the thing eaten more over its life leads")
+    func lifetimeCountBreaksWindowTies() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries:
+                    // A staple in a quiet spell: eaten all through last year,
+                    // twice in the past fortnight.
+                    (100...199).map {
+                        Entry(trackerID: tracker.id, value: 320, date: daysAgo($0), name: "porridge")
+                    }
+                    + [
+                        Entry(trackerID: tracker.id, value: 320, date: daysAgo(14), name: "porridge"),
+                        Entry(trackerID: tracker.id, value: 320, date: daysAgo(9), name: "porridge"),
+                        // Tried twice this month and never before. Tied with the
+                        // staple on the window's count, and eaten more recently,
+                        // so the date alone used to put it first.
+                        Entry(trackerID: tracker.id, value: 640, date: daysAgo(6), name: "pizza"),
+                        Entry(trackerID: tracker.id, value: 640, date: daysAgo(2), name: "pizza"),
+                    ]
+            )
+        )
+
+        #expect(store.repeatItems.map(\.displayName) == ["porridge", "pizza"])
+    }
+
+    @Test("The window still decides first, however long the lifetime count is")
+    func lifetimeCountNeverOutranksTheWindow() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries:
+                    // Two hundred logs, every one of them outside the window:
+                    // given up, and the window is the whole reason it stopped
+                    // owning the top of the screen. A second tie-break must not
+                    // hand that back.
+                    (61...260).map {
+                        Entry(trackerID: tracker.id, value: 320, date: daysAgo($0), name: "porridge")
+                    }
+                    + [
+                        Entry(trackerID: tracker.id, value: 290, date: daysAgo(3), name: "oats")
+                    ]
+            )
+        )
+
+        // 1 beats 0 on the first comparison, so the lifetime count is never
+        // asked. Both rows are still listed.
+        #expect(store.repeatItems.map(\.displayName) == ["oats", "porridge"])
+    }
+
+    @Test("Rows tied on both counts and the date fall back to the row id")
+    func orderIsStableWhenEverythingTies() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        // Six rows at one shared instant, each logged once, distinguishable only
+        // by their values. Both counts tie, the date ties, and the row id is all
+        // that is left — so the list must not shuffle between openings.
+        let entries = (1...6).map {
+            Entry(
+                trackerID: tracker.id, value: Double($0) * 100, date: daysAgo(5), name: "leftovers"
+            )
+        }
+        let store = repeatStore(StoreDocument(trackers: [tracker], entries: entries))
+
+        // Asserted against the order the comparator promises, not against a
+        // second reading of the same list: `sorted` is deterministic for a fixed
+        // input, so comparing two calls to each other passes whatever the last
+        // tie-break does — including nothing at all.
+        //
+        // **What this pins is the order, not the `sortID` line.** Deleting that
+        // line leaves every test here green, because `historyItems` already
+        // sorts by `sortID` within a shared date and `sorted` keeps that order
+        // at any size this was tried at — so the line is a guard against
+        // `historyItems` changing rather than something reachable from here. It
+        // does fail if the direction is reversed, which is the part a reader
+        // could get wrong.
+        let expected =
+            entries
+            .sorted { "entry:\($0.id.uuidString)" > "entry:\($1.id.uuidString)" }
+            .map { HistoryItem.ID.entry($0.id) }
+        #expect(store.repeatItems.map(\.id) == expected)
     }
 
     @Test("The same values under different names stay apart")

@@ -339,6 +339,13 @@ The frequency count reaches back 60 days instead of over all history, so a
 staple you gave up stops outranking this month's breakfast — without dropping a
 row from the list. `90dda62`
 
+## 16d. Lifetime count as a second tie-break on the Repeat list — done
+
+Between the 60-day count and recency, so a staple having a quiet spell beats
+something new on the same small window count, and the window still decides
+first. The rule is in PRODUCT.md; what it moved on a real diary, and what it
+cost, are in the commit message.
+
 ## 16b. Search in History too — done
 
 One `.searchable` over History, filtering through item 16's matcher rather than

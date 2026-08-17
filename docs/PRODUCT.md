@@ -339,14 +339,22 @@ Small enough to list completely.
   and rounding to paper over it would be the app deciding what counts as the
   same meal.
 
-  **Ordered by how often you have logged it in the last 60 days**, ties broken
-  by recency. Frequency rather than recency because the row you tap each
-  morning should be in the same place twice — the top of a recency list moves
-  on every single log, and a one-off floats to it merely because it was
-  yesterday. A window rather than a lifetime count because a lifetime count
-  never falls: a staple you gave up a year ago would outrank the thing you have
-  eaten every morning this month, reachable only by search, on a screen whose
-  job is one tap.
+  **Ordered by how often you have logged it in the last 60 days**, then by how
+  often you have logged it ever, then by recency. Frequency rather than recency
+  because the row you tap each morning should be in the same place twice — the
+  top of a recency list moves on every single log, and a one-off floats to it
+  merely because it was yesterday. A window rather than a lifetime count
+  because a lifetime count never falls: a staple you gave up a year ago would
+  outrank the thing you have eaten every morning this month, reachable only by
+  search, on a screen whose job is one tap.
+
+  The lifetime count sits underneath the window rather than replacing it,
+  because inside 60 days most counts are small and ties are the ordinary case.
+  Two things each eaten twice this month tie at once, and recency then picks
+  between them on which you happened to eat last, which says nothing about
+  which you want; a thing eaten 200 times over two years and twice this month
+  is a staple having a quiet spell, and a thing eaten twice ever is not. It
+  never speaks first, so the window still decides which staples are quiet.
 
   **Nothing ever leaves this list.** A row with nothing inside the window
   counts zero and sinks; it does not disappear. Neither does one that can no
