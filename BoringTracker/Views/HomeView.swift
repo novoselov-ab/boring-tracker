@@ -77,7 +77,7 @@ struct HomeView: View {
                     // pass it: home has deleted nothing, and a deletion's offer
                     // is deliberately never expired, so without it a swipe on
                     // History would pin "Deleted batch" here instead.
-                    if wroteRow != nil, store.lastLoggedAgainRow == wroteRow {
+                    if offersUndo {
                         UndoBar(offersDeletion: false)
                     }
                     logBar
@@ -116,7 +116,22 @@ struct HomeView: View {
                 // it fired.
                 RepeatView { wroteRow = store.lastLoggedAgainRow }
             }
-            // And the offer expires. The store's slot deliberately never does —
+            // The clock the offer expires on, and the thing that redraws home
+            // when it does — `offersUndo` cannot do that half, because elapsed
+            // time is not state SwiftUI observes.
+            //
+            // **Both halves are needed and each covers the other's hole.**
+            // Pushing settings or History takes the stack root off screen and
+            // cancels this task, so a timer alone let a write made before the
+            // trip come back with a fresh ten seconds on the way home
+            // (screenshotted: the bar was still there 32 seconds after the
+            // write). And a predicate alone leaves the bar drawn until
+            // something else happens to invalidate the body, which coming back
+            // from a pushed screen does not — same screenshot, other cause. So
+            // the task recomputes what is *left* of the offer each time home
+            // reappears, and the predicate keeps any redraw honest meanwhile.
+            //
+            // The store's own slot never expires —
             // a repeat's undo stands until something newer is written — which
             // was right when the bar lived on a screen you left, and is wrong on
             // the one screen you are always on: nothing else here would clear
@@ -130,12 +145,37 @@ struct HomeView: View {
             // After that the undo is still there on History, which is where a
             // deliberate correction goes anyway.
             .task(id: wroteRow) {
-                guard wroteRow != nil else { return }
-                try? await Task.sleep(for: .seconds(10))
-                guard !Task.isCancelled else { return }
+                guard wroteRow != nil, let at = store.lastLoggedAgainAt else { return }
+                // What is left of the ten seconds, not ten seconds. This runs
+                // again every time home comes back, so a write made before a
+                // trip to settings is already over when the task restarts and
+                // is cleared in the same breath rather than being given a
+                // second full offer.
+                let remaining = Self.undoOffer - Date().timeIntervalSince(at)
+                if remaining > 0 {
+                    try? await Task.sleep(for: .seconds(remaining))
+                    guard !Task.isCancelled else { return }
+                }
                 wroteRow = nil
             }
         }
+    }
+
+    /// How long home offers to take a repeat back.
+    private static let undoOffer: TimeInterval = 10
+
+    /// Whether the bar is drawn: this screen wrote the pending repeat, and it
+    /// wrote it recently.
+    ///
+    /// Both halves are read from the store rather than from a flag, so neither
+    /// can be left standing by a screen that stopped running. The row says whose
+    /// write it is; the date says how old, which is what makes the answer
+    /// correct on the way back from a pushed screen where the timer above was
+    /// cancelled.
+    private var offersUndo: Bool {
+        guard wroteRow != nil, store.lastLoggedAgainRow == wroteRow,
+              let at = store.lastLoggedAgainAt else { return false }
+        return Date().timeIntervalSince(at) < Self.undoOffer
     }
 
     /// The bottom bar: the one big thing, and one small one beside it.
@@ -323,6 +363,9 @@ struct HomeView: View {
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// The app has exactly one animation, and this is it — so this is the only
+    /// place that has to ask.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let tracker: Tracker
     let open: () -> Void
     let log: () -> Void
@@ -530,7 +573,14 @@ private struct TrackerCard: View {
         // still counts a daily total down to zero, now over 0.8s rather than
         // 0.3s. Item 15 left that deliberately (the number really did change)
         // and slowing it does not make it a different decision.
-        .animation(.easeOut(duration: 0.8), value: headline.amount)
+        //
+        // `nil` under Reduce Motion, which swaps the number instantly. Somebody
+        // who has asked the system for less motion has not asked for the app's
+        // one animation to run nearly three times longer than it used to, and
+        // what the count buys — watching the addition happen — is exactly the
+        // moving thing that setting turns off. This is the only animation in the
+        // app, so it is the only place that has to ask.
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.8), value: headline.amount)
         .lineLimit(1)
         .minimumScaleFactor(0.6)
     }
