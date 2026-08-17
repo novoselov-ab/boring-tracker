@@ -13,22 +13,32 @@ import SwiftUI
 /// field over the top. Not a new list built from the entries: the grouping of a
 /// batch into one row and the ordering are the same question both screens ask,
 /// and answering it twice is how they come to disagree.
+///
+/// **A sheet, not a pushed screen, and a tap on a row closes it** (docs/TODO.md
+/// item 20). Pushed, it was a titled screen with a list and a search field —
+/// which is precisely what History is, so it read as a second History rather
+/// than as a fast way to log, and it was reached and left the way you reach and
+/// leave a place. Half height over the screen you were on says the opposite: it
+/// is a thing that comes up, takes one tap, and goes. What it costs is that
+/// nothing here can be a *destination* — no editing a row, no deleting one, no
+/// second tap — and that is the point rather than the price. History is still
+/// there for all of it.
 struct RepeatView: View {
     @Environment(Store.self) private var store
-    /// Built once, when the screen opens, and deliberately not rebuilt while it
+    @Environment(\.dismiss) private var dismiss
+    /// Built once, when the sheet opens, and deliberately not rebuilt while it
     /// is up.
     ///
-    /// **Because the list must not move under your thumb.** Repeating writes a
-    /// row dated now against the same name and values, which adds one to that
-    /// row's count and moves it up the ordering — so a live list would reshuffle
-    /// on each tap, and logging breakfast (coffee, then oats) would mean aiming
-    /// at a target that just moved. What says the tap landed is the undo bar,
-    /// exactly as it does on History.
+    /// **Because it is the expensive part.** `repeatItems` walks and sorts every
+    /// entry ever logged; a computed property read from `body` would pay that
+    /// again on every keystroke in the search field. Filtering a snapshot is a
+    /// string comparison per row. Measured again after the move to a sheet,
+    /// unchanged — the numbers are in `Store.repeatItems` and in the commit.
     ///
-    /// **And because it is the expensive part.** `repeatItems` walks and sorts
-    /// every entry ever logged; a computed property read from `body` would pay
-    /// that again on every keystroke in the search field. Filtering a snapshot
-    /// is a string comparison per row.
+    /// It also used to be what stopped the list reshuffling under your thumb
+    /// between two taps, which no longer arises: one tap logs and the sheet
+    /// leaves, so there is no second tap to aim. Kept for the cost, which is the
+    /// half that was always load-bearing.
     ///
     /// `nil` rather than `[]` until it is built, so the empty state cannot flash
     /// on screen for the frame before the first pass.
@@ -36,6 +46,22 @@ struct RepeatView: View {
     @State private var query = ""
 
     var body: some View {
+        NavigationStack { content }
+            // Half the screen, draggable to full. A presentation that stops
+            // short of the top is the whole difference from the pushed screen:
+            // home stays visible behind it, so this reads as something over
+            // what you were doing rather than somewhere you went. `.large` is
+            // there because the list is as long as your history and the
+            // keyboard needs the room when you search.
+            .presentationDetents([.medium, .large])
+            // The system's own "this pulls down", as on the log sheet. There is
+            // no Cancel and no Done: tapping a row is the only thing this sheet
+            // does, and a bar button for leaving would cost the row of chrome
+            // that the pushed screen's title bar cost.
+            .presentationDragIndicator(.visible)
+    }
+
+    private var content: some View {
         // One dictionary for the whole screen. `HistoryItem.line` takes it as a
         // parameter precisely so a screenful of rows does not each rebuild it.
         //
@@ -46,7 +72,7 @@ struct RepeatView: View {
         let trackers = Dictionary(
             store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
         )
-        Group {
+        return Group {
             if let items {
                 let shown = items.filter { $0.matches(query) }
                 if items.isEmpty {
@@ -62,7 +88,7 @@ struct RepeatView: View {
                     ContentUnavailableView.search(text: query)
                 } else {
                     List(shown) { item in
-                        RepeatRow(item: item, trackers: trackers)
+                        RepeatRow(item: item, trackers: trackers) { dismiss() }
                     }
                     .listStyle(.insetGrouped)
                     // The band an inset-grouped list keeps for a section
@@ -85,11 +111,13 @@ struct RepeatView: View {
         // them would rename the model after a screen's title.
         .navigationTitle("Log again")
         .navigationBarTitleDisplayMode(.inline)
+        // The one thing History's list does not have, and the reason this is a
+        // list at all rather than a row of chips: with a year of food behind
+        // you the thing you want is four letters away.
         .searchable(text: $query, prompt: "Search names")
-        // The repeat half only. Nothing is deleted here, and a deletion's undo
-        // never expires, so the shared bar would otherwise arrive from History
-        // reading "Deleted batch" over a screen that had done nothing.
-        .safeAreaInset(edge: .bottom, spacing: 0) { UndoBar(offersDeletion: false) }
+        // No `UndoBar` here any more. The bar is on home, where this sheet
+        // leaves you — an undo drawn on a presentation that dismisses itself
+        // would be a button you cannot reach.
         .onAppear { if items == nil { items = store.repeatItems } }
     }
 }
@@ -117,24 +145,27 @@ struct RepeatView: View {
 /// data instead, the fix is to say "Archived" on the row, which is a change to
 /// what a row shows and belongs with item 14b's question rather than here.
 ///
-/// **A double tap writes twice and only the second is undoable.** True on
-/// History as well — the store keeps one undo slot on purpose (item 14) — but
-/// the target here is a whole row rather than a 44pt disc, and the list
-/// deliberately does not move to confirm the first tap. The alternatives are a
-/// second undo slot, which item 14 rejected, and a confirmation, which the
-/// philosophy rejects; so this is a known cost of the wider target, not an
-/// oversight.
+/// **A tap logs and the sheet goes.** Which also closes the double-tap this row
+/// used to carry: a second tap on a row that is no longer there cannot write a
+/// second copy, where before the list sat still under your thumb and would take
+/// one (docs/TODO.md item 20). Only the write that a tap makes is dismissed
+/// over — a row that can write nothing is disabled and does not dismiss, so a
+/// tap on it is not silently read as "done".
+///
+/// The undo for a mistap is on home, which is where this leaves you.
 private struct RepeatRow: View {
     @Environment(Store.self) private var store
     let item: HistoryItem
     /// Built once for the screen by `RepeatView`, not per row.
     let trackers: [UUID: Tracker]
+    /// Called after a row has actually written something.
+    let logged: () -> Void
 
     var body: some View {
         let line = item.line(trackers: trackers)
         let canRepeat = !store.repeatableEntries(of: item).isEmpty
         return Button {
-            store.logAgain(item)
+            if store.logAgain(item) { logged() }
         } label: {
             // The same two lines History draws, in the same order and the same
             // weights: the name leads and stays quiet, the values follow
@@ -212,5 +243,9 @@ private struct RepeatRow: View {
         ),
         file: StoreFile(directory: URL.temporaryDirectory.appending(path: "preview-repeat"))
     )
-    return NavigationStack { RepeatView().environment(store) }
+    // Presented the way the app presents it, over something, rather than as a
+    // screen of its own: the detents are half of what this view is.
+    return Color(.systemBackground)
+        .ignoresSafeArea()
+        .sheet(isPresented: .constant(true)) { RepeatView().environment(store) }
 }

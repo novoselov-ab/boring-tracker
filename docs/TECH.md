@@ -441,13 +441,20 @@ Numbers to hold the design to, measured on the oldest supported device:
   closes, the disk write happens later and off the main actor.
 - **Graph redraw: 60fps while scrubbing** over a year of data. Points are
   aggregated once when the range changes, not per frame.
-- **Opening Repeat: one list build, never one per redraw.** `Store.repeatItems`
-  walks and sorts the whole history — about 20ms over 7,600 entries and 40ms
-  over 15,300, Debug on an iPhone 17 simulator — so the screen snapshots it as
-  it appears and filters the snapshot. Reading the property from `body` instead
-  would pay that on every keystroke in its search field; filtering the snapshot
-  costs a fraction of a millisecond. The snapshot is also what stops the list
-  moving under your thumb between two taps.
+- **Opening Log again: one list build, never one per redraw.**
+  `Store.repeatItems` walks and sorts the whole history — about 20ms over 7,600
+  entries and 40ms over 15,300, Debug on an iPhone 17 simulator — so the sheet
+  snapshots it as it appears and filters the snapshot. Reading the property from
+  `body` instead would pay that on every keystroke in its search field;
+  filtering the snapshot costs a fraction of a millisecond.
+
+  Re-measured when the screen became a sheet (docs/TODO.md item 20), same
+  method, five runs: **20.2–21.8ms over 7,641 entries and 40.8–43.4ms over
+  15,291**, and **23.5–24.7ms / 49.0–50.0ms** on the shape where nothing
+  collapses. Counted as well as timed — an `NSLog` in `repeatItems`, read off
+  `log stream` — **one build when the sheet opens and none for focusing the
+  search field or typing three letters**. The count is the half a timing number
+  cannot show.
 
 ## Smaller decisions, settled
 

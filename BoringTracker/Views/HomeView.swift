@@ -6,6 +6,10 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(LogSheet.lastGroupKey) private var lastGroup = ""
     @State private var logging: LogSheet.Target?
+    /// Whether the Log again sheet is up. Not a `Route`: it comes up over home
+    /// and leaves as soon as it has written something, so it is a presentation
+    /// rather than a place (docs/TODO.md item 20).
+    @State private var loggingAgain = false
     @State private var path: [Route] = []
 
     /// Everything reachable from here. An enum rather than a bare `UUID` so
@@ -15,9 +19,6 @@ struct HomeView: View {
         case tracker(UUID)
         case history
         case settings
-        /// `repeatLog`, because `repeat` is a keyword and backticks in every
-        /// mention of it would be worse than one word of noise here.
-        case repeatLog
     }
 
     var body: some View {
@@ -41,7 +42,24 @@ struct HomeView: View {
             // title's own band is gone — so the density item 11 bought is
             // intact; the card count is in the commit body.
             .navigationBarTitleDisplayMode(.inline)
-            .safeAreaInset(edge: .bottom, spacing: 0) { logBar }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                VStack(spacing: 0) {
+                    // Home writes an undo-able thing now: the Log again sheet
+                    // dismisses onto this screen, so this is where the offer to
+                    // take it back has to be (docs/TODO.md item 20). The same
+                    // `UndoBar` History draws, not a copy — one wording for one
+                    // undo slot.
+                    //
+                    // `offersDeletion: false` for the reason the sheet used to
+                    // pass it: a deletion's offer never expires, and home has
+                    // deleted nothing, so without this a swipe on History would
+                    // pin "Deleted batch" over the main screen. It draws
+                    // nothing at all when there is nothing to undo, which is
+                    // almost always.
+                    UndoBar(offersDeletion: false)
+                    logBar
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink(value: Route.settings) {
@@ -63,11 +81,13 @@ struct HomeView: View {
                 case .tracker(let id): TrackerDetailView(trackerID: id)
                 case .history: HistoryView()
                 case .settings: SettingsView()
-                case .repeatLog: RepeatView()
                 }
             }
             .sheet(item: $logging) { target in
                 LogSheet(target: target)
+            }
+            .sheet(isPresented: $loggingAgain) {
+                RepeatView()
             }
         }
     }
@@ -95,7 +115,7 @@ struct HomeView: View {
     private var logBar: some View {
         if !store.activeTrackers.isEmpty {
             HStack(spacing: 8) {
-                NavigationLink(value: Route.repeatLog) {
+                Button { loggingAgain = true } label: {
                     Image(systemName: "arrow.clockwise")
                         .font(.body.weight(.semibold))
                         // Width only. A height here makes this button *taller*
