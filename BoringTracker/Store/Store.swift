@@ -103,6 +103,27 @@ final class Store {
     /// False when a test pinned the calendar, so system time-zone changes do
     /// not yank it back to the device's.
     private let followsSystemCalendar: Bool
+    /// The clock, pinned by tests. `nil` in the app, where the device's clock is
+    /// the only honest answer.
+    ///
+    /// Here for the same reason `calendar` is injectable: since `repeatItems`
+    /// counts only the last `countingWindowDays`, a fixture's dates and "now"
+    /// are no longer independent, and a test whose fixture drifts out of the
+    /// window as the wall clock advances is a test that passes today and fails
+    /// in March.
+    ///
+    /// **It pins which day the store thinks it is, not what a write stamps.**
+    /// `today`, `refreshToday()` and `travel(to:)` read it; `add`, `addBatch`,
+    /// `logAgain` and every `modified` stamp still read `Date.stamp()`. So in a
+    /// store with this pinned, a write lands at the real wall clock rather than
+    /// the pinned one, and therefore under a `DayKey` the store does not
+    /// consider today. Deliberately not threaded further: this exists so an
+    /// ordering test can sit at a known distance from its fixture, and running
+    /// the eight timestamps a mutation writes off a test-only clock is a change
+    /// to the data path to buy nothing the data path needs. A test that pins
+    /// this and then asserts a *total* or a day label wants the real fix first.
+    private let pinnedNow: Date?
+    private var now: Date { pinnedNow ?? Date() }
     private let file: StoreFile
     private let saver: StoreSaver
     /// Counts mutations. The saver uses it to tell a late-arriving old document
@@ -125,6 +146,7 @@ final class Store {
         origin: StoreOrigin = .fresh,
         file: StoreFile = .standard(),
         calendar: Calendar? = nil,
+        now: Date? = nil,
         saveWindow: Duration = .milliseconds(500)
     ) {
         let document = document.compactingTombstones()
@@ -134,7 +156,8 @@ final class Store {
         self.origin = origin
         self.calendar = calendar ?? .current
         self.followsSystemCalendar = calendar == nil
-        self.today = DayKey(Date(), calendar: calendar ?? .current)
+        self.pinnedNow = now
+        self.today = DayKey(now ?? Date(), calendar: calendar ?? .current)
         self.file = file
         self.saver = StoreSaver(file: file, window: saveWindow)
         rebuildTotals()
@@ -312,7 +335,7 @@ final class Store {
     }
 
     /// The Repeat screen's list: one row per distinct named thing you have
-    /// logged, the ones logged most often first.
+    /// logged, the ones logged most often lately first.
     ///
     /// **Deduplicated by name *and* values** (`HistoryItem.RepeatKey`). The
     /// plain list was built first on purpose and using it is what settled this:
@@ -327,16 +350,16 @@ final class Store {
     /// worth keeping. It is a real row rather than a summary, so repeating it
     /// goes through the same `logAgain` as everything else.
     ///
-    /// **Ordered by how often you have logged it, newest breaking the ties.**
-    /// Recency was right for the undeduplicated list and stops being right the
-    /// moment duplicates collapse: both orderings were built and screenshotted
-    /// on a 56-day fixture, and recency spent two of its first fourteen rows on
-    /// one food at two portions while four rows in a row read "Today" — a
-    /// one-off floats to the top merely because it was yesterday, and the date
-    /// column says nothing where it is densest. Frequency's first screen is
-    /// thirteen different foods at the portions actually eaten, with the
-    /// variants below them. It is also **stable**: the top of a recency list
-    /// moves on every single log, so the row you tap each morning is never
+    /// **Ordered by how often you have logged it lately, newest breaking the
+    /// ties.** Recency was right for the undeduplicated list and stops being
+    /// right the moment duplicates collapse: both orderings were built and
+    /// screenshotted on a 56-day fixture, and recency spent two of its first
+    /// fourteen rows on one food at two portions while four rows in a row read
+    /// "Today" — a one-off floats to the top merely because it was yesterday,
+    /// and the date column says nothing where it is densest. Frequency's first
+    /// screen is thirteen different foods at the portions actually eaten, with
+    /// the variants below them. It is also **steadier**: the top of a recency
+    /// list moves on every single log, so the row you tap each morning is never
     /// twice in the same place.
     ///
     /// Frequency degrades into recency rather than falling apart, which is what
@@ -349,18 +372,38 @@ final class Store {
     /// pure frequency order a year of porridge logged against a tracker you have
     /// since archived would own the top of the screen for good — a screenful of
     /// greyed rows in front of every row that still works. Recency used to sink
-    /// them on its own; a lifetime count never does. They stay on the list
+    /// them on its own, and the count below does so only once the window has
+    /// passed over them, which is months of it. They stay on the list
     /// rather than disappearing, which is item 16's decision and unchanged: the
     /// row is still a true statement about what you ate, and a screen that drops
     /// food when you archive a tracker is editing your history.
     ///
-    /// **The count is over everything ever logged, which is a decision and not
-    /// obviously the right one.** Eat porridge every morning for a year, switch
-    /// to overnight oats for a month, and last year's staple still outranks this
-    /// morning's — reachable only by search, on a screen whose job is one tap.
-    /// A window (say the last 60 days) would keep the stability argument and
-    /// drop the museum effect; it is not here because nothing measured yet says
-    /// what the window should be, and it is a displayed decision either way.
+    /// **The count is over the last `countingWindowDays` days, not over
+    /// everything ever logged.** A lifetime count never falls, so eat porridge
+    /// every morning for a year, switch to overnight oats for a month, and last
+    /// year's staple still outranks this morning's — reachable only by search,
+    /// on a screen whose job is one tap. The window drops that and keeps what
+    /// frequency was chosen for: the portion you usually eat first, and a
+    /// one-off that cannot reach the top merely because it was yesterday.
+    ///
+    /// **What it costs is the top row's stability, for the heaviest user
+    /// only.** A count that stops at the window saturates: log porridge and a
+    /// flat white once a day each and both count 60, where a lifetime count had
+    /// them at 400 and 380 and ordered them the same way for good. Tied, the
+    /// date decides, so those two swap places as you log them. Accepted, and it
+    /// is smaller than it sounds — the rows that swap are all things you are
+    /// about to tap, where a recency list floats up a one-off you are not, and
+    /// `RepeatView` snapshots the list so nothing moves under your thumb within
+    /// a visit. The fix if it grates is a lifetime count as a *second*
+    /// tie-break, ahead of the date; it is not here because it is a third
+    /// ordering rule to explain for a case nobody has complained about yet
+    /// (docs/TODO.md item 16c).
+    ///
+    /// **It changes the order, never the membership.** A row whose logs are all
+    /// older than the window counts zero and sinks to the bottom of the rows
+    /// that can still be written, ordered among them by recency — it does not
+    /// disappear. Item 16 settled that a screen which drops food is editing your
+    /// history, and a count is not a filter.
     ///
     /// A filter over `historyItems` rather than its own walk of `entries`: the
     /// grouping of a batch into one row is the same question both screens ask,
@@ -381,20 +424,40 @@ final class Store {
     /// keystroke never reaches it. A keystroke got *cheaper*, because there are
     /// far fewer rows left to filter — 0.08–0.16ms against the 5.3ms and 9.9ms
     /// recorded for the plain list.
+    ///
+    /// **The window is free.** One `Date` comparison per named row, no second
+    /// pass and nothing extra to sort. Re-measured the same way at the same two
+    /// entry counts, five runs each, against a build with the window widened
+    /// past the fixture's own history so the counterfactual is the same binary
+    /// in every other respect: **19.4–20.6ms against 19.7–23.1ms at 7,644
+    /// entries, and 39.1–41.8ms against 39.4–41.7ms at 15,294** (docs/TODO.md
+    /// item 16c). The windowed runs are the faster pair on both files, which is
+    /// noise rather than a saving — the honest reading is that the difference
+    /// does not register.
+    ///
+    /// **Those are not the fixtures the paragraph above was measured on**, and
+    /// the two sets must not be read as a before and after: a window measured
+    /// back from today reads nothing unless the file ends today, so these were
+    /// generated afresh and collapse to 37 rows rather than 61. The pair to
+    /// compare is the two columns here, taken minutes apart on one machine.
     var repeatItems: [HistoryItem] {
         var index: [HistoryItem.RepeatKey: Int] = [:]
         var rows: [(item: HistoryItem, count: Int, canRepeat: Bool)] = []
         let targets = repeatTargets
+        let windowStart = countingWindowStart
         for item in historyItems where item.isNamed {
             let key = item.repeatKey
+            // The only thing the window touches. Every row is still built and
+            // still listed; one outside it simply adds nothing to its count.
+            let counted = item.date >= windowStart ? 1 : 0
             if let at = index[key] {
-                rows[at].count += 1
+                rows[at].count += counted
             } else {
                 index[key] = rows.count
                 // Once per collapsed row, not once per comparison, and it is the
                 // same answer for every row the key collapsed: the key carries
                 // the tracker ids, so they all name the same trackers.
-                rows.append((item, 1, !repeatableEntries(of: item, targets: targets).isEmpty))
+                rows.append((item, counted, !repeatableEntries(of: item, targets: targets).isEmpty))
             }
         }
         // `historyItems` is newest first, so the tie-break is already in hand:
@@ -408,6 +471,29 @@ final class Store {
                 return lhs.item.sortID > rhs.item.sortID
             }
             .map(\.item)
+    }
+
+    /// How far back `repeatItems` counts.
+    ///
+    /// A displayed decision, free to change again: nothing is stored, derived or
+    /// migrated from it, and moving it only reorders a list. Sixty days is long
+    /// enough that a weekly thing is still counted about eight times and a
+    /// seasonal one does not fall off the moment the weather turns, and short
+    /// enough that a habit you dropped two months ago stops holding the top of
+    /// the screen (docs/TODO.md item 16c).
+    static let countingWindowDays = 60
+
+    /// The first moment `repeatItems` counts: the start of today's day, less the
+    /// days before it that the window reaches back over.
+    ///
+    /// Whole days, in the store's calendar, rather than 60×86,400 seconds before
+    /// this instant. Every other boundary in this app is a local day (`DayKey`),
+    /// a seconds-based window would slide under the list while you read it, and
+    /// asking the calendar is what makes the arithmetic survive a DST change.
+    var countingWindowStart: Date {
+        today
+            .adding(days: -(Self.countingWindowDays - 1), calendar: calendar)
+            .startOfDay(calendar: calendar)
     }
 
     // MARK: - Entries
@@ -1219,7 +1305,7 @@ final class Store {
                 rebuildTotals()
             }
         }
-        let day = DayKey(Date(), calendar: calendar)
+        let day = DayKey(now, calendar: calendar)
         if day != today { today = day }
     }
 
@@ -1229,7 +1315,7 @@ final class Store {
     func travel(to calendar: Calendar) {
         self.calendar = calendar
         rebuildTotals()
-        let day = DayKey(Date(), calendar: calendar)
+        let day = DayKey(now, calendar: calendar)
         if day != today { today = day }
     }
 

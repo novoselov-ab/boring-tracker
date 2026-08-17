@@ -10,11 +10,26 @@ import Testing
 @MainActor
 @Suite("Repeat")
 struct RepeatTests {
+    /// The clock every store here runs on, a day after `time(_:)`'s epoch.
+    ///
+    /// Pinned because the count reaches back `Store.countingWindowDays` days
+    /// from *today*: against the real clock these fixtures would drift out of
+    /// the window as the months pass, and every ordering test would quietly
+    /// become a test of the recency tie-break.
+    private static let now = date(2026, 1, 2, 12)
+
+    /// A moment `days` before the pinned now, at the same time of day. Whole
+    /// days, so a test says how far outside the window it means to be.
+    private func daysAgo(_ days: Int) -> Date {
+        Self.now.addingTimeInterval(Double(-days * 86_400))
+    }
+
     private func repeatStore(_ document: StoreDocument) -> Store {
         Store(
             document: document,
             file: StoreFile(directory: URL.temporaryDirectory.appending(path: "repeat-\(UUID())")),
             calendar: calendar("UTC"),
+            now: Self.now,
             saveWindow: .seconds(60)
         )
     }
@@ -205,11 +220,81 @@ struct RepeatTests {
         store.update(scale)
 
         // Three logs against one log: on count alone the archived row wins, and
-        // it would hold the top of the screen for good, greyed out, because a
-        // lifetime count never falls. Recency used to sink such rows on its own.
+        // it would hold the top of the screen greyed out for as long as the
+        // counting window still reaches its logs, which is months. Recency used
+        // to sink such rows on its own.
         let items = store.repeatItems
         #expect(items.map(\.displayName) == ["porridge", "morning"])
         #expect(store.repeatableEntries(of: try #require(items.last)).isEmpty)
+    }
+
+    @Test("Last year's staple stops outranking this month's, and still lists")
+    func countingWindowDropsTheMuseumEffect() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries:
+                    // Eaten every morning, and given up three months ago. Six
+                    // logs against three: on a lifetime count this owns the top
+                    // of the screen for good.
+                    (90...95).map {
+                        Entry(trackerID: tracker.id, value: 320, date: daysAgo($0), name: "porridge")
+                    }
+                    + (1...3).map {
+                        Entry(trackerID: tracker.id, value: 290, date: daysAgo($0), name: "oats")
+                    }
+            )
+        )
+
+        let items = store.repeatItems
+        // What you actually eat now is first...
+        #expect(items.map(\.displayName) == ["oats", "porridge"])
+        // ...and what you used to eat is still here, one tap away, with the
+        // date that says when you last ate it. A count is not a filter.
+        #expect(items.last?.date == daysAgo(90))
+    }
+
+    @Test("The window is 60 days counting today, and the edge is a whole day")
+    func countingWindowEdge() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    // Three logs, every one of them a day too old to count.
+                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(60), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(61), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(62), name: "porridge"),
+                    // One log, on the oldest day the window still reaches.
+                    Entry(trackerID: tracker.id, value: 890, date: daysAgo(59), name: "pizza"),
+                ]
+            )
+        )
+
+        // 1 beats 0, so the single log inside the window leads three outside it.
+        #expect(store.repeatItems.map(\.displayName) == ["pizza", "porridge"])
+    }
+
+    @Test("With nothing inside the window, the list is every row by recency")
+    func countingWindowEmpty() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(300), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(299), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 890, date: daysAgo(200), name: "pizza"),
+                    Entry(trackerID: tracker.id, value: 450, date: daysAgo(100), name: "soup"),
+                ]
+            )
+        )
+
+        // Come back after three months away and the screen is not empty: every
+        // count is 0, the tie-break is the whole ordering, and it degrades into
+        // the recency list rather than into nothing.
+        #expect(store.repeatItems.map(\.displayName) == ["soup", "pizza", "porridge"])
     }
 
     @Test("The same values under different names stay apart")

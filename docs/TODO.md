@@ -1572,7 +1572,8 @@ morning for a year, switch to overnight oats for a month, and last year's staple
 still outranks this morning's, reachable only by search. **A window — count only
 the last 60 days, say — keeps the stability argument and drops the museum
 effect**, and it is not in because nothing measured says what the window should
-be. Displayed either way, so it stays cheap.
+be. Displayed either way, so it stays cheap. *Settled in item 16c: the user
+picked 60 days and it is in.*
 
 **One known limit of the key**: values are compared as stored, not as drawn.
 `decimals` is editable, so "rice" at 100.4 and at 100.0 are correctly two rows
@@ -1594,6 +1595,89 @@ Nothing here rounds or groups to paper over it: both are design decisions about
 what counts as the same meal, and both belong to the user rather than to this
 step. Frequency ordering is what keeps the degraded case honest rather than
 arbitrary.
+
+## 16c. A 60-day counting window on the Repeat list — done
+
+The soft case item 16 left standing, with the number the user picked. The count
+that orders the Repeat list now reaches back 60 days — today and the 59 before
+it — instead of over everything ever logged.
+
+- [x] Count only entries inside the window when ordering by frequency.
+- [x] **Rows do not disappear.** A row whose logs are all older counts zero and
+      sinks to the bottom of the rows that can still be written, ordered among
+      them by recency. Item 16 settled that a screen which drops food is editing
+      your history, and a count is not a filter.
+- [x] Ties still break by recency, and a row that cannot be repeated still sorts
+      below every row that can.
+- [x] Re-measured.
+
+**It reads decisively better, and the case is not a hypothetical one.** On a
+200-day fixture whose breakfast, lunch and afternoon drink all changed 50 days
+ago (1,800 entries, 15 rows), the lifetime count opened with three rows last
+eaten on **28 June** — seven weeks ago — and put the thing eaten every morning
+at row 8. Only **three of the first eight rows** had been eaten in the past
+week. With the window, **all eight** have, and the first screen is what you
+currently eat; the abandoned staples sit at 9–14, still listed, still one tap.
+Read off the screen on an iPhone 17 in dark mode, and off a probe that printed
+the same ordering.
+
+**What it costs is the top row's stability, and only for the heaviest user.**
+Found in review. A windowed count saturates where a lifetime one keeps
+climbing: log porridge and a flat white once a day each and both count 60,
+where a lifetime count had them at 400 and 380 and put them in the same order
+for good. Tied, the date decides, so the two swap places as you log them —
+which is the one thing frequency was chosen over recency to stop. It is
+accepted, and it is smaller than it sounds: the rows that swap are all things
+you are about to tap, where recency floated up a one-off you were not, a
+one-off still cannot reach the top at count 1, and the screen snapshots the
+list so nothing moves during a visit. **The fix if it ever grates is a lifetime
+count as a second tie-break**, ahead of the date, which restores the old order
+exactly where the window has stopped discriminating — not in, because it is a
+third ordering rule to explain for a case nobody has hit yet.
+
+**60 is the right size, and the reason is the fade rather than the cut.** At 50
+days past the switch the old staples are not gone — the window still holds
+about ten days of them, so they sit mid-list and sink a row at a time; at 80
+days past they are at the bottom in pure recency order. Nothing snaps. Shorter
+was considered and rejected on what it costs the *other* end: at 30 days a
+fortnightly food is counted twice and at 14 days once, which ties it with the
+one-off from last Tuesday, and beating that one-off is the entire reason
+frequency was chosen over recency. At 60 days it is counted four times. Longer
+is the museum effect coming back.
+
+**The window is free.** One `Date` comparison per named row, no second pass and
+nothing extra to sort. Debug build on the iPhone 17 simulator, five runs each,
+against a counterfactual build with the window widened past the fixture's own
+history so the two binaries differ in nothing else:
+
+| entries | rows | build, 60-day window | build, lifetime count |
+|---------|------|----------------------|-----------------------|
+| 7,644   | 37   | 19.4–20.6ms          | 19.7–23.1ms           |
+| 15,294  | 37   | 39.1–41.8ms          | 39.4–41.7ms           |
+
+Fixtures of four named meals and a weight reading a day, generated to end
+*today* because a window measured back from today reads nothing otherwise —
+which is also why these are not the files item 16 measured, and why the pair to
+compare is the two columns here rather than these against the 20.6–21.1ms and
+41.0–42.4ms recorded there. These collapse to 37 rows where those collapsed to
+61. The windowed runs are the faster column on both files; that is noise, and
+the honest reading is that the difference does not register.
+
+**Whole days in the store's calendar**, not 60×86,400 seconds before this
+instant: every other boundary in this app is a local day, and a seconds-based
+window would slide under the list while you read it. `Store.today` already
+refreshes at midnight and on a time-zone change, so the window follows it.
+
+**Tests can now pin the clock** (`Store(now:)`). They have to: a fixture's dates
+and "now" stopped being independent the moment the count had a window, and a
+test whose fixture drifts out of it as the wall clock advances is one that
+passes today and fails in March. Three tests pin the window itself — the museum
+case, the day at its edge, and a history entirely outside it — and all three
+fail against a build with the window widened, which is what says they pin
+anything.
+
+**Still a displayed decision.** Nothing is stored, derived or migrated from the
+number; changing it reorders a list and nothing else.
 
 ## 16b. Search in History too — done
 
