@@ -41,6 +41,61 @@ struct NumberInputTests {
         #expect(NumberInput.parse("5..5", locale: us) == 5.5)
     }
 
+    @Test("The pad types what the region types")
+    func padTypesLocaleSeparator() {
+        #expect(NumberInput.appending("1", to: "", locale: us) == "1")
+        #expect(NumberInput.appending("5", to: "12", locale: us) == "125")
+        #expect(NumberInput.appending(".", to: "1", locale: us) == "1.")
+        #expect(NumberInput.appending(",", to: "1", locale: de) == "1,")
+    }
+
+    @Test("Either separator key means this region's separator")
+    func hardwareSeparatorIsTranslated() {
+        // The one that matters, and it is the grouping test above seen from
+        // the other side: a hardware keyboard sends the key that is physically
+        // on it. Appended verbatim in de_DE, "1.5" reads back through `parse`
+        // as grouped thousands — 15 — while the field on screen says 1.5.
+        #expect(NumberInput.appending(".", to: "1", locale: de) == "1,")
+        #expect(NumberInput.parse(NumberInput.appending(".", to: "1", locale: de) + "5",
+                                  locale: de) == 1.5)
+        #expect(NumberInput.appending(",", to: "1", locale: us) == "1.")
+        #expect(NumberInput.parse(NumberInput.appending(",", to: "1", locale: us) + "5",
+                                  locale: us) == 1.5)
+    }
+
+    @Test("A second separator is not typeable")
+    func oneSeparatorOnly() {
+        #expect(NumberInput.appending(".", to: "1.5", locale: us) == "1.5")
+        #expect(NumberInput.appending(",", to: "1,5", locale: de) == "1,5")
+        // Including when it arrives wearing the other region's character.
+        #expect(NumberInput.appending(",", to: "1.5", locale: us) == "1.5")
+        #expect(NumberInput.appending(".", to: "1,5", locale: de) == "1,5")
+        // Still one field, one separator, whichever end it was typed from.
+        #expect(NumberInput.appending(".", to: ".", locale: us) == ".")
+    }
+
+    @Test("A key that is not part of a number is ignored")
+    func strayKeysAreDropped() {
+        // A hardware keyboard can send anything, and what it types is shown to
+        // the user — so a stray key must not be able to put a character on
+        // screen that `parse` will silently drop later.
+        for key in ["a", "-", " ", "٥", "12", ""] {
+            #expect(NumberInput.appending(key, to: "78", locale: us) == "78",
+                    "\(key) should not be typeable")
+        }
+    }
+
+    @Test("Typing does not quietly fix what you typed")
+    func padDoesNotNormalise() {
+        // A lone separator stays nothing, so Log stays disabled — inserting a
+        // leading zero here would turn an empty field into a logged 0.
+        #expect(NumberInput.parse(NumberInput.appending(".", to: "", locale: us),
+                                  locale: us) == nil)
+        // Leading zeros behave exactly as they did through a text field.
+        #expect(NumberInput.appending("7", to: "00", locale: us) == "007")
+        #expect(NumberInput.parse("007", locale: us) == 7)
+    }
+
     @Test("Formatted output reads back as the same number", arguments: [
         Locale(identifier: "en_US"), Locale(identifier: "de_DE"), Locale(identifier: "fr_FR"),
     ])

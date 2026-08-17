@@ -16,6 +16,7 @@
 		2D83EFD094E34B98BAA91BF0 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721C965AFA696A46040D7D36 /* HistoryView.swift */; };
 		2F33FA871520132E396FFA90 /* HistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */; };
 		41C44088FB8828A51019C675 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECB67213A9E9B62A18C2139 /* HomeView.swift */; };
+		47BD10A953AD5691518B8BB0 /* NumberPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = F114F9405B5ECCD2CB5B757A /* NumberPad.swift */; };
 		47D615BD2BCD965EA88496D2 /* DropTargetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7AA4F04D4E1E7F598E1E3B4 /* DropTargetTests.swift */; };
 		4A014E4818154348886F5C75 /* Tracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84FAA4710A9AAAE2578DFBA8 /* Tracker.swift */; };
 		54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448B1DFA3C2C0226744A5DD7 /* NumberInput.swift */; };
@@ -92,7 +93,8 @@
 		C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExport.swift; sourceTree = "<group>"; };
 		CECB67213A9E9B62A18C2139 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayBoundaryTests.swift; sourceTree = "<group>"; };
-		"TEMP_856CB3DE-1BBF-4129-803A-800374ECE42F" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		F114F9405B5ECCD2CB5B757A /* NumberPad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberPad.swift; sourceTree = "<group>"; };
+		"TEMP_71D1F507-3023-40D7-BD59-0763F96E133C" /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -167,6 +169,7 @@
 				721C965AFA696A46040D7D36 /* HistoryView.swift */,
 				CECB67213A9E9B62A18C2139 /* HomeView.swift */,
 				5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */,
+				F114F9405B5ECCD2CB5B757A /* NumberPad.swift */,
 				495A6545977B6595DAAAABF0 /* SettingsView.swift */,
 				56577BF218740A2F6BE440BC /* TrackerChart.swift */,
 				9FEF582BB28BAC2425B52542 /* TrackerDetailView.swift */,
@@ -203,10 +206,10 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		"TEMP_4DDE60B8-A971-416C-8A97-B411882B9ADB" /* whatever-tracker */ = {
+		"TEMP_AB3C5FE4-163A-4FC1-B039-1E527770D4EF" /* whatever-tracker */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_856CB3DE-1BBF-4129-803A-800374ECE42F" /* Signing.xcconfig */,
+				"TEMP_71D1F507-3023-40D7-BD59-0763F96E133C" /* Signing.xcconfig */,
 			);
 			path = "whatever-tracker";
 			sourceTree = "<group>";
@@ -305,6 +308,7 @@
 				41C44088FB8828A51019C675 /* HomeView.swift in Sources */,
 				6B57D79A245A869FCD38FA05 /* LogSheet.swift in Sources */,
 				54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */,
+				47BD10A953AD5691518B8BB0 /* NumberPad.swift in Sources */,
 				09AF7BCF35A518DFC757B803 /* SettingsView.swift in Sources */,
 				59C99FC257AE0E8CAD01633A /* Store.swift in Sources */,
 				16DAB5EB550B24EE3D89DCDC /* StoreCoding.swift in Sources */,
@@ -388,7 +392,7 @@
 		};
 		84E36E9438E1A596A58CE3EA /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_856CB3DE-1BBF-4129-803A-800374ECE42F" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_71D1F507-3023-40D7-BD59-0763F96E133C" /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -488,7 +492,7 @@
 		};
 		C4D6BC27C60125D6365F7A59 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_856CB3DE-1BBF-4129-803A-800374ECE42F" /* Signing.xcconfig */;
+			baseConfigurationReference = "TEMP_71D1F507-3023-40D7-BD59-0763F96E133C" /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
