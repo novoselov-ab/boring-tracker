@@ -25,7 +25,6 @@
 		57FD846D7584CBB6511F05B5 /* DayBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */; };
 		59C99FC257AE0E8CAD01633A /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = A459D3E53C6D189A1607B841 /* Store.swift */; };
 		6B57D79A245A869FCD38FA05 /* LogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */; };
-		6BD47CB7CEA6458502F8BD54 /* ExportDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82A13E280BF69ABCB345AD83 /* ExportDocument.swift */; };
 		72A057B7838BFB3294CDFB12 /* ExportFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E25A93ECF6643CE4AFD002 /* ExportFile.swift */; };
 		77B806464D7C20CCA40A15D6 /* CSVExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */; };
 		89E8D750F3D2ED2586B5E816 /* NumberInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F34ADAEE0EB8F446DDF5A80 /* NumberInputTests.swift */; };
@@ -85,7 +84,6 @@
 		6E46836479675695F7D581EA /* HistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryTests.swift; sourceTree = "<group>"; };
 		71EEDC4A0698106FF1991C62 /* BoringTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BoringTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		721C965AFA696A46040D7D36 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
-		82A13E280BF69ABCB345AD83 /* ExportDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportDocument.swift; sourceTree = "<group>"; };
 		84FAA4710A9AAAE2578DFBA8 /* Tracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
 		9294BF10816F1BD93987BC0B /* MergeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergeTests.swift; sourceTree = "<group>"; };
 		97360C9D3403639D7FCCA007 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
@@ -160,7 +158,6 @@
 				B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */,
 				C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */,
 				5B941541BF6510B5BEF12183 /* DayKey.swift */,
-				82A13E280BF69ABCB345AD83 /* ExportDocument.swift */,
 				43E25A93ECF6643CE4AFD002 /* ExportFile.swift */,
 				BD1685BCF244DBCB15D66573 /* ExportName.swift */,
 				0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */,
@@ -312,7 +309,6 @@
 				9D0D944F40B37978E9DA7E9B /* DayKey.swift in Sources */,
 				D91E3EFB4B5DA1008E5D362D /* Entry.swift in Sources */,
 				0AE1F1E46CC38DD6DACB2513 /* EntryEditor.swift in Sources */,
-				6BD47CB7CEA6458502F8BD54 /* ExportDocument.swift in Sources */,
 				72A057B7838BFB3294CDFB12 /* ExportFile.swift in Sources */,
 				38FD4B1C71D666C4D5BD99AC /* ExportName.swift in Sources */,
 				2F33FA871520132E396FFA90 /* HistoryItem.swift in Sources */,

@@ -1486,6 +1486,19 @@ The cheap fix was tried first and it worked, so the bridge was never written and
 this paragraph is the case that was never needed. The checklist for this item is
 at the top, ticked.
 
+## 18c. One export door, not two — done
+
+The share sheet already contains *Save to Files*, so keeping the Files exporter
+beside it gave the export section four rows and two routes to the same place.
+The argument for keeping it was that a repeat export to the same folder is one
+tap cheaper — but export is not the common path, and this app does not spend
+four rows to save a tap on something done monthly.
+
+- [x] Both `Save to Files` rows removed; `Share JSON…` and `Share CSV…` remain.
+- [x] The whole `.fileExporter` path went with them — state, modifier, three
+      functions, and `ExportDocument`, which nothing else used. Dead code kept
+      alive by one caller is how a small app stops being one.
+
 ## 19. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good

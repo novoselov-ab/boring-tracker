@@ -7,10 +7,6 @@ import UniformTypeIdentifiers
 struct DataTransferView: View {
     @Environment(Store.self) private var store
 
-    @State private var exportDocument: ExportDocument?
-    @State private var exportType: UTType = .json
-    @State private var exportName = "boring-tracker"
-    @State private var isExporting = false
     @State private var isImporting = false
     @State private var pendingImport: Data?
     @State private var isRestoringBackup = false
@@ -56,24 +52,11 @@ struct DataTransferView: View {
                 ShareLink(item: csv, preview: SharePreview(csv.filename)) {
                     Label("Share CSV…", systemImage: "square.and.arrow.up")
                 }
-                // Kept beside the share sheet rather than replaced by the
-                // "Save to Files" inside it: this is the export people take on
-                // a schedule, to the same folder every time, and it is one tap
-                // instead of two.
-                Button("Save JSON to Files…", systemImage: "folder", action: exportJSON)
-                Button("Save CSV to Files…", systemImage: "folder", action: exportCSV)
             } header: {
                 Text("Export")
             } footer: {
                 Text("JSON contains the complete document and can be imported again. CSV is one row per entry for spreadsheets.")
             }
-            .fileExporter(
-                isPresented: $isExporting,
-                document: exportDocument,
-                contentType: exportType,
-                defaultFilename: exportName,
-                onCompletion: finishExport
-            )
 
             Section {
                 Button("Import JSON", systemImage: "square.and.arrow.down") {
@@ -124,37 +107,15 @@ struct DataTransferView: View {
         ExportFile(stem: stem(format), format: format, document: store.document)
     }
 
-    /// The undated stem. Both doors add the date themselves, at the moment they
-    /// are used, so a settings screen left open across midnight cannot hand the
-    /// share sheet yesterday's name while the Files exporter offers today's.
+    /// The undated stem. The date is added at the moment of use, so a settings
+    /// screen left open across midnight cannot hand the share sheet
+    /// yesterday's name.
     private func stem(_ format: ExportFile.Format) -> String {
         format == .csv ? "boring-tracker-entries" : "boring-tracker"
     }
 
-    private func exportJSON() {
-        do {
-            exportDocument = ExportDocument(data: try store.exportData())
-            exportType = .json
-            exportName = ExportName.dated(stem(.json))
-            isExporting = true
-        } catch {
-            show(error, action: "export")
-        }
-    }
 
-    private func exportCSV() {
-        exportDocument = ExportDocument(data: store.exportCSV())
-        exportType = .commaSeparatedText
-        exportName = ExportName.dated(stem(.csv))
-        isExporting = true
-    }
 
-    private func finishExport(_ result: Result<URL, any Error>) {
-        if case .failure(let error) = result, !isCancellation(error) {
-            show(error, action: "export")
-        }
-        exportDocument = nil
-    }
 
     private func selectImport(_ result: Result<[URL], any Error>) {
         do {
