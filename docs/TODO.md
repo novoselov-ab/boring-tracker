@@ -696,6 +696,25 @@ user: if repeating from History becomes the way you log, the name probably has
 to grow back — and that is a decision about which of the two items was right,
 not a tweak.
 
+## 14b. Put the name first, still grey
+
+Item 14 found what its brief predicted: scanning History for a food now means
+reading twelve small grey *second* lines while twelve large white numbers — the
+part that does not identify anything — take the eye first. It refused to
+re-loudify the name, which was right; that would have undone item 13 quietly in
+a step not asked to revisit it.
+
+The fix is **position, not weight.** A grey name on the first line scans far
+better than a grey name below a large number, because reading order does the
+work. So the name stays quiet, exactly as asked, and rows stay uniform — the
+uniformity was always about every row having the same *structure*, not about
+the name being hard to find.
+
+- [ ] The name leads the row; the numbers follow.
+- [ ] An unnamed entry keeps the same structure — the tracker or group name
+      leads instead, so every row still has an identity line.
+- [ ] Do not change the name's colour or weight.
+
 ## 15. Make a save feel like it landed
 
 Logging a number should **show the number changing**. Today nothing
