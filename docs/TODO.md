@@ -1320,26 +1320,37 @@ nothing that could run on: `.animation(_:value:)` fires on a change and
 `.easeOut(duration: 0.3)` does not repeat, so the worst case is one bounded ease
 on one `Text` that nobody sees.
 
-## 16. Search and repeat
+## 16. Repeat: a screen of things you have eaten
 
-A search field at the **bottom** of the log sheet, in thumb reach. Empty query
-lists your most-used foods by frequency and recency — the common case, with no
-typing. Typing filters past entry names. Tapping a result logs it immediately
-from that name's latest values, with a brief undo.
+**Supersedes the search-field-in-the-log-sheet design**, which is deleted
+rather than kept alongside. That put search inside the sheet you use to type a
+new number; this is a separate door for the different job of logging something
+again, and it is fewer taps for it — home, Repeat, tap, done, without ever
+raising a keypad. Two doors to one action is what the export screen just lost.
 
-This replaces pins, favourites and recents with one control, and it is why
-`Pin` was deleted rather than built.
+- [ ] **A control beside Log on home.** The risk is here: home's bottom already
+      holds the most frequent action in the app, and a peer next to it competes
+      with it. Try it as a smaller secondary control rather than a second
+      equal button, and say how it reads.
+- [ ] **A list of distinct names, not of entries.** Deduplicated by name —
+      otherwise forty logs of "chicken rice" are forty rows. Each row carries
+      that name's most recent values and when it was last logged, which is what
+      makes the date worth showing at all.
+- [ ] **Searchable**, filtering those names.
+- [ ] **One tap logs it again**, reusing item 14's `logAgain` — a new batch,
+      today's timestamp, the original untouched, and undo. Do not write a
+      second implementation of repeat.
+- [ ] Entries with no name are not in this list. The name is what makes
+      something repeatable; an unnamed number is a measurement, not a meal.
 
-**Treat this whole item as an experiment.** It is settled enough to build, not
-settled enough to defend. Every part of it — the ranking, the prefill, what the
-empty state lists, whether a tap logs or opens a sheet — is a *displayed*
-decision computed from an append-only history (see "Two classes of decision" in
-TECH.md), so it can be reworked or thrown away after real use at no cost and
-with no migration.
+Ordering is recency unless frequency proves better — with search present,
+recency is simpler and predictable, and for someone eating the same five things
+the two converge. It is a *displayed* decision either way, so it costs nothing
+to change after use.
 
-The one thing to watch for during the week: an experiment that needs a fact the
-document doesn't record. That's a stored decision, and it's the expensive kind —
-flag it early rather than working around it.
+**Still an experiment.** Settled enough to build, not settled enough to defend.
+Watch for the one thing that would be expensive: a version of this that needs a
+fact the document does not record.
 
 ## 17. One pass on a real device
 
