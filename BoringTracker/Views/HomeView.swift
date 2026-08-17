@@ -108,7 +108,10 @@ struct HomeView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
-                .accessibilityLabel("Repeat")
+                // The glyph stays; only what VoiceOver reads changes. "Log
+                // again" is what the screen it opens is called and what
+                // History's disc already says (docs/TODO.md item 20).
+                .accessibilityLabel("Log again")
                 // Unlike a card's small +, this is the primary action: it
                 // opens the last-used group instead of this row's. It stays
                 // centred enough to sit inside either hand's thumb arc.

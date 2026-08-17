@@ -76,7 +76,14 @@ struct RepeatView: View {
                 }
             }
         }
-        .navigationTitle("Repeat")
+        // "Log again", not "Repeat". It says what the tap does instead of naming
+        // a concept, and it is the app's own verb — the button beside the door
+        // to this screen says Log, and History's disc has been labelled "Log
+        // again" since item 14. Nobody has to interpret it (docs/TODO.md item
+        // 20). The type keeps its name: `RepeatView`, `repeatItems` and
+        // `repeatKey` are about the *rule* for collapsing rows, and renaming
+        // them would rename the model after a screen's title.
+        .navigationTitle("Log again")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, prompt: "Search names")
         // The repeat half only. Nothing is deleted here, and a deletion's undo
