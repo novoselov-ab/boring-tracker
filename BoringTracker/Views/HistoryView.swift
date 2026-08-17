@@ -284,7 +284,7 @@ private struct HistoryRow: View {
     /// from the other screen, and a second design language for "write a log"
     /// is the complaint docs/TODO.md item 13 is named after. A different glyph,
     /// because this one repeats something that already happened rather than
-    /// opening an empty sheet.
+    /// opening an empty sheet — the plus in it says a log is written either way.
     ///
     /// Off when the row has nothing left to write: every tracker it named has
     /// been deleted or archived. A control that looks live and does nothing is
@@ -302,27 +302,14 @@ private struct HistoryRow: View {
     /// label about the tracker rather than about the thing that was logged.
     private var repeatButton: some View {
         let canRepeat = !store.repeatableEntries(of: item).isEmpty
-        return Button { store.logAgain(item) } label: {
-            Image(systemName: "arrow.clockwise")
-                // Fixed rather than a text style, for the reason home's + is:
-                // the disc and the 44pt target do not scale, so a glyph that
-                // does outgrows its own circle at the accessibility sizes.
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(canRepeat ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
-                .frame(width: 30, height: 30)
-                // `Color.accentFill`, not `.tint`: the environment tint is the
-                // ordinary label colour now, and the accent is only ever a fill
-                // (docs/TODO.md item 13c).
-                .background(
-                    canRepeat ? AnyShapeStyle(Color.accentFill) : AnyShapeStyle(.quaternary),
-                    in: .circle
-                )
-                .frame(width: 44, height: 44)
-                .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .disabled(!canRepeat)
-        .accessibilityLabel("Log again")
+        // `RepeatDisc`, not a disc drawn here: this action appears in three
+        // places and drawing it three times is what let home's copy come out a
+        // different colour (docs/TODO.md item 21). The greying follows the
+        // `.disabled` below, from inside the label.
+        return Button { store.logAgain(item) } label: { RepeatDisc() }
+            .buttonStyle(.plain)
+            .disabled(!canRepeat)
+            .accessibilityLabel("Log again")
     }
 
     private var line: HistoryItem.Line { item.line(trackers: trackers) }

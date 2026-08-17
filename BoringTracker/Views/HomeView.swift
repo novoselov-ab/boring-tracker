@@ -193,27 +193,34 @@ struct HomeView: View {
     /// under it. Trailing was tried and puts the rarer control in the easiest
     /// place on the screen.
     ///
-    /// The glyph is History's repeat disc glyph, deliberately. `arrow.clockwise`
-    /// already means "log this again" in this app, one screen away, and a word
-    /// here would take another 60pt off the pill to say what the screen it
-    /// opens says in its own title.
+    /// The control is History's repeat disc, deliberately — `RepeatDisc`, the
+    /// same view rather than the same idea drawn again. It already means "log
+    /// this again" in this app, one screen away, and a word here would take
+    /// another 60pt off the pill to say what the screen it opens says in its
+    /// own title.
+    ///
+    /// **It was a grey `.bordered` square with a white glyph until item 21**,
+    /// which made this the one place in the app that answered "what kind of
+    /// control is this?" differently from the two other places the same action
+    /// appears. The worry above is what put it there, and it is not what
+    /// colour was buying: this stays secondary because it is a 30pt disc with
+    /// no word against a full-width pill, and the card's `+` is the same fill
+    /// on the same screen without competing with the pill either.
+    ///
+    /// **The 70pt-wide slot is kept**, though the disc inside it is 44. It is
+    /// what the `.bordered` square measured, so the pill's width does not move;
+    /// and a control this often reached should not lose 26pt of target to a
+    /// change of colour.
     @ViewBuilder
     private var logBar: some View {
         if !store.activeTrackers.isEmpty {
             HStack(spacing: 8) {
                 Button { loggingAgain = true } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.body.weight(.semibold))
-                        // Width only. A height here makes this button *taller*
-                        // than the pill it is meant to sit under — measured at
-                        // 60pt against the pill's 50 — and a secondary control
-                        // that overhangs the primary one is the competition
-                        // this shape exists to avoid. Left to itself,
-                        // `.controlSize(.large)` gives both the same 50.
-                        .frame(width: 30)
+                    RepeatDisc()
+                        .frame(width: 70)
+                        .contentShape(.rect)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
+                .buttonStyle(.plain)
                 // The glyph stays; only what VoiceOver reads changes. "Log
                 // again" is what the screen it opens is called and what
                 // History's disc already says (docs/TODO.md item 20).

@@ -493,9 +493,29 @@ was tried in that file before and reverted, for the common short name.
 
 Two things from use.
 
-- [ ] **The Log again button is a different colour on home and in History.**
+- [x] **The Log again button is a different colour on home and in History.**
       Same action, same accent, two answers. Fix it, and check every other
       place that action appears while you are there.
+
+      Three places, not two: home's bottom bar, a History row, a Log again row.
+      The third one **agreed** — the sheet's disc was copied from History's, and
+      copying is what kept them the same rather than anything structural. Home's
+      was the outlier and the app's only `.buttonStyle(.bordered)`: a grey square
+      with a white glyph, against two accent discs with a black one.
+
+      All three are `RepeatDisc` now, one view, beside `UndoButton` — which
+      exists because the same thing happened to Undo in item 13c. Home's stays
+      secondary on size and shape, which is what item 16 was actually protecting;
+      it never needed a colour of its own. Its 70pt-wide target is kept, so the
+      Log pill does not move.
+
+      **The glyph gained a plus**, so it reads as logging rather than only as
+      repeating: `plus.arrow.trianglehead.clockwise`, one native symbol rather
+      than a plus composited onto `arrow.clockwise`. There is no `.badge.plus`
+      variant to prefer — of the 64 `.badge.plus` symbols in iOS 26.3's
+      CoreGlyphs not one is an arrow, a clock or a rotate — and this is the only
+      symbol in the set that pairs a plus with a clockwise arrow. iOS 18.0,
+      which is the deployment target.
 
 - [ ] **Log again lists named entries, and that is the wrong filter.** A name
       is not what makes something repeatable — the tracker's **kind** is.

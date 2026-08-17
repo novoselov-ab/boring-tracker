@@ -94,7 +94,9 @@ struct RepeatView: View {
                 if items.isEmpty {
                     ContentUnavailableView(
                         "Nothing named yet",
-                        systemImage: "arrow.clockwise",
+                        // The same glyph the rows and home's bar draw, so the
+                        // screen with nothing on it still says what it is for.
+                        systemImage: RepeatDisc.symbol,
                         description: Text(
                             "Give a log a name — \"porridge\", \"flat white\" — and it turns up "
                                 + "here to log again in one tap."
@@ -227,7 +229,11 @@ private struct RepeatRow: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
-                disc(canRepeat)
+                // Not a `Button`. The row already is one, and a control inside
+                // a control is two tap targets where the screen means one — so
+                // the disc reads `\.isEnabled` from the `.disabled(!canRepeat)`
+                // on the row below it.
+                RepeatDisc()
             }
             .contentShape(.rect)
         }
@@ -239,26 +245,6 @@ private struct RepeatRow: View {
 
     private var day: DayKey {
         DayKey(item.date, calendar: store.calendar)
-    }
-
-    /// Not a `Button`. The row already is one, and a control inside a control
-    /// is two tap targets where the screen means one.
-    private func disc(_ canRepeat: Bool) -> some View {
-        Image(systemName: "arrow.clockwise")
-            // Fixed rather than a text style, for the reason home's + is: the
-            // disc does not scale, so a glyph that does outgrows its own circle
-            // at the accessibility sizes.
-            .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(canRepeat ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
-            .frame(width: 30, height: 30)
-            // `Color.accentFill`, not `.tint`: the environment tint is the
-            // ordinary label colour now, and the accent is only ever a fill
-            // (docs/TODO.md item 13c).
-            .background(
-                canRepeat ? AnyShapeStyle(Color.accentFill) : AnyShapeStyle(.quaternary),
-                in: .circle
-            )
-            .frame(width: 44, height: 44)
     }
 }
 

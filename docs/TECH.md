@@ -549,6 +549,18 @@ control in the app that destroys a record (TODO item 20). It names `.tint(.red)`
 itself now. **A control whose meaning is carried by colour has to state that
 colour where it is used**, the same way a bar button states `navBarAccent()`.
 
+**And a control that appears on more than one screen states it once, in a view
+both screens use.** Stating the colour at each site is what the rule above
+asks for, and it is also how sites drift apart: "log this again" reached three
+screens and one of them — home's bottom bar, the app's only
+`.buttonStyle(.bordered)` — drew a grey square with a *white* glyph beside two
+accent discs with a black one (TODO item 21). Same glyph, same VoiceOver label,
+two answers about what kind of control it is. It is `RepeatDisc` now, one view
+in three places, next to `UndoButton`, which exists because the same thing
+happened to Undo one item earlier. **Prominence is carried by size and shape,
+not by hue**: home's copy stays secondary because it is a 30pt disc with no word
+against a full-width pill.
+
 **The light-mode foreground failure is real and unfixed.** One system hue cannot
 be both a legible fill and a legible foreground on white. The fix is an accent
 colour *set* with a deliberate darker light-mode value — TODO item 18 — and it

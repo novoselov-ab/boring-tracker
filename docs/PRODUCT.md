@@ -331,13 +331,15 @@ Small enough to list completely.
   apart. An entry with no name disappears under a non-empty query, because this
   searches names and the field says so.
 - **Log again** — the things you have logged and named, the ones you log most
-  often first, one tap each to log again. Reached by a small bordered control
-  beside home's Log button, deliberately quieter than it: the bottom of home
-  holds the most frequent action in the app, and a second equal button there
-  reads as a choice to make on arrival, which is a decision in front of
-  logging. Searchable by name, like History. The whole row is the button —
-  there is nothing else a tap here could mean, so the target is the full width
-  rather than a disc on the end of it.
+  often first, one tap each to log again. Reached by a small disc beside home's
+  Log button, deliberately quieter than it: the bottom of home holds the most
+  frequent action in the app, and a second equal button there reads as a choice
+  to make on arrival, which is a decision in front of logging. What makes it
+  quieter is its size and the absence of a word, not its colour — it is the
+  same disc, in the same accent, that a History row and a Log again row carry,
+  because it is the same action. Searchable by name, like History. The whole
+  row is the button — there is nothing else a tap here could mean, so the
+  target is the full width rather than a disc on the end of it.
 
   **It comes up over home at half height and leaves as soon as you have
   logged.** It was a pushed screen first, and a pushed screen with a title, a

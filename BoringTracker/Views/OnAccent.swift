@@ -143,6 +143,67 @@ struct UndoButton: View {
     }
 }
 
+/// "Log this again", drawn one way wherever it appears.
+///
+/// **Shared because it had already come apart.** The action reaches three
+/// places — home's bottom bar, a History row, a row in the Log again sheet —
+/// and the first of them was the app's only `.buttonStyle(.bordered)`: a grey
+/// square with a *white* glyph, beside two accent discs with a black one. Same
+/// glyph, same VoiceOver label, two answers about what kind of control it is
+/// (docs/TODO.md item 21). The other two agreed only because one was copied
+/// from the other, which is the arrangement that produced the disagreement in
+/// the first place — `UndoButton` above exists for exactly this reason, one
+/// item earlier.
+///
+/// **Prominence is carried by size and shape here, not by colour.** The worry
+/// item 16 recorded about home's bar is real — a peer beside the Log pill reads
+/// as a choice to make on arrival — but what makes this a secondary control is
+/// that it is a 30pt disc against a full-width pill and has no word on it, not
+/// that it is drawn in a different colour from the same action one screen away.
+/// The card's `+` is the same disc in the same fill and does not compete with
+/// the pill either.
+///
+/// **The glyph carries a plus**, because the tap logs something rather than
+/// merely repeating it. `plus.arrow.trianglehead.clockwise` is one symbol
+/// rather than a plus composited onto `arrow.clockwise`: it scales, mirrors and
+/// takes a weight on its own. No repeat-ish symbol has a `.badge.plus` variant
+/// — there are 64 `.badge.plus` symbols in iOS 26.3's CoreGlyphs and not one of
+/// them is an arrow, a clock or a rotate — so this native composition is the
+/// nearest thing, and it is available from iOS 18.0, which is the deployment
+/// target.
+///
+/// Disabled off `\.isEnabled` rather than a parameter, so a caller says
+/// `.disabled(...)` once on its button and the disc follows. **Read from
+/// inside the button's label**, which is where this always sits — a reader
+/// wrapped around an already-disabled button sees the ancestors' environment
+/// instead and always believes it is enabled (see `OnAccentFill` above).
+struct RepeatDisc: View {
+    /// The glyph, named once so the three call sites cannot drift again — and
+    /// so the Log again sheet's empty state can draw the same one.
+    static let symbol = "plus.arrow.trianglehead.clockwise"
+
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        Image(systemName: Self.symbol)
+            // Fixed rather than a text style, for the reason home's + is: the
+            // disc and the 44pt target do not scale, so a glyph that does
+            // outgrows its own circle at the accessibility sizes.
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(isEnabled ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
+            .frame(width: 30, height: 30)
+            // `Color.accentFill`, not `.tint`: the environment tint is the
+            // ordinary label colour now, and the accent is only ever a fill
+            // (docs/TODO.md item 13c).
+            .background(
+                isEnabled ? AnyShapeStyle(Color.accentFill) : AnyShapeStyle(.quaternary),
+                in: .circle
+            )
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+    }
+}
+
 extension View {
 
     /// For the label of a control filled with the accent — a prominent button,
