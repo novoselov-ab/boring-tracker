@@ -1332,10 +1332,13 @@ raising a keypad. Two doors to one action is what the export screen just lost.
       holds the most frequent action in the app, and a peer next to it competes
       with it. Try it as a smaller secondary control rather than a second
       equal button, and say how it reads.
-- [ ] **A list of distinct names, not of entries.** Deduplicated by name —
-      otherwise forty logs of "chicken rice" are forty rows. Each row carries
-      that name's most recent values and when it was last logged, which is what
-      makes the date worth showing at all.
+- [ ] **Every named entry, newest first. No deduplication for now.** The row
+      is what you logged: its name, its values, its date. Forty logs of
+      "chicken rice" are forty rows, and that is accepted deliberately —
+      deduping by name alone hides that you sometimes ate a bigger portion, and
+      deduping by name *and* values raises questions about someone who weighs
+      food precisely and never repeats a number exactly. Neither is worth
+      answering before the plain list has been used.
 - [ ] **Searchable**, filtering those names.
 - [ ] **One tap logs it again**, reusing item 14's `logAgain` — a new batch,
       today's timestamp, the original untouched, and undo. Do not write a
@@ -1343,10 +1346,12 @@ raising a keypad. Two doors to one action is what the export screen just lost.
 - [ ] Entries with no name are not in this list. The name is what makes
       something repeatable; an unnamed number is a measurement, not a meal.
 
-Ordering is recency unless frequency proves better — with search present,
-recency is simpler and predictable, and for someone eating the same five things
-the two converge. It is a *displayed* decision either way, so it costs nothing
-to change after use.
+**Ordering is recency**, which needs no justification while the list is
+undeduplicated: it is your history, filtered to the things you named.
+
+If the list turns out noisy in use, deduplication is the answer and it is a
+*displayed* decision — free to add later, with no schema change and nothing
+stored differently. Report how it reads with a realistic amount of history.
 
 **Still an experiment.** Settled enough to build, not settled enough to defend.
 Watch for the one thing that would be expensive: a version of this that needs a
