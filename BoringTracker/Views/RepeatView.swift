@@ -50,6 +50,8 @@ struct RepeatView: View {
     /// on screen for the frame before the first pass.
     @State private var items: [HistoryItem]?
     @State private var query = ""
+    /// Whether this presentation has already written something — see `log(_:)`.
+    @State private var wrote = false
 
     var body: some View {
         NavigationStack { content }
@@ -102,10 +104,7 @@ struct RepeatView: View {
                     ContentUnavailableView.search(text: query)
                 } else {
                     List(shown) { item in
-                        RepeatRow(item: item, trackers: trackers) {
-                            logged()
-                            dismiss()
-                        }
+                        RepeatRow(item: item, trackers: trackers) { log(item) }
                     }
                     .listStyle(.insetGrouped)
                     // The band an inset-grouped list keeps for a section
@@ -137,6 +136,24 @@ struct RepeatView: View {
         // would be a button you cannot reach.
         .onAppear { if items == nil { items = store.repeatItems } }
     }
+
+    /// Write the row, tell home, and go.
+    ///
+    /// **Once per presentation.** `dismiss()` starts an *animated* dismissal and
+    /// the list stays laid out and hit-testable while the sheet slides away, so
+    /// a second tap in that window would write a second copy — and only the
+    /// second would be undoable, since the store keeps one slot (item 14). The
+    /// flag is what actually closes the double tap the pushed screen carried;
+    /// the sheet leaving narrows the window, it does not shut it.
+    ///
+    /// Here rather than in the row, because it is the *sheet* that is leaving:
+    /// a guard per row would still let a tap on a different row through.
+    private func log(_ item: HistoryItem) {
+        guard !wrote, store.logAgain(item) else { return }
+        wrote = true
+        logged()
+        dismiss()
+    }
 }
 
 /// One thing you logged: what you called it, what it was, and when.
@@ -162,12 +179,16 @@ struct RepeatView: View {
 /// data instead, the fix is to say "Archived" on the row, which is a change to
 /// what a row shows and belongs with item 14b's question rather than here.
 ///
-/// **A tap logs and the sheet goes.** Which also closes the double-tap this row
-/// used to carry: a second tap on a row that is no longer there cannot write a
-/// second copy, where before the list sat still under your thumb and would take
-/// one (docs/TODO.md item 20). Only the write that a tap makes is dismissed
-/// over — a row that can write nothing is disabled and does not dismiss, so a
-/// tap on it is not silently read as "done".
+/// **A tap logs and the sheet goes**, and the writing itself belongs to
+/// `RepeatView.log(_:)` rather than to the row: a row that has been tapped is
+/// still on screen and still hit-testable for the length of the dismissal, so
+/// the refusal of a second write has to be one flag for the sheet rather than
+/// one per row (docs/TODO.md item 20). That closes the double tap this list
+/// carried when it was a screen, where the list sat still under your thumb and
+/// would take a second copy that made the first unrecoverable.
+///
+/// A row that can write nothing is disabled and nothing happens, so a tap on it
+/// is not silently read as "done".
 ///
 /// The undo for a mistap is on home, which is where this leaves you.
 private struct RepeatRow: View {
@@ -175,15 +196,14 @@ private struct RepeatRow: View {
     let item: HistoryItem
     /// Built once for the screen by `RepeatView`, not per row.
     let trackers: [UUID: Tracker]
-    /// Called after a row has actually written something.
-    let logged: () -> Void
+    /// Log this row again. Owned by `RepeatView`, which decides whether this
+    /// presentation has already written something.
+    let log: () -> Void
 
     var body: some View {
         let line = item.line(trackers: trackers)
         let canRepeat = !store.repeatableEntries(of: item).isEmpty
-        return Button {
-            if store.logAgain(item) { logged() }
-        } label: {
+        return Button(action: log) {
             // The same two lines History draws, in the same order and the same
             // weights: the name leads and stays quiet, the values follow
             // (docs/TODO.md item 14b). A louder name was tempting here, where
