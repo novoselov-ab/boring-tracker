@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 14), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 15), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -384,7 +384,7 @@ animation on save is later.
       is for. `Store.recentValues` was kept on the grounds that
       search-and-repeat would want it — **that reasoning looks wrong**: it keys
       on tracker UUID and ignores names entirely, which is the opposite of what
-      item 14 needs. Decide when building item 14 whether to rewrite it around
+      item 14 needs. Decide when building item 15 whether to rewrite it around
       names or delete it; do not keep it out of habit.
 - [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
@@ -460,12 +460,43 @@ right now beyond the sheet closing. Deliberately deferred — it wants designing
 once the app has been lived with, and it is the one place this app is allowed
 a moment of motion.
 
-## 12. CI
+## 12. Draw our own number pad
+
+The real answer to "the sheet and the keyboard don't move together". Item 11
+established that they *can't*: iOS will not raise the keyboard while a modal
+presentation animates, so the sheet's duration is added to the wait rather than
+overlapping it. That constraint only binds if we ask the system for a keyboard.
+
+**So don't.** Draw the pad as an ordinary view inside the sheet. Nothing is
+raised, so nothing animates and nothing is waited for — the pad is already on
+screen when the sheet is. Time-to-typeable goes to roughly zero.
+
+It also deletes accumulated machinery: the `Task.yield()` before focusing, the
+`@FocusState` ordering assumption, and the "does the keypad reliably come up"
+question that two reviews have now had to re-test.
+
+- [ ] A pad drawn in the sheet: digits, the **locale** decimal separator,
+      delete, previous/next field, and Log.
+- [ ] **Not** a keyboard extension, and **not** a `UITextField.inputView` swap
+      — an input view still goes through the keyboard presentation machinery
+      and keeps the animation this item exists to remove.
+- [ ] The **name** field keeps the system keyboard. Naming is the rare path, so
+      it can pay for what it costs.
+- [ ] A hardware keyboard must still type digits — simulators and iPads have
+      one, and losing that would make development worse.
+- [ ] Every key labelled for VoiceOver. A custom pad is the one place where
+      rolling our own silently drops accessibility that came for free.
+- [ ] Measure time-to-typeable before and after, with the method.
+
+PHILOSOPHY.md already says the number pad is the interface. This makes that
+literally true.
+
+## 13. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
 
-## 13. Use it on a real phone for a week
+## 14. Use it on a real phone for a week
 
 The step that decides everything after it. Whether logging is genuinely fast,
 and what search and pinning should feel like, are not answerable from a
@@ -478,7 +509,7 @@ means owning the presentation, which is a real change and wants a week of use
 to say whether it earns one. Answer it here rather than leaving it to be
 rediscovered.
 
-## 14. Search and repeat
+## 15. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -499,10 +530,10 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 14b. One VoiceOver pass, on a device
+## 15b. One VoiceOver pass, on a device
 
 Unresolved and unresolvable from the accessibility tree, so it waits for the
-same phone trip as items 8 and 13. Commit `0564080` claims `.accessibilityLabel`
+same phone trip as items 8 and 14. Commit `0564080` claims `.accessibilityLabel`
 on the card's + "had no effect at all", but `logButton` a few lines below and
 `HistoryView` both do exactly that and work. Either the claim is wrong, or
 `children: .ignore` makes that button a container and the hint has to move
@@ -511,7 +542,7 @@ inside it.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
-## 15. App icon and asset catalog
+## 16. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
