@@ -1357,6 +1357,23 @@ stored differently. Report how it reads with a realistic amount of history.
 Watch for the one thing that would be expensive: a version of this that needs a
 fact the document does not record.
 
+## 16b. Search in History too
+
+History is the general view of everything logged, and finding something in it
+means scrolling. It should be searchable for the same reason item 16 is.
+
+- [ ] Search over History, filtering by entry name.
+- [ ] **Reuse item 16's search rather than writing a second one.** They filter
+      the same field of the same records; two implementations would drift, and
+      the second one would be the one nobody tests.
+- [ ] Unnamed entries stay visible when the query is empty — History shows
+      everything, unlike item 16's screen, which is only the things you named.
+      Decide what an unnamed entry does under a non-empty query and say why.
+
+Deliberately after item 16, not merged into it: that screen is a new surface
+with a placement risk, this is a field added to a screen that already works,
+and bundling them would let the harder one drag the easy one.
+
 ## 17. One pass on a real device
 
 Three things that no agent can settle, because each needs a thumb, an ear, or
