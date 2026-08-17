@@ -183,10 +183,16 @@ Like "tracker", the word barely appears: the home screen shows the heading
 `Honda wheels`, and the only visible use of the noun is one field label in the
 tracker editor.
 
-**Favourite**, if a label is ever needed for search-and-repeat. It is the word
-people already have for "the thing I log again", and it beats "preset", which
-no consumer app uses. Not needed yet — see the search-and-repeat design below,
-which deliberately has no button to name.
+**Favourite**, if a label is ever needed for the things you log again. It is
+the word people already have for it, and it beats "preset", which no consumer
+app uses. Still not needed: the screen those things live on is called
+**Repeat**, which names the *action* rather than a category of thing, so there
+is no noun on screen to get wrong and nothing for the user to curate.
+
+**Log, and Save.** The button that records something happening says **Log** —
+you are not saving a document, and *log* is the verb the whole product already
+uses. The entry editor keeps **Save**, because there you genuinely are saving
+an edit to something that already exists. Different action, different word.
 
 **Never *recipe*.** Food apps do have this concept — MyFitnessPal keeps Foods,
 Meals and Recipes as three separate things to manage — and it is precisely the
@@ -231,20 +237,25 @@ So, in order of importance:
 
    Two details carry the whole thing:
 
-   - **The empty search field is the feature.** With no query typed, the list
-     shows your most-used foods, ranked by frequency and recency. You eat the
-     same five things most days, and typing four letters for those would be
-     slower than a button — so the common case needs no typing at all, and
-     search is only for reaching past it. One control replaces recents,
-     favourites and search, and none of them need to exist as concepts.
-   - **Tapping a result logs it immediately**, prefilled from that name's most
-     recent values. Not a prefilled sheet you then confirm — that's three taps
-     to do a one-tap thing. Mistaps become possible, which is precisely why
-     undo has to be trivial (see PHILOSOPHY.md). A brief undo after logging is
-     the right trade; a confirmation on every repeat is not.
+   - **The list with nothing typed is the feature.** Before any query it
+     already shows your most-used foods, ranked. You eat the same five things
+     most days, and typing four letters for those would be slower than a
+     button — so the common case needs no typing at all, and search is only
+     for reaching past it. One screen replaces recents, favourites and search,
+     and none of them need to exist as concepts.
+   - **Tapping a row logs it immediately**, as a new entry with today's
+     timestamp, leaving the original alone. Not a prefilled sheet you then
+     confirm — that's three taps to do a one-tap thing. Mistaps become
+     possible, which is precisely why undo has to be trivial (see
+     PHILOSOPHY.md). A brief undo after logging is the right trade; a
+     confirmation on every repeat is not.
 
-   It lives at the **bottom** of the log sheet, in thumb reach, results rising
-   above it.
+   **It is its own screen, not a field inside the log sheet.** That was the
+   original design and it was replaced before it was built: the sheet is where
+   you type a number that is *new*, and logging something again is a different
+   job that never needs a keypad at all. So it gets a quiet door of its own
+   beside home's Log button — see **Repeat** under Screens — and the log sheet
+   keeps none of it.
 
    Call these **presets** if they need a name at all, and never *recipes*. A
    recipe is ingredients, and ingredients are permanently out of scope — see
@@ -270,12 +281,28 @@ Small enough to list completely.
 
 - **Home** — your trackers as cards. Daily-total cards show today's number and
   a + button. Measurement cards show the latest reading and when. That's the
-  whole main screen — arranging the list is a settings job.
-- **Log sheet** — number pad, presets/recents row, tracker(s), date/time
-  (defaults to now, tappable to change), optional name, Log. One group's
-  trackers, or one loose tracker; its title is how you switch between them.
-  Backdating is first-class: you *will* forget dinner until the next morning.
-- **History** — everything you've logged, newest first, grouped by day. Today
+  whole main screen — arranging the list is a settings job. **Six to ten cards
+  fit without scrolling** on a current iPhone, which is the density to hold a
+  change to: four trackers must never fill a screen.
+
+  **The card's number is the one thing in this app that animates**, rolling
+  from the old value to the new over 0.3s when it changes. It is the single
+  deliberate exception to "nothing animates that you have to wait for"
+  (PHILOSOPHY.md), and it earns it by delaying nothing: the log sheet still
+  closes in the same breath and the number catches up behind it. An ease, not a
+  spring — a number that bounces is congratulating you. It also rolls down to
+  zero when you open the app the morning after, which is left alone: the number
+  really did change, and the alternative is putting the animation back in the
+  hands of everything that writes.
+- **Log sheet** — number pad, tracker(s), date/time (defaults to now, tappable
+  to change), optional name, Log. One group's trackers, or one loose tracker;
+  its title is how you switch between them, and the keypad never goes down to
+  do it. Backdating is first-class: you *will* forget dinner until the next
+  morning. There is no row of recent *values* — people do not log the same
+  number twice, they log the same food, which is what the Repeat screen is
+  for.
+- **History** — everything you've logged, newest first, grouped by day, and
+  searchable by name through the same matcher the Repeat screen uses. Today
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
   10 g", deleted or edited once, not once per tracker. Without this screen,
   fixing a mistyped food means visiting each tracker's detail separately and
@@ -288,13 +315,57 @@ Small enough to list completely.
   for a food, you scroll to the last time you ate it — and the undo it needs
   sits in a bar at the bottom of the screen, which also carries the undo for a
   swipe-delete.
+
+  **A row leads with what identifies it** — your name for it, or the tracker or
+  group when you typed none — and the numbers follow. Reading order is what
+  makes a list scannable, and the numbers are not the part that tells two rows
+  apart. An entry with no name disappears under a non-empty query, because this
+  searches names and the field says so.
+- **Repeat** — the things you have logged and named, the ones you log most
+  often first, one tap each to log again. Reached by a small bordered control
+  beside home's Log button, deliberately quieter than it: the bottom of home
+  holds the most frequent action in the app, and a second equal button there
+  reads as a choice to make on arrival, which is a decision in front of
+  logging. Searchable by name, like History. The whole row is the button —
+  there is nothing else a tap here could mean, so the target is the full width
+  rather than a disc on the end of it.
+
+  **One row per thing you ate, not per time you ate it.** Rows sharing both a
+  name and their values collapse into the newest of them, so forty logs of
+  "chicken rice — 620 kcal, 45 g" are one row while the same food at a bigger
+  portion stays its own: a bigger portion is a different thing to log again.
+  Someone who weighs every meal to the gram repeats no number exactly, so
+  nothing collapses for them and they get the plain list back — a known limit,
+  and rounding to paper over it would be the app deciding what counts as the
+  same meal.
+
+  **Ordered by how often you have logged it in the last 60 days**, ties broken
+  by recency. Frequency rather than recency because the row you tap each
+  morning should be in the same place twice — the top of a recency list moves
+  on every single log, and a one-off floats to it merely because it was
+  yesterday. A window rather than a lifetime count because a lifetime count
+  never falls: a staple you gave up a year ago would outrank the thing you have
+  eaten every morning this month, reachable only by search, on a screen whose
+  job is one tap.
+
+  **Nothing ever leaves this list.** A row with nothing inside the window
+  counts zero and sinks; it does not disappear. Neither does one that can no
+  longer be written at all because every tracker it named has been archived or
+  deleted — it sorts below every row that can, with the whole row greyed and
+  disabled. A screen that drops food when you archive a tracker is editing your
+  history.
+
 - **Tracker detail** — the graph on top, that tracker's entries below, grouped
   by day. Swipe to delete, tap to edit.
 - **Graph** — daily totals as bars, measurements as a line with a moving
   average. Range switch: week / month / year / all. Nothing interactive beyond
   scrubbing for a value.
 - **Settings** — the trackers (add/edit/archive/reorder), drawn in the same
-  shape as home so the two cannot disagree; export, import,
+  shape as home so the two cannot disagree — a heading above each run of
+  trackers sharing a group, bare rows for loose ones, and **membership changed
+  only in the tracker editor**, never by where a row sits. They agree on order
+  and shape but not on density: home's rows were tuned and settings' were not,
+  so it is visibly the looser of the two. Also export, import,
   appearance, about + link to the GitHub repo. One screen, no subscreens if
   avoidable. **A reorder drag commits wherever you let go, including outside
   the list** — it lands on the nearest row that is on screen. That is

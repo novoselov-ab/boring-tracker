@@ -441,6 +441,13 @@ Numbers to hold the design to, measured on the oldest supported device:
   closes, the disk write happens later and off the main actor.
 - **Graph redraw: 60fps while scrubbing** over a year of data. Points are
   aggregated once when the range changes, not per frame.
+- **Opening Repeat: one list build, never one per redraw.** `Store.repeatItems`
+  walks and sorts the whole history — about 20ms over 7,600 entries and 40ms
+  over 15,300, Debug on an iPhone 17 simulator — so the screen snapshots it as
+  it appears and filters the snapshot. Reading the property from `body` instead
+  would pay that on every keystroke in its search field; filtering the snapshot
+  costs a fraction of a millisecond. The snapshot is also what stops the list
+  moving under your thumb between two taps.
 
 ## Smaller decisions, settled
 
@@ -467,6 +474,86 @@ So they don't get re-argued mid-build:
   the first group on the home screen. A stale string costs nothing.
 - **No analytics, no crash reporter, no launch screen image.** Rules 5 and the
   launch budget.
+- **The log sheet is presented without animation, and the keypad cannot be made
+  to arrive with it.** iOS will not raise the keyboard while a modal
+  presentation animation is in flight, so a sheet's duration is *added* to the
+  wait rather than hidden inside it: instant is one ramp, at 0.70s to typeable,
+  and animating the sheet over the keyboard's own 0.38s is two ramps with a
+  stall between them, at 1.27s. That the two do arrive at two moments and read
+  as a small glitch is known and accepted — the only fix is to stop using
+  `.sheet` and own the presentation, which is a much larger change than the
+  half-second it would buy back.
+- **The sheet's Log button is a bottom safe-area inset, not a `.keyboard`
+  toolbar item.** SwiftUI's native keyboard placement emitted no visible
+  accessory in an iOS 26 sheet. The inset sits directly above the keypad, drops
+  to the bottom of the sheet when the keypad goes down, and lands in the same
+  place on the smallest supported phone.
+
+## The accent, and what may be painted with it
+
+Four rules, each learned by measuring a control that turned out to be
+unreadable, and coupled tightly enough that breaking one takes the others under
+the floor with it. The measurements live beside the code in
+`BoringTracker/Views/OnAccent.swift`; what is here is the shape of the decision.
+
+**One constant names the hue.** `Color.accentFill` is `Color(.systemMint)` and
+nothing else in the app names a colour. A system colour rather than a
+hand-picked hex, because both of its values are Apple's, tuned against Apple's own
+backgrounds, and there is nothing to keep in step by hand — *not* because a
+system colour desaturates itself for dark mode, which is a claim from a web
+article that does not survive measurement.
+
+**It is a fill, never a foreground.** The accent as *text* measures around
+2.1:1 on the ordinary background in light mode, against the 3:1 floor a UI
+element needs, so it may only ever sit behind something. That is why the chart
+is monochrome: bars and the readings line are the label colour and the moving
+average is `.secondary`, so the two are told apart by weight rather than by a
+hue one of them cannot legibly have.
+
+**What sits on the accent is `Color.onAccent`, which is black, and that is
+load-bearing rather than tidy.** iOS draws a prominent button's label white
+whatever the tint, and white on this fill is the worst pairing in the whole
+candidate set — under 2:1 in both appearances, against about 11:1 for the black
+label the app forces. A blue would have cleared the floor with either label;
+mint clears it with one. So a new control that draws its own white label on the
+accent does not look slightly different, it takes every accent-filled site in
+the app under the floor at once.
+
+**Nothing inherits it.** The root tint is `.tint(.primary)`, not the accent. A
+tint is inherited by every standard control there is, which is exactly how a
+foreground use of the accent twice appeared by accident; with nothing to
+inherit, a new one has to name itself. Navigation bar buttons do, through
+`navBarAccent()` — a deliberate carve-out for system chrome, where a tint is the
+platform saying "tappable" rather than the app writing in colour. It is also the
+one place the rule costs rather than buys: a bar glyph measures about 2:1 in
+light mode where Apple's own blue on that bar measures 3.89:1, so the carve-out
+inherited the shape of Apple's decision without inheriting its number. Nothing
+may paint with `Color.accentColor`, which resolves from an asset catalog that
+does not exist and is still the system blue.
+
+**The light-mode foreground failure is real and unfixed.** One system hue cannot
+be both a legible fill and a legible foreground on white. The fix is an accent
+colour *set* with a deliberate darker light-mode value — TODO item 18 — and it
+resolves the `Form` buttons, `.alert` and `.confirmationDialog` in passing.
+
+**The back chevron takes no tint at all**, and this was proved rather than
+assumed. Set at the app root, on the `NavigationStack`, on the destination, or
+through `UINavigationBar.appearance().tintColor`, it comes back the label colour
+every time — the same pixels, byte for byte — and `toolbarForegroundStyle(_:for:)`
+is unavailable on iOS. A pale chevron beside a tinted `+` is what this OS draws,
+not something the app took away or can restore.
+
+### Sampling a colour off the screen
+
+Read the screenshot's own bytes. `NSBitmapImageRep.colorAt(x:y:)` does **not**
+return what is in the PNG on this machine, even for a file that reports itself
+as `sRGB IEC61966-2.1`: it hands back a colour converted out of sRGB, which
+moved the accent by 7 units per channel and the old blue by 20. Two sessions
+sampled the same pixel and disagreed about what it was, and the sanity check
+both of them ran — "black reads `#000000` and white `#FFFFFF`" — passes anyway,
+because black and white are fixed points of that conversion. The conversion is
+not per-channel either, so a hex read that way cannot be corrected on paper;
+re-sample instead.
 
 ## A `ShareLink` will not present beside a `.confirmationDialog`
 
