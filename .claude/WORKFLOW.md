@@ -146,6 +146,27 @@ After spawning, check `agtermctl tree --json` and confirm the new session's
 `foreground` is `claude`. A malformed `--command` fails silently into a bare
 shell, and the session looks perfectly fine in the sidebar.
 
+### Talking to a running session
+
+`agtermctl session type` **types, it does not submit.** A payload containing
+newlines does not get sent at all — it sits in the input unsubmitted, and the
+session carries on with whatever it was doing while you assume it was
+redirected. That has already cost one wrong-direction session here.
+
+Send the message as **one line, with no trailing newline**, then send a lone
+newline as a **separate call**:
+
+```sh
+agtermctl session type --target "$ID" 'one line, no newline at the end'
+agtermctl session type --target "$ID" '
+'
+```
+
+Then confirm: the footer reads *"Press up to edit queued messages"* if it
+landed, and an empty input with the session still working means it did not.
+Grep the session text for a distinctive word from the message before trusting
+that a redirect arrived.
+
 `.claude/settings.local.json` carries the allowlist for what these sessions
 routinely run — xcodegen, xcodebuild, the git subcommands, agtermctl, read-only
 inspection. It is machine-local and gitignored. Destructive git (`reset --hard`,
