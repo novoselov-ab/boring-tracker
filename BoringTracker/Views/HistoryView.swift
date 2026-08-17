@@ -14,6 +14,15 @@ struct HistoryView: View {
     /// straight away. So a keystroke rebuilds `historyItems` — which every
     /// redraw of this screen already did — and filters it.
     @State private var query = ""
+    /// The row a repeat has just written, while it is still worth pointing at.
+    ///
+    /// Logging again writes a row dated now, which lands among rows dated a few
+    /// minutes ago — so without this you are left comparing timestamps to find
+    /// out which one your tap made (docs/TODO.md item 20). It clears itself: a
+    /// mark that stays is a second state to reason about, and by the time you
+    /// have looked away and back the answer to "which is new" is no longer a
+    /// question anyone is asking.
+    @State private var highlighted: HistoryItem.ID?
 
     var body: some View {
         let days = days
@@ -43,6 +52,41 @@ struct HistoryView: View {
                         Section(title(for: group.day)) {
                             ForEach(group.items) { item in
                                 HistoryRow(item: item, trackers: trackers) { editing = item }
+                                    // The accent, at a fifth, over the fill a
+                                    // grouped row already has: #16423F against
+                                    // the row's #1C1C1E in dark mode, sampled
+                                    // off a screenshot. Loud enough to find in
+                                    // a list of near-identical rows, quiet
+                                    // enough that it is still the same row —
+                                    // white on it measures 11.1:1, so nothing
+                                    // on the row gets harder to read while it
+                                    // is up.
+                                    //
+                                    // On every row, not only the marked one, so
+                                    // the unmarked rows are drawn by the same
+                                    // expression instead of one row having to
+                                    // match iOS's default by hand. It does
+                                    // match — the named colour renders the same
+                                    // #1C1C1E the list drew before this — and
+                                    // painting them all is what keeps that
+                                    // true if it ever stops being.
+                                    //
+                                    // **The fade has to live here.**
+                                    // `withAnimation` around the state change
+                                    // does not reach a row's background: it was
+                                    // written that way first and a recording
+                                    // showed the mark cut off between two
+                                    // frames rather than fading. Attached to
+                                    // the colour, it fades over ~785ms,
+                                    // measured the same way.
+                                    .listRowBackground(
+                                        Color.accentFill
+                                            .opacity(highlighted == item.id ? 0.2 : 0)
+                                            .animation(
+                                                .easeOut(duration: 0.9), value: highlighted
+                                            )
+                                            .background(Color(.secondarySystemGroupedBackground))
+                                    )
                                     .swipeActions(edge: .trailing) {
                                         Button(role: .destructive) {
                                             if let entry = item.entries.first {
@@ -85,6 +129,31 @@ struct HistoryView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { UndoBar() }
         .sheet(item: $editing) { item in
             BatchEditor(item: item)
+        }
+        // Marked from what the store wrote rather than at the disc that was
+        // tapped, so the row is marked however the write arrived — this
+        // screen's disc today, anything else that goes through `logAgain`
+        // later.
+        //
+        // No animation on the way in, and none is wanted: the row it marks is
+        // being inserted in the same instant, so it arrives already marked
+        // rather than fading up from a row that was not there a frame ago.
+        // Measured off a recording — the mark is at full strength in the frame
+        // the row appears in.
+        .onChange(of: store.lastLoggedAgainRow) { _, row in
+            guard let row else { return }
+            highlighted = row
+        }
+        // It fades on its own, which is the half that is a decision: a mark
+        // that stays is a second state to reason about. `task(id:)` restarts
+        // the clock when a second repeat marks a second row, and cancels when
+        // the screen goes — so nothing is left running behind a screen nobody
+        // is on.
+        .task(id: highlighted) {
+            guard highlighted != nil else { return }
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            highlighted = nil
         }
     }
 

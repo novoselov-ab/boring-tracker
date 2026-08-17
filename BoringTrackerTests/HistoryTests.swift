@@ -457,6 +457,35 @@ struct HistoryTests {
         #expect(store.lastLoggedAgain == Store.LoggedAgain(count: 1, skipped: 0))
     }
 
+    /// The mark on History has to land on the row the tap made, and on a
+    /// *different* row each time — a second repeat of the same food is a second
+    /// row, and a screen watching this for changes has to see the second tap
+    /// (docs/TODO.md item 20).
+    @Test("A repeat names the row it wrote, and a fresh one every time")
+    func repeatNamesItsRow() throws {
+        let calories = Tracker(name: "Calories")
+        let source = Entry(trackerID: calories.id, value: 250, date: time(10), name: "apple")
+        let store = historyStore(StoreDocument(trackers: [calories], entries: [source]))
+
+        #expect(store.lastLoggedAgainRow == nil)
+        #expect(store.logAgain(try #require(store.historyItems.first)))
+
+        let written = try #require(store.entries.first { $0.id != source.id })
+        let first = try #require(store.lastLoggedAgainRow)
+        #expect(first == .batch(try #require(written.batchID)))
+        // The newest row is the one that was written, which is what makes the
+        // mark land where the eye is going anyway.
+        #expect(store.historyItems.first?.id == first)
+
+        #expect(store.logAgain(try #require(store.historyItems.first)))
+        #expect(store.lastLoggedAgainRow != first)
+
+        // Taken back with the write it describes, so nothing is left pointing
+        // at a row that no longer exists.
+        store.undoLastLog()
+        #expect(store.lastLoggedAgainRow == nil)
+    }
+
     @Test("Undoing a repeat removes exactly what it wrote, and no tombstone")
     func undoRepeat() throws {
         let calories = Tracker(name: "Calories")

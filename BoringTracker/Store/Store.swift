@@ -77,6 +77,29 @@ final class Store {
         return LoggedAgain(count: entries.count, skipped: skipped)
     }
 
+    /// Which history row the last repeat wrote, so History can point at the new
+    /// one (docs/TODO.md item 20).
+    ///
+    /// Beside `lastLoggedAgain` rather than inside it: the bar wants to know
+    /// how much was written, this wants to know where, and a row id folded into
+    /// that struct would have to be named by every test that asserts a count.
+    /// Both read the one slot, so they are never out of step.
+    ///
+    /// **Two repeats of the same food give two different values here**, because
+    /// every write gets a fresh batch id — which is what lets a screen watch
+    /// this for changes and see the second tap. A count would be equal across
+    /// both, and the second tap would look like nothing having happened.
+    var lastLoggedAgainRow: HistoryItem.ID? {
+        guard case .logged(let entries, _) = lastWrite, let written = entries.first else {
+            return nil
+        }
+        // Every repeat writes through `addBatch`, which stamps a batch id on
+        // every member including a lone one — so this is `.batch` in practice,
+        // and the other case is here because `HistoryItem` has it rather than
+        // because a path reaches it.
+        return written.batchID.map(HistoryItem.ID.batch) ?? .entry(written.id)
+    }
+
     /// The newest thing the last deletion took from this tracker, if it took
     /// anything. Undo restores the whole deletion either way; a tracker's own
     /// screen asks this rather than reading `lastDeletion`, because the newest
