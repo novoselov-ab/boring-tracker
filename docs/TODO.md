@@ -457,86 +457,29 @@ duration — it is not using `.sheet`.
 is being raised, and the pad is now drawn instead. `.sheet` stayed.
 
 
-## 12. Draw our own number pad
+## 12. Draw our own number pad — tried, reverted
 
-The real answer to "the sheet and the keyboard don't move together". Item 11
-established that they *can't*: iOS will not raise the keyboard while a modal
-presentation animates, so the sheet's duration is added to the wait rather than
-overlapping it. That constraint only binds if we ask the system for a keyboard.
+Built, measured, used on a phone, and reverted. **The code is `6bf00f7`** and
+the revert is the commit after it; `6bf00f7` applies cleanly on its own if this
+is ever revisited.
 
-**So don't.** Draw the pad as an ordinary view inside the sheet. Nothing is
-raised, so nothing animates and nothing is waited for — the pad is already on
-screen when the sheet is. Time-to-typeable goes to roughly zero.
+**It worked.** Press-to-settled went from ~0.70s to ~0.21s, with the 0.513s
+keypad ramp gone entirely — the frame the sheet first appears in already holds
+the pad, the caret and the Log bar. The method and the numbers are in the
+commit body, including the check that the before-figure reproduces item 11's
+independently recorded one.
 
-It also deletes accumulated machinery: the `Task.yield()` before focusing, the
-`@FocusState` ordering assumption, and the "does the keypad reliably come up"
-question that two reviews have now had to re-test.
+**It was reverted anyway.** Half a second per log did not turn out to be worth
+owning a keyboard, and what ownership costs is permanent and grows: dictation,
+paste, hardware keyboards, and every accessibility affordance reimplemented by
+hand and kept working across iOS releases. The system keypad reads as fine now
+that item 11 removed the sheet's own animation — which was most of what made
+the delay noticeable to begin with.
 
-- [x] A pad drawn in the sheet: digits, the **locale** decimal separator,
-      delete, previous/next field, and Log.
-- [x] **Not** a keyboard extension, and **not** a `UITextField.inputView` swap
-      — an input view still goes through the keyboard presentation machinery
-      and keeps the animation this item exists to remove.
-- [x] The **name** field keeps the system keyboard. Naming is the rare path, so
-      it can pay for what it costs.
-- [x] A hardware keyboard must still type digits — simulators and iPads have
-      one, and losing that would make development worse.
-- [x] Every key labelled for VoiceOver. A custom pad is the one place where
-      rolling our own silently drops accessibility that came for free.
-- [x] Measure time-to-typeable before and after, with the method.
-
-PHILOSOPHY.md already says the number pad is the interface. This makes that
-literally true.
-
-**It goes to roughly zero, and the recording says so in one frame.** Measured on
-the iPhone 17 simulator with the item 5 method — a synthesized tap, `xcrun
-simctl io recordVideo`, a frame-by-frame coarse-grid diff, first frame showing
-the press to the last frame above the noise floor, three runs each. Press to
-settled: **0.698–0.708 s before, 0.205–0.207 s after.** The before numbers
-reproduce item 11's recorded 0.697–0.710 s from a clean build, which is the
-check that the two are the same measurement.
-
-The clean half of that comparison is what happens *after* the sheet appears,
-since the press-to-present interval is unchanged and includes the synthetic
-click's own 110 ms hold. The sheet arrives in one frame either way; what
-followed it was **0.513–0.517 s of keypad ramp before, and nothing after** —
-the frame the sheet appears in already holds the full pad, the caret and the
-Log bar, extracted from the recording and looked at rather than inferred.
-
-Deleted with the timing they worked around: the `await Task.yield()` before
-setting focus, the `@FocusState` ordering assumption, the "nothing is focused,
-because the keypad went down" branch in the chevron walk, and the amount
-fields' `@FocusState` entirely. Where the caret is, is now resolved from the
-target and the store instead of assigned after presentation, so there is no
-moment when it is nowhere and no ordering left to get wrong.
-
-Two defects found by driving it, neither of them in the pad:
-
-- **The name field was half-hidden behind its own action bar** — at HEAD too,
-  and fully hidden once the pad changed how far the form scrolls. iOS scrolls a
-  focused field clear of the *keyboard* and knows nothing about a
-  `safeAreaInset` above it. Fixed with an explicit scroll, which has to be
-  deferred one turn: fired on the focus change it computes against the
-  pre-keyboard layout and lands short.
-- **At AX4 and AX5 a long tracker name pushed the number off screen.**
-  `LabeledContent` stacks label over value at accessibility sizes, the pad takes
-  43% of an iPhone SE, and "Calories burned exercising" ran to three lines. The
-  name is capped to two lines, the same call HomeView's card makes: a truncated
-  name still says which tracker it is, an invisible number does not.
-
-Swept default through AX5 on the smallest supported phone (iPhone SE 3rd
-generation, created for the run and deleted afterwards) with the pad open over
-a four-tracker group — all four fields, the bar and the whole pad fit without
-scrolling at the default size, and the pad's own grid holds at every size
-because its keys are fixed, exactly like the system keypad's. Checked in dark
-mode, and on an iPad Pro 13-inch, where the form sheet already constrains the
-pad to a sensible width and needs no cap.
-
-Not regressed, checked by driving it and reading `store.json` rather than by
-eye: one save still writes one batch with one `batchID`, the date picker still
-backdates, group switching still clears what was typed and moves the caret to
-the new group's first field without the pad going down, and the sheet still
-opens instantly.
+Worth revisiting only if something changes the trade: a Watch app, where a
+custom pad may be the only sensible input; or the system keypad becoming the
+dominant cost again after other work. Not on taste alone — the number is known
+now, and it is half a second.
 
 ## 13. Make it look like one app
 
