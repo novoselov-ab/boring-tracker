@@ -371,10 +371,12 @@ final class Store {
     /// row and the sort runs over the collapsed list rather than the raw one.
     /// Measured in a Debug build on the iPhone 17 simulator, five runs each,
     /// against fixtures of four named meals and a weight reading a day:
-    /// **20.2–21.1ms over 7,644 entries (4,248 rows) and 41.3–47.2ms over
-    /// 15,294 (8,498 rows)**, against 15.1–15.9ms and 31.4–31.9ms for the
-    /// undeduplicated list on the same two files — so deduplication is 5ms and
-    /// 10ms of it, and the rest is `historyItems`. Paid once, when the screen
+    /// **20.6–21.1ms over 7,644 entries (4,248 history rows) and 41.0–42.4ms
+    /// over 15,294 (8,498)**, against 15.7–16.4ms and 31.6–36.7ms for the
+    /// undeduplicated list on the same two files — so deduplication is about
+    /// 5ms and 8ms of it, and the rest is `historyItems`. The worst shape is
+    /// the one where nothing collapses: 15,294 entries that all differ cost
+    /// **49.9–51.0ms** against a plain 32.2–32.8ms. Paid once, when the screen
     /// opens: `RepeatView` snapshots this and filters the snapshot, so a
     /// keystroke never reaches it. A keystroke got *cheaper*, because there are
     /// far fewer rows left to filter — 0.08–0.16ms against the 5.3ms and 9.9ms
@@ -382,6 +384,7 @@ final class Store {
     var repeatItems: [HistoryItem] {
         var index: [HistoryItem.RepeatKey: Int] = [:]
         var rows: [(item: HistoryItem, count: Int, canRepeat: Bool)] = []
+        let targets = repeatTargets
         for item in historyItems where item.isNamed {
             let key = item.repeatKey
             if let at = index[key] {
@@ -391,7 +394,7 @@ final class Store {
                 // Once per collapsed row, not once per comparison, and it is the
                 // same answer for every row the key collapsed: the key carries
                 // the tracker ids, so they all name the same trackers.
-                rows.append((item, 1, !repeatableEntries(of: item).isEmpty))
+                rows.append((item, 1, !repeatableEntries(of: item, targets: targets).isEmpty))
             }
         }
         // `historyItems` is newest first, so the tie-break is already in hand:
@@ -468,9 +471,26 @@ final class Store {
     /// put a number somewhere no other screen in the app offers to put one, and
     /// somewhere home would never show it.
     func repeatableEntries(of item: HistoryItem) -> [Entry] {
-        item.entries.filter { entry in
-            tracker(entry.trackerID).map { !$0.isArchived } ?? false
-        }
+        repeatableEntries(of: item, targets: repeatTargets)
+    }
+
+    /// The same question with the answer hoisted, for a caller asking it about
+    /// every row at once.
+    ///
+    /// `repeatItems` asks it once per collapsed row, and `tracker(_:)` is a
+    /// linear scan, so the cost grows with the number of trackers as well as
+    /// with the number of rows. Measured on the worst shape there is — 15,294
+    /// entries that all differ, so nothing collapses and every row asks —
+    /// hoisting the set takes the whole walk from 54.0–56.9ms to 49.9–51.0ms
+    /// over eight trackers, and from 56.2–59.3ms to 54.4–55.5ms over three. The
+    /// rule stays written once; only where the set is built moves.
+    private func repeatableEntries(of item: HistoryItem, targets: Set<UUID>) -> [Entry] {
+        item.entries.filter { targets.contains($0.trackerID) }
+    }
+
+    /// Every tracker a repeat may write to: still present, and not archived.
+    private var repeatTargets: Set<UUID> {
+        Set(trackers.lazy.filter { !$0.isArchived }.map(\.id))
     }
 
     /// Logs a history row again, now: the same values against the same trackers,

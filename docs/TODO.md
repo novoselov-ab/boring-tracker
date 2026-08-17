@@ -1531,11 +1531,14 @@ commit):
 
 | entries | rows before | build, plain | build, deduped | rows after | one keystroke |
 |---------|-------------|--------------|----------------|------------|---------------|
-| 7,644   | 3,399       | 15.1–15.9ms  | 20.2–21.1ms    | 61         | 0.08–0.16ms   |
-| 15,294  | 6,799       | 31.4–31.9ms  | 41.3–47.2ms    | 61         | 0.09–0.16ms   |
+| 7,644   | 3,399       | 15.7–16.4ms  | 20.6–21.1ms    | 61         | 0.08–0.16ms   |
+| 15,294  | 6,799       | 31.6–36.7ms  | 41.0–42.4ms    | 61         | 0.09–0.16ms   |
+| 15,294† | 6,799       | 32.2–32.8ms  | 49.9–51.0ms    | 6,799      | —             |
 
-Deduplication is 5ms and 10ms of that; the rest is `historyItems`, which both
-columns pay. Still one build, paid inside the push transition — `RepeatView`
+† the same 56 days re-jittered so no two logs share a number, over eight
+trackers: the worst shape there is, where nothing collapses and every row still
+pays for the key. Deduplication is about 5ms and 8ms of the first two rows and
+18ms of the third; the rest is `historyItems`, which both columns pay. Still one build, paid inside the push transition — `RepeatView`
 snapshots the list and filters the snapshot, so a keystroke never reaches it.
 **A keystroke got cheaper**, from the 5.3ms and 9.9ms recorded above to a tenth
 of a millisecond, because there are 61 rows left to filter instead of thousands.
@@ -1553,6 +1556,14 @@ that still works. **A row that cannot be repeated now sorts below every row that
 can**, whatever its count, and it stays on the list rather than vanishing,
 because item 16 already decided that a screen which drops food when you archive
 a tracker is editing your history. A test pins it.
+
+Sorting on that flag meant asking it once per collapsed row, and asking it
+resolved each entry's tracker by scanning the tracker list — so the second
+review round asked for the set of writable ids to be hoisted out of the walk,
+and it is. **Its 14ms figure did not reproduce here**: on the degenerate fixture
+the hoist is worth 54.0–56.9ms → 49.9–51.0ms over eight trackers and
+56.2–59.3ms → 54.4–55.5ms over three, so 4–6ms rather than 14, and it is kept
+for that and for keeping the rule in one expression rather than two.
 
 The soft case is left standing and is the user's call: eat porridge every
 morning for a year, switch to overnight oats for a month, and last year's staple
@@ -1574,7 +1585,8 @@ the wrong tap is nearly the right log.
 weigh every portion, so the numbers land near the same value and never on it:
 jittering each value by ±0.5 kcal takes 224 named rows to **214** rows instead
 of 46. Deduplication buys such a person 4% where it buys the fixture 79%, and
-what they get is the plain list back — no worse than before, and no better.
+what they get is the plain list back — for 18ms more than the plain list cost,
+which is the one place this is worse rather than merely no better.
 Nothing here rounds or groups to paper over it: both are design decisions about
 what counts as the same meal, and both belong to the user rather than to this
 step. Frequency ordering is what keeps the degraded case honest rather than
