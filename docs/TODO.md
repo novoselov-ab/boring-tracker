@@ -617,7 +617,7 @@ and the label is dark now. Worth capturing directly the next time the console is
 unlocked, but it cannot fail — pressed only moves this pairing further from the
 floor.
 
-## 14. Log it again, from History
+## 14. Log it again, from History — done
 
 A button on each History row that logs that entry again, now. Same values, same
 trackers, today's timestamp.
@@ -628,10 +628,73 @@ once. It is worth building before item 16 rather than after, because it may
 turn out to be most of what search-and-repeat was for — and if it is, item 17
 gets smaller instead of duplicating it.
 
-- [ ] One tap, no sheet, no confirmation. It writes a new batch; it does not
+- [x] One tap, no sheet, no confirmation. It writes a new batch; it does not
       edit the old one.
-- [ ] Undo, since a mistap now writes data.
-- [ ] Works for a batch and for a single entry, without two code paths.
+- [x] Undo, since a mistap now writes data.
+- [x] Works for a batch and for a single entry, without two code paths.
+
+**One code path, and it is now the only one.** `Store.addBatch` is where a batch
+gets written, and both the log sheet and a repeat go through it. It takes pairs
+rather than a `[UUID: Double]` for two reasons that only showed up here: a
+repeat carries each member's *own* name, where the sheet has one name field for
+all of them; and a row is a list, so keying by tracker would silently drop one
+of two entries that an imported or hand-edited file put in one batch against the
+same tracker — after the row had already displayed both. Nothing anywhere
+branches on how many members a row has, which is what makes a single entry and a
+batch the same case rather than two that agree.
+
+**What a repeat writes to, and what it leaves out.** A tracker deleted with its
+history kept, and an archived one, are both unreachable from the log sheet, so a
+repeat does not write to them either — a number there would land somewhere no
+other screen in the app offers to put one, and somewhere home would never show
+it. A row whose trackers are *all* gone gets a disabled disc; the row already
+prints "Deleted tracker" for those values, so it explains itself. A row with
+some left writes the rest and **says so**: the undo bar reads "Logged 1 of 2
+again" rather than letting a button quietly do less than it promised. Refusing
+the whole row instead was rejected — deleting a tracker and keeping its history
+is a supported choice, and it would disable the button on every row that tracker
+ever touched.
+
+**The undo moved to the bottom of the screen, and took the delete undo with
+it.** It used to be a section above the first day, which works only while you
+are already looking at the top — and neither thing it undoes happens there.
+Repeating is a button on a row you scrolled to find; deleting is a swipe on that
+same row. In both cases the tap had *no visible result at all*: the new entry
+and the undo offer both appeared off screen, above where the user was looking.
+An undo you cannot see is not an undo. One bar, at the bottom, in the thumb —
+the store keeps one undo slot, so a second affordance in a second place would be
+the screen saying the same thing twice.
+
+**One undo slot, not two.** A pending deletion and a pending repeat behind one
+Undo button would give that button two meanings and no way to say which; two
+buttons is more screen than either case deserves. The newer write takes the slot,
+which is exactly what a second deletion already did to the first. Undoing a
+repeat records **no tombstone** — the entries are being unmade, not deleted, and
+a tombstone would carry "never allow this id again" into every future merge for
+a log that lasted two seconds. The same honest limit as the deletion undo
+applies in reverse: export between the tap and the undo and a re-import brings
+them back.
+
+### The name is the quiet part, and finding a food by name is harder for it
+
+Item 13 made a History row's name a small grey footnote under the values, on the
+grounds that the numbers are what every row has. That was right and it stands.
+But this item makes History the place you scroll to *find a food by name* to
+repeat, and the two do pull against each other, exactly as the brief predicted.
+
+Looked at on the iPhone 17 in dark mode against a twelve-row fixture: scanning
+for "chicken rice" means reading eleven small grey second lines while eleven
+large white numbers — the part that does **not** identify the food — take the
+eye first. It is not unusable. It is slower than it was, and it is slower than
+the thing it is standing in for: item 16's search field ranks by name and puts
+the answer at the top with no scrolling at all.
+
+**Not changed here, and deliberately not.** Re-loudening the name would undo
+item 13 quietly, in a step that was not asked to revisit it, and the honest fix
+may be item 16 rather than a font weight. Left as a design question for the
+user: if repeating from History becomes the way you log, the name probably has
+to grow back — and that is a decision about which of the two items was right,
+not a tweak.
 
 ## 15. Make a save feel like it landed
 

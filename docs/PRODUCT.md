@@ -281,7 +281,13 @@ Small enough to list completely.
   fixing a mistyped food means visiting each tracker's detail separately and
   deleting a row in each, which is absurd. A batch whose members straddle
   midnight is drawn once, under its newest surviving member — a row is a thing
-  you logged, and one thing cannot appear on two days.
+  you logged, and one thing cannot appear on two days. Every row also has a
+  **repeat button**: one tap writes the same values against the same trackers
+  with today's timestamp, as a new row, leaving the old one alone. That is
+  search-and-repeat's idea arriving through a different door — you don't search
+  for a food, you scroll to the last time you ate it — and the undo it needs
+  sits in a bar at the bottom of the screen, which also carries the undo for a
+  swipe-delete.
 - **Tracker detail** — the graph on top, that tracker's entries below, grouped
   by day. Swipe to delete, tap to edit.
 - **Graph** — daily totals as bars, measurements as a line with a moving

@@ -194,4 +194,214 @@ struct HistoryTests {
         // still stands; the weight reading stays gone.
         #expect(store.entries == [logged])
     }
+
+    // MARK: - Logging a row again
+
+    @Test("Repeating a batch writes a new batch and leaves the old one alone")
+    func repeatBatchWritesRatherThanEdits() throws {
+        let calories = Tracker(name: "Calories")
+        let protein = Tracker(name: "Protein")
+        let batch = UUID()
+        let first = Entry(trackerID: calories.id, value: 100, date: time(10),
+                          name: "chicken rice", batchID: batch)
+        let second = Entry(trackerID: protein.id, value: 10, date: time(10),
+                           name: "chicken rice", batchID: batch)
+        let store = historyStore(
+            StoreDocument(trackers: [calories, protein], entries: [first, second])
+        )
+        let before = Date()
+
+        let item = try #require(store.historyItems.first)
+        #expect(store.logAgain(item))
+
+        // The row that was tapped is untouched — same ids, same values, same
+        // date, same batch. Repeating is a write, never an edit.
+        let originals = store.entries.filter { $0.batchID == batch }
+        #expect(originals.map(\.id).sorted() == [first, second].map(\.id).sorted())
+        #expect(originals.allSatisfy { $0.date == time(10) })
+
+        let written = store.entries.filter { $0.batchID != batch }
+        #expect(written.count == 2)
+        // One new batch, shared by both members, and not the old one's.
+        let newBatch = try #require(written.first?.batchID)
+        #expect(newBatch != batch)
+        #expect(written.allSatisfy { $0.batchID == newBatch })
+        #expect(written.allSatisfy { $0.date >= before.canonicalized })
+        #expect(written.allSatisfy { $0.name == "chicken rice" })
+        #expect(Set(written.map(\.trackerID)) == [calories.id, protein.id])
+        #expect(written.map(\.value).sorted() == [10, 100])
+        // Values land in the totals index, not just the entry list: a repeat
+        // that does not move the number on the home screen has not logged
+        // anything as far as the user is concerned.
+        #expect(store.total(for: calories.id, on: store.today) == 100)
+    }
+
+    @Test("Repeating a single entry takes the same path as repeating a batch")
+    func repeatSingleEntry() throws {
+        let calories = Tracker(name: "Calories")
+        let loose = Entry(trackerID: calories.id, value: 250, date: time(10), name: "apple")
+        let store = historyStore(StoreDocument(trackers: [calories], entries: [loose]))
+
+        let item = try #require(store.historyItems.first)
+        #expect(store.logAgain(item))
+
+        let written = try #require(store.entries.first { $0.id != loose.id })
+        #expect(written.value == 250)
+        #expect(written.name == "apple")
+        // A one-member row still gets a batch id. What was logged together is a
+        // property of the log, not of how many trackers it touched — and it is
+        // what makes the new row deletable and editable as one thing.
+        #expect(written.batchID != nil)
+        #expect(store.lastLoggedAgain == Store.LoggedAgain(count: 1, skipped: 0))
+    }
+
+    @Test("Undoing a repeat removes exactly what it wrote, and no tombstone")
+    func undoRepeat() throws {
+        let calories = Tracker(name: "Calories")
+        let protein = Tracker(name: "Protein")
+        let batch = UUID()
+        let entries = [
+            Entry(trackerID: calories.id, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: protein.id, value: 10, date: time(10), batchID: batch),
+        ]
+        let store = historyStore(
+            StoreDocument(trackers: [calories, protein], entries: entries)
+        )
+
+        let item = try #require(store.historyItems.first)
+        #expect(store.logAgain(item))
+        #expect(store.entries.count == 4)
+
+        store.undoLastLog()
+
+        #expect(store.entries.map(\.id).sorted() == entries.map(\.id).sorted())
+        #expect(store.total(for: calories.id, on: store.today) == 0)
+        // Unmade, not deleted: a tombstone would carry "never allow this id
+        // again" into every future merge for a log that lasted two seconds.
+        #expect(store.tombstones.isEmpty)
+        #expect(store.lastLoggedAgain == nil)
+        // And it is not repeatable: a second undo must not eat the original.
+        store.undoLastLog()
+        #expect(store.entries.count == 2)
+    }
+
+    @Test("One undo slot: a repeat displaces a pending deletion undo")
+    func repeatTakesTheUndoSlot() throws {
+        let calories = Tracker(name: "Calories")
+        let older = Entry(trackerID: calories.id, value: 100, date: time(10))
+        let newer = Entry(trackerID: calories.id, value: 200, date: time(20))
+        let store = historyStore(StoreDocument(trackers: [calories], entries: [older, newer]))
+
+        store.delete(older)
+        #expect(store.lastDeletion == older)
+
+        let item = try #require(store.historyItems.first { $0.entries.first?.id == newer.id })
+        #expect(store.logAgain(item))
+
+        // The deletion stops being offered rather than sitting behind the same
+        // Undo button with a second meaning.
+        #expect(store.lastDeletion == nil)
+        #expect(store.lastLoggedAgain?.count == 1)
+
+        store.undoLastLog()
+        // Undoing the repeat does not resurrect the deleted entry either.
+        #expect(store.entries == [newer])
+    }
+
+    @Test("A row whose trackers are all gone or archived cannot be repeated")
+    func repeatRefusesAnUnrepeatableRow() throws {
+        let deleted = Tracker(name: "Calories")
+        let archived = Tracker(name: "Protein", isArchived: true)
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [deleted, archived], entries: [
+            Entry(trackerID: deleted.id, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: archived.id, value: 10, date: time(10), batchID: batch),
+        ]))
+        // Deleted with its history kept, which is a supported choice and leaves
+        // entries behind pointing at nothing.
+        store.delete(deleted)
+
+        let item = try #require(store.historyItems.first)
+        #expect(store.repeatableEntries(of: item).isEmpty)
+        #expect(store.logAgain(item) == false)
+        #expect(store.entries.count == 2)
+        // A refused repeat writes nothing, so it must not claim the undo slot.
+        #expect(store.lastLoggedAgain == nil)
+    }
+
+    @Test("A batch mixing live and deleted trackers repeats the live part and says so")
+    func repeatPartialBatch() throws {
+        let live = Tracker(name: "Calories")
+        let gone = Tracker(name: "Protein")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [live, gone], entries: [
+            Entry(trackerID: live.id, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: gone.id, value: 10, date: time(10), batchID: batch),
+        ]))
+        store.delete(gone)
+
+        let item = try #require(store.historyItems.first)
+        #expect(store.logAgain(item))
+
+        let written = store.entries.filter { $0.batchID != batch }
+        #expect(written.map(\.value) == [100])
+        #expect(written.allSatisfy { $0.trackerID == live.id })
+        // The count is the honest part: the tap promised the row and wrote less
+        // than the row, so the screen has to be able to say which.
+        #expect(store.lastLoggedAgain == Store.LoggedAgain(count: 1, skipped: 1))
+    }
+
+    @Test("Deleting a tracker with its history withdraws a repeat's undo for it")
+    func deleteWithHistoryInvalidatesRepeatUndo() throws {
+        let calories = Tracker(name: "Calories")
+        let weight = Tracker(name: "Weight", kind: .measurement)
+        let logged = Entry(trackerID: calories.id, value: 100, date: time(10))
+        let reading = Entry(trackerID: weight.id, value: 78, date: time(20))
+        let store = historyStore(
+            StoreDocument(trackers: [calories, weight], entries: [logged, reading])
+        )
+
+        let item = try #require(store.historyItems.first { $0.entries.first?.id == reading.id })
+        #expect(store.logAgain(item))
+        store.deleteWithHistory(weight)
+        store.undoLastLog()
+
+        // Nothing left to take back, and nothing else disturbed.
+        #expect(store.lastLoggedAgain == nil)
+        #expect(store.entries == [logged])
+    }
+
+    @Test("A repeat's undo survives a deletion that never touched its trackers")
+    func deleteWithHistoryKeepsAnUnrelatedRepeatUndo() throws {
+        let calories = Tracker(name: "Calories")
+        let weight = Tracker(name: "Weight", kind: .measurement)
+        let logged = Entry(trackerID: calories.id, value: 100, date: time(10))
+        let reading = Entry(trackerID: weight.id, value: 78, date: time(20))
+        let store = historyStore(
+            StoreDocument(trackers: [calories, weight], entries: [logged, reading])
+        )
+
+        let item = try #require(store.historyItems.first { $0.entries.first?.id == logged.id })
+        #expect(store.logAgain(item))
+        store.deleteWithHistory(weight)
+        store.undoLastLog()
+
+        #expect(store.entries == [logged])
+    }
+
+    @Test("A repeat is one history row, not one row per value")
+    func repeatIsOneRow() throws {
+        let calories = Tracker(name: "Calories")
+        let protein = Tracker(name: "Protein")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [calories, protein], entries: [
+            Entry(trackerID: calories.id, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: protein.id, value: 10, date: time(10), batchID: batch),
+        ]))
+
+        #expect(store.logAgain(try #require(store.historyItems.first)))
+
+        #expect(store.historyItems.count == 2)
+        #expect(store.historyItems.allSatisfy { $0.entries.count == 2 })
+    }
 }

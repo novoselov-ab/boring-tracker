@@ -25,12 +25,52 @@ final class Store {
     private(set) var origin: StoreOrigin
     /// Set when a save fails, so the app can say so instead of pretending.
     private(set) var saveError: String?
+    /// The last write that can still be taken back, and there is only ever one
+    /// of it.
+    ///
+    /// Deleting a row and logging one again are both undoable, and History
+    /// offers both through the same Undo button. With two live slots that one
+    /// button would have two meanings and no way to say which it meant, and two
+    /// buttons is more screen than either case deserves. So the newer write
+    /// takes the slot and the older one stops being offered — which is exactly
+    /// what a second deletion already did to the first.
+    private enum LastWrite {
+        /// Everything one deletion removed, newest first.
+        case deleted([Entry])
+        /// What one repeat wrote, and how many members of the row it had to
+        /// leave out because their tracker is gone or archived. The count is
+        /// kept because only the moment of the tap knows it: afterwards the
+        /// entries that were written look like any other batch.
+        case logged(entries: [Entry], skipped: Int)
+    }
+
+    private var lastWrite: LastWrite?
+
     /// The newest member of what was deleted most recently. Detail uses this
     /// to decide whether its undo row belongs on screen; the complete deletion
     /// is kept separately so one history-row delete can restore a whole batch.
     var lastDeletion: Entry? { lastDeletedEntries.first }
     var lastDeletionCount: Int { lastDeletedEntries.count }
-    private var lastDeletedEntries: [Entry] = []
+
+    private var lastDeletedEntries: [Entry] {
+        if case .deleted(let entries) = lastWrite { entries } else { [] }
+    }
+
+    /// What one repeat wrote, when a repeat is the thing waiting to be undone.
+    struct LoggedAgain: Equatable, Sendable {
+        /// Entries written. Never zero: a repeat that can write nothing does
+        /// not happen and does not take the slot.
+        var count: Int
+        /// Members of the row left out because their tracker has been deleted
+        /// or archived. The screen says so rather than writing part of a row
+        /// under a button that promised the whole of it.
+        var skipped: Int
+    }
+
+    var lastLoggedAgain: LoggedAgain? {
+        guard case .logged(let entries, let skipped) = lastWrite else { return nil }
+        return LoggedAgain(count: entries.count, skipped: skipped)
+    }
 
     /// The newest thing the last deletion took from this tracker, if it took
     /// anything. Undo restores the whole deletion either way; a tracker's own
@@ -240,13 +280,16 @@ final class Store {
     /// so the number you want is usually one you have typed before. No setup,
     /// nothing to maintain.
     ///
-    /// **Uncalled on purpose — do not delete it as dead code.** Its one caller
-    /// was the row of value chips in the log sheet, removed in item 11 because
-    /// people do not log the same *number* twice; they log the same food. The
-    /// query was never the wrong idea, only the presentation was, and item 14's
-    /// search-and-repeat is the right one — it ranks past entries by name and
-    /// then needs exactly this to fill the fields in. Keeping it costs eight
-    /// lines; rediscovering it costs the reasoning above.
+    /// **Uncalled, and now on notice.** Its one caller was the row of value
+    /// chips in the log sheet, removed in item 11 because people do not log the
+    /// same *number* twice; they log the same food. It was kept for item 14's
+    /// sake, and item 14 turned out not to want it: repeating a history row
+    /// reads that row's own entries, which carry their values already, so
+    /// nothing here was needed. The remaining candidate is item 16's search,
+    /// which ranks past entries by name — and this keys on tracker id and
+    /// ignores names entirely, which is the opposite shape. Decide there
+    /// whether to rewrite it around names or delete it, and do not keep it a
+    /// third time out of habit.
     func recentValues(for tracker: UUID, limit: Int = 5) -> [Double] {
         var seen = Set<Double>()
         var result: [Double] = []
@@ -301,18 +344,100 @@ final class Store {
     }
 
     /// Logs the same moment against several trackers at once, because calories
-    /// and protein come from the same meal.
-    ///
-    /// They share a `batchID`, which is what makes them one logged food rather
-    /// than two rows that happen to agree on the clock. Assigned even for a
-    /// single value: what was logged together is a property of the log, not of
-    /// how many trackers it happened to touch.
+    /// and protein come from the same meal. One name across all of them: the
+    /// log sheet has one name field.
     func add(values: [UUID: Double], at date: Date = .stamp(), name: String? = nil) {
+        addBatch(
+            values.sorted { $0.key < $1.key }.map { (tracker: $0.key, value: $0.value, name: name) },
+            at: date
+        )
+    }
+
+    /// The one place a batch is written, and the one code path behind both the
+    /// log sheet and repeating a history row.
+    ///
+    /// Members share a `batchID`, which is what makes them one logged food
+    /// rather than two rows that happen to agree on the clock. Assigned even for
+    /// a single value: what was logged together is a property of the log, not of
+    /// how many trackers it happened to touch — which is also why nothing here
+    /// branches on how many there are.
+    ///
+    /// Takes pairs rather than a `[UUID: Double]` because a repeat carries each
+    /// member's own name, and because a row is a list: keying by tracker would
+    /// silently drop one of two entries that a hand-edited or imported file put
+    /// in one batch against the same tracker, after the row had already
+    /// displayed both.
+    @discardableResult
+    private func addBatch(
+        _ values: [(tracker: UUID, value: Double, name: String?)],
+        at date: Date = .stamp()
+    ) -> [Entry] {
         let date = date.canonicalized
         let batch = UUID()
-        for (tracker, value) in values.sorted(by: { $0.key < $1.key }) {
-            add(Entry(trackerID: tracker, value: value, date: date, name: name, batchID: batch))
+        return values.map { value in
+            let entry = Entry(
+                trackerID: value.tracker, value: value.value,
+                date: date, name: value.name, batchID: batch
+            )
+            add(entry)
+            return entry
         }
+    }
+
+    /// Which members of a history row a repeat can write again.
+    ///
+    /// A tracker deleted with its history kept leaves entries behind pointing at
+    /// nothing, and an archived tracker is one you have said you are done
+    /// logging — the log sheet reaches neither. Writing to them from here would
+    /// put a number somewhere no other screen in the app offers to put one, and
+    /// somewhere home would never show it.
+    func repeatableEntries(of item: HistoryItem) -> [Entry] {
+        item.entries.filter { entry in
+            tracker(entry.trackerID).map { !$0.isArchived } ?? false
+        }
+    }
+
+    /// Logs a history row again, now: the same values against the same trackers,
+    /// each keeping its own name, with today's timestamp and a **new** batch id.
+    ///
+    /// It writes; it never edits. The row that was tapped is untouched, which is
+    /// what makes this safe to tap on a five-year-old entry.
+    ///
+    /// Partial rows write what they can and say so through `lastLoggedAgain`.
+    /// Refusing the whole row because one of three trackers was deleted would
+    /// make a normal state — deleting a tracker and keeping its history is a
+    /// supported choice — quietly disable a button on every row it ever touched.
+    @discardableResult
+    func logAgain(_ item: HistoryItem) -> Bool {
+        let repeatable = repeatableEntries(of: item)
+        guard !repeatable.isEmpty else { return false }
+        let written = addBatch(
+            repeatable.map { (tracker: $0.trackerID, value: $0.value, name: $0.name) }
+        )
+        lastWrite = .logged(entries: written, skipped: item.entries.count - repeatable.count)
+        return true
+    }
+
+    /// Takes back the repeat that was just written.
+    ///
+    /// A mistap now costs data rather than a moment, so this has to exist. It
+    /// records **no tombstone**: these entries are being unmade, not deleted,
+    /// and a tombstone would carry "never allow this id again" into every future
+    /// merge for a log that lasted two seconds.
+    ///
+    /// The same honest limit as `undoLastDeletion`, in reverse: if you exported
+    /// between the tap and the undo, that export holds the entries, and
+    /// re-importing it puts them back.
+    func undoLastLog() {
+        guard case .logged(let written, _) = lastWrite else { return }
+        let ids = Set(written.map(\.id))
+        let existing = entries.filter { ids.contains($0.id) }
+        lastWrite = nil
+        guard !existing.isEmpty else { return }
+        for entry in existing { apply(-1, to: entry) }
+        entries.removeAll { ids.contains($0.id) }
+        refreshToday()
+        scheduleSave()
     }
 
     func update(_ entry: Entry) {
@@ -382,7 +507,7 @@ final class Store {
             recordDeletion(of: entry.id)
         }
         entries.removeAll { ids.contains($0.id) }
-        lastDeletedEntries = existing.sorted { ($0.date, $0.id) > ($1.date, $1.id) }
+        lastWrite = .deleted(existing.sorted { ($0.date, $0.id) > ($1.date, $1.id) })
         refreshToday()
         scheduleSave()
     }
@@ -407,7 +532,7 @@ final class Store {
             insertSorted(entry)
             apply(1, to: entry)
         }
-        lastDeletedEntries = []
+        lastWrite = nil
         guard !restorable.isEmpty else { return }
         refreshToday()
         scheduleSave()
@@ -500,12 +625,32 @@ final class Store {
             recordDeletion(of: entry.id)
         }
         entries.removeAll { $0.trackerID == tracker.id }
-        // A previous entry undo must not be allowed to put this tracker's
-        // history back after the explicit, stronger deletion — but only this
-        // tracker's. Dropping the whole undo threw away a pending undo for a
-        // different tracker that the deletion never touched.
-        lastDeletedEntries.removeAll { $0.trackerID == tracker.id }
+        forgetUndo(of: tracker.id)
         delete(tracker)
+    }
+
+    /// Drops one tracker's entries out of whatever undo is pending.
+    ///
+    /// A deletion undo must not be allowed to put this tracker's history back
+    /// after the explicit, stronger deletion — but only this tracker's, because
+    /// dropping the whole slot threw away a pending undo for a different tracker
+    /// the deletion never touched. A repeat's undo removes entries rather than
+    /// restoring them, so once its members are gone there is nothing left for it
+    /// to take back, and an offer to undo what no longer exists is a lie.
+    private func forgetUndo(of tracker: UUID) {
+        func surviving(_ entries: [Entry]) -> [Entry] {
+            entries.filter { $0.trackerID != tracker }
+        }
+        switch lastWrite {
+        case .deleted(let entries):
+            let remaining = surviving(entries)
+            lastWrite = remaining.isEmpty ? nil : .deleted(remaining)
+        case .logged(let entries, let skipped):
+            let remaining = surviving(entries)
+            lastWrite = remaining.isEmpty ? nil : .logged(entries: remaining, skipped: skipped)
+        case .none:
+            break
+        }
     }
 
     /// The trackers a drop would carry: the dragged one alone inside its own
@@ -883,8 +1028,10 @@ final class Store {
         tombstones = document.tombstones
         // Import is a new whole-document decision. An undo captured from the
         // document it replaced must never be able to inject old entries into
-        // it, or duplicate an id the imported file already restored.
-        lastDeletedEntries = []
+        // it, duplicate an id the imported file already restored, or delete an
+        // entry the file brought in that happens to share an id with one a
+        // repeat wrote a moment ago.
+        lastWrite = nil
         rebuildTotals()
         if saving { scheduleSave() }
     }

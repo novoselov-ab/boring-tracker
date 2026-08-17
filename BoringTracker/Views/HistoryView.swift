@@ -9,7 +9,7 @@ struct HistoryView: View {
     var body: some View {
         let days = days
         Group {
-            if days.isEmpty, store.lastDeletion == nil {
+            if days.isEmpty {
                 ContentUnavailableView(
                     "Nothing logged yet",
                     systemImage: "clock",
@@ -17,16 +17,6 @@ struct HistoryView: View {
                 )
             } else {
                 List {
-                    if store.lastDeletion != nil {
-                        Section {
-                            HStack {
-                                Text(store.lastDeletionCount == 1 ? "Deleted entry" : "Deleted batch")
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                Button("Undo", action: store.undoLastDeletion)
-                            }
-                        }
-                    }
                     ForEach(days, id: \.day) { group in
                         Section(title(for: group.day)) {
                             ForEach(group.items) { item in
@@ -47,8 +37,66 @@ struct HistoryView: View {
         }
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom, spacing: 0) { undoBar }
         .sheet(item: $editing) { item in
             BatchEditor(item: item)
+        }
+    }
+
+    /// The one undo on this screen, at the bottom rather than at the top of the
+    /// list.
+    ///
+    /// It used to be a section above the first day, which works only while you
+    /// are already looking at the top — and neither thing it undoes happens
+    /// there. Repeating is a button on a row you scrolled to find, three days
+    /// back or three months; deleting is a swipe on that same row. In both cases
+    /// the top of the list is off screen, so the undo appeared where the user
+    /// was not, and the tap itself had no visible result at all. An undo you
+    /// cannot see is not an undo, and this is the bar idiom home's Log already
+    /// uses (docs/PHILOSOPHY.md, "frequent actions live low").
+    ///
+    /// One bar for both, because the store keeps one undo slot: two undo
+    /// affordances in two places on one screen is a screen saying the same thing
+    /// twice, which is the complaint docs/TODO.md item 13 is named after.
+    @ViewBuilder
+    private var undoBar: some View {
+        if let message = undoMessage {
+            HStack {
+                Text(message)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Undo", action: undo)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(.bar)
+        }
+    }
+
+    /// What the pending undo would take back. A repeat wins when both could be
+    /// set, which cannot happen — the store's slot holds one — so this is the
+    /// order the two are read in, not a priority between them.
+    private var undoMessage: String? {
+        if let logged = store.lastLoggedAgain {
+            // Named honestly when the row was only partly repeatable: the tap
+            // promised the row and wrote less than the row, and the alternative
+            // is a button that quietly does something other than what it says.
+            return logged.skipped == 0
+                ? "Logged again"
+                : "Logged \(logged.count) of \(logged.count + logged.skipped) again"
+        }
+        if store.lastDeletion != nil {
+            return store.lastDeletionCount == 1 ? "Deleted entry" : "Deleted batch"
+        }
+        return nil
+    }
+
+    private func undo() {
+        if store.lastLoggedAgain != nil {
+            store.undoLastLog()
+        } else {
+            store.undoLastDeletion()
         }
     }
 
@@ -94,25 +142,65 @@ private struct HistoryRow: View {
     /// is what only some rows have, so it is the part that may be missing, and
     /// grey where it isn't.
     var body: some View {
-        Button(action: edit) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(values)
-                    if let name = item.displayName {
-                        Text(name)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+        // Two plain buttons with disjoint frames, the same shape a home card
+        // uses: tapping the row edits it, tapping the disc logs it again.
+        HStack(spacing: 8) {
+            Button(action: edit) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(values)
+                        if let name = item.displayName {
+                            Text(name)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
                     }
+                    Spacer(minLength: 8)
+                    Text(item.date.formatted(date: .omitted, time: .shortened))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
-                Spacer(minLength: 8)
-                Text(item.date.formatted(date: .omitted, time: .shortened))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                .contentShape(.rect)
             }
+            .buttonStyle(.plain)
+            .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
+            repeatButton
+        }
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
+    }
+
+    /// Log this row again, now. One tap: no sheet, no confirmation, and no
+    /// picker in front of it — the same rule the home screen's + follows, for
+    /// the same reason.
+    ///
+    /// Drawn as a home card's + is drawn, because it is the same action reached
+    /// from the other screen, and a second design language for "write a log"
+    /// is the complaint docs/TODO.md item 13 is named after. A different glyph,
+    /// because this one repeats something that already happened rather than
+    /// opening an empty sheet.
+    ///
+    /// Off when the row has nothing left to write: every tracker it named has
+    /// been deleted or archived. The row already says so — it prints
+    /// "Deleted tracker" for those values — and a control that looks live and
+    /// does nothing is worse than one that plainly cannot be used.
+    private var repeatButton: some View {
+        let canRepeat = !store.repeatableEntries(of: item).isEmpty
+        return Button { store.logAgain(item) } label: {
+            Image(systemName: "arrow.clockwise")
+                // Fixed rather than a text style, for the reason home's + is:
+                // the disc and the 44pt target do not scale, so a glyph that
+                // does outgrows its own circle at the accessibility sizes.
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(canRepeat ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
+                .frame(width: 30, height: 30)
+                .background(canRepeat ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary), in: .circle)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
+        .disabled(!canRepeat)
+        .accessibilityLabel("Log again")
     }
 
     private var values: String {

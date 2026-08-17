@@ -308,9 +308,10 @@ struct LogSheet: View {
     // nobody logs the same *number* twice — they log the same food, and the
     // number follows from the name. So the chips took up the space under the
     // field you were typing into, moved the form around as you focused and
-    // blurred, and were tapped roughly never. `Store.recentValues` is
-    // deliberately kept: item 14's search-and-repeat is the feature these
-    // chips were a bad guess at, and it wants exactly that data.
+    // blurred, and were tapped roughly never. The feature these chips were a
+    // bad guess at is repeating a whole logged food, and item 14 built the
+    // first half of it on the History screen without needing
+    // `Store.recentValues` at all — see the note on that method.
 
     private func binding(for tracker: UUID) -> Binding<String> {
         Binding(
