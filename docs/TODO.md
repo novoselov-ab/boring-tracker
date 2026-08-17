@@ -1285,29 +1285,34 @@ already works.
       *Merge / Replace Everything…* dialog.
 - [ ] Then the app icon.
 
-## 18b. Share the export with UIKit
+## 18b. Get the export into the share sheet
 
-Decided, with the evidence in `531d71c`. **`ShareLink` silently fails to
-present from settings' Data section** — no sheet, no error — while a `Button` in
-that same section works on the same tap. `UIActivityViewController` presented by
-hand from that screen works, and was screenshotted.
+Found in `531d71c`. **`ShareLink` silently fails to present from settings' Data
+section** — no sheet, no error — while a `Button` in that same section works on
+the same tap.
 
-**The cause recorded in `531d71c` was wrong, and the review corrected it: it is
-`.confirmationDialog` on that section, not the tracker editor's
-`.sheet(item:)`.** Measured seven ways on an iPhone 17 / iOS 26.3 — see the
-small-things item below for the table. This does not reverse the decision; it
-changes what the options are. Before writing the app's first UIKit, it is worth
-knowing that the blocker is the import chooser sitting on the same container,
-so **giving that dialog a different home may be the whole fix** and is cheaper
-than a window-hierarchy bridge. Which way to go is still the user's call.
+**It was decided as "do it in UIKit", and that decision is suspended, because
+the fact it rested on is not true.** The cause recorded in `531d71c` was the tracker editor's
+`.sheet(item:)`; it is actually `.confirmationDialog` on the Data section —
+measured eight ways, table in the small-things item below.
 
-So: about fifteen lines of UIKit. This is the app's first UIKit and its first
-reach into the window hierarchy, which is why it was escalated rather than
-slipped into a five-item pass — but it is the right call. Rule 10 bans
-*dependencies* and explicitly permits platform frameworks, and rule 6 promises
-data leaves in one tap, where Files-only means save, find, then share.
+That matters because "there is no way to do this in SwiftUI" was the whole
+argument for the app's first UIKit, and it is now unproven: the blocker is one
+modifier on one section, so **moving the import chooser off that container may
+be the entire fix**, at no UIKit and no window-hierarchy reach. It may also not
+work, and nobody has tried it. Whoever picks this up **tries that first** and
+only then writes the bridge.
 
-- [ ] Isolate it in one small file, so the UIKit surface is one place.
+The UIKit case, if it comes to that, is unchanged and still good: about fifteen
+lines. Rule 10 bans *dependencies* and explicitly permits platform frameworks,
+and rule 6 promises data leaves in one tap, where Files-only means save, find,
+then share. `UIActivityViewController` presented by hand from that screen was
+probed and does work.
+
+- [ ] Try the cheap fix first: give the confirmation dialog a different host
+      and see whether a plain `ShareLink` presents.
+- [ ] Only if that fails: isolate the UIKit in one small file, so the surface
+      is one place.
 - [ ] Record the `ShareLink` bug next to it and in TECH.md, so nobody
       "simplifies" it back and silently loses the button again.
 - [ ] Keep the Files exporter working alongside it.
@@ -1378,24 +1383,36 @@ the numbered items is going near the same code.
 
       **The cause is `.confirmationDialog`, not `.sheet(item:)`**, and the
       first diagnosis had it wrong. Re-bisected on an iPhone 17 / iOS 26.3 by
-      putting a probe `ShareLink` in the real screen and building it seven
-      ways: with every presentation modifier stripped from the Data section it
-      presents; with `.alert(item:)` alone it presents; with
-      `.fileImporter` + `.alert` it presents; with **`.confirmationDialog`
-      alone it does not.** The import merge/replace chooser is that dialog.
+      putting a probe `ShareLink` into the real screen — not a model of it —
+      and building it eight ways:
 
-      The `.sheet(item:)` reading is disproved twice over: removing the tracker
-      editor's `.sheet` from settings does **not** bring the ShareLink back, a
-      probe `ShareLink` in settings' *Add Tracker* section presents fine with
-      that `.sheet` still attached, and a 40-line throwaway app pairing a
-      `Form`, a `.sheet(item:)` and a `ShareLink` presents every time.
+          Data section, as shipped                        silent
+          Data section, editor `.sheet(item:)` removed    silent
+          Data section, `.fileExporter` removed           silent
+          Data section, `.confirmationDialog` only        silent
+          Data section, every presentation stripped       presents
+          Data section, `.alert(item:)` only              presents
+          Data section, `.fileImporter` + `.alert`        presents
+          *Add Tracker* section, `.sheet` still attached  presents
 
-      What is left is a decision rather than a fix: present
-      `UIActivityViewController` directly (about fifteen lines and the app's
-      first UIKit, and it does work from that screen — probed), move the export
-      rows out of the settings list, or leave the Files exporter alone. Not
-      taken here, because a small-things pass is the wrong place to add the
-      first UIKit bridge.
+      So `.confirmationDialog` on the same container is enough on its own, and
+      that dialog is the import merge/replace chooser. The `.sheet(item:)`
+      reading is disproved three ways: removing the tracker editor's `.sheet`
+      does not bring the ShareLink back, a probe two sections up presents while
+      that `.sheet` is still attached, and a 40-line throwaway app pairing a
+      `Form`, a `.sheet(item:)` and a `ShareLink` — the shape the original
+      bisect describes — presents every time. **A minimal repro that does not
+      reproduce is evidence about the repro**, which is how the wrong modifier
+      got the blame.
+
+      What is left is a decision rather than a fix, and the corrected cause adds
+      an option that was not on the list when it was taken: **host the
+      confirmation dialog somewhere else** and see whether a plain `ShareLink`
+      then presents. Failing that, present `UIActivityViewController` directly
+      (about fifteen lines and the app's first UIKit, and it does work from that
+      screen — probed), move the export rows out of the settings list, or leave
+      the Files exporter alone. Not taken here, because a small-things pass is
+      the wrong place to add the first UIKit bridge. See item 18b.
 - [x] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Fixed by moving
       `Signing.xcconfig` into `Config/`. With `createIntermediateGroups` on, a
       config file beside `project.yml` makes XcodeGen build a group for the
@@ -1430,12 +1447,20 @@ the numbered items is going near the same code.
       runs were minutes apart. The title, the fields, the keypad and the Log
       bar are pixel-identical.
 - [x] **Releasing a settings drag outside the list commits it** rather than
-      cancelling. Deliberate — requiring the finger inside would break dragging
-      to the top edge to reach the first row — and now written down: a comment
-      at the gesture and a line under Screens in PRODUCT.md. Both halves were
-      reproduced on an iPhone 17 first, against the list's measured 116…840pt
-      band: releasing at 866 moved the dragged block to the end, releasing at 54
-      (inside the navigation bar) put it on top.
+      cancelling. Deliberate, and now written down: a comment at the gesture and
+      a line under Screens in PRODUCT.md. Both halves were reproduced on an
+      iPhone 17 first, against the list's measured 116…840pt band: releasing at
+      866 moved the dragged block to the end, releasing at 54 (inside the
+      navigation bar) put it on top.
+
+      **The reason first recorded here was wrong and has been corrected.** It
+      said requiring the finger inside would break dragging to the top edge to
+      reach the first row. Measured from the frames the drop code reads, the
+      first row is 166…210 inside a 116…840 band, so 116…254 already picks it
+      without leaving the list — driven at 150, which landed on the first row.
+      The real reason is tolerance: `row(nearest:)` answers at every y, so a
+      refusal would disambiguate nothing, and it would throw away a drag
+      released a few points past an edge the finger cannot see.
 
 ## After v1
 

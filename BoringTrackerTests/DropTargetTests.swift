@@ -100,8 +100,10 @@ struct DropTargetTests {
 
     @Test("A row straddling the top edge is still a drop target")
     func partiallyVisibleRowsCount() {
-        // Half under the navigation bar is half on screen, and it is the row a
-        // finger at the top edge is aiming at.
+        // A row scrolled half out of the band is still half on screen, so it
+        // stays a candidate and a drop aimed at the visible half lands on it.
+        // Not the first row at rest — `deviceRows()` puts that at 166…210,
+        // wholly inside the band — this is the scrolled case.
         let straddling: (id: UUID, frame: CGRect) = (UUID(), CGRect(x: 32, y: 100, width: 338, height: 44))
         let all = [straddling] + deviceRows()
 

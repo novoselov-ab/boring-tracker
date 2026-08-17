@@ -325,9 +325,14 @@ struct SettingsView: View {
 
 /// The visible row whose middle is closest to `y`. Rows scrolled out of sight
 /// are not candidates: their frames are still recorded, and a drop belongs on
-/// something the finger could see. Overlapping the band is enough — a row half
-/// under the navigation bar is half on screen, and dragging to the top edge to
-/// reach the first row is exactly where a finger goes.
+/// something the finger could see. Overlapping the band is enough — a row
+/// scrolled half out of it is still half on screen, and a drop aimed at the
+/// half you can see should land on it rather than on its neighbour.
+///
+/// That is about a *scrolled* list. It used to be justified by the first row
+/// sitting half under the navigation bar, and that is measurably untrue — at
+/// rest the band is 116…840 and the first row is 166…210, wholly inside it.
+/// See the release comment in `reorderGesture(for:)`.
 ///
 /// Pulled out of the view and free of SwiftUI so it can be tested without a
 /// simulator. Settings has now got this answer wrong twice, in two different
