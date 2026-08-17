@@ -76,7 +76,14 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         // One number is a special case for the identity line's sake, not for
         // the layout's: with nothing to tell it apart from, its tracker has
         // already been named on the line above it.
-        let alone = entries.count == 1
+        //
+        // **Only when the line above is the tracker.** A name the user typed
+        // wins the identity line, and then nothing has said which tracker this
+        // is — so "morning / 3" on a unitless tracker would name neither the
+        // number nor the thing it counts, and a named lone entry whose tracker
+        // has been deleted would drop the "Deleted tracker" that explains why
+        // its repeat disc is off. Both were live for one review round.
+        let alone = entries.count == 1 && displayName == nil
         let units = entries.compactMap { trackers[$0.trackerID]?.unit }
         let values = entries
             .map { entry in
@@ -103,8 +110,11 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// calorie entry "Food" would be the wrong half of the answer. Several
     /// trackers take the group they were logged as, which is what the log sheet
     /// called them when it wrote them. Anything else — a batch spanning groups,
-    /// which only a hand-edited or imported file produces — lists its trackers
-    /// and lets the line limit cut it off.
+    /// which only a hand-edited or imported file produces — lists its trackers,
+    /// and the row wraps if that runs long. No line limit: the values line is
+    /// already allowed to wrap (item 14b measured a two-line row and kept it),
+    /// so capping the identity line alone would truncate the quieter half of a
+    /// row whose louder half is permitted to grow.
     private func identity(of entries: [Entry], in trackers: [UUID: Tracker]) -> String {
         if let name = displayName { return name }
         let resolved = entries.compactMap { trackers[$0.trackerID] }

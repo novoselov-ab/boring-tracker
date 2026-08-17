@@ -216,6 +216,40 @@ struct HistoryTests {
         #expect(try line(store) == .init(identity: "Cigarettes", values: "3"))
     }
 
+    /// The mirror of the test above, and the case it got wrong: dropping the
+    /// prefix is only safe while the identity line is the tracker's name. Once
+    /// the user has typed one, nothing else on the row says what was counted.
+    @Test("A lone unitless number keeps its tracker's name under a typed one")
+    func lineKeepsTheTrackerUnderAName() throws {
+        let cigarettes = Tracker(name: "Cigarettes")
+        let store = historyStore(StoreDocument(trackers: [cigarettes], entries: [
+            Entry(trackerID: cigarettes.id, value: 3, date: time(10), name: "after lunch"),
+        ]))
+
+        #expect(try line(store) == .init(identity: "after lunch", values: "Cigarettes: 3"))
+    }
+
+    @Test("A named row whose tracker is gone still says the tracker is gone")
+    func lineForANamedDeletedTracker() throws {
+        let store = historyStore(StoreDocument(trackers: [], entries: [
+            Entry(trackerID: UUID(), value: 3, date: time(10), name: "after lunch"),
+        ]))
+
+        #expect(try line(store) == .init(identity: "after lunch", values: "Deleted tracker: 3"))
+    }
+
+    /// A name must not start printing a prefix that was never needed: with a
+    /// unit doing the telling-apart, the values line stays exactly as it was.
+    @Test("A named lone entry with a unit is unchanged")
+    func lineForANamedSingleWithAUnit() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        let store = historyStore(StoreDocument(trackers: [calories], entries: [
+            Entry(trackerID: calories.id, value: 90, date: time(10), name: "flat white"),
+        ]))
+
+        #expect(try line(store) == .init(identity: "flat white", values: "90 kcal"))
+    }
+
     @Test("Members that share a unit are still told apart inside a batch")
     func lineNamesAmbiguousMembers() throws {
         let eaten = Tracker(name: "Calories", unit: "kcal", group: "Food")
