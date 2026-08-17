@@ -489,6 +489,41 @@ Left alone, recorded rather than fixed: a long tracker name re-truncates
 mid-count when the total crosses a grouping boundary (950 → 1,050). `minWidth`
 was tried in that file before and reverted, for the common short name.
 
+## 21. Repeatable is about the tracker, not the name
+
+Two things from use.
+
+- [ ] **The Log again button is a different colour on home and in History.**
+      Same action, same accent, two answers. Fix it, and check every other
+      place that action appears while you are there.
+
+- [ ] **Log again lists named entries, and that is the wrong filter.** A name
+      is not what makes something repeatable — the tracker's **kind** is.
+
+      A **daily total** can be logged again: you can eat 450 kcal and 30 g
+      again whether or not you called it anything, so an unnamed one belongs
+      in the list and is currently missing from it.
+
+      A **measurement** cannot. Repeating yesterday's weight is meaningless —
+      you would measure again, not copy. Nothing measurement-kind belongs
+      there however carefully it was named.
+
+      So the rule becomes kind-based, and the list gains the unnamed daily
+      totals it was wrongly hiding. An unnamed row shows its values, which is
+      what identifies it.
+
+      **This is instead of a "show all" toggle.** A toggle would make Log again
+      into History with a filter, which is the direction that blurs them; the
+      right rule does the work without a control.
+
+### Why History and Log again stay separate
+
+They answer different questions, and merging them makes one screen worse at
+both. **History is "what did I do"** — chronological, everything, where you
+review and fix and delete. **Log again is "do that again"** — deduplicated,
+ranked, one tap and gone. Sharing a search and a repeat action is fine; sharing
+a screen is not.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
