@@ -53,7 +53,12 @@ struct TrackerChart: View {
                         x: .value("Day", point.date, unit: .day),
                         y: .value(tracker.name, point.value)
                     )
-                    .foregroundStyle(.tint)
+                    // The ordinary label colour, not the accent. These were
+                    // teal, which is 1.90:1 against the chart's own background
+                    // in light mode — a bar you cannot see is a chart that
+                    // doesn't work, and teal is a fill for a dark label rather
+                    // than something to draw with (docs/TODO.md item 13c).
+                    .foregroundStyle(.primary)
                 }
             case .measurement:
                 ForEach(average) { point in
@@ -71,12 +76,16 @@ struct TrackerChart: View {
                         y: .value(tracker.name, point.value),
                         series: .value("Series", "readings")
                     )
-                    .foregroundStyle(.tint)
+                    // The readings line and its points, in the label colour for
+                    // the same reason as the bars above. The average line stays
+                    // `.secondary`, so the two are still told apart by weight
+                    // rather than by a hue one of them can no longer have.
+                    .foregroundStyle(.primary)
                     PointMark(
                         x: .value("When", point.date),
                         y: .value(tracker.name, point.value)
                     )
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(.primary)
                     .symbolSize(points.count > 60 ? 0 : 20)
                 }
             }

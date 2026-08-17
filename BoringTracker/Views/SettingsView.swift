@@ -140,14 +140,20 @@ struct SettingsView: View {
         // only after letting go, which is how a drop target that resolved to
         // the wrong row survived a hand-run reproduction.
         .opacity(carried.contains(tracker.id) ? 0.4 : 1)
-        // `.tint`, not `Color.accentColor`: the accent is an environment tint
-        // (see `BoringTrackerApp`) and that name still resolves the catalog's
-        // blue. One style with a switched opacity rather than a choice between
-        // two — `.tint` and `.clear` are different shape-style types, so the
-        // branch had to be boxed in `AnyShapeStyle` to have one type; a fill at
-        // zero opacity draws exactly what `.clear` did and needs no box.
-        .background(.tint.opacity(drag?.target == tracker.id && !carried.isEmpty ? 0.18 : 0),
-                    in: .rect(cornerRadius: 8))
+        // `Color.accentFill`, not `.tint` and not `Color.accentColor`: the
+        // environment tint is the ordinary label colour now (docs/TODO.md item
+        // 13c) and that other name still resolves a catalog that does not
+        // exist. A wash behind a row is a fill, which is the one thing the
+        // accent is still allowed to be — nothing is written in it, and the
+        // label on top is the ordinary one at 0.18 opacity of teal.
+        //
+        // One style with a switched opacity rather than a choice between two:
+        // a fill at zero opacity draws exactly what `.clear` did, and no
+        // `AnyShapeStyle` box is needed to give the branch one type.
+        .background(
+            Color.accentFill.opacity(drag?.target == tracker.id && !carried.isEmpty ? 0.18 : 0),
+            in: .rect(cornerRadius: 8)
+        )
         .swipeActions(edge: .trailing) {
             archiveButton(tracker)
         }

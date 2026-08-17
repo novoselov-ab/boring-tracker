@@ -75,16 +75,27 @@ struct HistoryView: View {
                     .padding(.vertical, 6)
                 Spacer()
                 Button(action: undo) {
-                    // 44pt, the same rule the repeat disc below follows and for
-                    // a better reason: this is the recovery for a control that
-                    // writes data on one tap. A bare `Button("Undo")` is hit
-                    // only where the word is drawn — measured at roughly 20pt
-                    // tall inside a 40pt bar — so the target was half the size
-                    // of the mistake it exists to fix.
+                    // Filled, dark-labelled, and shaped like the repeat disc
+                    // eight lines below it — the same idiom in a capsule
+                    // because the word is wider than it is tall. It used to be
+                    // teal *text* on the bar, which is the pairing item 13c
+                    // removes: 1.89:1 in light mode, on the one control in the
+                    // app that exists to be found in a hurry.
+                    //
+                    // 32pt fill inside a 44pt target, so the bar's height does
+                    // not move: this is the recovery for a control that writes
+                    // data on one tap, and a bare `Button("Undo")` was hit only
+                    // where the word is drawn — roughly 20pt inside a 40pt bar,
+                    // half the size of the mistake it exists to fix.
                     Text("Undo")
+                        .foregroundStyle(Color.onAccent)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 32)
+                        .background(Color.accentFill, in: .capsule)
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity)
@@ -221,7 +232,13 @@ private struct HistoryRow: View {
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(canRepeat ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
                 .frame(width: 30, height: 30)
-                .background(canRepeat ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary), in: .circle)
+                // `Color.accentFill`, not `.tint`: the environment tint is the
+                // ordinary label colour now, and teal is only ever a fill
+                // (docs/TODO.md item 13c).
+                .background(
+                    canRepeat ? AnyShapeStyle(Color.accentFill) : AnyShapeStyle(.quaternary),
+                    in: .circle
+                )
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }

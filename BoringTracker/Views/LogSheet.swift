@@ -139,6 +139,9 @@ struct LogSheet: View {
                         Text("Log").onAccentFill()
                     }
                     .buttonStyle(.borderedProminent)
+                    // Named, not inherited: the environment tint is the
+                    // ordinary label colour now (docs/TODO.md item 13c).
+                    .tint(Color.accentFill)
                     .disabled(amounts.isEmpty)
                 }
                 .padding(.horizontal)
@@ -225,13 +228,12 @@ struct LogSheet: View {
                 // in the down-chevron's rect — a previous/next control that
                 // does the opposite of what it looks like.
                 .font(.system(size: 17, weight: .medium))
-                // Tinted, like every other system form accessory: `.plain` is
-                // here for the 44pt `contentShape`, not for its colour, and it
-                // would otherwise paint these the same black as the labels.
-                // `.tint`, not `Color.accentColor` — the accent lives as an
-                // environment tint (see `BoringTrackerApp`), and the catalog
-                // colour that name resolves is still the system blue.
-                .foregroundStyle(.tint)
+                // Drawn in the ordinary label colour, which is what `.plain`
+                // gives them and what the tint now resolves to anyway. They
+                // used to be teal, which is a foreground use of the accent and
+                // measured 1.89:1 on this sheet's background in light mode
+                // (docs/TODO.md item 13c). A chevron is a glyph you aim at, so
+                // it has the same 3:1 floor as any other control.
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }

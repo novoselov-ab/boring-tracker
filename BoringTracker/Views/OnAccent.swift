@@ -2,9 +2,29 @@ import SwiftUI
 
 extension Color {
 
+    /// The accent, and it is **only ever a fill**.
+    ///
+    /// `.teal` rather than a hex: a system colour is dynamic, so it desaturates
+    /// itself on black instead of glowing there, and dark mode is where this app
+    /// is used. `.mint` was the alternative and reads greener than the app's own
+    /// name.
+    ///
+    /// Named rather than read from the environment tint, because the tint is no
+    /// longer this colour (docs/TODO.md item 13c). Teal is light in both
+    /// appearances, which is what makes it a good fill behind a dark label and a
+    /// bad colour to write with: as a *foreground* on the ordinary background it
+    /// measured 1.95:1 in light mode, under the same 3:1 floor item 13b fixed
+    /// the fills against. So every control that used to be teal text is drawn in
+    /// the ordinary label colour, and this name marks the places that are
+    /// genuinely a fill — the prominent buttons, the two small discs that are
+    /// the same idiom in miniature, and the drop highlight in settings.
+    ///
+    /// Anything painted with this needs `Color.onAccent` on top of it.
+    static let accentFill = Color.teal
+
     /// What goes *on* the accent fill.
     ///
-    /// The app's tint is a light teal — `#00D9E6` in dark mode, `#00CDD9` in
+    /// The accent fill is a light teal — `#00D9E6` in dark mode, `#00CDD9` in
     /// light — and iOS draws a prominent button's label white whatever the tint
     /// is. That pairing measures 1.74:1, against the 3:1 floor a UI element
     /// needs, on the one screen this app exists to be glanced at one-handed

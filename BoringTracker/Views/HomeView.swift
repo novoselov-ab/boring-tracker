@@ -55,6 +55,10 @@ struct HomeView: View {
                             .onAccentFill()
                     }
                     .buttonStyle(.borderedProminent)
+                    // The accent is named here rather than inherited: the
+                    // environment tint is the ordinary label colour now, and
+                    // teal is a fill (docs/TODO.md item 13c, `Color.accentFill`).
+                    .tint(Color.accentFill)
                     .controlSize(.large)
                     .padding(.horizontal)
                     .padding(.vertical, 6)
@@ -119,6 +123,7 @@ struct HomeView: View {
                 Text("Add Tracker").onAccentFill()
             }
             .buttonStyle(.borderedProminent)
+            .tint(Color.accentFill)
         }
     }
 
@@ -398,10 +403,11 @@ private struct TrackerCard: View {
                 // languages again (docs/TODO.md item 13b).
                 .foregroundStyle(Color.onAccent)
                 .frame(width: 30, height: 30)
-                // `.tint`, not `Color.accentColor`: the accent is set as an
-                // environment tint in `BoringTrackerApp` and the catalog one
-                // this used to read is still the system blue.
-                .background(.tint, in: .circle)
+                // `Color.accentFill`, not `.tint` and not `Color.accentColor`:
+                // the environment tint is the ordinary label colour now, and
+                // the catalog colour that second name resolves does not exist
+                // yet (docs/TODO.md items 13c and 18).
+                .background(Color.accentFill, in: .circle)
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }

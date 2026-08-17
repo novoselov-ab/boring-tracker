@@ -791,7 +791,7 @@ user: if repeating from History becomes the way you log, the name probably has
 to grow back — and that is a decision about which of the two items was right,
 not a tweak.
 
-## 13c. Teal is a fill, not a text colour
+## 13c. Teal is a fill, not a text colour — done
 
 Left by the item 14 review: the teal drawn as a *foreground* — tinted text and
 glyphs on the ordinary background — was never measured and fails in light mode.
@@ -802,10 +802,61 @@ Rather than tune a second shade, apply the rule 13b already established:
 with.** Where it currently paints text or a small glyph directly, it becomes
 either a fill with a dark label on it, or the ordinary label colour.
 
-- [ ] Find every foreground use of the accent and convert or revert it.
-- [ ] Measure light mode as well as dark. Dark is what this app is used in,
+- [x] Find every foreground use of the accent and convert or revert it.
+- [x] Measure light mode as well as dark. Dark is what this app is used in,
       but light still ships, and "we only look at dark" is not a reason for it
       to be unreadable.
+
+**The accent stopped being the tint.** Finding them one at a time is how this
+went wrong twice, and a tint is inherited by every standard control there is —
+so the fix is at the root: `.tint(.primary)` in `BoringTrackerApp`, and teal
+survives only where a line of code names `Color.accentFill` to fill something.
+A foreground use cannot be missed now, because there is nothing left to inherit
+it from. `.primary` rather than no tint at all, since the default is the system
+blue item 13 deliberately stopped using.
+
+Seven sites moved, measured on an iPhone 17 in both appearances. Light first,
+because light is where it failed:
+
+    nav bar gear, home            2.13:1  →  20.34:1     dark 10.71 → 15.84
+    nav bar +, tracker detail     2.13:1  →  16.98:1     dark 10.71 → 15.99
+    the Group picker's value      2.16:1  →  21.00:1     dark  9.15 → 17.01
+    Export JSON, in settings      2.16:1  →  21.00:1     dark 11.30 → 21.00
+    the log sheet's chevrons      2.07:1  →  19.00:1     dark  7.65 → 13.27
+    a chart bar on its card       2.16:1  →  21.00:1     dark  9.15 → 17.01
+    History's Undo                2.07:1  →   9.72:1     dark  9.93 → 11.30
+
+The four fills item 13b fixed are untouched and measure what they did before:
+black on `#00C3D0` in light, on `#00D2E0` in dark. **Those two hexes are not
+the `#00CDD9` / `#00D9E6` recorded in items 13 and 13b, and the ratios that
+follow are 9.72:1 and 11.30:1 rather than 10.73:1 and 12.07:1.** Sampled the
+same way — `xcrun simctl io booted screenshot` and an AppKit pixel scan, on a
+PNG that reports itself as `sRGB IEC61966-2.1`, cropped inside each fill.
+Black reads exactly `#000000` and white exactly `#FFFFFF` in the same crops, so
+nothing is shifting the whole image; the accent itself renders slightly darker
+on this runtime than the one those numbers were taken on. Every conclusion
+holds — the fills are six to seven times the 3:1 floor either way — but the
+hexes are worth distrusting until somebody explains them.
+
+**Undo is now a fill rather than a word.** It is the one control in the app
+that exists to be found in a hurry, and "the ordinary label colour" would have
+made it read as part of the sentence beside it. A 32pt capsule inside the 44pt
+target item 14 gave it, which is the repeat disc's idiom in the shape a word
+needs, so the bar's height did not move.
+
+**The chart lost its colour, and that is the visible cost of the rule.** Bars
+and the readings line were `.foregroundStyle(.tint)`, which is a foreground use
+by anybody's definition — and at 2.16:1 a bar was barely a shape in light mode.
+They are the label colour now: black bars on white, white on black. The moving
+average stays `.secondary`, so the two lines are still told apart, by weight
+rather than by a hue one of them can no longer have.
+
+**And the nav bars read quieter.** Cancel, Save, the gear, the clock and
+tracker detail's + are the label colour now, which on iOS 26 still sits inside
+a glass capsule that says "button" — but a tinted nav bar is what an Apple app
+looks like, and this is the one place the rule costs something rather than
+buying something. Left as it is: the alternative is a second accent for
+foregrounds, which is the "tune a second shade" this item exists to refuse.
 
 ## 14b. Put the name first, still grey
 

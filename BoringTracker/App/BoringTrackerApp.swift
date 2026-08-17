@@ -13,23 +13,27 @@ struct BoringTrackerApp: App {
         WindowGroup {
             HomeView()
                 .environment(store)
-                // The app's accent, in one place. `.teal` rather than a hex:
-                // a system colour is dynamic, so it desaturates itself on
-                // black instead of glowing there, and dark mode is where this
-                // app is used. `.mint` was the alternative and reads greener
-                // than the app's own name — teal is still a quiet blue-green
-                // and stays distinguishable from the green/orange the archive
-                // swipe already owns.
+                // The ordinary label colour, not the accent. A tint is what
+                // every standard control *writes* with — a nav bar glyph, a
+                // form picker's value, the Undo in a bar — and the accent is a
+                // light teal, which on the ordinary background measured 1.95:1
+                // in light mode against a 3:1 floor (docs/TODO.md item 13c).
+                // Item 13b settled that pairing for the fills by moving the
+                // label; there is nothing to move here, because the teal *is*
+                // the label. So teal stops being the tint and stays what item
+                // 13b made it: a fill, named `Color.accentFill`, applied at the
+                // handful of places that genuinely fill something.
                 //
-                // As an environment tint rather than an asset-catalog accent
-                // because there is no asset catalog yet (docs/TODO.md item 18),
-                // and one modifier that every control already reads beats a
-                // catalog entry plus a build setting. The corollary is that
-                // nothing may paint with `Color.accentColor`, which resolves
-                // from the catalog and would have stayed blue — the places
-                // that used it now use the `.tint` shape style, which resolves
-                // from here.
-                .tint(.teal)
+                // `.primary`, not "no tint at all": the default is the system
+                // blue this app deliberately stopped using.
+                //
+                // The corollary from item 13 still holds and now covers two
+                // names: nothing may paint with `Color.accentColor`, which
+                // resolves from an asset catalog that does not exist yet
+                // (item 18) and is still blue, and nothing may paint with the
+                // `.tint` shape style expecting teal, because this is what it
+                // resolves to.
+                .tint(.primary)
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else {
