@@ -66,6 +66,7 @@ struct TrackerDetailView: View {
                         using: $logging
                     )
                 }
+                .navBarAccent()
             }
         }
     }
@@ -123,7 +124,12 @@ struct TrackerDetailView: View {
                      : "Deleted batch")
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Undo") { store.undoLastDeletion() }
+                // The same capsule History's undo bar draws. It was a bare
+                // `Button("Undo")` until the item 13d review found it: with the
+                // tint set to the label colour (item 13c), the one control that
+                // takes back a deletion was drawn exactly like the sentence
+                // beside it, which is a recovery you have to hunt for.
+                UndoButton { store.undoLastDeletion() }
             }
         }
     }

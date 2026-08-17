@@ -2,7 +2,7 @@ import SwiftUI
 
 extension Color {
 
-    /// The accent, and it is **only ever a fill**.
+    /// The accent. A fill everywhere except the nav bar — see `navBarAccent()`.
     ///
     /// `.teal` rather than a hex: a system colour is dynamic, so it desaturates
     /// itself on black instead of glowing there, and dark mode is where this app
@@ -19,14 +19,16 @@ extension Color {
     /// genuinely a fill — the prominent buttons, the two small discs that are
     /// the same idiom in miniature, and the drop highlight in settings.
     ///
-    /// Anything painted with this needs `Color.onAccent` on top of it.
+    /// Anything *filled* with this needs `Color.onAccent` on top of it. The one
+    /// place it is a foreground is system chrome, which has its own name below
+    /// so that the exception is greppable rather than a judgement call.
     static let accentFill = Color.teal
 
     /// What goes *on* the accent fill.
     ///
-    /// The accent fill is a light teal — `#00D9E6` in dark mode, `#00CDD9` in
+    /// The accent fill is a light teal — `#00D2E0` in dark mode, `#00C3D0` in
     /// light — and iOS draws a prominent button's label white whatever the tint
-    /// is. That pairing measures 1.74:1, against the 3:1 floor a UI element
+    /// is. That pairing measures 1.86:1, against the 3:1 floor a UI element
     /// needs, on the one screen this app exists to be glanced at one-handed
     /// (docs/TODO.md item 13b). The blue it replaced was 2.69:1, so the accent
     /// change made a failing pairing worse rather than breaking a working one,
@@ -70,11 +72,66 @@ private struct OnAccentFill: ViewModifier {
     }
 }
 
+/// The app's recovery control, drawn one way wherever it appears.
+///
+/// Filled, dark-labelled, and shaped like History's repeat disc — the same
+/// idiom in a capsule, because the word is wider than it is tall. A 32pt fill
+/// inside a 44pt target, so it does not set the height of the bar or the row it
+/// lands in; a bare `Button("Undo")` is hit only where the word is drawn, which
+/// was half the size of the mistake it exists to fix.
+///
+/// **Shared rather than written twice.** There are two of these — History's
+/// undo bar and a tracker's own deletion row — and item 13c redesigned the
+/// first without noticing the second, which left one screen's recovery as a
+/// capsule and another's as a word in the label colour, indistinguishable from
+/// the sentence beside it. Undo is the one control in the app that exists to be
+/// found in a hurry (docs/PHILOSOPHY.md, "Forgiving"), so it is the last place
+/// two design languages belong.
+struct UndoButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("Undo")
+                .foregroundStyle(Color.onAccent)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 32)
+                .background(Color.accentFill, in: .capsule)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(.rect)
+        }
+        // `.plain`, so the fill above is the whole of the styling and a list row
+        // does not draw its own on top.
+        .buttonStyle(.plain)
+    }
+}
+
 extension View {
 
     /// For the label of a control filled with the accent — a prominent button,
     /// or the small discs that are the same idiom in miniature.
     func onAccentFill() -> some View {
         modifier(OnAccentFill())
+    }
+
+    /// The accent back on a **nav bar button**, and nowhere else
+    /// (docs/TODO.md item 13d).
+    ///
+    /// Item 13c stopped the accent being something this app *writes* with —
+    /// chart bars, glyphs and labels on the ordinary background — and applying
+    /// that at the root took the nav bars with it, which is the one place the
+    /// rule cost something rather than buying something. A tinted bar button is
+    /// not text painted in an accent; it is the standard iOS affordance for
+    /// "tappable", on a bar background Apple has already tuned for it, and
+    /// Cancel, Save, the gear and the clock read as chrome rather than as
+    /// writing. So this is a carve-out for system chrome, not a retreat: the
+    /// chart stays monochrome and every other 13c site is unchanged.
+    ///
+    /// Per button rather than at the root on purpose. The root tint stays
+    /// `.primary`, so a foreground use of teal cannot appear by inheritance the
+    /// way it did twice before — it has to name itself here, and a bar button
+    /// that misses this call reads as one black word beside a teal one.
+    func navBarAccent() -> some View {
+        tint(Color.accentFill)
     }
 }

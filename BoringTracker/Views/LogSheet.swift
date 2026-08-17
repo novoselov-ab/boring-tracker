@@ -275,6 +275,15 @@ struct LogSheet: View {
                 .contentShape(.rect)
             }
             .accessibilityLabel("Logging \(label(group))")
+            // Tinted with the rest of the bar (docs/TODO.md item 13d). Sitting
+            // where a title goes was the argument for leaving it the label
+            // colour, and two review rounds read it the other way: this is the
+            // one control on the sheet, and the *static* title twenty lines
+            // below — the same words, for a group you cannot switch away from —
+            // is what it would otherwise look like. A 12pt chevron is not
+            // enough difference between "this is what you are logging" and
+            // "this is what you are logging, and you can change it".
+            .navBarAccent()
         } else {
             Text(label(group)).font(.headline)
         }

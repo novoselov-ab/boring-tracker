@@ -76,12 +76,14 @@ struct HomeView: View {
                         Image(systemName: "gearshape")
                     }
                     .accessibilityLabel("Settings")
+                    .navBarAccent()
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(value: Route.history) {
                         Label("History", systemImage: "clock")
                     }
                     .labelStyle(.iconOnly)
+                    .navBarAccent()
                 }
             }
             .navigationDestination(for: Route.self) { route in
@@ -418,7 +420,7 @@ private struct TrackerCard: View {
                 // The same dark-on-teal the Log pill uses, for the same
                 // measured reason: this glyph sits on the identical fill six to
                 // ten times down the main screen, so it was the identical
-                // 1.74:1. The two move together or the screen has two design
+                // 1.86:1. The two move together or the screen has two design
                 // languages again (docs/TODO.md item 13b).
                 .foregroundStyle(Color.onAccent)
                 .frame(width: 30, height: 30)

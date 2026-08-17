@@ -47,10 +47,12 @@ struct EntryEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { dismiss() }.navBarAccent()
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(NumberInput.parse(typed) == nil)
+                    Button("Save", action: save)
+                        .disabled(NumberInput.parse(typed) == nil)
+                        .navBarAccent()
                 }
             }
         }

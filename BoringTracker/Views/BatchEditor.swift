@@ -51,10 +51,12 @@ struct BatchEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: dismiss.callAsFunction)
+                    Button("Cancel", action: dismiss.callAsFunction).navBarAccent()
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(parsedValues == nil)
+                    Button("Save", action: save)
+                        .disabled(parsedValues == nil)
+                        .navBarAccent()
                 }
             }
         }

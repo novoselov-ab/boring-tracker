@@ -39,10 +39,10 @@ struct TrackerEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { dismiss() }.navBarAccent()
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!canSave)
+                    Button("Save", action: save).disabled(!canSave).navBarAccent()
                 }
             }
         }

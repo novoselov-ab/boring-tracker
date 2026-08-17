@@ -8,6 +8,17 @@ struct HistoryView: View {
 
     var body: some View {
         let days = days
+        // One dictionary for the whole screen. `HistoryItem.line` takes it as a
+        // parameter precisely so a screenful of rows does not each rebuild it,
+        // and the rows were rebuilding one each anyway.
+        //
+        // `uniquingKeysWith`, not `uniqueKeysWithValues`, which traps: a store
+        // file holding two trackers with the same id is a shape nothing on the
+        // load path rejects, and the rest of the store layer already survives
+        // it.
+        let trackers = Dictionary(
+            store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
+        )
         Group {
             if days.isEmpty {
                 ContentUnavailableView(
@@ -20,7 +31,7 @@ struct HistoryView: View {
                     ForEach(days, id: \.day) { group in
                         Section(title(for: group.day)) {
                             ForEach(group.items) { item in
-                                HistoryRow(item: item) { editing = item }
+                                HistoryRow(item: item, trackers: trackers) { editing = item }
                                     .swipeActions(edge: .trailing) {
                                         Button("Delete", systemImage: "trash", role: .destructive) {
                                             if let entry = item.entries.first {
@@ -74,28 +85,12 @@ struct HistoryView: View {
                     // for a case that only happens at the top of the range.
                     .padding(.vertical, 6)
                 Spacer()
-                Button(action: undo) {
-                    // Filled, dark-labelled, and shaped like the repeat disc
-                    // eight lines below it — the same idiom in a capsule
-                    // because the word is wider than it is tall. It used to be
-                    // teal *text* on the bar, which is the pairing item 13c
-                    // removes: 1.89:1 in light mode, on the one control in the
-                    // app that exists to be found in a hurry.
-                    //
-                    // 32pt fill inside a 44pt target, so the bar's height does
-                    // not move: this is the recovery for a control that writes
-                    // data on one tap, and a bare `Button("Undo")` was hit only
-                    // where the word is drawn — roughly 20pt inside a 40pt bar,
-                    // half the size of the mistake it exists to fix.
-                    Text("Undo")
-                        .foregroundStyle(Color.onAccent)
-                        .padding(.horizontal, 12)
-                        .frame(minHeight: 32)
-                        .background(Color.accentFill, in: .capsule)
-                        .frame(minWidth: 44, minHeight: 44)
-                        .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
+                // It used to be teal *text* on the bar, which is the pairing
+                // item 13c removes: 1.89:1 in light mode, on the one control in
+                // the app that exists to be found in a hurry. `UndoButton`
+                // carries the shape and the reasons, and the tracker detail
+                // screen's own undo row draws the same one.
+                UndoButton(action: undo)
             }
             .padding(.horizontal)
             .frame(maxWidth: .infinity)
@@ -157,6 +152,8 @@ struct HistoryView: View {
 private struct HistoryRow: View {
     @Environment(Store.self) private var store
     let item: HistoryItem
+    /// Built once for the screen by `HistoryView`, not per row.
+    let trackers: [UUID: Tracker]
     let edit: () -> Void
 
     /// One shape for every row: what it is called on the first line, what it
@@ -256,16 +253,7 @@ private struct HistoryRow: View {
         .accessibilityLabel("Log again")
     }
 
-    /// `uniquingKeysWith`, not `uniqueKeysWithValues`, which traps: a store file
-    /// holding two trackers with the same id is a shape nothing on the load path
-    /// rejects, and the rest of the store layer already survives it.
-    private var line: HistoryItem.Line {
-        item.line(
-            trackers: Dictionary(
-                store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
-            )
-        )
-    }
+    private var line: HistoryItem.Line { item.line(trackers: trackers) }
 }
 
 #Preview {

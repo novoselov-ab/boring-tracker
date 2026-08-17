@@ -27,6 +27,16 @@ struct BoringTrackerApp: App {
                 // `.primary`, not "no tint at all": the default is the system
                 // blue this app deliberately stopped using.
                 //
+                // The cost is that a tint carries meaning for some standard
+                // controls, and `.primary` is a poor answer for those. Measured
+                // in review: a `Toggle` under this tint is a solid white capsule
+                // in dark mode — white track, white knob, on and off
+                // indistinguishable. There is no `Toggle` in the app, and the
+                // first one to arrive needs its own `.tint`, the way the nav bar
+                // buttons name `navBarAccent()` and the prominent buttons name
+                // `Color.accentFill`. What this rules out is *inheritance*, not
+                // colour.
+                //
                 // The corollary from item 13 still holds and now covers two
                 // names: nothing may paint with `Color.accentColor`, which
                 // resolves from an asset catalog that does not exist yet
