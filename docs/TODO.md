@@ -617,6 +617,38 @@ and the label is dark now. Worth capturing directly the next time the console is
 unlocked, but it cannot fail — pressed only moves this pairing further from the
 floor.
 
+**Reproduced by the review, on its own probe build and its own pixel scan.**
+`#000000` on `#00D9E6` at the Log pill, a card's +, the empty state's *Add
+Tracker* and (after item 14) the History repeat disc: **12.08:1** dark and
+**10.69:1** light, against the 12.07 / 10.73 above — the same measurement, the
+last digit moving with which antialiased pixels land in the crop. The exact
+ratios for those two pairs are 12.07:1 and 10.73:1, so the recorded numbers are
+the right ones. The disabled Log measured `#3C3C3C` on `#000000`, **1.92:1** —
+the system's own rendering, so `onAccentFill` did stand aside rather than paint
+black on black. **There is no fifth site:** every other `.tint` in the app is a
+foreground (the chart's line and area, the log sheet's chevrons) or the settings
+drop highlight at 0.18 opacity, and no `Color.accentColor` survives anywhere.
+Pressed stayed uncaptured for the review too — the console was still locked —
+but the 13.02:1 above recomputes exactly from `#36E0EB`.
+
+**The other half of the accent was never measured, and it fails in light mode.**
+This item fixed what sits *on* the teal. Nothing here looked at the teal drawn
+*as* a foreground on a light background, which is what every plain tinted control
+does — and in light mode that is teal on near-white, measured on the iPhone 17:
+
+    #00CBD9 on #FCFCFF   1.95:1   nav bar gear, and the History clock beside it
+    #00CDD9 on #FBFBFD   1.89:1   the undo bar's Undo button (item 14)
+
+Against the same 3:1 floor, and against 2.68:1 for the blue this replaced — so
+again a failing pairing made worse rather than a working one broken. Dark mode is
+fine at 10.21:1, and dark mode is where this app is used, but light mode ships
+too. **Not fixed here, and not a fifth instance of what 13b fixed** — those four
+sites were *fills* and this is the tint itself, at every plain tinted control in
+the app including two that predate item 14. Moving it means changing the accent
+or how a foreground tint is drawn app-wide — nav bar, chart, log sheet chevrons,
+the undo bar — which is the same decision item 13b was, and the same one that
+belongs to the user rather than to a review of item 14.
+
 ## 14. Log it again, from History — done
 
 A button on each History row that logs that entry again, now. Same values, same
@@ -655,6 +687,17 @@ the whole row instead was rejected — deleting a tracker and keeping its histor
 is a supported choice, and it would disable the button on every row that tracker
 ever touched.
 
+**Correction, from the review: only the *deleted* half of that explains itself.**
+An archived tracker is still a record, so its row prints its value like any
+other, and the sentence above is true of a deleted tracker's row and false of an
+archived one — the disc is simply off, with nothing on the row saying why.
+Checked on the iPhone 17 against a fixture holding both: the deleted row reads
+"Deleted tracker: 3", the archived row reads "7 y". The disabled disc measures
+1.25:1 against the row in light mode and 1.58:1 in dark, so it reads as *no*
+button rather than a dead one, which is why this is a missing explanation and
+not a control that lies. Left as it is on purpose: saying "Archived" on the row
+changes what a row shows, and what a row shows is item 14b's question.
+
 **The undo moved to the bottom of the screen, and took the delete undo with
 it.** It used to be a section above the first day, which works only while you
 are already looking at the top — and neither thing it undoes happens there.
@@ -668,7 +711,59 @@ the screen saying the same thing twice.
 **One undo slot, not two.** A pending deletion and a pending repeat behind one
 Undo button would give that button two meanings and no way to say which; two
 buttons is more screen than either case deserves. The newer write takes the slot,
-which is exactly what a second deletion already did to the first. Undoing a
+which is exactly what a second deletion already did to the first.
+
+**And a newer write ends a pending repeat's offer, which the first pass did not
+do.** The review found the hole: only `logAgain` and a deletion set the slot, so
+a log through the sheet or an edit left the old offer standing. Repeat a row, log
+a different food, come back to History, and the bar still read "Logged again"
+over a list whose top row was the food you had just logged — Undo then deleted
+the repeat, with no tombstone and nothing to recover it from. Editing the batch a
+repeat wrote was the same shape and worse: Undo removes by id, so it took the
+edit away with the entries. Adding an entry and editing one now withdraw a
+pending repeat, and `logAgain` sets it again afterwards.
+
+**Only the repeat's, because the two slots are not symmetric.** Undoing a repeat
+*removes* records, so a stale offer destroys data; undoing a deletion only puts
+records back, so it can go stale harmlessly — and tracker detail's undo row
+surviving a log made while it is on screen is the forgiving behaviour that
+already shipped. Withdrawing both would have paid for this bug with a working
+undo somewhere else. A repeat that loses *some* of its members to a tracker
+deletion drops out whole for the same data reason — "Logged 1 of 2 again" beside
+a write that is now one entry describes a row that never existed. A save that
+changed nothing withdraws nothing, by the same test that already decides whether
+a member gets a fresh `modified`: opening the row a repeat wrote to check the
+number should not cost the undo.
+
+**The Undo button was a 20pt target inside a 40pt bar.** `Button("Undo")` is hit
+only where the word is drawn, so the recovery for a control that writes data on
+one tap was half the size of the mistake it exists to fix — while the repeat disc
+eight lines below it carries an explicit 44pt frame. Its label now carries the
+same 44pt, which took the bar from 74.3pt to 78.0pt overall on the iPhone 17
+(measured off screenshots: the `.bar` material's top edge moved 11px at 3x, and
+34pt of that total is the home-indicator safe area either way). The bar's own
+vertical padding moved onto the message to buy that: at default sizes the
+button's 44pt sets the height and the padding is slack inside it, and above the
+accessibility sizes the message is the taller of the two, where without it the
+wrapped lines render flush against both edges of the material. Padding the bar
+instead bought the same margin at the cost of 12pt at every size. Swept to AX5:
+the message wraps to two lines with room above and below, and nothing clips or
+overlaps.
+
+**Still unpressed, by the review as well.** The console was locked for both
+sessions, so the repeat disc's tap target, the swipe-to-delete on the
+restructured row and the Undo button's own tap were driven through the store and
+looked at in screenshots, never touched. What the screenshots do settle: both
+repeat paths write a new row into Today and leave the tapped row's values, name
+and time exactly as they were; the partial row's bar reads "Logged 1 of 2 again";
+the deleted-tracker row prints "Deleted tracker" beside a disc that is off. The
+bar's Undo measures **10.21:1** (`#00D9E6` on the bar's `#171818`) in dark mode,
+not the 7.3:1 recorded above — comfortably clear either way, but the smaller
+number was the one that did not reproduce. In *light* mode the same button is
+1.89:1, which is the accent's own problem rather than this item's — see the last
+paragraph of 13b.
+
+Undoing a
 repeat records **no tombstone** — the entries are being unmade, not deleted, and
 a tombstone would carry "never allow this id again" into every future merge for
 a log that lasted two seconds. The same honest limit as the deletion undo

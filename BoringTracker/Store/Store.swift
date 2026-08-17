@@ -34,6 +34,11 @@ final class Store {
     /// buttons is more screen than either case deserves. So the newer write
     /// takes the slot and the older one stops being offered — which is exactly
     /// what a second deletion already did to the first.
+    ///
+    /// **A newer write also ends a pending repeat's offer, and only a repeat's**
+    /// — see `forgetRepeatUndo`. Undoing a repeat removes entries, so an offer
+    /// that outlives the write it describes destroys data; undoing a deletion
+    /// only puts records back, so it can go stale harmlessly.
     private enum LastWrite {
         /// Everything one deletion removed, newest first.
         case deleted([Entry])
@@ -339,6 +344,7 @@ final class Store {
         entry.modified = .stamp()
         insertSorted(entry)
         apply(1, to: entry)
+        forgetRepeatUndo()
         refreshToday()
         scheduleSave()
     }
@@ -418,6 +424,21 @@ final class Store {
         return true
     }
 
+    /// Ends a pending repeat's undo, because something newer has been written.
+    ///
+    /// Only the repeat's. The two slots are not symmetric: undoing a repeat
+    /// **removes** entries by id, so an offer that outlives the write it
+    /// describes destroys data — repeat a row, log a different food, and a bar
+    /// still reading "Logged again" deletes the repeat with no tombstone behind
+    /// it; edit the batch the repeat wrote and the same tap takes the edit away
+    /// with it. Undoing a deletion only puts records back, so a deletion's offer
+    /// is harmless however stale it gets, and it keeps standing exactly as it
+    /// did before — the undo row in tracker detail survives a log made while it
+    /// is on screen, which is what "forgiving" asks for (docs/PHILOSOPHY.md).
+    private func forgetRepeatUndo() {
+        if case .logged = lastWrite { lastWrite = nil }
+    }
+
     /// Takes back the repeat that was just written.
     ///
     /// A mistap now costs data rather than a moment, so this has to exist. It
@@ -460,6 +481,7 @@ final class Store {
         entries.removeAll { ids.contains($0.id) }
 
         let now = Date.stamp()
+        var changedSomething = false
         for var updated in updatedEntries {
             // Only a member that actually changed gets a fresh stamp. The batch
             // editor submits every member of the row whichever one you touched,
@@ -470,13 +492,21 @@ final class Store {
             if let old = previous[updated.id] {
                 var withoutStamp = updated
                 withoutStamp.modified = old.modified
-                updated.modified = withoutStamp == old ? old.modified : now
+                let changed = withoutStamp != old
+                updated.modified = changed ? now : old.modified
+                changedSomething = changedSomething || changed
             } else {
                 updated.modified = now
+                changedSomething = true
             }
             insertSorted(updated)
             apply(1, to: updated)
         }
+        // The same test decides both: a save that changed nothing is not a
+        // newer write, so it must not withdraw a pending repeat's undo any more
+        // than it restamps a member. Opening the batch a repeat wrote to check
+        // the number and closing it again would otherwise cost the undo.
+        if changedSomething { forgetRepeatUndo() }
         refreshToday()
         scheduleSave()
         return true
@@ -637,6 +667,14 @@ final class Store {
     /// the deletion never touched. A repeat's undo removes entries rather than
     /// restoring them, so once its members are gone there is nothing left for it
     /// to take back, and an offer to undo what no longer exists is a lie.
+    ///
+    /// A repeat that lost only *some* of its members drops out whole rather than
+    /// shrinking. Its two numbers describe one moment — "you tapped a row of
+    /// three and I wrote two of them" — and there is no honest way to restate
+    /// them once a tracker deletion has taken one of the two away: keeping the
+    /// old `skipped` beside a smaller count reads "Logged 1 of 2 again" about a
+    /// row that never existed, and recomputing it would claim the tap skipped
+    /// something it had in fact written.
     private func forgetUndo(of tracker: UUID) {
         func surviving(_ entries: [Entry]) -> [Entry] {
             entries.filter { $0.trackerID != tracker }
@@ -645,9 +683,8 @@ final class Store {
         case .deleted(let entries):
             let remaining = surviving(entries)
             lastWrite = remaining.isEmpty ? nil : .deleted(remaining)
-        case .logged(let entries, let skipped):
-            let remaining = surviving(entries)
-            lastWrite = remaining.isEmpty ? nil : .logged(entries: remaining, skipped: skipped)
+        case .logged(let entries, _):
+            if surviving(entries).count != entries.count { lastWrite = nil }
         case .none:
             break
         }

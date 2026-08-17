@@ -64,11 +64,29 @@ struct HistoryView: View {
             HStack {
                 Text(message)
                     .foregroundStyle(.secondary)
+                    // On the message rather than on the bar. At default sizes
+                    // the button's 44pt sets the height and this is slack
+                    // inside it; above the accessibility sizes the message is
+                    // the taller of the two and sets the height itself, and
+                    // without this its wrapped lines render flush against both
+                    // edges of the material. Padding the bar instead would buy
+                    // the same margin by making it 12pt taller at every size,
+                    // for a case that only happens at the top of the range.
+                    .padding(.vertical, 6)
                 Spacer()
-                Button("Undo", action: undo)
+                Button(action: undo) {
+                    // 44pt, the same rule the repeat disc below follows and for
+                    // a better reason: this is the recovery for a control that
+                    // writes data on one tap. A bare `Button("Undo")` is hit
+                    // only where the word is drawn — measured at roughly 20pt
+                    // tall inside a 40pt bar — so the target was half the size
+                    // of the mistake it exists to fix.
+                    Text("Undo")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(.rect)
+                }
             }
             .padding(.horizontal)
-            .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .background(.bar)
         }
@@ -181,9 +199,18 @@ private struct HistoryRow: View {
     /// opening an empty sheet.
     ///
     /// Off when the row has nothing left to write: every tracker it named has
-    /// been deleted or archived. The row already says so — it prints
-    /// "Deleted tracker" for those values — and a control that looks live and
-    /// does nothing is worse than one that plainly cannot be used.
+    /// been deleted or archived. A control that looks live and does nothing is
+    /// worse than one that plainly cannot be used.
+    ///
+    /// **A deleted tracker's row explains itself and an archived one does not.**
+    /// `values` prints "Deleted tracker" where the record is gone, so that row
+    /// says why the disc is off; an archived tracker is still a record, so its
+    /// row reads like any other and the disc is simply absent-looking beside it
+    /// (measured at 1.25:1 against the row in light mode — it reads as no button
+    /// rather than a dead one). Left that way deliberately, and corrected in
+    /// docs/TODO.md item 14 rather than fixed here: saying "Archived" on the row
+    /// is a change to what a row shows, and what a row shows is item 14b's
+    /// question.
     private var repeatButton: some View {
         let canRepeat = !store.repeatableEntries(of: item).isEmpty
         return Button { store.logAgain(item) } label: {
