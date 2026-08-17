@@ -484,6 +484,12 @@ final class Store {
     /// hoisting the set takes the whole walk from 54.0–56.9ms to 49.9–51.0ms
     /// over eight trackers, and from 56.2–59.3ms to 54.4–55.5ms over three. The
     /// rule stays written once; only where the set is built moves.
+    ///
+    /// The public entry point above pays for that: it builds the set per call,
+    /// and its callers are row bodies. Sub-microsecond on a handful of trackers,
+    /// and taken deliberately — the alternative is the rule written twice, or a
+    /// set threaded through two views to save an allocation neither screen can
+    /// measure.
     private func repeatableEntries(of item: HistoryItem, targets: Set<UUID>) -> [Entry] {
         item.entries.filter { targets.contains($0.trackerID) }
     }

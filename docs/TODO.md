@@ -1535,10 +1535,12 @@ commit):
 | 15,294  | 6,799       | 31.6–36.7ms  | 41.0–42.4ms    | 61         | 0.09–0.16ms   |
 | 15,294† | 6,799       | 32.2–32.8ms  | 49.9–51.0ms    | 6,799      | —             |
 
-† the same 56 days re-jittered so no two logs share a number, over eight
-trackers: the worst shape there is, where nothing collapses and every row still
-pays for the key. Deduplication is about 5ms and 8ms of the first two rows and
-18ms of the third; the rest is `historyItems`, which both columns pay. Still one build, paid inside the push transition — `RepeatView`
+† the **15,294-entry** file re-jittered so that no two logs share a number, over
+eight trackers: the worst shape there is, where nothing collapses and every row
+still pays for the key. Deduplication is about 5ms and 8ms of the first two rows
+and 18ms of the third; the rest is `historyItems`, which both columns pay.
+
+Still one build, paid inside the push transition — `RepeatView`
 snapshots the list and filters the snapshot, so a keystroke never reaches it.
 **A keystroke got cheaper**, from the 5.3ms and 9.9ms recorded above to a tenth
 of a millisecond, because there are 61 rows left to filter instead of thousands.
@@ -1585,8 +1587,9 @@ the wrong tap is nearly the right log.
 weigh every portion, so the numbers land near the same value and never on it:
 jittering each value by ±0.5 kcal takes 224 named rows to **214** rows instead
 of 46. Deduplication buys such a person 4% where it buys the fixture 79%, and
-what they get is the plain list back — for 18ms more than the plain list cost,
-which is the one place this is worse rather than merely no better.
+what they get is the plain list back — no worse to read than before, and paid
+for: the walk still builds a key per row, which is the 18ms in the table's third
+line at five years of that data, and a fraction of a millisecond at 56 days.
 Nothing here rounds or groups to paper over it: both are design decisions about
 what counts as the same meal, and both belong to the user rather than to this
 step. Frequency ordering is what keeps the degraded case honest rather than
