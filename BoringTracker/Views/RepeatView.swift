@@ -24,6 +24,11 @@ import SwiftUI
 /// second tap — and that is the point rather than the price. History is still
 /// there for all of it.
 struct RepeatView: View {
+    /// Called once a row has actually written something, just before the sheet
+    /// goes. It is how home knows the pending undo is its own — see
+    /// `HomeView.wroteRow`.
+    var logged: () -> Void = {}
+
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -97,7 +102,10 @@ struct RepeatView: View {
                     ContentUnavailableView.search(text: query)
                 } else {
                     List(shown) { item in
-                        RepeatRow(item: item, trackers: trackers) { dismiss() }
+                        RepeatRow(item: item, trackers: trackers) {
+                            logged()
+                            dismiss()
+                        }
                     }
                     .listStyle(.insetGrouped)
                     // The band an inset-grouped list keeps for a section

@@ -10,6 +10,16 @@ struct HomeView: View {
     /// and leaves as soon as it has written something, so it is a presentation
     /// rather than a place (docs/TODO.md item 20).
     @State private var loggingAgain = false
+    /// The row the sheet wrote from here, while it is still the one the store
+    /// would take back.
+    ///
+    /// The store keeps one undo slot for the whole app and a repeat's offer
+    /// stands until something newer is written, so "is there a repeat to undo"
+    /// is not the same question as "did this screen write it". Only the second
+    /// one belongs on home. Comparing the row rather than keeping a flag is
+    /// what makes it self-clearing: an undo empties the slot and a repeat made
+    /// on History replaces it, and either way this stops matching.
+    @State private var wroteRow: HistoryItem.ID?
     @State private var path: [Route] = []
 
     /// Everything reachable from here. An enum rather than a bare `UUID` so
@@ -50,13 +60,26 @@ struct HomeView: View {
                     // `UndoBar` History draws, not a copy — one wording for one
                     // undo slot.
                     //
+                    // **Only what the sheet wrote from here.** The store's slot
+                    // is global and a repeat's offer never expires, so reading
+                    // it directly meant that repeating a row on History and
+                    // tapping Back pinned "Logged again" over the main screen
+                    // for the rest of the session — an offer for something done
+                    // on another screen, which is exactly what
+                    // `offersDeletion: false` exists to stop in the other
+                    // direction, and one whose Undo silently removes a batch if
+                    // it is tapped ten minutes later. Matching `wroteRow`
+                    // narrows it to this screen's own write, which is what the
+                    // bar has always meant: the undo of the screen that wrote
+                    // the thing.
+                    //
                     // `offersDeletion: false` for the reason the sheet used to
-                    // pass it: a deletion's offer never expires, and home has
-                    // deleted nothing, so without this a swipe on History would
-                    // pin "Deleted batch" over the main screen. It draws
-                    // nothing at all when there is nothing to undo, which is
-                    // almost always.
-                    UndoBar(offersDeletion: false)
+                    // pass it: home has deleted nothing, and a deletion's offer
+                    // is deliberately never expired, so without it a swipe on
+                    // History would pin "Deleted batch" here instead.
+                    if wroteRow != nil, store.lastLoggedAgainRow == wroteRow {
+                        UndoBar(offersDeletion: false)
+                    }
                     logBar
                 }
             }
@@ -87,7 +110,11 @@ struct HomeView: View {
                 LogSheet(target: target)
             }
             .sheet(isPresented: $loggingAgain) {
-                RepeatView()
+                // Told by the sheet rather than watched for: the write and the
+                // dismissal happen in the same breath, so an `onChange` on the
+                // store would have to guess whether the sheet was still up when
+                // it fired.
+                RepeatView { wroteRow = store.lastLoggedAgainRow }
             }
         }
     }
@@ -450,6 +477,16 @@ private struct TrackerCard: View {
         // Load-bearing while it counts, not a nicety: proportional digits
         // change width on every frame, so the number would shiver through the
         // whole animation and drag the name beside it along.
+        //
+        // It fixes the width of a digit, not the *number* of them. A count that
+        // crosses a grouping boundary — 950 to 1,050 kcal, an ordinary lunch —
+        // gains a digit and a separator part-way through, and because the
+        // number carries `layoutPriority(1)` it takes that width out of the
+        // name's truncation budget, so a name long enough to truncate
+        // re-truncates mid-count. Raised in review and left: reserving the
+        // width is the `minWidth` that `summary` tried and reverted for the
+        // common short name, and reserving the *destination* width would move
+        // the name before the number arrives.
         .monospacedDigit()
         // On the card rather than at the place that writes, which is what
         // keeps it honest in both directions. Nothing waits on it: `log()`
@@ -465,6 +502,15 @@ private struct TrackerCard: View {
         // a spring is a bounce, and a number that bounces is congratulating
         // you (docs/PHILOSOPHY.md "Quiet") — and easing out means the count
         // arrives rather than stopping dead.
+        //
+        // Keyed on the amount rather than on the string it prints, because the
+        // amount is what is being interpolated. Two consequences, both looked
+        // at and kept: editing a tracker's unit or decimals changes the string
+        // without changing the number, and now swaps rather than transitions —
+        // which is right, since nothing was logged; and the midnight rollover
+        // still counts a daily total down to zero, now over 0.8s rather than
+        // 0.3s. Item 15 left that deliberately (the number really did change)
+        // and slowing it does not make it a different decision.
         .animation(.easeOut(duration: 0.8), value: headline.amount)
         .lineLimit(1)
         .minimumScaleFactor(0.6)
