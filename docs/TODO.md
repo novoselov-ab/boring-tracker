@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 15), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 17), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -380,11 +380,11 @@ animation on save is later.
       and the same idiom as Log, smaller. Tapping the card itself still opens
       that tracker's detail.
 - [x] **Remove the recent-value bubbles from the log sheet.** People don't log
-      the same number twice — they log the same *food*, which is what item 15
+      the same number twice — they log the same *food*, which is what item 17
       is for. `Store.recentValues` was kept on the grounds that
       search-and-repeat would want it — **that reasoning looks wrong**: it keys
       on tracker UUID and ignores names entirely, which is the opposite of what
-      item 14 needs. Decide when building item 15 whether to rewrite it around
+      item 14 needs. Decide when building item 17 whether to rewrite it around
       names or delete it; do not keep it out of habit.
 - [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
@@ -492,13 +492,48 @@ saying the same thing two different ways — and all on screens looked at daily.
 - [ ] **The "Boring Tracker" title only exists at the top of the scroll.**
       Keep it visible always, smaller — a title that appears and disappears
       makes the screen feel like it is changing when only the scroll offset is.
+- [ ] **Replace the blue with a teal.** Use a **SwiftUI system colour**
+      (`.teal`, or `.mint` if it reads too blue) rather than a custom hex: the
+      system ones are dynamic, so they desaturate themselves for dark mode.
+      That matters here — a colour tuned on white goes neon on black, which is
+      the usual way a custom accent looks wrong in the mode we care about most.
+      Judge it in dark mode first, since that is where this app is actually
+      used, and check the disabled and pressed states too.
 - [ ] **In History, a named entry is drawn differently from an unnamed one**,
       so the macros shift shape depending on whether you typed a name. Make the
       row uniform and let the **name** be the grey, quieter part. The numbers
       are the thing every row has, so they should be what every row shows the
       same way.
 
-## 14. Make a save feel like it landed
+## 14. Log it again, from History
+
+A button on each History row that logs that entry again, now. Same values, same
+trackers, today's timestamp.
+
+This is **search-and-repeat's idea arriving early through a different door**:
+you don't search for a food, you scroll to the last time you ate it and tap
+once. It is worth building before item 17 rather than after, because it may
+turn out to be most of what search-and-repeat was for — and if it is, item 17
+gets smaller instead of duplicating it.
+
+- [ ] One tap, no sheet, no confirmation. It writes a new batch; it does not
+      edit the old one.
+- [ ] Undo, since a mistap now writes data.
+- [ ] Works for a batch and for a single entry, without two code paths.
+
+## 15. Export through the share sheet
+
+Exporting currently goes through Files. A `ShareLink` gives the system share
+sheet instead — AirDrop, Messages, Mail, any app that accepts a file, and Files
+still among them.
+
+**This is about three lines, not a project.** It was worth asking whether it
+was hard; it isn't.
+
+- [ ] JSON and CSV both go through the share sheet.
+- [ ] Sensible filename with a date, so a folder of exports is readable.
+
+## 16. Make a save feel like it landed
 
 Logging a number should **show the number changing**. Today nothing
 acknowledges a log beyond the sheet closing: you tap Log, the sheet goes, and
@@ -519,7 +554,7 @@ carve-out and it needs to earn the name.
 Deliberately after a week of real use: whether this is satisfying or annoying
 is exactly the kind of thing that cannot be decided from a simulator.
 
-## 15. Search and repeat
+## 17. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -540,7 +575,7 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 15b. One VoiceOver pass, on a device
+## 17b. One VoiceOver pass, on a device
 
 Unresolved and unresolvable from the accessibility tree, so it waits for the
 same phone trip as item 8. Commit `0564080` claims `.accessibilityLabel`
@@ -552,11 +587,11 @@ inside it.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
-## 16. App icon and asset catalog
+## 18. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
 
-## 17. CI
+## 19. CI
 
 GitHub Actions build + test on push. Cheap, and the test suite is already good
 enough to be worth protecting.
