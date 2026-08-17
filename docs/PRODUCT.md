@@ -298,10 +298,11 @@ Small enough to list completely.
   appearance, about + link to the GitHub repo. One screen, no subscreens if
   avoidable. **A reorder drag commits wherever you let go, including outside
   the list** — it lands on the nearest row that is on screen. That is
-  deliberate, not a missed cancel: the first row sits under the navigation bar,
-  so reaching it means dragging to the top edge and past it, and a drag that
-  cancelled when the finger left the list would make the top of the list the
-  one place you cannot drop. To undo a drag you didn't mean, drag it back.
+  deliberate, not a missed cancel: the nearest row is defined from any
+  position, so there is nothing to resolve by refusing, and cancelling when the
+  finger strayed a few points past an edge it cannot see would throw away a
+  drag heading for the end of the list. To undo a drag you didn't mean, drag it
+  back.
 
 Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 

@@ -265,19 +265,30 @@ struct SettingsView: View {
             // is a decision rather than a missing check.
             //
             // `row(nearest:)` picks the closest row that is *on screen*; it
-            // never asks whether the finger is. Requiring that would make the
-            // top of the list the one place you cannot drop: the first row is
-            // half under the navigation bar, so reaching it means dragging to
-            // the top edge and past it, which is exactly where a finger goes
-            // and exactly what `dropTarget(at:rows:visible:)` is written to
-            // allow. The same is true at the bottom, over the home indicator.
+            // never asks whether the finger is, and nothing needs it to. The
+            // rule is defined at every y: any point above the list resolves to
+            // the topmost visible row and any point below it to the last, so
+            // there is nowhere a drop becomes ambiguous and has to be refused.
+            //
+            // What the check would buy is **not** reachability, and an earlier
+            // version of this comment said it was — that the first row sits
+            // half under the navigation bar, so reaching it means dragging past
+            // the top edge. It does not and it doesn't. Measured on an
+            // iPhone 17 from the frames this code actually reads: the list
+            // reports 116…840 and the first row's handle box is 166…210, 50pt
+            // clear of the band's top, so the whole span 116…254 picks it with
+            // the finger still inside. Releasing at 150 moved the dragged block
+            // onto the first row, from inside the list.
+            //
+            // What it would cost is a drag released a few points past an edge
+            // the finger cannot see — likeliest at the ends of the list, which
+            // is where a long drag is going. So the tolerance is the point.
             //
             // Checked on an iPhone 17 rather than reasoned about: with the list
-            // running 116…840pt, releasing at 866 — below it — moved the Food
-            // block to the end and restamped every row's `orderModified`, and
-            // releasing at 54, inside the navigation bar, put the dragged
-            // tracker on top. Both commit, and the second is the case this
-            // costs nothing to keep.
+            // running 116…840pt, releasing at 866 — below it, over the home
+            // indicator — moved the dragged block to the end and restamped
+            // every row's `orderModified`, and releasing at 54, inside the
+            // navigation bar, put the dragged tracker on top. Both commit.
             //
             // The price is that a drag abandoned by dragging away still moves
             // something. It is recoverable by dragging it back, it is visible
