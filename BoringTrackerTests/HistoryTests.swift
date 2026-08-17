@@ -735,4 +735,30 @@ struct HistoryTests {
         #expect(store.historyItems.count == 2)
         #expect(store.historyItems.allSatisfy { $0.entries.count == 2 })
     }
+
+    @Test("Searching History keeps everything under an empty query and names under one")
+    func search() {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, sortIndex: 1,
+                             group: "Weight")
+        let store = historyStore(StoreDocument(trackers: [calories, weight], entries: [
+            Entry(trackerID: calories.id, value: 620, date: time(10), name: "chicken rice"),
+            Entry(trackerID: calories.id, value: 320, date: time(20), name: "porridge"),
+            // No name: a measurement rather than a meal, and the row History
+            // draws for it leads with "Weight" because the tracker names it.
+            Entry(trackerID: weight.id, value: 79.1, date: time(30)),
+        ]))
+        let items = store.historyItems
+
+        // Empty, and whitespace-only, show everything — History is the screen
+        // that shows everything, unlike the Repeat screen.
+        #expect(items.filter { $0.matches("") }.count == 3)
+        #expect(items.filter { $0.matches("  ") }.count == 3)
+        // A query is about a name, so the unnamed reading drops out. Its
+        // identity line says "Weight" and that is deliberately not searched:
+        // the same rule would make "food" return every meal in the group.
+        #expect(items.filter { $0.matches("weight") }.isEmpty)
+        #expect(items.filter { $0.matches("food") }.isEmpty)
+        #expect(items.filter { $0.matches("rice") }.map(\.displayName) == ["chicken rice"])
+    }
 }

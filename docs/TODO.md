@@ -1554,18 +1554,51 @@ what counts as the same meal, and both belong to the user rather than to this
 step. Frequency ordering is what keeps the degraded case honest rather than
 arbitrary.
 
-## 16b. Search in History too
+## 16b. Search in History too — done
 
 History is the general view of everything logged, and finding something in it
 means scrolling. It should be searchable for the same reason item 16 is.
 
-- [ ] Search over History, filtering by entry name.
-- [ ] **Reuse item 16's search rather than writing a second one.** They filter
+- [x] Search over History, filtering by entry name.
+- [x] **Reuse item 16's search rather than writing a second one.** They filter
       the same field of the same records; two implementations would drift, and
       the second one would be the one nobody tests.
-- [ ] Unnamed entries stay visible when the query is empty — History shows
+- [x] Unnamed entries stay visible when the query is empty — History shows
       everything, unlike item 16's screen, which is only the things you named.
       Decide what an unnamed entry does under a non-empty query and say why.
+
+One `.searchable` and one `where item.matches(query)` inside the grouping that
+was already there — `HistoryItem.matches` unchanged, so the two screens cannot
+come to mean different things by one query. A day with nothing left in it is
+not drawn, so a search leaves no empty headings behind, and a query that
+matches nothing gets the system search empty state rather than a blank list.
+
+**An unnamed entry disappears under a non-empty query.** It has no name, and
+this searches names. The alternative — matching the identity line too, so that
+"weight" found this morning's reading — was refused: that line falls back to a
+*tracker* or a *group* for rows nobody named, so "food" would answer with every
+meal ever logged in that group, and item 16's screen would have to either
+follow or disagree. What stops it being a screen that silently hides half the
+log: the field says **"Search names"**, the same words as the Repeat screen, and
+an empty result says so with the query quoted back.
+
+Checked on the iPhone 17 in dark mode against a 56-day fixture: with the field
+empty the weight readings are on screen among the meals, "rice" leaves day
+sections holding nothing but chicken rice — at two portions, since History does
+not deduplicate and should not — with the days that held no rice gone entirely
+and no weight reading anywhere, and "zzz" draws *No Results for "zzz"*. **The UI was not driven** — the macOS console was
+locked for this session, which takes the AX tree and synthesized clicks with it,
+so the query was preset through a launch argument on a temporary probe root and
+the screens were read from screenshots. Nothing was typed and no row was tapped.
+
+**A keystroke rebuilds the list, which History's every redraw already did.**
+Measured in the same probe: **18.0–20.4ms at 7,644 entries and 35.3–36.1ms at
+15,294**, of which the filter itself is 4.9ms and 9.4ms and the rest is
+`historyItems`. Repeat's screen escapes this by snapshotting, and History cannot:
+a deletion or a repeat has to show up here immediately. At five years of history
+that is a dropped frame or two per keystroke, and the fix — if it ever bites —
+is to cache `historyItems` on the store and invalidate it on write, which is a
+change to the store rather than to this screen.
 
 Deliberately after item 16, not merged into it: that screen is a new surface
 with a placement risk, this is a field added to a screen that already works,

@@ -5,6 +5,15 @@ import SwiftUI
 struct HistoryView: View {
     @Environment(Store.self) private var store
     @State private var editing: HistoryItem?
+    /// Filters the same field, through the same `HistoryItem.matches`, as the
+    /// Repeat screen. Two implementations of one search would drift, and the
+    /// second one would be the one nobody tests (docs/TODO.md item 16b).
+    ///
+    /// Not snapshotted the way Repeat's list is: this screen has to stay live,
+    /// because deleting a row and repeating one both have to be visible here
+    /// straight away. So a keystroke rebuilds `historyItems` — which every
+    /// redraw of this screen already did — and filters it.
+    @State private var query = ""
 
     var body: some View {
         let days = days
@@ -20,7 +29,9 @@ struct HistoryView: View {
             store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
         )
         Group {
-            if days.isEmpty {
+            if days.isEmpty, !query.isEmpty {
+                ContentUnavailableView.search(text: query)
+            } else if days.isEmpty {
                 ContentUnavailableView(
                     "Nothing logged yet",
                     systemImage: "clock",
@@ -48,6 +59,10 @@ struct HistoryView: View {
         }
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
+        // The same prompt as the Repeat screen, and it is doing work: it says
+        // what the field looks at, which is the one thing a searcher has to
+        // know here. See `days` for what that costs an unnamed row.
+        .searchable(text: $query, prompt: "Search names")
         // `UndoBar`, not a copy of it: the Repeat screen writes through the same
         // `logAgain` and takes it back through the same one slot, and two copies
         // of this is two chances to word one undo differently.
@@ -62,9 +77,27 @@ struct HistoryView: View {
         var items: [HistoryItem]
     }
 
+    /// The rows the query keeps, grouped by day. A day with nothing left in it
+    /// is not drawn, so a search does not leave empty headings behind.
+    ///
+    /// **An unnamed entry disappears under a non-empty query, and stays under
+    /// an empty one.** It has no name, and this searches names — the same rule
+    /// the Repeat screen runs, through the same `HistoryItem.matches`, because
+    /// two screens filtering the same field of the same records must not
+    /// disagree about what a query means (docs/TODO.md item 16b).
+    ///
+    /// The alternative was to match the identity line as well, so that
+    /// "weight" found this morning's weight reading. Refused: that line falls
+    /// back to a tracker or a group for rows nobody named, so a search for
+    /// "food" would return every meal ever logged under that group — a query
+    /// nobody typed a name for, answered with hundreds of rows. What makes the
+    /// omission safe rather than surprising is that half a log does not vanish
+    /// silently: the field says "Search names", the day headings for filtered
+    /// days go with their rows, and an unmatched query gets the search empty
+    /// state rather than a blank list.
     private var days: [DayGroup] {
         var groups: [DayKey: [HistoryItem]] = [:]
-        for item in store.historyItems {
+        for item in store.historyItems where item.matches(query) {
             groups[DayKey(item.date, calendar: store.calendar), default: []].append(item)
         }
         return groups.sorted { $0.key > $1.key }.map { DayGroup(day: $0.key, items: $0.value) }
