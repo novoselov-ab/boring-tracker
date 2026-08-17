@@ -1346,12 +1346,16 @@ raising a keypad. Two doors to one action is what the export screen just lost.
 - [x] Entries with no name are not in this list. The name is what makes
       something repeatable; an unnamed number is a measurement, not a meal.
 
-**Ordering is recency**, which needs no justification while the list is
-undeduplicated: it is your history, filtered to the things you named.
+Ordering: recency was right for the raw list. With duplicates collapsed,
+**frequency deserves a look** — it puts the portion you usually eat first and
+lets a rare variant sink, where recency floats a one-off to the top merely
+because it was yesterday. Whoever builds it should try both and say which reads
+better; it is a *displayed* decision, so it costs nothing to change again.
 
-If the list turns out noisy in use, deduplication is the answer and it is a
-*displayed* decision — free to add later, with no schema change and nothing
-stored differently. Report how it reads with a realistic amount of history.
+The failure mode to watch and report: someone who weighs food precisely never
+repeats a number exactly, so nothing collapses and they see the raw list again.
+If that is bad it wants rounding or grouping — a design decision, not a fix to
+slip in.
 
 **Still an experiment.** Settled enough to build, not settled enough to defend.
 Watch for the one thing that would be expensive: a version of this that needs a
