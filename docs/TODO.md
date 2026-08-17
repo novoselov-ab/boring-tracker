@@ -1325,10 +1325,16 @@ the numbered items is going near the same code.
       with an absurd `sortIndex` — which was "you would have to hand-edit it"
       when it was found, but the app has an **import** now, so a foreign or
       hand-edited file is a real way in. A crash, however unlikely.
-- [ ] **The log sheet has no signposted exit** since Cancel was removed. Swiping
+- [x] **The log sheet has no signposted exit** since Cancel was removed. Swiping
       down works and nothing advertises it; `.presentationDragIndicator(.visible)`
-      buys it back for one line. Wait until item 12 settles, since the pad may
-      change the sheet anyway.
+      bought it back for one line, on the `NavigationStack` rather than the
+      `Form` because it is a property of the presentation. Item 12 was the thing
+      it waited on and item 12 was reverted, so the standard sheet is what
+      ships. It costs nothing: against the same build without it, on an
+      iPhone 17, the only rows of the screenshot that differ are the grabber's
+      own 15px and the clock inside the *When* row, which moved because the two
+      runs were minutes apart. The title, the fields, the keypad and the Log
+      bar are pixel-identical.
 - [ ] **Releasing a settings drag outside the list commits it** rather than
       cancelling. Deliberate — requiring the finger inside would break dragging
       to the top edge to reach the first row — but it is nowhere in the docs, so

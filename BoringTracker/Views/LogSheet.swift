@@ -149,6 +149,20 @@ struct LogSheet: View {
                 .background(.bar)
             }
         }
+        // The only thing on this sheet that says how to leave it without
+        // logging. Item 5 removed Cancel — a sheet dismisses by swiping down,
+        // and a nav bar button for the rare case was costing room beside the
+        // one for the common case — which left the exit real and unadvertised.
+        // The grabber is the system's own way of saying "this pulls down": it
+        // takes no row, no tap off the common path, and no space the keypad
+        // wanted.
+        //
+        // On the `NavigationStack` rather than the `Form`, because this is a
+        // property of the presentation and the stack is what the sheet
+        // presents. It waited on item 12, since a hand-drawn keypad would have
+        // owned the whole presentation; that was tried and reverted, so the
+        // standard sheet is what ships and this is its standard hint.
+        .presentationDragIndicator(.visible)
         .task {
             // Presentation deliberately has animations disabled. Let that
             // transaction finish before asking the system to animate in the
