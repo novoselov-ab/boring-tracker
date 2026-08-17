@@ -524,6 +524,25 @@ review and fix and delete. **Log again is "do that again"** — deduplicated,
 ranked, one tap and gone. Sharing a search and a repeat action is fine; sharing
 a screen is not.
 
+## 22. Say that a History row can be tapped and swiped
+
+Neither affordance announces itself. Swipe-to-delete is invisible by design in
+iOS, and tapping a row to edit is invisible too — both are discoverable only if
+you already know the platform, and one of us wondered aloud whether they were
+findable, which is the evidence.
+
+- [ ] A quiet footer saying both: a row can be **tapped to edit** and **swiped
+      to delete**. One line, label-secondary, no icon.
+- [ ] Put it where it is actually seen — under the first day's section, not at
+      the bottom of a list that may be a year long.
+- [ ] Same question for the Log again sheet: check whether anything there is
+      similarly silent, and say so rather than assuming History is the only
+      screen with this problem.
+
+It costs no tap and it is the ordinary iOS idiom — the app already uses footers
+this way on the log sheet. A hint that never moves is cheaper than a gesture
+nobody finds.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
