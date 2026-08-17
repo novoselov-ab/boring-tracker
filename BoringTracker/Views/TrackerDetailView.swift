@@ -155,14 +155,7 @@ struct TrackerDetailView: View {
     }
 
     private func title(for day: DayKey) -> String {
-        if day == store.today { return "Today" }
-        if day == store.today.adding(days: -1, calendar: store.calendar) { return "Yesterday" }
-        let start = day.startOfDay(calendar: store.calendar)
-        return if day.year == store.today.year {
-            start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        } else {
-            start.formatted(.dateTime.day().month(.abbreviated).year())
-        }
+        day.label(today: store.today, calendar: store.calendar)
     }
 }
 

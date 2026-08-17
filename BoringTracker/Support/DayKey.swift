@@ -40,6 +40,23 @@ struct DayKey: Codable, Hashable, Comparable, Sendable {
         return calendar.startOfDay(for: date)
     }
 
+    /// What to call this day on screen: "Today", "Yesterday", or the date.
+    ///
+    /// Shared by History's section headings and the Repeat screen's rows, which
+    /// have to agree — the same day named two ways on two screens is the
+    /// complaint docs/TODO.md item 13 is named after. The year is left off
+    /// inside the current one, where it says nothing on every row.
+    func label(today: DayKey, calendar: Calendar = .current) -> String {
+        if self == today { return "Today" }
+        if self == today.adding(days: -1, calendar: calendar) { return "Yesterday" }
+        let start = startOfDay(calendar: calendar)
+        return if year == today.year {
+            start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        } else {
+            start.formatted(.dateTime.day().month(.abbreviated).year())
+        }
+    }
+
     func adding(days: Int, calendar: Calendar = .current) -> DayKey {
         let base = startOfDay(calendar: calendar)
         guard let moved = calendar.date(byAdding: .day, value: days, to: base) else {

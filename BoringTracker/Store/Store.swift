@@ -279,32 +279,6 @@ final class Store {
         entries.filter { $0.trackerID == tracker }
     }
 
-    /// The last few distinct values logged against a tracker, newest first.
-    ///
-    /// This is the whole of "recents": you eat the same things over and over,
-    /// so the number you want is usually one you have typed before. No setup,
-    /// nothing to maintain.
-    ///
-    /// **Uncalled, and now on notice.** Its one caller was the row of value
-    /// chips in the log sheet, removed in item 11 because people do not log the
-    /// same *number* twice; they log the same food. It was kept for item 14's
-    /// sake, and item 14 turned out not to want it: repeating a history row
-    /// reads that row's own entries, which carry their values already, so
-    /// nothing here was needed. The remaining candidate is item 16's search,
-    /// which ranks past entries by name — and this keys on tracker id and
-    /// ignores names entirely, which is the opposite shape. Decide there
-    /// whether to rewrite it around names or delete it, and do not keep it a
-    /// third time out of habit.
-    func recentValues(for tracker: UUID, limit: Int = 5) -> [Double] {
-        var seen = Set<Double>()
-        var result: [Double] = []
-        for entry in entries.reversed() where entry.trackerID == tracker {
-            if seen.insert(entry.value).inserted { result.append(entry.value) }
-            if result.count == limit { break }
-        }
-        return result
-    }
-
     func day(of entry: Entry) -> DayKey {
         DayKey(entry.date, calendar: calendar)
     }
@@ -335,6 +309,24 @@ final class Store {
             if lhs.date != rhs.date { return lhs.date > rhs.date }
             return lhs.sortID > rhs.sortID
         }
+    }
+
+    /// The Repeat screen's list: every row that carries a name, newest first.
+    ///
+    /// **Not deduplicated**, deliberately. Forty logs of "chicken rice" are
+    /// forty rows: collapsing by name alone would hide that some of them were a
+    /// bigger portion, and collapsing by name *and* values leaves anybody who
+    /// weighs food precisely with a screen of near-identical rows. Neither
+    /// question is worth answering before the plain list has been used, and
+    /// both are free to answer later — this is derived on the way to the
+    /// screen, so nothing about it is stored (docs/TODO.md item 16).
+    ///
+    /// A filter over `historyItems` rather than its own walk of `entries`: the
+    /// grouping of a batch into one row, and the ordering, are the same
+    /// question both screens ask, and they are already pinned by tests here. A
+    /// second walk would be a second chance to answer it differently.
+    var repeatItems: [HistoryItem] {
+        historyItems.filter(\.isNamed)
     }
 
     // MARK: - Entries

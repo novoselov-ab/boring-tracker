@@ -334,9 +334,12 @@ struct LogSheet: View {
     // number follows from the name. So the chips took up the space under the
     // field you were typing into, moved the form around as you focused and
     // blurred, and were tapped roughly never. The feature these chips were a
-    // bad guess at is repeating a whole logged food, and item 14 built the
-    // first half of it on the History screen without needing
-    // `Store.recentValues` at all — see the note on that method.
+    // bad guess at is repeating a whole logged food, and items 14 and 16 built
+    // it — a row on History, then a screen of its own — without wanting a list
+    // of bare numbers anywhere. `Store.recentValues`, which survived those two
+    // items uncalled while it waited to find out whether search needed it, is
+    // deleted: it keyed on tracker id and ignored names, and every door onto
+    // repeating turned out to be a door onto a name.
 
     private func binding(for tracker: UUID) -> Binding<String> {
         Binding(

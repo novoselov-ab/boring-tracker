@@ -15,6 +15,9 @@ struct HomeView: View {
         case tracker(UUID)
         case history
         case settings
+        /// `repeatLog`, because `repeat` is a keyword and backticks in every
+        /// mention of it would be worse than one word of noise here.
+        case repeatLog
     }
 
     var body: some View {
@@ -38,39 +41,7 @@ struct HomeView: View {
             // title's own band is gone — so the density item 11 bought is
             // intact; the card count is in the commit body.
             .navigationBarTitleDisplayMode(.inline)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !store.activeTrackers.isEmpty {
-                    // Unlike a card's small +, this is the primary action: it
-                    // opens the last-used group instead of this row's. It is
-                    // centred so it sits inside either hand's thumb arc.
-                    Button(action: logLastGroup) {
-                        Label("Log", systemImage: "plus")
-                            .frame(
-                                maxWidth: horizontalSizeClass == .regular ? 440 : .infinity
-                            )
-                            // Dark on the fill, not the white iOS draws by
-                            // default — see `Color.onAccent`. Inside the label,
-                            // because that is where a `.disabled` outside can
-                            // still reach it.
-                            .onAccentFill()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    // The accent is named here rather than inherited: the
-                    // environment tint is the ordinary label colour now, and the
-                    // accent is a fill (docs/TODO.md item 13c,
-                    // `Color.accentFill`).
-                    .tint(Color.accentFill)
-                    .controlSize(.large)
-                    .padding(.horizontal)
-                    .padding(.vertical, 6)
-                    // The inset is reserved across the full width, so the bar
-                    // has to span it. Backing only the constrained button left
-                    // the list scrolling through untinted gutters either side
-                    // of it on a regular-width screen.
-                    .frame(maxWidth: .infinity)
-                    .background(.bar)
-                }
-            }
+            .safeAreaInset(edge: .bottom, spacing: 0) { logBar }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink(value: Route.settings) {
@@ -92,11 +63,80 @@ struct HomeView: View {
                 case .tracker(let id): TrackerDetailView(trackerID: id)
                 case .history: HistoryView()
                 case .settings: SettingsView()
+                case .repeatLog: RepeatView()
                 }
             }
             .sheet(item: $logging) { target in
                 LogSheet(target: target)
             }
+        }
+    }
+
+    /// The bottom bar: the one big thing, and one small one beside it.
+    ///
+    /// **The small one is the risk in item 16.** The bottom of home holds the
+    /// most frequent action in the app, and a peer beside it competes with it
+    /// for the same thumb — so Repeat is not a peer. It is a bordered square
+    /// against a filled pill: no accent, no words, a third of the width, and
+    /// the same height so the bar does not grow. Two prominent buttons were
+    /// tried first and read as a choice to make on arrival, which is a decision
+    /// in front of logging and wrong by default (docs/PHILOSOPHY.md).
+    ///
+    /// **On the leading side**, which costs Log nothing it was using: a
+    /// right-handed thumb rests at the bottom right, and the pill still runs
+    /// under it. Trailing was tried and puts the rarer control in the easiest
+    /// place on the screen.
+    ///
+    /// The glyph is History's repeat disc glyph, deliberately. `arrow.clockwise`
+    /// already means "log this again" in this app, one screen away, and a word
+    /// here would take another 60pt off the pill to say what the screen it
+    /// opens says in its own title.
+    @ViewBuilder
+    private var logBar: some View {
+        if !store.activeTrackers.isEmpty {
+            HStack(spacing: 8) {
+                NavigationLink(value: Route.repeatLog) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.body.weight(.semibold))
+                        // Width only. A height here makes this button *taller*
+                        // than the pill it is meant to sit under — measured at
+                        // 60pt against the pill's 50 — and a secondary control
+                        // that overhangs the primary one is the competition
+                        // this shape exists to avoid. Left to itself,
+                        // `.controlSize(.large)` gives both the same 50.
+                        .frame(width: 30)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .accessibilityLabel("Repeat")
+                // Unlike a card's small +, this is the primary action: it
+                // opens the last-used group instead of this row's. It stays
+                // centred enough to sit inside either hand's thumb arc.
+                Button(action: logLastGroup) {
+                    Label("Log", systemImage: "plus")
+                        .frame(maxWidth: .infinity)
+                        // Dark on the fill, not the white iOS draws by
+                        // default — see `Color.onAccent`. Inside the label,
+                        // because that is where a `.disabled` outside can
+                        // still reach it.
+                        .onAccentFill()
+                }
+                .buttonStyle(.borderedProminent)
+                // The accent is named here rather than inherited: the
+                // environment tint is the ordinary label colour now, and the
+                // accent is a fill (docs/TODO.md item 13c, `Color.accentFill`).
+                .tint(Color.accentFill)
+                .controlSize(.large)
+            }
+            .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            // The inset is reserved across the full width, so the bar has to
+            // span it. Backing only the constrained buttons left the list
+            // scrolling through untinted gutters either side of it on a
+            // regular-width screen.
+            .frame(maxWidth: .infinity)
+            .background(.bar)
         }
     }
 

@@ -1320,7 +1320,7 @@ nothing that could run on: `.animation(_:value:)` fires on a change and
 `.easeOut(duration: 0.3)` does not repeat, so the worst case is one bounded ease
 on one `Text` that nobody sees.
 
-## 16. Repeat: a screen of things you have eaten
+## 16. Repeat: a screen of things you have eaten — done
 
 **Supersedes the search-field-in-the-log-sheet design**, which is deleted
 rather than kept alongside. That put search inside the sheet you use to type a
@@ -1328,22 +1328,22 @@ new number; this is a separate door for the different job of logging something
 again, and it is fewer taps for it — home, Repeat, tap, done, without ever
 raising a keypad. Two doors to one action is what the export screen just lost.
 
-- [ ] **A control beside Log on home.** The risk is here: home's bottom already
+- [x] **A control beside Log on home.** The risk is here: home's bottom already
       holds the most frequent action in the app, and a peer next to it competes
       with it. Try it as a smaller secondary control rather than a second
       equal button, and say how it reads.
-- [ ] **Every named entry, newest first. No deduplication for now.** The row
+- [x] **Every named entry, newest first. No deduplication for now.** The row
       is what you logged: its name, its values, its date. Forty logs of
       "chicken rice" are forty rows, and that is accepted deliberately —
       deduping by name alone hides that you sometimes ate a bigger portion, and
       deduping by name *and* values raises questions about someone who weighs
       food precisely and never repeats a number exactly. Neither is worth
       answering before the plain list has been used.
-- [ ] **Searchable**, filtering those names.
-- [ ] **One tap logs it again**, reusing item 14's `logAgain` — a new batch,
+- [x] **Searchable**, filtering those names.
+- [x] **One tap logs it again**, reusing item 14's `logAgain` — a new batch,
       today's timestamp, the original untouched, and undo. Do not write a
       second implementation of repeat.
-- [ ] Entries with no name are not in this list. The name is what makes
+- [x] Entries with no name are not in this list. The name is what makes
       something repeatable; an unnamed number is a measurement, not a meal.
 
 **Ordering is recency**, which needs no justification while the list is
@@ -1356,6 +1356,135 @@ stored differently. Report how it reads with a realistic amount of history.
 **Still an experiment.** Settled enough to build, not settled enough to defend.
 Watch for the one thing that would be expensive: a version of this that needs a
 fact the document does not record.
+
+### It is not fewer taps than History, and the item's own claim above is wrong
+
+Both paths are **two taps**: home → Repeat → the row, and home → History → the
+row's disc. The sentence at the top of this item — "it is fewer taps for it" —
+was never true, and the brief was right to demand the count out loud.
+
+What it actually buys, on the same 56-day fixture (364 entries, 336 of them
+named), measured off screenshots on an iPhone 17 in dark mode:
+
+- **12 candidates on the first screen against History's 9.** History spends the
+  space on day headings and on rows this screen has no use for — an unnamed
+  weight reading sat fifth in the list. Both were two taps to the top row and
+  neither needed a scroll; past the first screen History has nothing but
+  scrolling, and this has a search field.
+- **The whole row is the target — 370×52pt against a 44pt disc.** Where a tap
+  lands is half the budget (docs/PHILOSOPHY.md), and this is the larger half of
+  the difference. There is nothing else a tap on this screen could mean, so
+  nothing had to be given up to widen it; on History the row itself opens the
+  editor.
+- **Search is the only way to reach anything old.** 56 days is already 112 rows.
+
+So the screen earns its place on *finding*, not on tapping, and the item's
+opening paragraph is left standing above this correction rather than edited, so
+that what was claimed and what was measured stay legible apart.
+
+### It is noisy, exactly where the brief said to look
+
+Searching "rice" on the 56-day fixture returns **eight rows, six of them
+`620 kcal, 45 g`** — the same meal, the same numbers, six times. The screen is
+readable and the top row is nearly always the one you want, but the bottom of
+the list is repetition with dates attached.
+
+**Not fixed here, and the reason is the one this item already gives.** The two
+obvious answers each hide something real, and the plain list has not been used
+yet. What the fixture does settle is that the *portion drift* case is real
+rather than hypothetical: the same "pasta pesto" appears at 650 and 690 kcal
+within one screenful, so deduplication by name alone would have to pick one and
+silently drop the other.
+
+### The list is built once, when the screen opens
+
+`Store.repeatItems` walks and sorts every entry ever logged. Measured in the app
+on the iPhone 17 simulator with a temporary `print` around the build (Debug
+build, reverted before the commit):
+
+| entries | rows  | build  | one search keystroke |
+|---------|-------|--------|----------------------|
+| 7,644   | 3,597 | 23.4ms | 5.3ms                |
+| 15,294  | 7,197 | 43.4ms | 9.9ms                |
+
+Both fixtures generated to the same shape as the small one, four meals a day
+over 900 and 1,800 days. 43ms is one build, paid inside the push transition,
+not per redraw — and reading the computed property from `body` instead would
+have paid it again on every keystroke, which at 15,000 entries is a third of a
+second to type "chicken". What a keystroke pays now is the 9.9ms above.
+
+**The snapshot is also what stops the list moving under your thumb.** A repeat
+writes a row dated now, which on a recency-ordered list belongs at the very top,
+so a live list would push every row down by one on each tap — and logging
+breakfast means two taps in a row. The undo bar is what says the tap landed,
+exactly as on History. The cost is honest and small: the row you just logged
+does not appear until you come back.
+
+### The control on home reads as secondary, and costs the pill 78pt
+
+A bordered glyph square on the **leading** side, `.controlSize(.large)` so the
+bar's height does not move: measured **70×51pt against the pill's 292×50** on
+an iPhone 17, and 90×82 against 272×93 at AX5. The pill lost 78pt of width and
+nothing else — no accent, no word, no second prominent fill. Two equal buttons
+were tried first and read as a choice to make on arrival, which is a decision in
+front of logging.
+
+Leading rather than trailing because a right thumb rests at the bottom right and
+the pill still runs under it; the rarer control takes the further corner. A
+first pass set an explicit 30×30 frame on the glyph and made the *secondary*
+button 60pt tall against the pill's 50 — a secondary control overhanging the
+primary one, which is precisely the competition the shape exists to avoid.
+
+The glyph is `arrow.clockwise`, which already means "log this again" one screen
+away on every History row. A word would have cost the pill another 60pt to say
+what the screen's own title says.
+
+### Three things that fell out of it
+
+**`Store.recentValues` is deleted.** It has been uncalled since item 11 and was
+kept twice: once for item 14, which turned out not to want it, and once for this
+item's search, which does not either — it keys on tracker id and ignores names,
+and every door onto repeating turned out to be a door onto a name. Its own
+comment said to decide here rather than keep it a third time.
+
+**The undo bar is one view now** (`UndoBar`), and the day heading one function
+(`DayKey.label(today:calendar:)`). Both screens write through `logAgain` into
+one undo slot and both name the same days; a second copy of either is a second
+chance for the two screens to word the same thing differently.
+
+**At AX5 the row wraps rather than breaking**, with the date hyphenating to
+"Yester-day" beside a name on two lines. Nothing clips and nothing overlaps, and
+it is the row shape item 14b already swept and accepted on History — but History
+shows a *time* there, which never wraps, and this shows a date. The known remedy
+is home's `isStacked` trick, and it is not worth a layout branch on an
+experiment.
+
+### What the review changed, and two things it raised that were kept
+
+**The shared undo bar was showing History's deletions here.** A deletion's undo
+is deliberately never expired — undoing one only puts records back, so it can go
+stale harmlessly — which meant swiping a row away on History and then opening
+Repeat pinned "Deleted batch" over a screen that had done nothing, offering to
+restore a row it would not then show. The bar takes the repeat half only on this
+screen. History keeps both, because the slot survives the trip.
+
+**Tracker detail had a third copy of the day heading**, byte-identical, left
+behind by the extraction. It calls `DayKey.label` now, which is what made the
+extraction worth doing rather than a lateral move.
+
+**Kept: disabling greys the whole row, where History greys only the disc.**
+Here the row *is* the button, so a dimmed row is the platform's own way of
+saying the action is unavailable — which is more than History manages, since
+item 14 recorded that an archived tracker's row says nothing about why its disc
+is off. The alternative is saying "Archived" on the row, which changes what a
+row shows and is item 14b's question.
+
+**Kept: a double tap writes twice and only the second is undoable.** True on
+History too — one undo slot, settled in item 14 — but the target here is a whole
+row rather than a 44pt disc and the list deliberately does not move under it. A
+second slot was rejected in item 14 and a confirmation is rejected by the
+philosophy, so this is a cost of the wider target rather than an oversight. It
+is the thing to watch first if the screen turns out to misfire in use.
 
 ## 16b. Search in History too
 

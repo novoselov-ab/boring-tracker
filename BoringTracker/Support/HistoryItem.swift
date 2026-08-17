@@ -47,6 +47,30 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return names.count > 1 ? "Mixed names" : names.first
     }
 
+    /// Whether this row is one of the things you can ask for by name.
+    ///
+    /// The Repeat screen lists these and nothing else: a name is what makes
+    /// something repeatable, and an unnamed number is a measurement rather than
+    /// a meal (docs/TODO.md item 16). *Any* named member is enough — a batch
+    /// whose members disagree is already known by `displayName` everywhere
+    /// else, and it is still a thing you typed a name for.
+    var isNamed: Bool { !names.isEmpty }
+
+    /// Whether a search for `query` keeps this row.
+    ///
+    /// Against the names that were typed, not against the identity line: that
+    /// line falls back to a tracker or a group for rows nobody named, and those
+    /// are not on this screen at all — so searching "weight" would otherwise
+    /// return rows whose only claim to the word is the tracker they landed on.
+    ///
+    /// `localizedStandardContains` is the comparison the Finder uses: case- and
+    /// diacritic-insensitive, so "creme" finds "Crème" and "RICE" finds "rice".
+    func matches(_ query: String) -> Bool {
+        let query = query.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return true }
+        return names.contains { $0.localizedStandardContains(query) }
+    }
+
     /// The two lines a History row draws: what this was called, and what it
     /// was.
     struct Line: Equatable {
