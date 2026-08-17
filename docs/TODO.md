@@ -466,6 +466,29 @@ the list is still built once when the sheet opens (re-measured, and counted),
 and the counting animation delays nothing (three runs against a build without
 it).
 
+## 20b. Make the undo offers agree
+
+Item 20 gave home's undo offer a ten-second life. History's still never
+expires, so the same bar behaves differently depending on which screen wrote
+it — and a bar that never leaves stops meaning *just now*, which is the only
+thing it was ever saying.
+
+- [ ] History's undo offer expires like home's.
+- [ ] Both read their expiry from one place. Two screens with the same ten
+      hard-coded twice is how they drifted in the first place.
+
+**Not doing: undo on the Log sheet.** Item 20 noticed the asymmetry — logging
+again offers undo, logging does not — and it is deliberate rather than an
+oversight. **Undo exists where a single tap writes data without confirmation.**
+Tapping a row is easy to do by accident; typing a number and pressing Log is
+not, and a mistyped number is already fixable by editing the entry you are
+looking at. Adding undo to a deliberate action buys a control nobody needs and
+makes the one that matters less distinct.
+
+Left alone, recorded rather than fixed: a long tracker name re-truncates
+mid-count when the total crosses a grouping boundary (950 → 1,050). `minWidth`
+was tried in that file before and reverted, for the common short name.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
