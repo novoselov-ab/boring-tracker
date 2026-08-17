@@ -56,6 +56,52 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// else, and it is still a thing you typed a name for.
     var isNamed: Bool { !names.isEmpty }
 
+    /// What makes two rows the same thing you ate: the names you typed, and
+    /// every value against the tracker it was logged to.
+    ///
+    /// **Both halves, and the values are the half that is easy to leave out.**
+    /// Collapsing by name alone would hide a bigger portion behind whichever
+    /// one was logged last — "chicken rice" at 160 kcal and at 100 kcal are two
+    /// things you ate, and a screen that shows one of them and calls it the
+    /// other is worse than a screen that repeats itself (docs/TODO.md item 16).
+    ///
+    /// The tracker is part of a value because a number on its own is not one:
+    /// 100 on Calories and 100 on Protein are different logs, and a batch that
+    /// logged both is different again from one that logged only the first.
+    ///
+    /// Both halves are sorted, because neither is ordered by anything the user
+    /// controls: a batch's members each carry their own name, and nothing
+    /// promises two logs of one meal wrote them in the same order.
+    ///
+    /// Names are compared exactly, so "Porridge" and "porridge" stay two rows.
+    /// Search folds case and diacritics and this does not, deliberately: search
+    /// only decides what you are shown, while this decides what is *hidden
+    /// behind* a row, and a normalisation that swallows the wrong two rows is
+    /// invisible from the screen. iOS capitalises the name field's first letter
+    /// either way, so the case that would benefit is rare.
+    struct RepeatKey: Hashable, Sendable {
+        struct Value: Hashable, Sendable, Comparable {
+            var tracker: UUID
+            var value: Double
+
+            static func < (lhs: Self, rhs: Self) -> Bool {
+                (lhs.tracker, lhs.value) < (rhs.tracker, rhs.value)
+            }
+        }
+
+        var names: [String]
+        var values: [Value]
+    }
+
+    var repeatKey: RepeatKey {
+        RepeatKey(
+            names: names.sorted(),
+            values: entries
+                .map { RepeatKey.Value(tracker: $0.trackerID, value: $0.value) }
+                .sorted()
+        )
+    }
+
     /// Whether a search for `query` keeps this row.
     ///
     /// Against the names that were typed, not against the identity line: that

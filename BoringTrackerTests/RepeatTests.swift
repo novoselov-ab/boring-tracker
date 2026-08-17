@@ -115,6 +115,196 @@ struct RepeatTests {
         #expect(store.logAgain(item) == false)
     }
 
+    @Test("The same name at the same values is one row, a bigger portion is its own")
+    func dedupesByNameAndValues() throws {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 100, date: time(10), name: "rice"),
+                    Entry(trackerID: tracker.id, value: 160, date: time(20), name: "rice"),
+                    Entry(trackerID: tracker.id, value: 100, date: time(30), name: "rice"),
+                    Entry(trackerID: tracker.id, value: 100, date: time(40), name: "rice"),
+                ]
+            )
+        )
+
+        let items = store.repeatItems
+        // Two things you ate, not four rows and not one: the bigger portion is
+        // a separate row rather than something hidden behind the last log.
+        #expect(items.map(\.displayName) == ["rice", "rice"])
+        #expect(items.map { $0.entries.map(\.value) } == [[100], [160]])
+        // The row kept is the newest of the ones it collapsed, so its date says
+        // when you last ate that — 40, not the 10 or 30 it stands for.
+        #expect(items.first?.date == time(40))
+    }
+
+    @Test("What you log most is first, and a one-off does not outrank it")
+    func frequencyOrdering() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 320, date: time(10), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 320, date: time(20), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 320, date: time(30), name: "porridge"),
+                    // Eaten once, and eaten last. On a recency list this would
+                    // be the top row every time; here it sits under the thing
+                    // actually eaten every day.
+                    Entry(trackerID: tracker.id, value: 890, date: time(40), name: "pizza"),
+                ]
+            )
+        )
+
+        #expect(store.repeatItems.map(\.displayName) == ["porridge", "pizza"])
+        // The frequent row still carries its own latest date, so the screen can
+        // say when it was last eaten.
+        #expect(store.repeatItems.first?.date == time(30))
+    }
+
+    @Test("With nothing to count, frequency is recency")
+    func frequencyTiesBreakOnRecency() {
+        let tracker = Tracker(name: "Calories", unit: "kcal", decimals: 1)
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    // Someone who weighs food to the gram: the same meal, never
+                    // the same number, so nothing collapses and every count is
+                    // 1. The ordering has to degrade into the recency list
+                    // rather than into an arbitrary one.
+                    Entry(trackerID: tracker.id, value: 618.4, date: time(10), name: "rice"),
+                    Entry(trackerID: tracker.id, value: 621.1, date: time(20), name: "rice"),
+                    Entry(trackerID: tracker.id, value: 619.7, date: time(30), name: "rice"),
+                ]
+            )
+        )
+
+        #expect(store.repeatItems.map { $0.entries.map(\.value) } == [[619.7], [621.1], [618.4]])
+    }
+
+    @Test("The same values under different names stay apart")
+    func namesSeparateRows() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 300, date: time(10), name: "porridge"),
+                    Entry(trackerID: tracker.id, value: 300, date: time(20), name: "toast"),
+                ]
+            )
+        )
+
+        #expect(store.repeatItems.map(\.displayName) == ["toast", "porridge"])
+    }
+
+    @Test("The same number on a different tracker is a different log")
+    func trackersSeparateRows() {
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1)
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, protein],
+                entries: [
+                    Entry(trackerID: calories.id, value: 20, date: time(10), name: "snack"),
+                    Entry(trackerID: protein.id, value: 20, date: time(20), name: "snack"),
+                ]
+            )
+        )
+
+        // A value is a number *against a tracker*. Collapsing these would say
+        // 20 kcal and 20 g are the same thing to log again.
+        #expect(store.repeatItems.count == 2)
+    }
+
+    @Test("A batch collapses whatever order its members were written in")
+    func batchMemberOrder() {
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1)
+        let first = UUID()
+        let second = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, protein],
+                entries: [
+                    Entry(
+                        trackerID: calories.id, value: 100, date: time(10),
+                        name: "chicken rice", batchID: first
+                    ),
+                    Entry(
+                        trackerID: protein.id, value: 10, date: time(11),
+                        name: "chicken rice", batchID: first
+                    ),
+                    // The same meal, its members stamped the other way round —
+                    // which a repeat can produce, since it writes each member
+                    // in the order the row happened to hold them.
+                    Entry(
+                        trackerID: protein.id, value: 10, date: time(20),
+                        name: "chicken rice", batchID: second
+                    ),
+                    Entry(
+                        trackerID: calories.id, value: 100, date: time(21),
+                        name: "chicken rice", batchID: second
+                    ),
+                ]
+            )
+        )
+
+        #expect(store.repeatItems.count == 1)
+    }
+
+    @Test("A batch is not the same row as one of its members logged alone")
+    func partialBatch() {
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1)
+        let batch = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, protein],
+                entries: [
+                    Entry(
+                        trackerID: calories.id, value: 100, date: time(10),
+                        name: "chicken rice", batchID: batch
+                    ),
+                    Entry(
+                        trackerID: protein.id, value: 10, date: time(10),
+                        name: "chicken rice", batchID: batch
+                    ),
+                    // The day the protein went unlogged. Repeating this writes
+                    // one number, and repeating the row above writes two, so
+                    // the screen has to offer both.
+                    Entry(trackerID: calories.id, value: 100, date: time(20), name: "chicken rice"),
+                ]
+            )
+        )
+
+        #expect(store.repeatItems.map { $0.entries.count } == [1, 2])
+    }
+
+    @Test("Deduplication does not collapse rows a search would match together")
+    func exactNames() {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 90, date: time(10), name: "Porridge"),
+                    Entry(trackerID: tracker.id, value: 90, date: time(20), name: "porridge"),
+                ]
+            )
+        )
+        let items = store.repeatItems
+
+        // Search folds case, and this does not: search decides what you are
+        // shown, deduplication decides what is *hidden behind* a row, and a row
+        // that swallowed the wrong one would be invisible from the screen.
+        #expect(items.count == 2)
+        #expect(items.filter { $0.matches("porridge") }.count == 2)
+    }
+
     @Test("Search matches the names, not the tracker or the group")
     func search() {
         let tracker = Tracker(name: "Calories", group: "Food")

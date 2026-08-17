@@ -1490,6 +1490,70 @@ second slot was rejected in item 14 and a confirmation is rejected by the
 philosophy, so this is a cost of the wider target rather than an oversight. It
 is the thing to watch first if the screen turns out to misfire in use.
 
+### Deduplicated after all, by name and values — done
+
+- [x] Rows sharing **both** a name and its values collapse to one.
+- [x] Not by name alone: a bigger portion stays its own row.
+- [x] The row kept is the newest one, so its date says when you last ate that.
+- [x] Still built once when the screen opens, and re-measured.
+
+The key is the row's typed names and its `(tracker, value)` pairs, both sorted
+(`HistoryItem.RepeatKey`). The tracker is part of a value because a number on
+its own is not one — 20 kcal and 20 g are not the same log — and a batch of two
+is not the same row as one of its members logged alone, because repeating them
+writes different things.
+
+On a fresh 56-day fixture of the same shape as the one that found the noise —
+four named meals a day, a quarter of them a different portion of the same food —
+**224 named rows become 46**, and the 23 rows matching "rice" become **four**:
+`620/45`, logged 15 times, plus the three portions `775/56`, `992/72` and
+`465/34` that a name-only rule would have hidden behind it, which is the whole
+reason the key carries values. Counted over the fixture's own JSON by the same
+grouping the app applies, and confirmed on screen in dark mode on an iPhone 17.
+
+**Ordering is frequency, ties broken by recency.** Both were built and
+screenshotted on that fixture. Recency spent two of its first fourteen rows on
+chicken rice at two portions and opened with four rows all reading "Today" —
+the date column says nothing exactly where the list is densest, and a one-off
+floats to the top merely because it was yesterday. Frequency's first screen is
+thirteen different foods at the portions actually eaten. It is also **stable**:
+the top of a recency list moves on every log, so the row tapped every morning is
+never twice in the same place. Displayed, so it stays cheap to change again.
+
+Frequency degrades into recency rather than into nonsense, which matters for the
+failure mode below: when nothing repeats, every count is 1 and the tie-break is
+the whole ordering.
+
+**Re-measured, Debug build on the iPhone 17 simulator, five runs each**, against
+fixtures of four named meals and a weight reading a day (`store.json` seeded into
+the data container, a temporary probe root and `print`, both reverted before the
+commit):
+
+| entries | rows before | build, plain | build, deduped | rows after | one keystroke |
+|---------|-------------|--------------|----------------|------------|---------------|
+| 7,644   | 3,399       | 15.1–15.9ms  | 20.2–21.1ms    | 61         | 0.08–0.16ms   |
+| 15,294  | 6,799       | 31.4–31.9ms  | 41.3–47.2ms    | 61         | 0.09–0.16ms   |
+
+Deduplication is 5ms and 10ms of that; the rest is `historyItems`, which both
+columns pay. Still one build, paid inside the push transition — `RepeatView`
+snapshots the list and filters the snapshot, so a keystroke never reaches it.
+**A keystroke got cheaper**, from the 5.3ms and 9.9ms recorded above to a tenth
+of a millisecond, because there are 61 rows left to filter instead of thousands.
+These are not the same fixture files as the 23.4ms / 43.4ms recorded earlier —
+generating them again gives 4,248 and 8,498 history rows against that session's
+3,597 and 7,197 — so the pair to compare is the plain and deduped columns here,
+measured minutes apart on one machine.
+
+**The failure mode is real and now has a number.** Take the same 56 days and
+weigh every portion, so the numbers land near the same value and never on it:
+jittering each value by ±0.5 kcal takes 224 named rows to **214** rows instead
+of 46. Deduplication buys such a person 4% where it buys the fixture 79%, and
+what they get is the plain list back — no worse than before, and no better.
+Nothing here rounds or groups to paper over it: both are design decisions about
+what counts as the same meal, and both belong to the user rather than to this
+step. Frequency ordering is what keeps the degraded case honest rather than
+arbitrary.
+
 ## 16b. Search in History too
 
 History is the general view of everything logged, and finding something in it

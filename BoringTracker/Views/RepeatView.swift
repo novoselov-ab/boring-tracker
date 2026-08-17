@@ -1,29 +1,29 @@
 import SwiftUI
 
-/// The things you have logged and named, newest first, one tap each to log
-/// again.
+/// The things you have logged and named, the ones you log most often first, one
+/// tap each to log again.
 ///
 /// A second door on home for a different job. The Log button opens an empty
 /// sheet with the keypad up, which is right when the number is new; this is for
 /// the far commoner case where you are eating the same thing again, and it
 /// never raises a keypad at all (docs/TODO.md item 16).
 ///
-/// It is History filtered to the rows that have a name, with the day sections
-/// flattened away and a search field over the top. Not a new list built from
-/// the entries: the grouping of a batch into one row and the ordering are the
-/// same question both screens ask, and answering it twice is how they come to
-/// disagree.
+/// It is History filtered to the rows that have a name and collapsed to one row
+/// per distinct thing you ate, with the day sections flattened away and a search
+/// field over the top. Not a new list built from the entries: the grouping of a
+/// batch into one row and the ordering are the same question both screens ask,
+/// and answering it twice is how they come to disagree.
 struct RepeatView: View {
     @Environment(Store.self) private var store
     /// Built once, when the screen opens, and deliberately not rebuilt while it
     /// is up.
     ///
     /// **Because the list must not move under your thumb.** Repeating writes a
-    /// new row dated now, which on a list ordered by recency belongs at the
-    /// very top — so a live list would push every row down by one on each tap,
-    /// and logging breakfast (coffee, then oats) would mean aiming at a target
-    /// that just moved. What says the tap landed is the undo bar, exactly as it
-    /// does on History.
+    /// row dated now against the same name and values, which adds one to that
+    /// row's count and moves it up the ordering — so a live list would reshuffle
+    /// on each tap, and logging breakfast (coffee, then oats) would mean aiming
+    /// at a target that just moved. What says the tap landed is the undo bar,
+    /// exactly as it does on History.
     ///
     /// **And because it is the expensive part.** `repeatItems` walks and sorts
     /// every entry ever logged; a computed property read from `body` would pay
