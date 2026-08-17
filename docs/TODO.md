@@ -1321,10 +1321,14 @@ the numbered items is going near the same code.
       those documents itself as the one thing it cannot promise. One check
       beside the others, or a decision that a blank name is the user's problem.
       Same way in as the item below.
-- [ ] **`(max ?? -1) + 1` traps on `Int.max`.** Reachable only from a store file
-      with an absurd `sortIndex` — which was "you would have to hand-edit it"
-      when it was found, but the app has an **import** now, so a foreign or
-      hand-edited file is a real way in. A crash, however unlikely.
+- [x] **`(max ?? -1) + 1` traps on `Int.max`.** Already fixed, in `a1c42a5`
+      (item 10): `Store.add` renumbers the whole list when the largest index is
+      within one of `Int.max`, and `validateImport` rejects the value at the
+      import boundary outright. What was missing was a test for the value
+      arriving the way import cannot stop it — in the store file this device
+      wrote — so there are now two, and with the guard removed the first one
+      kills the test process rather than failing an expectation, which is what a
+      Swift overflow does.
 - [x] **The log sheet has no signposted exit** since Cancel was removed. Swiping
       down works and nothing advertises it; `.presentationDragIndicator(.visible)`
       bought it back for one line, on the `NavigationStack` rather than the

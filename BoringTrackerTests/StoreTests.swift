@@ -1321,6 +1321,50 @@ struct StoreTests {
         #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
     }
 
+    /// The value import refuses, arriving the way import cannot stop: in the
+    /// store file itself. `validateImport` guards the boundary an *imported*
+    /// document crosses, and nothing validates the file this device wrote — a
+    /// file hand-edited on the Mac, or one written by a build that allowed
+    /// something this one does not. Adding a tracker then computes
+    /// `maximum + 1` on `Int.max`, which in Swift is a trap and not a wrap:
+    /// the app would die on the Add Tracker button, every time, with the only
+    /// way out being to delete it.
+    @Test("A stored sort index of Int.max does not blow up the next tracker added")
+    func addSurvivesAnOverflowingStoredSortIndex() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "First", sortIndex: 3, modified: time(1)),
+            Tracker(name: "Absurd", sortIndex: .max, modified: time(1)),
+        ]))
+
+        store.add(Tracker(name: "Added"))
+
+        // Renumbered from the top rather than appended, which is the only
+        // answer that leaves room for the one after this.
+        #expect(store.trackers.map(\.name) == ["First", "Absurd", "Added"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
+        // And it stays survivable: a second add is ordinary arithmetic now.
+        store.add(Tracker(name: "And another"))
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2, 3])
+    }
+
+    /// The same value, one field down: a tracker in a *group*, so `add` takes
+    /// its insertion path instead of appending. That branch renumbers whatever
+    /// it finds, so it never does the arithmetic — worth pinning, because the
+    /// fix lives in the other branch and a later edit could easily give this
+    /// one a `maximum + 1` of its own.
+    @Test("An overflowing sort index survives an insertion beside its group too")
+    func insertionSurvivesAnOverflowingStoredSortIndex() {
+        let store = makeStore(StoreDocument(trackers: [
+            Tracker(name: "Calories", sortIndex: 0, group: "Food", modified: time(1)),
+            Tracker(name: "Absurd", sortIndex: .max, modified: time(1)),
+        ]))
+
+        store.add(Tracker(name: "Protein", group: "Food"))
+
+        #expect(store.trackers.map(\.name) == ["Calories", "Protein", "Absurd"])
+        #expect(store.trackers.map(\.sortIndex) == [0, 1, 2])
+    }
+
     // MARK: - Saving
 
     @Test("A change reaches disk on its own, shortly")
