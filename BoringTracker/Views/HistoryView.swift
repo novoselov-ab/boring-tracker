@@ -44,11 +44,27 @@ struct HistoryView: View {
                             ForEach(group.items) { item in
                                 HistoryRow(item: item, trackers: trackers) { editing = item }
                                     .swipeActions(edge: .trailing) {
-                                        Button("Delete", systemImage: "trash", role: .destructive) {
+                                        Button(role: .destructive) {
                                             if let entry = item.entries.first {
                                                 store.deleteBatch(containing: entry)
                                             }
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
                                         }
+                                        // The `Toggle` case from the root
+                                        // tint's own comment, arriving for
+                                        // real: `.tint(.primary)` reaches a
+                                        // swipe action, so this drew as a blank
+                                        // white capsule in dark mode — white
+                                        // fill, white label, no glyph and no
+                                        // word — on the one control in the app
+                                        // that destroys a record. `role:
+                                        // .destructive` does not survive an
+                                        // inherited tint, so the red is named
+                                        // here, exactly as a bar button names
+                                        // `navBarAccent()` (docs/TODO.md item
+                                        // 20).
+                                        .tint(.red)
                                     }
                             }
                         }
