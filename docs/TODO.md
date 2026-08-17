@@ -563,6 +563,23 @@ put the accent in eight places to protect a workflow nobody here uses. Item 18
 retires the question, since an asset-catalog accent is inherited by previews
 too.
 
+## 13b. Dark labels on the teal
+
+Decided, from item 13's review. **White on the teal measures 1.74:1** — and the
+blue it replaced was 2.69:1, so this made a failing pairing worse rather than
+breaking a working one. Both are far below the 3:1 a UI element needs, on the
+screen this app exists to be glanced at one-handed.
+
+Keep the teal, change what sits on it: **a dark label on the teal fill**, not
+white. Teal is a light colour, so near-black on it reads easily, it stays a
+system colour that adapts itself to dark mode, and light-fill-with-dark-label is
+ordinary current practice rather than a workaround.
+
+- [ ] Both sites move together — the Log pill and a card's +. The review was
+      right that fixing one leaves two design languages on one screen, which is
+      the complaint item 13 is named after.
+- [ ] Measure the new ratio and record it.
+
 ## 14. Log it again, from History
 
 A button on each History row that logs that entry again, now. Same values, same
