@@ -139,7 +139,8 @@ struct HistoryView: View {
         // being inserted in the same instant, so it arrives already marked
         // rather than fading up from a row that was not there a frame ago.
         // Measured off a recording — the mark is at full strength in the frame
-        // the row appears in.
+        // the row appears in. (The `onAppear` path below has to say so
+        // explicitly, because there the row is already on screen.)
         .onChange(of: store.lastLoggedAgainRow) { _, row in
             guard let row else { return }
             highlighted = row
@@ -157,10 +158,19 @@ struct HistoryView: View {
         // a row nobody just made. Five seconds is "I tapped that and opened
         // History to look", and nothing longer.
         .onAppear {
-            guard let row = store.lastLoggedAgainRow,
-                  let item = store.historyItems.first(where: { $0.id == row }),
-                  Date().timeIntervalSince(item.date) < 5 else { return }
-            highlighted = row
+            guard let row = store.lastLoggedAgainRow, let at = store.lastLoggedAgainAt,
+                  Date().timeIntervalSince(at) < 5 else { return }
+            // Without animations, so this path marks the way the other one
+            // does. The colour below carries an `.animation`, which is
+            // bidirectional: on the `onChange` path the row is being inserted
+            // at that instant so there is nothing to animate from, but here the
+            // row is already on screen and the mark would otherwise bloom up
+            // over 0.9s — 0.9s of fade-in eating into a 2s hold, on a mark
+            // whose whole job is to be there when you look. The same
+            // `disablesAnimations` transaction the log sheet presents with.
+            var instant = Transaction()
+            instant.disablesAnimations = true
+            withTransaction(instant) { highlighted = row }
         }
         // It fades on its own, which is the half that is a decision: a mark
         // that stays is a second state to reason about. `task(id:)` restarts

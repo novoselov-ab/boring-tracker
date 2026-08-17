@@ -100,6 +100,23 @@ final class Store {
         return written.batchID.map(HistoryItem.ID.batch) ?? .entry(written.id)
     }
 
+    /// When that row was written, for a screen that wants to know whether the
+    /// repeat is seconds old or an hour old.
+    ///
+    /// A repeat's offer stands until something newer is written, so "there is a
+    /// repeat to undo" says nothing about *when*. Read off the entries the write
+    /// made rather than stamped separately: they carry the moment already, and a
+    /// second timestamp is a second thing to keep in step.
+    ///
+    /// Here rather than in the screen that asks. History had this by finding the
+    /// row in `historyItems` and reading its date, which walks and sorts every
+    /// entry ever logged — a second full build, on a screen that already pays
+    /// for one, every time it opens while an offer stands.
+    var lastLoggedAgainAt: Date? {
+        guard case .logged(let entries, _) = lastWrite else { return nil }
+        return entries.first?.date
+    }
+
     /// The newest thing the last deletion took from this tracker, if it took
     /// anything. Undo restores the whole deletion either way; a tracker's own
     /// screen asks this rather than reading `lastDeletion`, because the newest
