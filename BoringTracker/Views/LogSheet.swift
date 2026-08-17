@@ -127,9 +127,19 @@ struct LogSheet: View {
                     fieldStep(-1, "chevron.up", "Previous field")
                     fieldStep(1, "chevron.down", "Next field")
                     Spacer()
-                    Button("Log", action: log)
-                        .buttonStyle(.borderedProminent)
-                        .disabled(amounts.isEmpty)
+                    Button(action: log) {
+                        // Dark on the teal (see `Color.onAccent`), and inside
+                        // the label rather than on the button: this is the one
+                        // prominent button in the app that is routinely
+                        // disabled — the sheet opens that way, with no number
+                        // typed yet — and a disabled prominent button is drawn
+                        // from a neutral near-black fill that ignores the tint
+                        // entirely. `onAccentFill` reads `isEnabled` from here,
+                        // inside `.disabled`, and stands aside for it.
+                        Text("Log").onAccentFill()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(amounts.isEmpty)
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 2)

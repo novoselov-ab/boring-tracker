@@ -48,6 +48,11 @@ struct HomeView: View {
                             .frame(
                                 maxWidth: horizontalSizeClass == .regular ? 440 : .infinity
                             )
+                            // Dark on the teal, not the white iOS draws by
+                            // default — see `Color.onAccent`. Inside the label,
+                            // because that is where a `.disabled` outside can
+                            // still reach it.
+                            .onAccentFill()
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
@@ -106,8 +111,14 @@ struct HomeView: View {
         } description: {
             Text("Add one to start counting whatever you like.")
         } actions: {
-            NavigationLink("Add Tracker", value: Route.settings)
-                .buttonStyle(.borderedProminent)
+            // Spelled out rather than the string convenience so the label can
+            // be drawn dark on the teal like every other prominent button here.
+            // It is a rare screen, but a screen that says the same thing a
+            // different way is what item 13 is named after.
+            NavigationLink(value: Route.settings) {
+                Text("Add Tracker").onAccentFill()
+            }
+            .buttonStyle(.borderedProminent)
         }
     }
 
@@ -380,7 +391,12 @@ private struct TrackerCard: View {
                 // door. A control that is already a comfortable target at
                 // every size has nothing to gain by growing.
                 .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(.white)
+                // The same dark-on-teal the Log pill uses, for the same
+                // measured reason: this glyph sits on the identical fill six to
+                // ten times down the main screen, so it was the identical
+                // 1.74:1. The two move together or the screen has two design
+                // languages again (docs/TODO.md item 13b).
+                .foregroundStyle(Color.onAccent)
                 .frame(width: 30, height: 30)
                 // `.tint`, not `Color.accentColor`: the accent is set as an
                 // environment tint in `BoringTrackerApp` and the catalog one

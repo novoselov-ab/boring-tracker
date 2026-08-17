@@ -537,6 +537,11 @@ is the complaint item 11 fixed and the complaint this whole item is named
 after. Both sites move together or neither does, and what moves them is the
 accent, which is the user's call.
 
+**Item 13b is that call, and it went the other way on the paragraph above.** The
+dark label is in, brand-button objection and all: 1.74:1 is not a look to weigh
+against a look, it is a control you cannot read. The 12.08:1 recorded here
+reproduces as 12.07:1 from a fresh screenshot.
+
 Disabled and pressed both checked, in dark mode: the disabled Log is a black
 pill with a grey label at 1.94:1 — **identical before and after**, because iOS
 draws a disabled prominent button from a neutral fill and never touches the
@@ -563,7 +568,7 @@ put the accent in eight places to protect a workflow nobody here uses. Item 18
 retires the question, since an asset-catalog accent is inherited by previews
 too.
 
-## 13b. Dark labels on the teal
+## 13b. Dark labels on the teal — done
 
 Decided, from item 13's review. **White on the teal measures 1.74:1** — and the
 blue it replaced was 2.69:1, so this made a failing pairing worse rather than
@@ -575,10 +580,42 @@ white. Teal is a light colour, so near-black on it reads easily, it stays a
 system colour that adapts itself to dark mode, and light-fill-with-dark-label is
 ordinary current practice rather than a workaround.
 
-- [ ] Both sites move together — the Log pill and a card's +. The review was
+- [x] Both sites move together — the Log pill and a card's +. The review was
       right that fixing one leaves two design languages on one screen, which is
       the complaint item 13 is named after.
-- [ ] Measure the new ratio and record it.
+- [x] Measure the new ratio and record it.
+
+**`#000000` on the teal, measured at every accent-filled site: 12.07:1 in dark
+mode (`#00D9E6`) and 10.73:1 in light (`#00CDD9`).** Against 1.74:1 and 1.96:1
+for the white iOS was drawing, and against a 3:1 floor. Sampled from
+`xcrun simctl io booted screenshot` with an AppKit pixel scan, cropped inside
+each fill so the surrounding row background could not be mistaken for the label;
+WCAG ratios computed from the sampled sRGB.
+
+**Four sites, not two.** The item named the Log pill and a card's +, and the
+same white-on-tint pairing was also under the log sheet's own Log button and the
+empty state's *Add Tracker*. All four are prominent-accent controls on the same
+fill, so all four moved — leaving one behind is the two-design-languages
+complaint at a smaller scale, and it is the same one-line change.
+
+**The disabled state is why this is a modifier and not a `.foregroundStyle` at
+each call site.** iOS draws a disabled prominent button from a neutral fill and
+never touches the tint — measured in dark mode as `#3C3C3C` on `#000000`,
+1.90:1 — so forcing the label black there paints black on black, and the log
+sheet opens in exactly that state every time, with no number typed yet.
+`onAccentFill` reads `isEnabled` from inside the button's label and stands
+aside, which the probe confirms: the disabled Log is still the system's grey on
+its neutral pill, unchanged by this item.
+
+**Pressed was not captured this session, and the number below is computed rather
+than measured.** The macOS console was locked for the whole of it, which takes
+the AX tree and CGEvent clicks with it (`System Events` reports zero Simulator
+windows), so there is no way to hold a button down and screenshot it. Nothing
+here touches a fill, and item 13 measured the pressed fill as `#36E0EB`: black
+on that is **13.02:1**, higher than at rest, because pressing lightens the fill
+and the label is dark now. Worth capturing directly the next time the console is
+unlocked, but it cannot fail — pressed only moves this pairing further from the
+floor.
 
 ## 14. Log it again, from History
 
