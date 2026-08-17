@@ -1288,11 +1288,18 @@ already works.
 ## 18b. Share the export with UIKit
 
 Decided, with the evidence in `531d71c`. **`ShareLink` silently fails to
-present from a `Form` that carries a `.sheet(item:)`** — which settings does,
-for the tracker editor. Bisected against a throwaway app; the editor sheet
-still presents, a `Button` in the same section still works, and the same
-`ShareLink` in home's toolbar opens fine. `UIActivityViewController` presented
-by hand from that screen works, and was screenshotted.
+present from settings' Data section** — no sheet, no error — while a `Button` in
+that same section works on the same tap. `UIActivityViewController` presented by
+hand from that screen works, and was screenshotted.
+
+**The cause recorded in `531d71c` was wrong, and the review corrected it: it is
+`.confirmationDialog` on that section, not the tracker editor's
+`.sheet(item:)`.** Measured seven ways on an iPhone 17 / iOS 26.3 — see the
+small-things item below for the table. This does not reverse the decision; it
+changes what the options are. Before writing the app's first UIKit, it is worth
+knowing that the blocker is the import chooser sitting on the same container,
+so **giving that dialog a different home may be the whole fix** and is cheaper
+than a window-hierarchy bridge. Which way to go is still the user's call.
 
 So: about fifteen lines of UIKit. This is the app's first UIKit and its first
 reach into the window hierarchy, which is why it was escalated rather than
@@ -1364,16 +1371,24 @@ the numbered items is going near the same code.
       done: both exports are offered as `boring-tracker-2026-08-16`, verified
       by saving one into Files.
 
-      **`ShareLink` does not present from the settings list.** Tapping it does
-      nothing — no sheet, no log line, no error. Bisected to a 40-line app: a
-      `ShareLink` in a `Form` row presents normally until the same `Form`
-      carries a `.sheet(item:)` modifier anywhere in it, and then it silently
-      stops. Settings has exactly that — the tracker editor. In the same build
-      the editor sheet still opens, a `Button` in the same section still works,
-      and the same `ShareLink` in home's toolbar opens the share sheet, so it is
-      the pairing rather than the control, the screen or the simulator.
-      Attaching the editor's `.sheet` to a different section, or to a
-      `Color.clear` background, does not help.
+      **`ShareLink` does not present from the Data section.** Tapping it does
+      nothing — no sheet, no log line, no error. A `Button` in the same section
+      works on the same synthesized tap, so it is the control and not the input
+      path.
+
+      **The cause is `.confirmationDialog`, not `.sheet(item:)`**, and the
+      first diagnosis had it wrong. Re-bisected on an iPhone 17 / iOS 26.3 by
+      putting a probe `ShareLink` in the real screen and building it seven
+      ways: with every presentation modifier stripped from the Data section it
+      presents; with `.alert(item:)` alone it presents; with
+      `.fileImporter` + `.alert` it presents; with **`.confirmationDialog`
+      alone it does not.** The import merge/replace chooser is that dialog.
+
+      The `.sheet(item:)` reading is disproved twice over: removing the tracker
+      editor's `.sheet` from settings does **not** bring the ShareLink back, a
+      probe `ShareLink` in settings' *Add Tracker* section presents fine with
+      that `.sheet` still attached, and a 40-line throwaway app pairing a
+      `Form`, a `.sheet(item:)` and a `ShareLink` presents every time.
 
       What is left is a decision rather than a fix: present
       `UIActivityViewController` directly (about fifteen lines and the app's
