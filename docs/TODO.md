@@ -496,6 +496,16 @@ thing it was ever saying.
       gone for good eleven seconds after a wrong swipe. `Store.forgetRepeatUndo`
       already recorded half of this reasoning at the model layer.
 
+      Verified in the simulator, dark mode, the way item 20 verified home's:
+      screenshots of History at +2s (bar reading "Logged again", the new row
+      still marked), +7s (bar there) and +15s (bar gone, mark faded), and of
+      home at +3s and +15s — the bar goes and the Log pill sits exactly where it
+      does with no bar, so the safe-area inset collapses cleanly rather than
+      leaving a gap. A deletion at +15s still offers its Undo, which is the
+      asymmetry above holding. The screen was locked, so this was driven by a
+      launch-argument probe root built in a throwaway worktree rather than by
+      tapping; the write and the delete were made from the probe's `task`.
+
 **Not doing: undo on the Log sheet.** Item 20 noticed the asymmetry — logging
 again offers undo, logging does not — and it is deliberate rather than an
 oversight. **Undo exists where a single tap writes data without confirmation.**
