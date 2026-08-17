@@ -97,6 +97,13 @@ struct TrackerDetailView: View {
             Button("Delete", systemImage: "trash", role: .destructive) {
                 store.delete(entry)
             }
+            // The same fix History's swipe needed, on the same day: the root
+            // `.tint(.primary)` reaches a swipe action and `role: .destructive`
+            // loses to it, so this drew as a white capsule with an invisible
+            // glyph (docs/TODO.md item 20). Settings' archive swipe already
+            // named `.tint(.orange)`, which is why that one was never wrong —
+            // the rule is that a swipe action states its own colour.
+            .tint(.red)
         }
     }
 
