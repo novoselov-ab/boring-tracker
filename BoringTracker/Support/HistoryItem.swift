@@ -47,6 +47,77 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return names.count > 1 ? "Mixed names" : names.first
     }
 
+    /// The two lines a History row draws: what this was called, and what it
+    /// was.
+    struct Line: Equatable {
+        /// Never empty. Every row has an identity line, so the eye lands on
+        /// what a row *is* before it lands on its numbers.
+        var identity: String
+        var values: String
+    }
+
+    /// Both lines, from one walk over the row's trackers.
+    ///
+    /// Together rather than as two calls because they have to agree: the
+    /// identity line says which tracker a lone number belongs to, so the values
+    /// line must not say it again. Here rather than in the view because that
+    /// agreement is a rule worth pinning down in a test, and because
+    /// `displayName` — the other half of the same question — already lives on
+    /// this type.
+    ///
+    /// The dictionary comes from the caller: a screenful of rows would
+    /// otherwise each rebuild it from `Store.trackers`.
+    func line(trackers: [UUID: Tracker]) -> Line {
+        let entries = entries.sorted { lhs, rhs in
+            let left = trackers[lhs.trackerID]?.sortIndex ?? .max
+            let right = trackers[rhs.trackerID]?.sortIndex ?? .max
+            return (left, lhs.trackerID, lhs.id) < (right, rhs.trackerID, rhs.id)
+        }
+        // One number is a special case for the identity line's sake, not for
+        // the layout's: with nothing to tell it apart from, its tracker has
+        // already been named on the line above it.
+        let alone = entries.count == 1
+        let units = entries.compactMap { trackers[$0.trackerID]?.unit }
+        let values = entries
+            .map { entry in
+                guard let tracker = trackers[entry.trackerID] else {
+                    return alone
+                        ? entry.value.formatted()
+                        : "Deleted tracker: \(entry.value.formatted())"
+                }
+                let needsName = !alone
+                    && (tracker.unit.isEmpty || units.count(where: { $0 == tracker.unit }) > 1)
+                return needsName
+                    ? "\(tracker.name): \(tracker.format(entry.value))"
+                    : tracker.format(entry.value)
+            }
+            .joined(separator: ", ")
+        return Line(identity: identity(of: entries, in: trackers), values: values)
+    }
+
+    /// What to call a row that was never named: the tracker, the group, or the
+    /// honest admission that the tracker is gone.
+    ///
+    /// One tracker names itself, however it is grouped — "Weight" says more
+    /// about a lone reading than the group "Weight" does, and for a lone
+    /// calorie entry "Food" would be the wrong half of the answer. Several
+    /// trackers take the group they were logged as, which is what the log sheet
+    /// called them when it wrote them. Anything else — a batch spanning groups,
+    /// which only a hand-edited or imported file produces — lists its trackers
+    /// and lets the line limit cut it off.
+    private func identity(of entries: [Entry], in trackers: [UUID: Tracker]) -> String {
+        if let name = displayName { return name }
+        let resolved = entries.compactMap { trackers[$0.trackerID] }
+        guard !resolved.isEmpty else { return "Deleted tracker" }
+        if Set(resolved.map(\.id)).count == 1 { return resolved[0].name }
+        let groups = Set(resolved.map(\.group))
+        if groups.count == 1, let group = groups.first, !group.isEmpty { return group }
+        var seen = Set<String>()
+        return resolved
+            .compactMap { seen.insert($0.name).inserted ? $0.name : nil }
+            .joined(separator: ", ")
+    }
+
     init?(entries: [Entry]) {
         guard let newest = entries.max(by: { ($0.date, $0.id) < ($1.date, $1.id) }) else {
             return nil

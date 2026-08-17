@@ -152,6 +152,136 @@ struct HistoryTests {
         #expect(item.displayName == "Mixed names")
     }
 
+    // MARK: - What a row says (docs/TODO.md item 14b)
+
+    /// The rule the two lines have to keep between them: the identity line
+    /// leads, and the values line never repeats what it already said.
+    private func line(_ store: Store, _ index: Int = 0) throws -> HistoryItem.Line {
+        let trackers = Dictionary(
+            store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
+        )
+        let items = store.historyItems
+        try #require(index < items.count)
+        return items[index].line(trackers: trackers)
+    }
+
+    @Test("A named row leads with the name and keeps it out of the values")
+    func lineUsesTheName() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [calories, protein], entries: [
+            Entry(trackerID: calories.id, value: 100, date: time(10),
+                  name: "chicken rice", batchID: batch),
+            Entry(trackerID: protein.id, value: 10, date: time(10),
+                  name: "chicken rice", batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(identity: "chicken rice", values: "100 kcal, 10 g"))
+    }
+
+    @Test("An unnamed batch leads with the group it was logged as")
+    func lineFallsBackToTheGroup() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        let protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [calories, protein], entries: [
+            Entry(trackerID: calories.id, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: protein.id, value: 10, date: time(10), batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(identity: "Food", values: "100 kcal, 10 g"))
+    }
+
+    @Test("An unnamed single entry leads with its tracker, not with its group")
+    func lineFallsBackToTheTracker() throws {
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
+                             group: "Weight")
+        let store = historyStore(StoreDocument(trackers: [weight], entries: [
+            Entry(trackerID: weight.id, value: 78.4, date: time(10)),
+        ]))
+
+        #expect(try line(store) == .init(identity: "Weight", values: "78.4 kg"))
+    }
+
+    /// The one the layout change is for: with the tracker named above it, a
+    /// unitless number must not be prefixed with that same name again.
+    @Test("A lone unitless number is not prefixed with the name above it")
+    func lineDoesNotSayTheTrackerTwice() throws {
+        let cigarettes = Tracker(name: "Cigarettes")
+        let store = historyStore(StoreDocument(trackers: [cigarettes], entries: [
+            Entry(trackerID: cigarettes.id, value: 3, date: time(10)),
+        ]))
+
+        #expect(try line(store) == .init(identity: "Cigarettes", values: "3"))
+    }
+
+    @Test("Members that share a unit are still told apart inside a batch")
+    func lineNamesAmbiguousMembers() throws {
+        let eaten = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        let burned = Tracker(name: "Calories burned", unit: "kcal", sortIndex: 1, group: "Food")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [eaten, burned], entries: [
+            Entry(trackerID: eaten.id, value: 320, date: time(10), batchID: batch),
+            Entry(trackerID: burned.id, value: 410, date: time(10), batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(
+            identity: "Food", values: "Calories: 320 kcal, Calories burned: 410 kcal"
+        ))
+    }
+
+    @Test("A row whose tracker is gone says so on the line that identifies it")
+    func lineForADeletedTracker() throws {
+        let store = historyStore(StoreDocument(trackers: [], entries: [
+            Entry(trackerID: UUID(), value: 3, date: time(10)),
+        ]))
+
+        #expect(try line(store) == .init(identity: "Deleted tracker", values: "3"))
+    }
+
+    @Test("A batch that half survives names the survivor and flags the rest")
+    func lineForAPartlyDeletedBatch() throws {
+        let protein = Tracker(name: "Protein", unit: "g", group: "Food")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [protein], entries: [
+            Entry(trackerID: UUID(), value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: protein.id, value: 10, date: time(10), batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(
+            identity: "Protein", values: "10 g, Deleted tracker: 100"
+        ))
+    }
+
+    @Test("A batch spanning groups lists its trackers rather than picking one")
+    func lineForABatchSpanningGroups() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        let weight = Tracker(name: "Weight", unit: "kg", decimals: 1, sortIndex: 1,
+                             group: "Weight")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [calories, weight], entries: [
+            Entry(trackerID: calories.id, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: weight.id, value: 78.4, date: time(10), batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(
+            identity: "Calories, Weight", values: "100 kcal, 78.4 kg"
+        ))
+    }
+
+    @Test("Members that disagree about the name still say so on the first line")
+    func lineForMixedNames() throws {
+        let tracker = Tracker(name: "Calories", unit: "kcal")
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [tracker], entries: [
+            Entry(trackerID: tracker.id, value: 1, date: time(10), name: "rice", batchID: batch),
+            Entry(trackerID: tracker.id, value: 2, date: time(20), name: "beans", batchID: batch),
+        ]))
+
+        #expect(try line(store).identity == "Mixed names")
+    }
+
     @Test("Saving a batch does not restamp the members that did not change")
     func batchEditStampsOnlyWhatChanged() {
         let calories = Tracker(name: "Calories")

@@ -858,7 +858,7 @@ looks like, and this is the one place the rule costs something rather than
 buying something. Left as it is: the alternative is a second accent for
 foregrounds, which is the "tune a second shade" this item exists to refuse.
 
-## 14b. Put the name first, still grey
+## 14b. Put the name first, still grey — done
 
 Item 14 found what its brief predicted: scanning History for a food now means
 reading twelve small grey *second* lines while twelve large white numbers — the
@@ -872,10 +872,38 @@ work. So the name stays quiet, exactly as asked, and rows stay uniform — the
 uniformity was always about every row having the same *structure*, not about
 the name being hard to find.
 
-- [ ] The name leads the row; the numbers follow.
-- [ ] An unnamed entry keeps the same structure — the tracker or group name
+- [x] The name leads the row; the numbers follow.
+- [x] An unnamed entry keeps the same structure — the tracker or group name
       leads instead, so every row still has an identity line.
-- [ ] Do not change the name's colour or weight.
+- [x] Do not change the name's colour or weight.
+
+**It costs no density at all**, which was the thing worth checking, since every
+row grew a line it did not have before. Measured off screenshots by finding the
+list's separators — the only full-width faint lines in the card — on an
+iPhone 17 in dark mode against the same fixture before and after: separators at
+y = 622, 778, 934, 1090, 1246, 1450, 1606, 1762, 1918, 2074, 2230 px in **both**
+builds. A 52pt row pitch, one 68pt row where the values wrap to two lines, and
+not one pixel of movement. The repeat disc's 44pt frame was already setting the
+row height, and a footnote above a body line still fits inside it.
+
+**The identity line is `HistoryItem.line(trackers:)`, not two properties in the
+view.** The two lines have to agree — the identity line names the tracker, so
+the values line must stop repeating it — and that agreement is a rule worth a
+test rather than a coincidence between two computed properties. Nine tests pin
+it: a named batch, an unnamed one falling back to its group, a lone reading
+falling back to its tracker rather than to that tracker's group, and the case
+that made the rule necessary — `Cigarettes` has no unit, so its row used to
+read "Cigarettes: 3" under a name that was about to say "Cigarettes" again.
+
+Two rows say more than they used to, for free. **An archived tracker's row now
+names it** — it reads "Old scale / 79.1 kg" beside a disc that is off, which is
+the missing explanation item 14 recorded and declined to fix by adding a label.
+And a deleted tracker's row leads with "Deleted tracker" instead of burying it
+in front of the number.
+
+Not changed: tracker detail's own list, which draws the same shape and is not
+this item's question — there the tracker is the screen you are on, so a name
+line would repeat the title on every row.
 
 ## 15. Make a save feel like it landed
 

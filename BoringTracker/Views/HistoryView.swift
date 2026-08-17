@@ -159,30 +159,38 @@ private struct HistoryRow: View {
     let item: HistoryItem
     let edit: () -> Void
 
-    /// One shape for every row: the numbers on the first line, the name under
-    /// them if there is one.
+    /// One shape for every row: what it is called on the first line, what it
+    /// was on the second.
     ///
-    /// It used to be two shapes. A named batch put the name first and dropped
-    /// the values to a grey footnote beneath it, an unnamed one printed the
-    /// values full size on the first line — so "100 kcal, 10 g" changed size,
-    /// weight, colour and position depending on whether a name had been typed,
-    /// and a day's scroll was two interleaved layouts. The numbers are what
-    /// every row has, so they are what every row shows the same way; the name
-    /// is what only some rows have, so it is the part that may be missing, and
-    /// grey where it isn't.
+    /// **The name leads and stays quiet.** Item 13 put the numbers first on the
+    /// grounds that the numbers are what every row has, which was right about
+    /// uniformity and wrong about scanning: item 14 made History the place you
+    /// come to *find a food by name* and repeat it, and finding one meant
+    /// reading twelve small grey second lines while twelve large white numbers,
+    /// which identify nothing, took the eye first (docs/TODO.md item 14b).
+    ///
+    /// So the fix is position, not weight. The name is still a grey footnote —
+    /// quiet was asked for deliberately, and re-loudening it would undo item 13
+    /// rather than finish it — and reading order does the work instead. Every
+    /// row still has the same structure, which is what item 13's uniformity was
+    /// actually about; a row nobody named leads with its group or its tracker,
+    /// so the first line is an identity line on every row rather than on some
+    /// of them.
     var body: some View {
+        let line = line
         // Two plain buttons with disjoint frames, the same shape a home card
         // uses: tapping the row edits it, tapping the disc logs it again.
-        HStack(spacing: 8) {
+        return HStack(spacing: 8) {
             Button(action: edit) {
+                // The time is on the identity line rather than beside the
+                // numbers: it is the same footnote grey, and the two quiet
+                // things belong together above the one loud one.
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(values)
-                        if let name = item.displayName {
-                            Text(name)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text(line.identity)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Text(line.values)
                     }
                     Spacer(minLength: 8)
                     Text(item.date.formatted(date: .omitted, time: .shortened))
@@ -214,14 +222,15 @@ private struct HistoryRow: View {
     /// worse than one that plainly cannot be used.
     ///
     /// **A deleted tracker's row explains itself and an archived one does not.**
-    /// `values` prints "Deleted tracker" where the record is gone, so that row
-    /// says why the disc is off; an archived tracker is still a record, so its
-    /// row reads like any other and the disc is simply absent-looking beside it
-    /// (measured at 1.25:1 against the row in light mode — it reads as no button
-    /// rather than a dead one). Left that way deliberately, and corrected in
-    /// docs/TODO.md item 14 rather than fixed here: saying "Archived" on the row
-    /// is a change to what a row shows, and what a row shows is item 14b's
-    /// question.
+    /// The row prints "Deleted tracker" where the record is gone — on the
+    /// identity line for a lone entry, beside the number inside a batch — so
+    /// that row says why the disc is off; an archived tracker is still a
+    /// record, so its row reads like any other and the disc is simply
+    /// absent-looking beside it (measured at 1.25:1 against the row in light
+    /// mode — it reads as no button rather than a dead one). Still deliberate
+    /// after item 14b: an archived tracker's row now leads with that tracker's
+    /// name, which is more than it used to say, and "Archived" on the row is a
+    /// label about the tracker rather than about the thing that was logged.
     private var repeatButton: some View {
         let canRepeat = !store.repeatableEntries(of: item).isEmpty
         return Button { store.logAgain(item) } label: {
@@ -247,25 +256,15 @@ private struct HistoryRow: View {
         .accessibilityLabel("Log again")
     }
 
-    private var values: String {
-        let trackers = Dictionary(store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let units = item.entries.compactMap { trackers[$0.trackerID]?.unit }
-        return item.entries
-            .sorted { lhs, rhs in
-                let left = trackers[lhs.trackerID]?.sortIndex ?? .max
-                let right = trackers[rhs.trackerID]?.sortIndex ?? .max
-                return (left, lhs.trackerID, lhs.id) < (right, rhs.trackerID, rhs.id)
-            }
-            .map { entry in
-                guard let tracker = trackers[entry.trackerID] else {
-                    return "Deleted tracker: \(entry.value.formatted())"
-                }
-                let needsName = tracker.unit.isEmpty || units.count(where: { $0 == tracker.unit }) > 1
-                return needsName
-                    ? "\(tracker.name): \(tracker.format(entry.value))"
-                    : tracker.format(entry.value)
-            }
-            .joined(separator: ", ")
+    /// `uniquingKeysWith`, not `uniqueKeysWithValues`, which traps: a store file
+    /// holding two trackers with the same id is a shape nothing on the load path
+    /// rejects, and the rest of the store layer already survives it.
+    private var line: HistoryItem.Line {
+        item.line(
+            trackers: Dictionary(
+                store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
+            )
+        )
     }
 }
 
