@@ -140,9 +140,13 @@ struct SettingsView: View {
         // only after letting go, which is how a drop target that resolved to
         // the wrong row survived a hand-run reproduction.
         .opacity(carried.contains(tracker.id) ? 0.4 : 1)
+        // `.tint`, not `Color.accentColor`: the accent is an environment tint
+        // (see `BoringTrackerApp`) and that name still resolves the catalog's
+        // blue. Boxed in `AnyShapeStyle` because the two branches are now
+        // different shape-style types.
         .background(drag?.target == tracker.id && !carried.isEmpty
-                    ? Color.accentColor.opacity(0.18)
-                    : .clear,
+                    ? AnyShapeStyle(.tint.opacity(0.18))
+                    : AnyShapeStyle(.clear),
                     in: .rect(cornerRadius: 8))
         .swipeActions(edge: .trailing) {
             archiveButton(tracker)

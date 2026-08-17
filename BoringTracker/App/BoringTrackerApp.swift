@@ -13,6 +13,23 @@ struct BoringTrackerApp: App {
         WindowGroup {
             HomeView()
                 .environment(store)
+                // The app's accent, in one place. `.teal` rather than a hex:
+                // a system colour is dynamic, so it desaturates itself on
+                // black instead of glowing there, and dark mode is where this
+                // app is used. `.mint` was the alternative and reads greener
+                // than the app's own name — teal is still a quiet blue-green
+                // and stays distinguishable from the green/orange the archive
+                // swipe already owns.
+                //
+                // As an environment tint rather than an asset-catalog accent
+                // because there is no asset catalog yet (docs/TODO.md item 18),
+                // and one modifier that every control already reads beats a
+                // catalog entry plus a build setting. The corollary is that
+                // nothing may paint with `Color.accentColor`, which resolves
+                // from the catalog and would have stayed blue — the places
+                // that used it now use the `.tint` shape style, which resolves
+                // from here.
+                .tint(.teal)
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else {

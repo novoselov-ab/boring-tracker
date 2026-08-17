@@ -82,17 +82,26 @@ private struct HistoryRow: View {
     let item: HistoryItem
     let edit: () -> Void
 
+    /// One shape for every row: the numbers on the first line, the name under
+    /// them if there is one.
+    ///
+    /// It used to be two shapes. A named batch put the name first and dropped
+    /// the values to a grey footnote beneath it, an unnamed one printed the
+    /// values full size on the first line — so "100 kcal, 10 g" changed size,
+    /// weight, colour and position depending on whether a name had been typed,
+    /// and a day's scroll was two interleaved layouts. The numbers are what
+    /// every row has, so they are what every row shows the same way; the name
+    /// is what only some rows have, so it is the part that may be missing, and
+    /// grey where it isn't.
     var body: some View {
         Button(action: edit) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
+                    Text(values)
                     if let name = item.displayName {
                         Text(name)
-                        Text(values)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                    } else {
-                        Text(values)
                     }
                 }
                 Spacer(minLength: 8)

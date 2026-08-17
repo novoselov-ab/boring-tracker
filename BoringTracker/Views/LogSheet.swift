@@ -218,7 +218,10 @@ struct LogSheet: View {
                 // Tinted, like every other system form accessory: `.plain` is
                 // here for the 44pt `contentShape`, not for its colour, and it
                 // would otherwise paint these the same black as the labels.
-                .foregroundStyle(Color.accentColor)
+                // `.tint`, not `Color.accentColor` — the accent lives as an
+                // environment tint (see `BoringTrackerApp`), and the catalog
+                // colour that name resolves is still the system blue.
+                .foregroundStyle(.tint)
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }

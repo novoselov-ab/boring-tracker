@@ -466,29 +466,73 @@ custom pad may be the only sensible input; or the system keypad becoming the
 dominant cost again after other work. Not on taste alone — the number is known
 now, and it is half a second.
 
-## 13. Make it look like one app
+## 13. Make it look like one app — done
 
-Three things spotted while using it. All the same kind of problem — a screen
+Four things spotted while using it. All the same kind of problem — a screen
 saying the same thing two different ways — and all on screens looked at daily.
 
-- [ ] **A tracker's name on home is grey and hard to read.** Give it the same
+- [x] **A tracker's name on home is grey and hard to read.** Give it the same
       white as its number. Grey says "secondary", and the name is not
       secondary — it is what tells you which number you are looking at.
-- [ ] **The "Boring Tracker" title only exists at the top of the scroll.**
+- [x] **The "Boring Tracker" title only exists at the top of the scroll.**
       Keep it visible always, smaller — a title that appears and disappears
       makes the screen feel like it is changing when only the scroll offset is.
-- [ ] **Replace the blue with a teal.** Use a **SwiftUI system colour**
+- [x] **Replace the blue with a teal.** Use a **SwiftUI system colour**
       (`.teal`, or `.mint` if it reads too blue) rather than a custom hex: the
       system ones are dynamic, so they desaturate themselves for dark mode.
       That matters here — a colour tuned on white goes neon on black, which is
       the usual way a custom accent looks wrong in the mode we care about most.
       Judge it in dark mode first, since that is where this app is actually
       used, and check the disabled and pressed states too.
-- [ ] **In History, a named entry is drawn differently from an unnamed one**,
+- [x] **In History, a named entry is drawn differently from an unnamed one**,
       so the macros shift shape depending on whether you typed a name. Make the
       row uniform and let the **name** be the grey, quieter part. The numbers
       are the thing every row has, so they should be what every row shows the
       same way.
+
+The inline title **gains** a card rather than costing one: on an iPhone 17 with
+twelve trackers, 9 cards were fully visible above the Log bar with the large
+title and **10** are with the inline one, measured off the accessibility tree's
+row frames rather than counted by eye. It is also what History, Settings and
+every editor already do, so the app now has one title treatment.
+
+**The accent is one `.tint(.teal)` on the root view**, not an asset-catalog
+colour — there is no catalog yet (item 18) — and the corollary is that
+`Color.accentColor` is now *wrong* everywhere: it resolves from the catalog and
+stays blue. Three sites that used it (home's card `+`, the sheet's field
+chevrons, the settings drop highlight) read the `.tint` shape style instead.
+Anything new that needs the accent must do the same, or the app goes
+half-teal — which is worse than the blue was.
+
+**A measured problem the colour brings with it, left as the user's call.**
+Dark mode's `.teal` renders `#00D9E6`, and iOS draws a prominent button's label
+white regardless of tint, so the Log button's own label sits at **1.74:1**
+against its fill — where the old blue (`#00A5FF`) gave 2.69:1. Both are under
+the 3:1 large-text floor; teal is 35% worse than a blue nobody complained
+about. Light mode is the same story (`#00CDD9`, 1.96:1), so it is the
+white-on-tint pairing rather than dark mode. `.mint` is no escape: `#00DFCE`,
+1.69:1, and greener. A dark label on the teal measures 12.08:1 and was tried —
+it reads much better and looks like a brand button rather than an iOS one,
+which is the opposite of "boring and native", so it is **not** in. Sampled
+from screenshots with an AppKit pixel scan; WCAG ratios computed from the
+sampled sRGB.
+
+Disabled and pressed both checked, in dark mode: the disabled Log is a black
+pill with a grey label at 1.94:1 — **identical before and after**, because iOS
+draws a disabled prominent button from a neutral fill and never touches the
+tint. Pressed lightens the fill to `#36E0EB`. So the accent change leaves both
+states exactly as blue left them, and the dim disabled pill is a pre-existing
+system rendering, not something teal introduced.
+
+Swept default → AX5 on home and History, dark mode, with a twelve-tracker
+fixture holding the worst case ("Calories burned exercising" against
+"1,234,567 kcal"): nothing clipped, nothing overlapping, the stacked fallback
+above `.xxxLarge` still stacks, and the `+` disc stays a 30pt circle in a 44pt
+target at every size. One thing the white name does cost: at the accessibility
+sizes `.subheadline` and `.title2` converge, so the name/number hierarchy that
+grey used to carry is left to the stacking order alone. It reads, because the
+number is on its own line under the name, but it is thinner than at default
+size.
 
 ## 14. Log it again, from History
 

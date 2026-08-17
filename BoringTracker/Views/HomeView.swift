@@ -27,6 +27,17 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Boring Tracker")
+            // Always the small title, never the large one. A large title is
+            // only drawn at the top of the scroll and swaps for the inline one
+            // as you move, so the screen reads as changing when nothing but
+            // the offset has: the same words, twice the size, in a different
+            // place. Inline says it once. It is also what every other screen
+            // here already does, which is the point of this item.
+            //
+            // It gives vertical space back rather than taking it — the large
+            // title's own band is gone — so the density item 11 bought is
+            // intact; the card count is in the commit body.
+            .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !store.activeTrackers.isEmpty {
                     // Unlike a card's small +, this is the primary action: it
@@ -302,11 +313,19 @@ private struct TrackerCard: View {
     /// "Calories burned exercising" wrapping to three lines would put back
     /// exactly the row height this card exists to cut. Capped on the one-line
     /// layout, uncapped on the stacked one, which has the room.
+    ///
+    /// The name is drawn in the primary colour, like the number. Grey means
+    /// "secondary" and the name is not: it is the only thing on the row that
+    /// says which number you are reading, and a grey label beside a white
+    /// total reads as an annotation on it. The hierarchy is carried by size
+    /// and weight instead — `.subheadline` against a medium `.title2` — which
+    /// still puts the number first at a glance without making the label
+    /// something you have to look for. The caption stays grey, because
+    /// "8 hours ago" genuinely is secondary to the reading it dates.
     private func nameBlock(_ caption: String?) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(tracker.name)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
             if let caption {
                 Text(caption)
                     .font(.caption2)
@@ -363,7 +382,10 @@ private struct TrackerCard: View {
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 30, height: 30)
-                .background(Color.accentColor, in: .circle)
+                // `.tint`, not `Color.accentColor`: the accent is set as an
+                // environment tint in `BoringTrackerApp` and the catalog one
+                // this used to read is still the system blue.
+                .background(.tint, in: .circle)
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
