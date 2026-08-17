@@ -19,7 +19,7 @@ struct RepeatTests {
         )
     }
 
-    @Test("Only named rows are listed, newest first")
+    @Test("Only named rows are listed")
     func namedOnly() {
         let tracker = Tracker(name: "Calories")
         let store = repeatStore(
@@ -183,6 +183,33 @@ struct RepeatTests {
         )
 
         #expect(store.repeatItems.map { $0.entries.map(\.value) } == [[619.7], [621.1], [618.4]])
+    }
+
+    @Test("A row that cannot be written sorts below every row that can")
+    func unrepeatableRowsSinkHoweverOftenTheyWereLogged() throws {
+        let archived = Tracker(name: "Old scale", unit: "kg", kind: .measurement)
+        let calories = Tracker(name: "Calories", unit: "kcal", sortIndex: 1)
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [archived, calories],
+                entries: [
+                    Entry(trackerID: archived.id, value: 79, date: time(10), name: "morning"),
+                    Entry(trackerID: archived.id, value: 79, date: time(20), name: "morning"),
+                    Entry(trackerID: archived.id, value: 79, date: time(30), name: "morning"),
+                    Entry(trackerID: calories.id, value: 320, date: time(40), name: "porridge"),
+                ]
+            )
+        )
+        var scale = archived
+        scale.isArchived = true
+        store.update(scale)
+
+        // Three logs against one log: on count alone the archived row wins, and
+        // it would hold the top of the screen for good, greyed out, because a
+        // lifetime count never falls. Recency used to sink such rows on its own.
+        let items = store.repeatItems
+        #expect(items.map(\.displayName) == ["porridge", "morning"])
+        #expect(store.repeatableEntries(of: try #require(items.last)).isEmpty)
     }
 
     @Test("The same values under different names stay apart")

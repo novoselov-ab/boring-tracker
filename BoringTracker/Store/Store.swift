@@ -312,11 +312,12 @@ final class Store {
     }
 
     /// The Repeat screen's list: one row per distinct named thing you have
-    /// logged, newest first.
+    /// logged, the ones logged most often first.
     ///
     /// **Deduplicated by name *and* values** (`HistoryItem.RepeatKey`). The
     /// plain list was built first on purpose and using it is what settled this:
-    /// eight rows for "rice", six of them the same meal at the same numbers.
+    /// item 16 recorded eight rows for "rice" with six of them the same meal at
+    /// the same numbers, and a fresh fixture of the same shape gives 23 and 15.
     /// Forty logs of "chicken rice 100/10" are one row here, while "chicken
     /// rice 160/16" stays its own, because a bigger portion is a different
     /// thing to log again (docs/TODO.md item 16).
@@ -343,6 +344,24 @@ final class Store {
     /// food to the gram repeats no number exactly, every count is 1, and the
     /// tie-break is the whole ordering (docs/TODO.md item 16).
     ///
+    /// **A row that cannot be written sorts below every row that can**, whatever
+    /// its count. Archiving a tracker is a supported thing to do, and under a
+    /// pure frequency order a year of porridge logged against a tracker you have
+    /// since archived would own the top of the screen for good — a screenful of
+    /// greyed rows in front of every row that still works. Recency used to sink
+    /// them on its own; a lifetime count never does. They stay on the list
+    /// rather than disappearing, which is item 16's decision and unchanged: the
+    /// row is still a true statement about what you ate, and a screen that drops
+    /// food when you archive a tracker is editing your history.
+    ///
+    /// **The count is over everything ever logged, which is a decision and not
+    /// obviously the right one.** Eat porridge every morning for a year, switch
+    /// to overnight oats for a month, and last year's staple still outranks this
+    /// morning's — reachable only by search, on a screen whose job is one tap.
+    /// A window (say the last 60 days) would keep the stability argument and
+    /// drop the museum effect; it is not here because nothing measured yet says
+    /// what the window should be, and it is a displayed decision either way.
+    ///
     /// A filter over `historyItems` rather than its own walk of `entries`: the
     /// grouping of a batch into one row is the same question both screens ask,
     /// and it is already pinned by tests here. A second walk would be a second
@@ -362,14 +381,17 @@ final class Store {
     /// recorded for the plain list.
     var repeatItems: [HistoryItem] {
         var index: [HistoryItem.RepeatKey: Int] = [:]
-        var rows: [(item: HistoryItem, count: Int)] = []
+        var rows: [(item: HistoryItem, count: Int, canRepeat: Bool)] = []
         for item in historyItems where item.isNamed {
             let key = item.repeatKey
             if let at = index[key] {
                 rows[at].count += 1
             } else {
                 index[key] = rows.count
-                rows.append((item, 1))
+                // Once per collapsed row, not once per comparison, and it is the
+                // same answer for every row the key collapsed: the key carries
+                // the tracker ids, so they all name the same trackers.
+                rows.append((item, 1, !repeatableEntries(of: item).isEmpty))
             }
         }
         // `historyItems` is newest first, so the tie-break is already in hand:
@@ -377,6 +399,7 @@ final class Store {
         // date and `sortID` below.
         return rows
             .sorted { lhs, rhs in
+                if lhs.canRepeat != rhs.canRepeat { return lhs.canRepeat }
                 if lhs.count != rhs.count { return lhs.count > rhs.count }
                 if lhs.item.date != rhs.item.date { return lhs.item.date > rhs.item.date }
                 return lhs.item.sortID > rhs.item.sortID

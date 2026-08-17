@@ -73,6 +73,17 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// controls: a batch's members each carry their own name, and nothing
     /// promises two logs of one meal wrote them in the same order.
     ///
+    /// **Values are compared as stored, not as drawn**, and the two can come
+    /// apart: a tracker's `decimals` is editable, so logging "rice" at 100.4 and
+    /// at 100.0 against a one-decimal tracker gives two rows correctly, and
+    /// setting that tracker to zero decimals afterwards leaves both rows reading
+    /// "rice / 100 kcal" with only their dates to tell them apart. Keying on the
+    /// formatted string instead would collapse them — and would make the key
+    /// depend on a setting, and cost a `Tracker.format` per value on a walk
+    /// measured in milliseconds over thousands of rows. Left as a known limit of
+    /// a rare sequence: both rows write nearly the same thing, so a tap on the
+    /// wrong one is nearly the right log.
+    ///
     /// Names are compared exactly, so "Porridge" and "porridge" stay two rows.
     /// Search folds case and diacritics and this does not, deliberately: search
     /// only decides what you are shown, while this decides what is *hidden

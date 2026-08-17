@@ -1544,6 +1544,32 @@ generating them again gives 4,248 and 8,498 history rows against that session's
 3,597 and 7,197 — so the pair to compare is the plain and deduped columns here,
 measured minutes apart on one machine.
 
+**What the review caught, and it is frequency's own bill.** A lifetime count
+never falls, so anything that used to sink on its own now stays where it is.
+The sharp case was a row that cannot be written at all: archive a tracker — a
+supported thing to do — and a year of porridge logged against it would own the
+top of the screen for good, a screenful of greyed rows in front of every row
+that still works. **A row that cannot be repeated now sorts below every row that
+can**, whatever its count, and it stays on the list rather than vanishing,
+because item 16 already decided that a screen which drops food when you archive
+a tracker is editing your history. A test pins it.
+
+The soft case is left standing and is the user's call: eat porridge every
+morning for a year, switch to overnight oats for a month, and last year's staple
+still outranks this morning's, reachable only by search. **A window — count only
+the last 60 days, say — keeps the stability argument and drops the museum
+effect**, and it is not in because nothing measured says what the window should
+be. Displayed either way, so it stays cheap.
+
+**One known limit of the key**: values are compared as stored, not as drawn.
+`decimals` is editable, so "rice" at 100.4 and at 100.0 are correctly two rows
+on a one-decimal tracker, and setting that tracker to zero decimals afterwards
+leaves both reading "rice / 100 kcal" with only their dates apart. Keying on the
+formatted string would collapse them, at the cost of making the key depend on a
+setting and paying a `Tracker.format` per value on a walk measured in
+milliseconds over thousands of rows. Both rows write nearly the same thing, so
+the wrong tap is nearly the right log.
+
 **The failure mode is real and now has a number.** Take the same 56 days and
 weigh every portion, so the numbers land near the same value and never on it:
 jittering each value by ±0.5 kcal takes 224 named rows to **214** rows instead
@@ -1593,7 +1619,7 @@ the screens were read from screenshots. Nothing was typed and no row was tapped.
 
 **A keystroke rebuilds the list, which History's every redraw already did.**
 Measured in the same probe: **18.0–20.4ms at 7,644 entries and 35.3–36.1ms at
-15,294**, of which the filter itself is 4.9ms and 9.4ms and the rest is
+15,294**, of which the filter itself is 4.9–5.7ms and 9.3–9.8ms and the rest is
 `historyItems`. Repeat's screen escapes this by snapshotting, and History cannot:
 a deletion or a repeat has to show up here immediately. At five years of history
 that is a dropped frame or two per keystroke, and the fix — if it ever bites —
