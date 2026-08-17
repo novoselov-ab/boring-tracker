@@ -37,7 +37,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 16), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 15), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -380,11 +380,11 @@ animation on save is later.
       and the same idiom as Log, smaller. Tapping the card itself still opens
       that tracker's detail.
 - [x] **Remove the recent-value bubbles from the log sheet.** People don't log
-      the same number twice — they log the same *food*, which is what item 14
+      the same number twice — they log the same *food*, which is what item 15
       is for. `Store.recentValues` was kept on the grounds that
       search-and-repeat would want it — **that reasoning looks wrong**: it keys
       on tracker UUID and ignores names entirely, which is the opposite of what
-      item 14 needs. Decide when building item 16 whether to rewrite it around
+      item 14 needs. Decide when building item 15 whether to rewrite it around
       names or delete it; do not keep it out of habit.
 - [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
@@ -538,24 +538,24 @@ backdates, group switching still clears what was typed and moves the caret to
 the new group's first field without the pad going down, and the sheet still
 opens instantly.
 
-## 13. CI
+## 13. Make it look like one app
 
-GitHub Actions build + test on push. Cheap, and the test suite is already good
-enough to be worth protecting.
+Three things spotted while using it. All the same kind of problem — a screen
+saying the same thing two different ways — and all on screens looked at daily.
 
-## 14. Use it on a real phone for a week
+- [ ] **A tracker's name on home is grey and hard to read.** Give it the same
+      white as its number. Grey says "secondary", and the name is not
+      secondary — it is what tells you which number you are looking at.
+- [ ] **The "Boring Tracker" title only exists at the top of the scroll.**
+      Keep it visible always, smaller — a title that appears and disappears
+      makes the screen feel like it is changing when only the scroll offset is.
+- [ ] **In History, a named entry is drawn differently from an unnamed one**,
+      so the macros shift shape depending on whether you typed a name. Make the
+      row uniform and let the **name** be the grey, quieter part. The numbers
+      are the thing every row has, so they should be what every row shows the
+      same way.
 
-The step that decides everything after it. Whether logging is genuinely fast,
-and what search and pinning should feel like, are not answerable from a
-simulator.
-
-~~**Carried here from item 11**~~ — **closed by item 12 before this step was
-reached, and by the other road.** The sheet and the keypad arrived at two
-moments because a keyboard was being raised; drawing the pad means nothing is
-raised, so there is only one moment. Owning the presentation, which is what
-this was reserved to decide about, turned out not to be needed.
-
-## 15. Make a save feel like it landed
+## 14. Make a save feel like it landed
 
 Logging a number should **show the number changing**. Today nothing
 acknowledges a log beyond the sheet closing: you tap Log, the sheet goes, and
@@ -576,7 +576,7 @@ carve-out and it needs to earn the name.
 Deliberately after a week of real use: whether this is satisfying or annoying
 is exactly the kind of thing that cannot be decided from a simulator.
 
-## 16. Search and repeat
+## 15. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -597,10 +597,10 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 16b. One VoiceOver pass, on a device
+## 15b. One VoiceOver pass, on a device
 
 Unresolved and unresolvable from the accessibility tree, so it waits for the
-same phone trip as items 8 and 14. Commit `0564080` claims `.accessibilityLabel`
+same phone trip as item 8. Commit `0564080` claims `.accessibilityLabel`
 on the card's + "had no effect at all", but `logButton` a few lines below and
 `HistoryView` both do exactly that and work. Either the claim is wrong, or
 `children: .ignore` makes that button a container and the hint has to move
@@ -609,9 +609,19 @@ inside it.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
-## 17. App icon and asset catalog
+## 16. App icon and asset catalog
 
 Neither exists. Needed before TestFlight, not before daily use.
+
+## 17. CI
+
+GitHub Actions build + test on push. Cheap, and the test suite is already good
+enough to be worth protecting.
+
+Moved to the end deliberately. CI protects a shared branch from contributors
+who don't exist yet — the suite already runs on every change because every
+session runs it, so until this repo has someone else pushing to it, CI buys
+reassurance rather than safety.
 
 ## Small things, unscheduled
 
