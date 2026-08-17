@@ -484,6 +484,18 @@ saying the same thing two different ways — and all on screens looked at daily.
       the usual way a custom accent looks wrong in the mode we care about most.
       Judge it in dark mode first, since that is where this app is actually
       used, and check the disabled and pressed states too.
+
+      **"They desaturate themselves for dark mode" is wrong, and it came from a
+      web article rather than from a pixel.** Measured across the seven system
+      hues (docs/accent-options.md, re-checked for mint in the accent change
+      below): blue, teal and mint are `S = 1.00` in *both* appearances, green
+      goes **up** (0.74 → 0.77), and only cyan and indigo actually desaturate.
+      What Apple changes in dark is **brightness** — the mint this app now ships
+      is `S = 1.00, V = 0.78` in light and `S = 1.00, V = 0.85` in dark. So a
+      system colour is still the right pick here, but for a different reason:
+      both of its values are Apple's and there is nothing to keep in step by
+      hand. Any argument of the form "use the UIKit values because Apple already
+      desaturated them" does not survive measurement and should not be repeated.
 - [x] **In History, a named entry is drawn differently from an unnamed one**,
       so the macros shift shape depending on whether you typed a name. Make the
       row uniform and let the **name** be the grey, quieter part. The numbers
@@ -592,37 +604,70 @@ for the white iOS was drawing, and against a 3:1 floor. Sampled from
 each fill so the surrounding row background could not be mistaken for the label;
 WCAG ratios computed from the sampled sRGB.
 
-**Those four numbers are corrections, and the ones they replace have no
-explanation.** This item first recorded `#00D9E6` / `#00CDD9` and 12.07:1 /
-10.73:1; item 13c sampled `#00C3D0` / `#00D2E0` and 11.30:1 / 9.72:1 an hour
-later and could not reconcile them. The item 13d review settled which one
-ships: **13c's.**
+**Those four numbers are corrections, and the ones they replace now have an
+explanation — it is the sampler.** This item first recorded `#00D9E6` /
+`#00CDD9` and 12.07:1 / 10.73:1; item 13c sampled `#00C3D0` / `#00D2E0` and
+11.30:1 / 9.72:1 an hour later and could not reconcile them. The item 13d review
+settled which one ships: **13c's.** The accent change to mint found out why, by
+running both readings on one file.
+
+`NSBitmapImageRep.colorAt(x:y:)` **does not return the bytes in the PNG** on this
+machine, even for a screenshot tagged `sRGB IEC61966-2.1`. Written as a
+one-pixel sRGB PNG and read back through it:
+
+    in the file    via colorAt      where that number was recorded
+    #00D2E0    →   #00D9E6          items 13 and 13b, teal in dark
+    #00C3D0    →   #00CDD9          items 13 and 13b, teal in light
+    #0091FF    →   #00A5FF          item 13, "the old blue"
+    #00DAC3    →   #00DFCE          item 13, `.mint` as the runner-up
+    #000000    →   #000000
+    #FFFFFF    →   #FFFFFF
+
+So both sets of sessions measured the same pixel and disagreed about what it
+was: one read the decoded IDAT bytes, one asked AppKit and got a colour
+converted out of sRGB. **Black and white are fixed points of that conversion**,
+which is exactly why the check every session ran — "black reads `#000000` and
+white `#FFFFFF`, checked" — passed every time and caught nothing.
+
+Two things follow. The disputed hexes were never invented, so the harsher
+reading of them in the paragraphs below can be retired; and **the sampling tool
+is part of the measurement**. Anything sampling a screenshot here should read
+the PNG's own bytes. The contrast conclusions are untouched either way: the
+converted hexes sit 7 to 20 units per channel off the real ones — 7 for the
+teal, 20 for the blue's `0x91 → 0xA5` — which moves a ratio by a few percent
+and no verdict in this file by anything.
 
 The deciding run was this commit itself. `b01fe00` checked out into a worktree,
 built and screenshotted today on the same iPhone 17, renders `#00C3D0` in light
 and `#00D2E0` in dark — byte for byte what 13c measured, at both the Log pill
 and a card's +, with every pixel inside the fill identical. So the code is not
-the difference. Nor is the sample site, nor a colour-space conversion (no
-profile pair maps one hex to the other: Display P3 → sRGB of `#00C3D0` is
-`#00C7D3`), nor Increase Contrast (which gives `#3BDDEC` / `#008198`). Nor,
-crucially, **a machine that changed underneath us**: the two sets were recorded
-65 minutes apart, on one Mac, against the one runtime installed here
-(iOS 26.3.1, 23D8133). There was no update to blame.
+the difference. Nor is the sample site, nor **a colour-space conversion of the
+file**, which is where this stopped: no *profile pair* maps one hex to the other
+(Display P3 → sRGB of `#00C3D0` is `#00C7D3`), and Increase Contrast gives
+`#3BDDEC` / `#008198`. That ruled out the image and left the reader unexamined —
+the conversion was happening one layer up, inside the sampler, on a file whose
+bytes were correct all along. Nor, crucially, was it **a machine that changed
+underneath us**: the two sets were recorded 65 minutes apart, on one Mac, against
+the one runtime installed here (iOS 26.3.1, 23D8133). There was no update to
+blame.
 
-What is left is that two sessions recorded a hex this machine will not produce
-from this code by any means found, and two more reproduce the other one on
-demand. The arithmetic was never the problem — 10.73:1 follows exactly from
-`#00CDD9` — so what failed is the pixel, not the sum, which is precisely the
-failure "Always check, not just read" in WORKFLOW.md exists for: a ratio that
-survives scrutiny it never earned. Every conclusion drawn from it is unaffected
-in either case; the fill clears the 3:1 floor by six to seven times.
+The arithmetic was never the problem either — 10.73:1 follows exactly from
+`#00CDD9`. What failed is the pixel, not the sum, which is the failure "Always
+check, not just read" in WORKFLOW.md exists for; the correction is that the
+unchecked step was the *tool*, not the person. Every conclusion drawn from it is
+unaffected in either case; the fill clears the 3:1 floor by six to seven times.
 
-The same doubt covers **every accent hex recorded before 13c** — the pressed
+The same doubt covered **every accent hex recorded before 13c** — the pressed
 `#36E0EB` in item 13, the `#00CBD9` / `#00CDD9` foreground pairs below, the
-`#00D9E6` in item 14's undo bar. Those are all foreground sites rather than
-fills, and 13c re-measured every one of them on the day it changed them, so its
-table is the set to read; the numbers left in place around here are kept for the
-reasoning attached to them, not for the digits. Two of 13c's have since been
+`#00D9E6` in item 14's undo bar. Two of those three are literally the pair in
+the table above, and the third was sampled the same way, so they are converted
+readings of real pixels rather than doubtful ones. **What they are not is
+invertible on paper:** the conversion is not per-channel — a grey ramp maps
+`0xD2 → 0xDB` while the teal's green channel went `0xD2 → 0xD9` — so the only
+way back to a true hex is to re-sample the screenshot, not to correct the
+number. 13c re-measured every one of them on the day it changed them, so its
+table is still the set to read; the numbers left in place around here are kept
+for the reasoning attached to them, not for the digits. Two of 13c's have since been
 re-checked independently and land on the same pixel — the nav bar gear at
 2.13:1 light and 10.71:1 dark — so that table has now been reproduced by a
 session that did not write it.
@@ -1096,6 +1141,56 @@ Everything…* sheet is drawn the same way.
       and the name in `OnAccent.swift` should stop saying "nav bar".
 - [ ] If writing: they need something that is not colour, and "a row that looks
       exactly like a label" is not an answer either.
+
+## 13f. The accent is a mint — done
+
+The teal is gone and **`Color(.systemMint)` is the accent**, one hue swap at one
+constant. Everything 13b, 13c and 13d settled stays exactly as it was: the dark
+label on the fill, the accent not used as text, the nav bar keeping its tint,
+the chart monochrome. Items 18, 13e and 18b are deliberately untouched — they
+get revised once this has been lived with.
+
+- [x] `Color.accentFill` is mint; nothing else names a hue.
+- [x] Re-measured on screen rather than taken from docs/accent-options.md.
+
+**Measured on an iPhone 17 Pro, iOS 26.3, both appearances, reading the PNG's
+own bytes** (see the sampler correction under 13b — this is the first set here
+taken without AppKit in the path):
+
+    dark   fill #00DAC3   black label 11.82:1   nav bar glyph  9.89:1
+    light  fill #00C8B3   black label  9.91:1   nav bar glyph  2.05:1
+
+The fill is `S = 1.00` in both appearances; what changes is `V`, 0.78 light to
+0.85 dark. Every accent-filled site draws the same two bytes — the Log pill, a
+card's +, History's repeat disc — and a whole-image scan of six screenshots
+finds **no teal and no blue pixels anywhere**, which is what "one constant"
+should mean and is worth checking rather than assuming.
+
+**Mint is legal only because item 13b banned the white label, and those two
+decisions are now coupled in a way the blue alternative would not have been.**
+White on this fill is **1.78:1** dark and 2.12:1 light — the worst in the
+candidate set bar cyan — against 11.82:1 for the black label the app forces.
+A blue clears 3:1 with either label; mint clears it with one. So anything that
+puts a white label back on an accent fill (dropping `onAccentFill()`, a new
+prominent button that forgets it, a control that draws its own label) does not
+look slightly different, it takes the accent under the floor everywhere at once.
+`Color.onAccent` is load-bearing now, not tidy.
+
+**The light-mode nav bar still fails, at 2.05:1**, on the `#FBFBFF` circle iOS 26
+draws behind a bar button — marginally worse than the teal's 2.13:1, and the
+number that opened item 18. Dark mode, which is the appearance this app is used
+in, is 9.89:1. Nothing here fixes that, and item 18 is where it is fixed.
+
+**A mechanism claim in docs/accent-options.md is narrower than it reads.** That
+document has a SwiftUI system colour rendering a bar glyph exactly `+13/255` on
+every channel where the UIKit value draws the fill unchanged. Built both ways
+today: the fills are identical to the byte (`#00DAC3`), and under `Color.mint`
+both bar buttons come out `#0DE7D0` — but under `Color(.systemMint)` home's gear
+draws `#00DAC3` while History's clock *still* comes out `#0DE7D0`. Same constant,
+same bar, two different bytes. So the offset belongs to the button as much as to
+the constant; the table was taken from the gear alone. Both readings are 9.89:1
+and 11.18:1 against that bar, so it changes nothing here beyond what may be
+concluded from it.
 
 ## 15. Make a save feel like it landed — done
 
