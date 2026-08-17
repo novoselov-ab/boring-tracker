@@ -791,6 +791,22 @@ user: if repeating from History becomes the way you log, the name probably has
 to grow back — and that is a decision about which of the two items was right,
 not a tweak.
 
+## 13c. Teal is a fill, not a text colour
+
+Left by the item 14 review: the teal drawn as a *foreground* — tinted text and
+glyphs on the ordinary background — was never measured and fails in light mode.
+It predates item 14 and is the accent itself.
+
+Rather than tune a second shade, apply the rule 13b already established:
+**teal is something you put behind a dark label, not something you write
+with.** Where it currently paints text or a small glyph directly, it becomes
+either a fill with a dark label on it, or the ordinary label colour.
+
+- [ ] Find every foreground use of the accent and convert or revert it.
+- [ ] Measure light mode as well as dark. Dark is what this app is used in,
+      but light still ships, and "we only look at dark" is not a reason for it
+      to be unreadable.
+
 ## 14b. Put the name first, still grey
 
 Item 14 found what its brief predicted: scanning History for a food now means
