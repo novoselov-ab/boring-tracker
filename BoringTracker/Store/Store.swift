@@ -877,6 +877,7 @@ final class Store {
     func importData(_ data: Data, mode: ImportMode) async throws -> ImportSummary {
         let incoming = try StoreMigration.migrate(data)
         try validateImport(incoming)
+        try validateImportedNames(incoming)
         while true {
             let before = document
             let startingRevision = revision
@@ -977,11 +978,45 @@ final class Store {
         }
     }
 
+    /// What a *foreign* file has to satisfy, and nothing else does.
+    ///
+    /// A name is what every screen identifies a tracker by, and nothing in the
+    /// app can produce a blank one — `TrackerEditor` trims and refuses to save
+    /// an empty name. A hand-edited or foreign file can, and it draws a blank
+    /// card on home, a blank row in settings and a blank identity line in
+    /// History, none of which say what they are or offer a way to find out.
+    ///
+    /// Refused rather than repaired: a repair rewrites a record the user did
+    /// not edit, stamps it as an edit, and the merge then carries that invented
+    /// name to every other device. The message names the id so the file can be
+    /// fixed and imported again.
+    ///
+    /// **Separate from `validateImport` because the restore path must not run
+    /// it.** That document was written by this app from its own memory, and
+    /// loading is deliberately tolerant of a bad local file, so a hand-edited
+    /// store file can put a blank name into the recovery slot. Refusing it
+    /// there would disable the one action that undoes a destructive import,
+    /// over a row that is merely blank. The checks in `validateImport` earn
+    /// their strictness on both paths — they are about merges that stop
+    /// converging and formatting that crashes; this one is not.
+    private func validateImportedNames(_ document: StoreDocument) throws {
+        for tracker in document.trackers {
+            guard !tracker.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw StoreError.invalidDocument(
+                    "tracker \(tracker.id.uuidString) has an empty name."
+                )
+            }
+        }
+    }
+
     /// Import has to be idempotent. A decodable document containing duplicate
     /// live ids, duplicate tombstones, or a record that is simultaneously live
     /// and deleted changes meaning after the next merge and can double-count
     /// totals or duplicate SwiftUI identity. Loading remains tolerant of old
     /// bad local files; crossing the explicit import boundary does not.
+    ///
+    /// Run by the restore path too, which is why a check that is only about how
+    /// a row *reads* lives in `validateImportedNames` instead.
     private func validateImport(_ document: StoreDocument) throws {
         var live = Set<UUID>()
         for id in document.trackers.map(\.id) + document.entries.map(\.id) {

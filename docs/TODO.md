@@ -1596,13 +1596,31 @@ the numbered items is going near the same code.
       the file reference came out as fresh `TEMP_<uuid>`s and five lines of the
       committed `.xcodeproj` changed every run. Any subdirectory ends it; two
       regenerates in a row are now byte-identical. See docs/TECH.md.
-- [ ] **`validateImport` never looks at a tracker's name.** It checks ids,
-      `decimals` and `sortIndex`, so an imported or hand-edited file may carry
+- [x] **`validateImport` never looks at a tracker's name.** It checked ids,
+      `decimals` and `sortIndex`, so an imported or hand-edited file could carry
       `"name": ""` — and a nameless tracker draws a blank card on home, a blank
       row in settings, and a blank identity line in History, which the last of
-      those documents itself as the one thing it cannot promise. One check
-      beside the others, or a decision that a blank name is the user's problem.
-      Same way in as the item below.
+      those documents itself as the one thing it cannot promise. Now one check
+      beside the others: a name that is empty **after trimming whitespace** is
+      refused at the import boundary, naming the tracker's id so the file can be
+      fixed.
+
+      **Refused rather than repaired**, which was the choice. A repair — falling
+      back to "Untitled" — rewrites a record the user never edited and stamps it
+      as an edit, and the merge then carries that invented name to every other
+      device; the blank row is at least honest about being a blank row. Refusing
+      also matches what the app itself can produce: `TrackerEditor` trims and
+      will not save an empty name, so no document this app has ever written can
+      fail this check. Two tests, an empty name and a whitespace-only one.
+
+      **It sits beside `validateImport` rather than inside it, because
+      `restoreImportBackup` runs that one too.** The recovery slot holds a
+      document this app wrote out of its own memory, and loading a local file is
+      deliberately tolerant, so a hand-edited store file can put a blank name in
+      there — and refusing it on the way back would disable the one action that
+      undoes a destructive import, over a row that is only blank. The checks
+      around it earn their strictness on both paths, being about merges that
+      stop converging and formatting that crashes. A third test holds that line.
 - [x] **`(max ?? -1) + 1` traps on `Int.max`.** Already fixed, in `a1c42a5`
       (item 10): `Store.add` renumbers the whole list when the largest index is
       within one of `Int.max`, and `validateImport` rejects the value at the

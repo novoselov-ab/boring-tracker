@@ -1299,6 +1299,67 @@ struct StoreTests {
         #expect(store.trackers == [current])
     }
 
+    /// A blank name is not a decoding failure and not an inconsistency the
+    /// merge can trip over, so nothing below this line would have stopped it:
+    /// it decodes, merges and saves, and the first thing that goes wrong is a
+    /// card on home with nothing written on it.
+    @Test("Import rejects a tracker with no name rather than drawing a blank row")
+    func importRejectsAnEmptyName() async throws {
+        let current = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [current]))
+
+        await #expect(throws: StoreError.self) {
+            try await store.importData(
+                StoreCoding.encode(StoreDocument(trackers: [Tracker(name: "", modified: time(1))])),
+                mode: .replace
+            )
+        }
+        #expect(store.trackers == [current])
+    }
+
+    /// Whitespace is the same blank row, and the app's own editor agrees: it
+    /// trims before it saves, so "   " is a name this app can never write.
+    @Test("Import rejects a name that is only whitespace")
+    func importRejectsAWhitespaceOnlyName() async throws {
+        let current = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [current]))
+
+        await #expect(throws: StoreError.self) {
+            try await store.importData(
+                StoreCoding.encode(StoreDocument(trackers: [
+                    Tracker(name: " \t\n ", modified: time(1)),
+                ])),
+                mode: .merge
+            )
+        }
+        #expect(store.trackers == [current])
+    }
+
+    /// The recovery slot holds a document *this app* wrote out of its own
+    /// memory, and loading a local file is deliberately tolerant, so a
+    /// hand-edited store file can put a blank name in there. Refusing to
+    /// restore it would disable the one action that undoes a destructive
+    /// import, over a row that is only blank — so the name check is on the
+    /// import path and not on this one.
+    @Test("A name import refuses does not block the restore that undoes an import")
+    func restoreAcceptsANameImportWouldRefuse() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let nameless = Tracker(name: "", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [Tracker(name: "Calories", modified: time(1))]),
+                              file: file, window: .seconds(60))
+        let recovery = StoreDocument(trackers: [nameless])
+        try file.writeImportBackup(recovery)
+
+        await #expect(throws: StoreError.self) {
+            try await store.importData(StoreCoding.encode(recovery), mode: .replace)
+        }
+        try await store.restoreImportBackup()
+
+        #expect(store.trackers == [nameless])
+        #expect(file.load().document == recovery)
+    }
+
     @Test("Import rejects an overflowing sort index and preserves safe positions")
     func importValidatesSortIndices() async throws {
         let store = makeStore()
