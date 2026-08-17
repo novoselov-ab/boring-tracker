@@ -26,6 +26,7 @@ import SwiftUI
 struct RepeatView: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// Built once, when the sheet opens, and deliberately not rebuilt while it
     /// is up.
     ///
@@ -53,11 +54,19 @@ struct RepeatView: View {
             // what you were doing rather than somewhere you went. `.large` is
             // there because the list is as long as your history and the
             // keyboard needs the room when you search.
-            .presentationDetents([.medium, .large])
-            // The system's own "this pulls down", as on the log sheet. There is
-            // no Cancel and no Done: tapping a row is the only thing this sheet
-            // does, and a bar button for leaving would cost the row of chrome
-            // that the pushed screen's title bar cost.
+            //
+            // **Past `.xxxLarge` it opens at full height instead**, at the same
+            // threshold and for the same reason the home card stops fitting on
+            // one line: half a screen holds one and a half rows at AX5 —
+            // checked on an iPhone 17 — and a list you cannot see two of is not
+            // a list you can pick from. Somebody reading at AX5 is not the
+            // person the half-height presentation was buying anything for.
+            .presentationDetents(typeSize >= .xxxLarge ? [.large] : [.medium, .large])
+            // The system's own "this pulls down", as on the log sheet. It is
+            // the only thing that advertises the exit: there is no Cancel and
+            // no Done, because tapping a row is the one thing this sheet does
+            // and leaving without logging is the rare case — the same trade
+            // item 5 made when it took Cancel off the log sheet.
             .presentationDragIndicator(.visible)
     }
 
