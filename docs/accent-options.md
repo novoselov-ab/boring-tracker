@@ -1,5 +1,11 @@
 # Accent options, measured
 
+> The screenshots behind these numbers are **kept outside the repository**,
+> in `~/dev/boring-tracker-accent/`. They are 1.2 MB of PNGs that would sit in
+> history forever to illustrate a decision this document already states in
+> words. The measurements are here; the pictures are on the machine that took
+> them.
+
 Evidence for a choice, not the choice. **Nothing in `BoringTracker/` changed** —
 the app still ships `Color.accentFill = Color.teal`. Every screen below was
 rendered by a throwaway probe build and thrown away with it.
@@ -163,21 +169,21 @@ It is the only way this screen shows the accent at all.
 
 ### blue — `Color(.systemBlue)`, the control
 
-![blue, system](accent/blue-system.png)
+*(screenshot: `blue-system.png`)*
 
 `#0091FF` · white 3.23 · near-black 5.26 · nav bar 5.44 — the only family that
 clears 3:1 with *either* label, so the app could stop forcing a label colour at all.
 
 ### blue — `Color.blue`
 
-![blue, SwiftUI](accent/blue-swiftui.png)
+*(screenshot: `blue-swiftui.png`)*
 
 `#0091FF` · white 3.23 · near-black 5.26 · nav bar 6.16 — the same fill as the
 UIKit one; only the bar glyph differs, and in this direction it is brighter.
 
 ### teal — `Color.teal`, what ships today
 
-![teal, SwiftUI](accent/teal-swiftui.png)
+*(screenshot: `teal-swiftui.png`)*
 
 `#00D2E0` · white **1.86** · near-black 9.15 · nav bar 10.71 — the best bar
 glyph in the set and the second-worst label; the black label is not a preference,
@@ -185,28 +191,28 @@ it is the only thing that makes this colour legal.
 
 ### teal — `Color(.systemTeal)`
 
-![teal, UIKit](accent/teal-system.png)
+*(screenshot: `teal-system.png`)*
 
 `#00D2E0` · white **1.86** · near-black 9.15 · nav bar 9.46 — identical fill to
 `Color.teal`, so switching to the UIKit value fixes nothing.
 
 ### mint
 
-![mint](accent/mint.png)
+*(screenshot: `mint.png`)*
 
 `#00DAC3` · white **1.78** · near-black 9.57 · nav bar 9.89 — teal's problem
 with a green cast; it was the runner-up when teal was chosen and measures the same.
 
 ### cyan
 
-![cyan](accent/cyan.png)
+*(screenshot: `cyan.png`)*
 
 `#3CD3FE` · white **1.76** · near-black 9.67 · nav bar 10.00 — the worst white
 label in the set, and close enough to teal to be the same decision again.
 
 ### indigo
 
-![indigo](accent/indigo.png)
+*(screenshot: `indigo.png`)*
 
 `#6D7CFF` · white 3.51 · near-black 4.84 · nav bar 5.00 — clears every floor
 with either label, and the one system colour Apple genuinely desaturates for
@@ -214,7 +220,7 @@ dark (0.65 → 0.57).
 
 ### green
 
-![green](accent/green.png)
+*(screenshot: `green.png`)*
 
 `#30D158` · white **2.02** · near-black 8.42 · nav bar 8.70 — reads as a status
 colour before it reads as a brand, and fails the white label like the rest of
@@ -222,28 +228,28 @@ the light hues.
 
 ### orange
 
-![orange](accent/orange.png)
+*(screenshot: `orange.png`)*
 
 `#FF9230` · white **2.23** · near-black 7.62 · nav bar 7.88 — the warm outlier,
 and it behaves exactly like the cool light ones: strong glyph, illegal white label.
 
 ### `#3B82F6` — the common dark-mode blue
 
-![#3B82F6](accent/blue-3b82f6.png)
+*(screenshot: `blue-3b82f6.png`)*
 
 `#3B82F6` · white 3.68 · near-black 4.63 · nav bar 4.78 — the best white-label
 margin of anything that also clears the bar, and 24% less saturated than system blue.
 
 ### `#10B981` — emerald
 
-![#10B981](accent/emerald-10b981.png)
+*(screenshot: `emerald-10b981.png`)*
 
 `#10B981` · white **2.54** · near-black 6.71 · nav bar 6.93 — the closest miss
 among the light hues, and still a fail; it is green's problem slightly softened.
 
 ### `#7C3AED` — violet
 
-![#7C3AED](accent/violet-7c3aed.png)
+*(screenshot: `violet-7c3aed.png`)*
 
 `#7C3AED` · white 5.70 · near-black **2.99** · nav bar 3.09 — the only candidate
 that *wants* a white label, bought with the weakest bar glyph in the set and a
@@ -256,7 +262,7 @@ near-black label that fails.
 Teal, system blue, `#3B82F6`, indigo — same build, same screen, with
 `Color.onAccent` set to white instead of black:
 
-![white label on four accents](accent/white-label.png)
+*(screenshot: `white-label.png`)*
 
 This is the 1.86:1 the app worked around, next to the three colours that do not
 need the workaround. If the accent moves to a blue, `Color.onAccent`,
