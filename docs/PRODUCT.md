@@ -296,7 +296,12 @@ Small enough to list completely.
 - **Settings** — the trackers (add/edit/archive/reorder), drawn in the same
   shape as home so the two cannot disagree; export, import,
   appearance, about + link to the GitHub repo. One screen, no subscreens if
-  avoidable.
+  avoidable. **A reorder drag commits wherever you let go, including outside
+  the list** — it lands on the nearest row that is on screen. That is
+  deliberate, not a missed cancel: the first row sits under the navigation bar,
+  so reaching it means dragging to the top edge and past it, and a drag that
+  cancelled when the finger left the list would make the top of the list the
+  one place you cannot drop. To undo a drag you didn't mean, drag it back.
 
 Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 

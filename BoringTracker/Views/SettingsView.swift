@@ -261,6 +261,30 @@ struct SettingsView: View {
                 let next = Drag(source: sourceID, target: row(nearest: value.location.y))
                 if drag != next { drag = next }
             }
+            // Letting go anywhere commits, including outside the list, and that
+            // is a decision rather than a missing check.
+            //
+            // `row(nearest:)` picks the closest row that is *on screen*; it
+            // never asks whether the finger is. Requiring that would make the
+            // top of the list the one place you cannot drop: the first row is
+            // half under the navigation bar, so reaching it means dragging to
+            // the top edge and past it, which is exactly where a finger goes
+            // and exactly what `dropTarget(at:rows:visible:)` is written to
+            // allow. The same is true at the bottom, over the home indicator.
+            //
+            // Checked on an iPhone 17 rather than reasoned about: with the list
+            // running 116…840pt, releasing at 866 — below it — moved the Food
+            // block to the end and restamped every row's `orderModified`, and
+            // releasing at 54, inside the navigation bar, put the dragged
+            // tracker on top. Both commit, and the second is the case this
+            // costs nothing to keep.
+            //
+            // The price is that a drag abandoned by dragging away still moves
+            // something. It is recoverable by dragging it back, it is visible
+            // while the finger is down — the carried rows fade and the target
+            // tints — and it is on a screen nobody's day runs through. Said out
+            // loud in docs/PRODUCT.md, under Screens, because the next person to
+            // meet it will otherwise read it as a bug.
             .onEnded { value in
                 guard let targetID = row(nearest: value.location.y) else { return }
                 apply(sourceID, onto: targetID)

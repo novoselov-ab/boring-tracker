@@ -1339,10 +1339,13 @@ the numbered items is going near the same code.
       own 15px and the clock inside the *When* row, which moved because the two
       runs were minutes apart. The title, the fields, the keypad and the Log
       bar are pixel-identical.
-- [ ] **Releasing a settings drag outside the list commits it** rather than
+- [x] **Releasing a settings drag outside the list commits it** rather than
       cancelling. Deliberate — requiring the finger inside would break dragging
-      to the top edge to reach the first row — but it is nowhere in the docs, so
-      the next person to see it will read it as a bug.
+      to the top edge to reach the first row — and now written down: a comment
+      at the gesture and a line under Screens in PRODUCT.md. Both halves were
+      reproduced on an iPhone 17 first, against the list's measured 116…840pt
+      band: releasing at 866 moved the dragged block to the end, releasing at 54
+      (inside the navigation bar) put it on top.
 
 ## After v1
 
