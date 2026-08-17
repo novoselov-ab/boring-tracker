@@ -965,7 +965,18 @@ is the sentence this item's own doc comment promises and the only explanation
 for the dead repeat disc beside it. `entries.count == 1 && displayName == nil`
 is the whole fix, and three more tests hold the two broken rows and the one that
 must not change: a named lone entry *with* a unit still reads "90 kcal", because
-the unit is already doing the telling-apart. Twelve tests now, not nine.
+the unit is already doing the telling-apart.
+
+A third round found the same mistake from the other end: "Deleted tracker" on a
+value exists to tell that member apart from the ones that survived, so a batch
+where *none* survived said it three times in one row — once as the identity line
+and once per number. Two taps reach that, because settings offers a deletion
+that keeps the history, so removing both members of a group orphans every batch
+it ever logged. It reads "Deleted tracker / 100, 10" now, and keeps the prefix
+when a name of your own has taken the identity line and nothing else is left to
+say it. Fourteen tests, not nine — and two of them pin their tracker ids rather
+than generating them, because with every tracker gone the row's order falls
+through to the ids and a random pair makes the expectation a coin toss.
 
 ## 13d. Give the nav bar its tint back — done
 
@@ -1006,6 +1017,16 @@ for it either — `#FBFBFF` on the `#EFEFF4` bar is 1.09:1, so in light mode the
 glyph is doing nearly all the work of saying "button". This is the deliberate
 cost of the carve-out and it is recorded rather than argued with; if light mode
 ever gets a real pass, this is the first thing on its list.
+
+**And the strongest argument against it, kept because it is a good one.** The
+third review round put it exactly: "a bar background Apple has already tuned for
+it" is true of the hue Apple tuned it *with*. The system blue `#007AFF` on that
+same bar is **3.89:1** — over the floor — where teal is 2.13:1. So the standard
+affordance carries its own contrast and this accent does not; what the carve-out
+inherits from Apple is the shape, not the number. If that turns out to matter in
+use, the honest fix is a darker teal for foregrounds, which is the "tune a
+second shade" 13c exists to refuse — which is to say the two items disagree, and
+this is where the disagreement lives.
 
 **The back chevron does not follow, and it turns out it never did.** It is drawn
 in the label colour whatever the app's tint is: the tint was set to `.primary`,
@@ -1064,6 +1085,10 @@ standard control is the OS saying "tappable", not the app writing in colour —
 arriving at the other place the app relies on it. The options are the 13d
 carve-out extended to `Form` action rows, or leaving them plain and giving them
 some other affordance.
+
+It reaches further than the Data section: `.alert` and `.confirmationDialog`
+buttons take the tint too, so the import's *Merge Documents* / *Replace
+Everything…* sheet is drawn the same way.
 
 - [ ] Decide whether a form action row is chrome, like a bar button, or writing,
       like a chart bar.
@@ -1147,6 +1172,19 @@ looking at the card — by the time you go back it has settled. The
 acknowledgement on that screen is the undo bar item 14 put there, which appears
 in the same instant. Left as it is: the alternative is a second, screen-specific
 piece of motion, and this item exists to have exactly one.
+
+**The number also moves at midnight, and that is left alone.** A review round
+found it: `refreshToday()` runs on `scenePhase == .active`, so opening the app
+the next morning rolls every daily total down to zero over 0.3 s, and the one
+piece of motion in the app is acknowledging something the user did not do. Kept,
+for two reasons. The number *did* change, which is the whole rule this item is
+written to — the roll shows the day resetting, which is a true and useful thing
+to see once a day. And the fix would be a flag set by the write paths, which
+undoes the property that makes this item three lines: *none of it is in the code
+that logs*, so a repeat, an undo, an edit and a deletion all get it for free. A
+flag would buy silence at midnight by putting the animation back in the hands of
+everything that writes. If it turns out to grate in use, that is the trade to
+reopen.
 
 **Confirmed wasteful-at-worst, not stuck**, since "it animates a card nobody is
 looking at" is only harmless if it also stops. Recorded a repeat fired from
@@ -1251,6 +1289,13 @@ the numbered items is going near the same code.
 - [ ] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Real diff noise in
       a repo that commits its `.xcodeproj` on purpose, and noise makes review
       worse. Pre-existing.
+- [ ] **`validateImport` never looks at a tracker's name.** It checks ids,
+      `decimals` and `sortIndex`, so an imported or hand-edited file may carry
+      `"name": ""` — and a nameless tracker draws a blank card on home, a blank
+      row in settings, and a blank identity line in History, which the last of
+      those documents itself as the one thing it cannot promise. One check
+      beside the others, or a decision that a blank name is the user's problem.
+      Same way in as the item below.
 - [ ] **`(max ?? -1) + 1` traps on `Int.max`.** Reachable only from a store file
       with an absurd `sortIndex` — which was "you would have to hand-edit it"
       when it was found, but the app has an **import** now, so a foreign or

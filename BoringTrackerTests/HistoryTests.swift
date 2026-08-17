@@ -288,6 +288,44 @@ struct HistoryTests {
         ))
     }
 
+    /// Fixed ids, not `UUID()`: with every tracker gone they all sort at
+    /// `.max`, so the row's order falls through to the ids themselves and a
+    /// random pair makes the expectation a coin toss. `…AA` sorts before `…BB`.
+    private var ghosts: (UUID, UUID) {
+        (UUID(uuidString: "00000000-0000-0000-0000-0000000000AA")!,
+         UUID(uuidString: "00000000-0000-0000-0000-0000000000BB")!)
+    }
+
+    /// Two taps in settings reach this: the deletion that keeps the history,
+    /// applied to both members of a group.
+    @Test("A batch whose trackers are all gone says so once, not three times")
+    func lineForAWhollyDeletedBatch() throws {
+        let (first, second) = ghosts
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [], entries: [
+            Entry(trackerID: first, value: 100, date: time(10), batchID: batch),
+            Entry(trackerID: second, value: 10, date: time(10), batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(identity: "Deleted tracker", values: "100, 10"))
+    }
+
+    /// …but a name of your own on the row leaves nothing else to say it, so
+    /// each value carries it rather than none of them.
+    @Test("A named batch whose trackers are all gone still says they are gone")
+    func lineForANamedWhollyDeletedBatch() throws {
+        let (first, second) = ghosts
+        let batch = UUID()
+        let store = historyStore(StoreDocument(trackers: [], entries: [
+            Entry(trackerID: first, value: 100, date: time(10), name: "lunch", batchID: batch),
+            Entry(trackerID: second, value: 10, date: time(10), name: "lunch", batchID: batch),
+        ]))
+
+        #expect(try line(store) == .init(
+            identity: "lunch", values: "Deleted tracker: 100, Deleted tracker: 10"
+        ))
+    }
+
     @Test("A batch spanning groups lists its trackers rather than picking one")
     func lineForABatchSpanningGroups() throws {
         let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")

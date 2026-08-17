@@ -50,8 +50,17 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// The two lines a History row draws: what this was called, and what it
     /// was.
     struct Line: Equatable {
-        /// Never empty. Every row has an identity line, so the eye lands on
-        /// what a row *is* before it lands on its numbers.
+        /// Every row has an identity line, so the eye lands on what a row *is*
+        /// before it lands on its numbers.
+        ///
+        /// Non-empty for every document the app can produce, and **not**
+        /// guaranteed for one it can only be given: a tracker whose `name` is
+        /// blank draws a blank line here. The editor will not save one and
+        /// nothing in the app creates one, but `Store.validateImport` checks
+        /// ids, `decimals` and `sortIndex` without ever looking at a name, so an
+        /// imported or hand-edited file can carry it. Guarding it here would
+        /// treat the symptom — that tracker is blank in settings and blank on
+        /// its own card too — so the note is in the small-things list instead.
         var identity: String
         var values: String
     }
@@ -84,11 +93,20 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         // has been deleted would drop the "Deleted tracker" that explains why
         // its repeat disc is off. Both were live for one review round.
         let alone = entries.count == 1 && displayName == nil
+        // "Deleted tracker" on a value tells that member apart from the ones
+        // that survived. When *none* survived, it tells nothing apart, and the
+        // identity line has already said it once — so a batch whose two
+        // trackers were both deleted read "Deleted tracker" three times in one
+        // row. Reachable in two taps: settings offers a deletion that keeps the
+        // history, so removing both members of a group orphans every batch it
+        // ever logged.
+        let identitySaysDeleted = displayName == nil
+            && !entries.contains { trackers[$0.trackerID] != nil }
         let units = entries.compactMap { trackers[$0.trackerID]?.unit }
         let values = entries
             .map { entry in
                 guard let tracker = trackers[entry.trackerID] else {
-                    return alone
+                    return alone || identitySaysDeleted
                         ? entry.value.formatted()
                         : "Deleted tracker: \(entry.value.formatted())"
                 }
