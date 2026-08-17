@@ -1262,9 +1262,48 @@ for three reviews running. A thumb has none of that problem.
       same batch of hexes item 13b has since corrected, so it is a number to
       re-take rather than to trust.
 
-## 18. App icon and asset catalog
+## 18. Asset catalog: the accent, then the icon
 
-Neither exists. Needed before TestFlight, not before daily use.
+Neither exists, and the accent question that 13c, 13d and 13e keep circling is
+really a missing asset catalog.
+
+**Define the accent as a colour set with light and dark variants.** One system
+hue has to work on both appearances and doesn't: on a nav bar in light mode
+this teal measures 2.13:1 where the system blue Apple ships measures 3.89:1.
+Apple tuned that background for the hue it shipped, so 13d's carve-out
+inherited the shape of Apple's decision without inheriting its number.
+
+That is not an argument for abandoning a system colour for a hand-picked hex.
+It is an argument for doing what the system colours themselves do: **two
+deliberate values, one per appearance.** A darker teal in light, the current
+bright one in dark — the mode this app is actually used in, and the one that
+already works.
+
+- [ ] An accent colour set, light and dark variants, measured on both.
+- [ ] It resolves **13e** in passing: `Form` buttons, `.alert` and
+      `.confirmationDialog` all take the tint, including the import's
+      *Merge / Replace Everything…* dialog.
+- [ ] Then the app icon.
+
+## 18b. Share the export with UIKit
+
+Decided, with the evidence in `531d71c`. **`ShareLink` silently fails to
+present from a `Form` that carries a `.sheet(item:)`** — which settings does,
+for the tracker editor. Bisected against a throwaway app; the editor sheet
+still presents, a `Button` in the same section still works, and the same
+`ShareLink` in home's toolbar opens fine. `UIActivityViewController` presented
+by hand from that screen works, and was screenshotted.
+
+So: about fifteen lines of UIKit. This is the app's first UIKit and its first
+reach into the window hierarchy, which is why it was escalated rather than
+slipped into a five-item pass — but it is the right call. Rule 10 bans
+*dependencies* and explicitly permits platform frameworks, and rule 6 promises
+data leaves in one tap, where Files-only means save, find, then share.
+
+- [ ] Isolate it in one small file, so the UIKit surface is one place.
+- [ ] Record the `ShareLink` bug next to it and in TECH.md, so nobody
+      "simplifies" it back and silently loses the button again.
+- [ ] Keep the Files exporter working alongside it.
 
 ## 19. CI
 
