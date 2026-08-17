@@ -10,8 +10,12 @@ import SwiftUI
 /// in a second field costs one extra tap, not a second trip through the sheet.
 ///
 /// Nothing stands in front of it. Tapping + opens the group you logged last,
-/// immediately, with the keypad up, and switching groups happens *here*, from
-/// the title, for the log that isn't the usual one.
+/// immediately, with the pad already on screen, and switching groups happens
+/// *here*, from the title, for the log that isn't the usual one.
+///
+/// **The pad is drawn, not asked for** — see `NumberPad`. Everything below
+/// about keyboard timing is why, and stays because it is the reasoning the
+/// design rests on rather than a description of what the code now does.
 struct LogSheet: View {
 
     /// `nil` makes the common-path presentation instant, and it stays that way.
@@ -34,9 +38,15 @@ struct LogSheet: View {
     /// it is the same two movements, further apart, for half a second more.
     ///
     /// So the glitch item 11 describes is real and this is not the fix for it.
-    /// Anything that is, has to start the keypad and the sheet together, which
-    /// means owning the presentation rather than asking `.sheet` for it — a
-    /// much larger change than the one this item was scoped for.
+    /// Anything that is, has to start the keypad and the sheet together.
+    ///
+    /// Item 12 is that fix, and it took the cheaper of the two roads: not
+    /// owning the presentation, but not asking for a keyboard at all. The
+    /// constraint above binds only while one is being raised. With the pad
+    /// drawn as an ordinary view, the sheet's first frame *is* the typeable
+    /// frame — measured at 0.205–0.207s from the press, against 0.698–0.708s
+    /// here, and nothing left after the sheet appears where 0.517s of keypad
+    /// used to be.
     private static let presentationAnimation: Animation? = nil
 
     /// Where the last-used group is remembered.
@@ -47,6 +57,10 @@ struct LogSheet: View {
     /// including the empty default on a fresh install, means + opens the first
     /// group on the home screen.
     static let lastGroupKey = "lastLoggedGroup"
+
+    /// Scroll identity for the name row. The amount rows use their tracker's
+    /// id; the name has none, so it gets one.
+    private static let nameRow = "name"
 
     struct Target: Identifiable, Hashable {
         var id = UUID()
@@ -62,26 +76,39 @@ struct LogSheet: View {
 
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
-
-    /// Which field the keypad is attached to.
-    ///
-    /// An enum rather than a bare tracker id because the name field is part of
-    /// the same walk: the chevrons in the bar step through everything you can
-    /// type into, and the thing you reach for after the last number is what you
-    /// ate. The date is deliberately not in here — it is a wheel, not a field,
-    /// and stopping the keypad on it would be the one place the walk costs you
-    /// something instead of saving it.
-    private enum Field: Hashable {
-        case amount(UUID)
-        case name
-    }
+    /// One source for what the decimal separator is, handed to both the pad
+    /// that types it and the parser that reads it back. They disagreed for
+    /// free while both defaulted to `Locale.current`; now they cannot.
+    @Environment(\.locale) private var locale
 
     @AppStorage(LogSheet.lastGroupKey) private var lastGroup = ""
     @State private var group: LogGroup
     @State private var typed: [UUID: String] = [:]
     @State private var date = Date()
     @State private var name = ""
-    @FocusState private var focused: Field?
+
+    /// Which amount field the pad types into, once the user has moved it.
+    ///
+    /// `nil` is not "nowhere" — it means nobody has moved the caret yet, and
+    /// `activeAmount` resolves it from the target and the store. That is the
+    /// whole of what `.task { await Task.yield() }` and a `@FocusState` set
+    /// after presentation used to buy: the pad is drawn, so there is no
+    /// keyboard whose arrival the first field has to be ordered against, and
+    /// the caret is simply where the sheet's first frame says it is.
+    @State private var picked: UUID?
+
+    /// The name field, and only the name field, still uses the system
+    /// keyboard. Naming is the rare path, so it can pay the presentation this
+    /// item removes from the common one; and a pad with no letters on it is no
+    /// way to type "chicken rice".
+    @FocusState private var nameFocused: Bool
+
+    /// Bumped every time the caret is put on an amount field, so the hardware
+    /// keyboard follows it. See `HardwareKeys.claim`.
+    @State private var claim = 0
+
+    /// The caret's height, tied to the size of the number it stands next to.
+    @ScaledMetric(relativeTo: .title3) private var caretHeight: CGFloat = 24
 
     init(target: Target) {
         self.target = target
@@ -99,51 +126,67 @@ struct LogSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    ForEach(trackers) { tracker in
-                        amountRow(tracker)
+            ScrollViewReader { form in
+                Form {
+                    Section {
+                        ForEach(trackers) { tracker in
+                            amountRow(tracker)
+                        }
+                    }
+
+                    Section {
+                        DatePicker("When", selection: $date)
+                        TextField("Name", text: $name)
+                            .focused($nameFocused)
+                            .id(Self.nameRow)
+                    } footer: {
+                        Text("The name is what you ate, not what it counts towards. "
+                            + "The time defaults to now — change it to log something you forgot.")
                     }
                 }
-
-                Section {
-                    DatePicker("When", selection: $date)
-                    TextField("Name", text: $name)
-                        .focused($focused, equals: .name)
-                } footer: {
-                    Text("The name is what you ate, not what it counts towards. "
-                        + "The time defaults to now — change it to log something you forgot.")
+                .onChange(of: activeAmount) { _, tracker in
+                    // The system scrolled a focused text field above the
+                    // keyboard for us, and it will not do that for a pad we
+                    // drew ourselves. A group with more trackers than fit
+                    // above the pad would otherwise step the caret onto a row
+                    // hidden behind it — you would be typing into something
+                    // you cannot see. Not animated: this happens after your
+                    // tap, and there is nothing to explain about where a row
+                    // went that a jump does not say faster.
+                    if let tracker { form.scrollTo(tracker, anchor: .center) }
+                }
+                .onChange(of: nameFocused) { _, isFocused in
+                    // The system scrolls a focused field clear of the
+                    // *keyboard* and knows nothing about the bar we put above
+                    // it, so it stopped one bar-height short and left the name
+                    // half behind the chevrons — measurable at HEAD too, and
+                    // fully hidden once the pad changed how far the form
+                    // scrolls. Typing into a field you cannot see is not the
+                    // rare path paying for itself, it is just broken.
+                    guard isFocused else { return }
+                    Task { form.scrollTo(Self.nameRow, anchor: .center) }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) { title }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                // A native `.keyboard` toolbar did not render an accessory in
-                // this iOS 26 sheet. The keyboard-following safe-area inset
-                // keeps the action in the same thumb-reachable position.
-                HStack(spacing: 8) {
-                    fieldStep(-1, "chevron.up", "Previous field")
-                    fieldStep(1, "chevron.down", "Next field")
-                    Spacer()
-                    Button("Log", action: log)
-                        .buttonStyle(.borderedProminent)
-                        .disabled(amounts.isEmpty)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 2)
-                .background(.bar)
-            }
+            .safeAreaInset(edge: .bottom, spacing: 0) { keys }
         }
-        .task {
-            // Presentation deliberately has animations disabled. Let that
-            // transaction finish before asking the system to animate in the
-            // keypad; focusing inside it suppresses the keypad altogether.
-            await Task.yield()
-            // The keypad should already be up: tapping + goes straight to a
-            // focused numeric field, with no intermediate screen.
-            focused = (target.tracker ?? trackers.first?.id).map(Field.amount)
+        // Zero-sized and behind everything: it is a place in the responder
+        // chain, not something to look at. See `HardwareKeys`.
+        .background {
+            HardwareKeys(
+                isActive: !nameFocused,
+                claim: claim,
+                insert: insert,
+                delete: deleteBack,
+                // `log` already refuses an empty sheet, which is the same rule
+                // that greys out the button, so Return needs no second one.
+                submit: log,
+                next: { step(1) }
+            )
+            .frame(width: 0, height: 0)
         }
         .onChange(of: group) { _, _ in
             // What was typed belonged to the group that was on screen when it
@@ -161,8 +204,11 @@ struct LogSheet: View {
             // backdating and then switching is not a mistake to undo.
             typed.removeAll()
             name = ""
-            // Switching is not a reason to have to tap a field again.
-            focused = (trackers.first?.id).map(Field.amount)
+            // Switching is not a reason to have to tap a field again. `nil`
+            // rather than the new group's first tracker because that is what
+            // `activeAmount` already resolves it to, and one rule for where
+            // the caret starts is better than two that have to agree.
+            focusAmount(nil)
         }
     }
 
@@ -171,41 +217,85 @@ struct LogSheet: View {
         store.trackers(in: group)
     }
 
-    /// Everything the chevrons walk, in the order it is drawn. Every typeable
-    /// field is in it and nothing is skipped, so "next" never jumps over a
-    /// number you were about to fill in.
+    /// The amount fields the chevrons walk, in the order they are drawn. The
+    /// name is the step after the last of these — it is part of the same walk,
+    /// because the thing you reach for after the last number is what you ate.
+    /// The date is deliberately not in it: it is a wheel, not a field, and
+    /// stopping the caret on it would be the one place the walk costs you
+    /// something instead of saving it.
     ///
-    /// Deduplicated, because the walk steps by *value*: `@FocusState` has only
-    /// the field to compare against. A store file holding two trackers with the
-    /// same id — a shape nothing on the load path rejects, and one that
-    /// `Store.reorderAll`, `CSVExport` and `HistoryView` all already tolerate
-    /// with `uniquingKeysWith` — would otherwise put the same value in twice,
-    /// `firstIndex(of:)` would keep returning the first copy, and "next" would
-    /// land back where it started. A dead chevron and an unreachable name field
-    /// is a worse way to meet bad data than one row drawn twice.
-    private var fields: [Field] {
-        var seen = Set<Field>()
-        return (trackers.map { Field.amount($0.id) } + [.name])
-            .filter { seen.insert($0).inserted }
+    /// Deduplicated, because the walk steps by *value*. A store file holding
+    /// two trackers with the same id — a shape nothing on the load path
+    /// rejects, and one that `Store.reorderAll`, `CSVExport` and `HistoryView`
+    /// all already tolerate with `uniquingKeysWith` — would otherwise put the
+    /// same id in twice, `firstIndex(of:)` would keep returning the first copy,
+    /// and "next" would land back where it started. A dead chevron and an
+    /// unreachable name field is a worse way to meet bad data than one row
+    /// drawn twice.
+    private var amountIDs: [UUID] {
+        var seen = Set<UUID>()
+        return trackers.map(\.id).filter { seen.insert($0).inserted }
     }
 
-    /// One step of the walk. Wraps at both ends rather than greying out: with
-    /// two or three fields a disabled chevron is a dead control most of the
-    /// time, and wrapping means the thumb never has to check which end it is at.
+    /// Where the pad types. Resolved rather than stored, so there is no moment
+    /// after presentation when it is unset and nothing to sequence against the
+    /// sheet appearing: the caret is on the tracker whose + was tapped, or on
+    /// the first field of whatever group opened, from the very first frame.
+    ///
+    /// `picked` only overrides it while it names a tracker this sheet is
+    /// actually showing, which is what makes switching groups safe to handle by
+    /// clearing it.
+    private var activeAmount: UUID? {
+        let ids = amountIDs
+        if let picked, ids.contains(picked) { return picked }
+        if let tracker = target.tracker, ids.contains(tracker) { return tracker }
+        return ids.first
+    }
+
+    /// One step of the walk, over the amount fields and then the name. Wraps at
+    /// both ends rather than greying out: with two or three fields a disabled
+    /// chevron is a dead control most of the time, and wrapping means the thumb
+    /// never has to check which end it is at.
+    ///
+    /// The old "nothing is focused, so go to the first field" case is gone with
+    /// the keypad that caused it. The caret is never nowhere now — tapping the
+    /// date wheel cannot take it away, because the wheel and the pad no longer
+    /// compete for one system focus.
+    private func step(_ offset: Int) {
+        let ids = amountIDs
+        guard !ids.isEmpty else {
+            nameFocused = true
+            return
+        }
+        // One past the last amount field is the name.
+        let count = ids.count + 1
+        let current = nameFocused
+            ? ids.count
+            : (activeAmount.flatMap { ids.firstIndex(of: $0) } ?? 0)
+        let next = (current + offset + count) % count
+        if next == ids.count {
+            nameFocused = true
+        } else {
+            focusAmount(ids[next])
+        }
+    }
+
+    /// Put the caret on an amount field — `nil` meaning "wherever
+    /// `activeAmount` resolves to" — and bring everything that types with it.
+    ///
+    /// One function because the three parts always travel together: the
+    /// letters go away, the caret moves, and the hardware keyboard follows.
+    /// Setting two of the three and forgetting the third is the shape of every
+    /// bug this sheet's focus handling has had.
+    private func focusAmount(_ tracker: UUID?) {
+        picked = tracker
+        nameFocused = false
+        claim += 1
+    }
+
     private func fieldStep(_ offset: Int, _ symbol: String, _ label: String) -> some View {
         Button {
-            let fields = fields
-            guard let focused, let index = fields.firstIndex(of: focused) else {
-                // Nothing focused — the keypad went down, most likely because
-                // the date picker took over. Both chevrons come back to the
-                // first field rather than to the end the arrow points at:
-                // there is no "previous" to a cursor that isn't anywhere, and
-                // sending *Previous* to the last field moved it forward, past
-                // the date the user had just left.
-                self.focused = fields.first
-                return
-            }
-            self.focused = fields[(index + offset + fields.count) % fields.count]
+            step(offset)
         } label: {
             Image(systemName: symbol)
                 // Fixed, not `.body`: the 44pt frame it sits in does not
@@ -274,19 +364,138 @@ struct LogSheet: View {
         }
     }
 
-    private func amountRow(_ tracker: Tracker) -> some View {
-        LabeledContent(tracker.name) {
-            HStack(spacing: 6) {
-                TextField("0", text: binding(for: tracker.id))
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .font(.title3.monospacedDigit())
-                    .focused($focused, equals: .amount(tracker.id))
-                if !tracker.unit.isEmpty {
-                    Text(tracker.unit).foregroundStyle(.secondary)
-                }
+    /// Everything below the form: the actions, then the pad.
+    ///
+    /// One `safeAreaInset` holds both, so they move as one and the Log button
+    /// stays exactly where item 5 put it — directly above the digits, which is
+    /// the shortest travel a thumb already on the pad can make.
+    ///
+    /// The pad steps aside while the name field is up. It has to: a
+    /// `safeAreaInset` is lifted above the system keyboard, so leaving it in
+    /// would stack a pad you cannot use on top of the letters you asked for.
+    /// The bar stays, which is what keeps Log reachable in both states and
+    /// stops the two arrangements reading as different screens.
+    @ViewBuilder
+    private var keys: some View {
+        VStack(spacing: 0) {
+            // A native `.keyboard` toolbar did not render an accessory in this
+            // iOS 26 sheet. The inset keeps the action in the same
+            // thumb-reachable position, and now also carries the pad.
+            HStack(spacing: 8) {
+                fieldStep(-1, "chevron.up", "Previous field")
+                fieldStep(1, "chevron.down", "Next field")
+                Spacer()
+                Button("Log", action: log)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(amounts.isEmpty)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 2)
+            .background(.bar)
+
+            if !nameFocused {
+                NumberPad(separator: separator, insert: insert, delete: deleteBack)
             }
         }
+    }
+
+    /// This region's decimal separator, from the same environment locale the
+    /// parse uses.
+    private var separator: String {
+        locale.decimalSeparator ?? "."
+    }
+
+    private func insert(_ key: String) {
+        guard let tracker = activeAmount else { return }
+        typed[tracker] = NumberInput.appending(key, to: typed[tracker] ?? "", locale: locale)
+    }
+
+    private func deleteBack() {
+        guard let tracker = activeAmount else { return }
+        typed[tracker] = String((typed[tracker] ?? "").dropLast())
+    }
+
+    /// A row you tap to move the caret, with the pad doing the typing.
+    ///
+    /// Not a `TextField` any more, and that is the point of the item: a text
+    /// field is what asks for a keyboard. What is kept is everything a text
+    /// field was showing — the greyed `0` while it is empty, the value
+    /// right-aligned in monospaced digits, the unit beside it, and a caret on
+    /// the field being typed into.
+    private func amountRow(_ tracker: Tracker) -> some View {
+        let text = typed[tracker.id] ?? ""
+        // `activeAmount` says which row the pad *would* type into; it stays
+        // put while the name has the keyboard, on purpose, so that coming back
+        // returns to the field you left. But drawing its caret meanwhile put
+        // two carets on screen and told VoiceOver the selected field was the
+        // one typing does not go to.
+        let isActive = activeAmount == tracker.id && !nameFocused
+        return Button {
+            // Tapping a number puts the letters away too. Otherwise the pad
+            // would come back under a keyboard that is still up.
+            focusAmount(tracker.id)
+        } label: {
+            LabeledContent {
+                HStack(spacing: 4) {
+                    Text(text.isEmpty ? "0" : text)
+                        .font(.title3.monospacedDigit())
+                        .foregroundStyle(text.isEmpty ? .tertiary : .primary)
+                    caret
+                        .opacity(isActive ? 1 : 0)
+                    if !tracker.unit.isEmpty {
+                        Text(tracker.unit).foregroundStyle(.secondary)
+                    }
+                }
+            } label: {
+                // Capped, because a tracker name is unbounded free text and
+                // the row it is in has a hard ceiling now: the pad takes 43%
+                // of an iPhone SE, and `LabeledContent` stacks the label over
+                // the value at accessibility sizes. Measured at AX5 with
+                // "Calories burned exercising", the name ran to three lines
+                // and pushed the number — the one thing on this screen you are
+                // typing — under the bar. The name giving way is the same call
+                // HomeView's card makes, for the same reason: a truncated name
+                // still says which tracker it is, an invisible number does not.
+                Text(tracker.name).lineLimit(2)
+            }
+            // The row's own insets are moved in here so the tap target is the
+            // whole row rather than the 24pt the text happens to occupy. Read
+            // back off the tree, not guessed: the first version reported a
+            // 338x24 button inside a 370x54 row, so half of what looks like
+            // the control did nothing.
+            .padding(.vertical, 15)
+            .contentShape(.rect)
+            // Spelled out rather than assembled from the row's parts, which
+            // reads the placeholder "0" as a value that was entered. Inside
+            // the button's label, not on the button: applied outside, this
+            // wrapped the button in a second element and left the real one
+            // announcing "Calories, 0, Calories, kcal" underneath it. Same
+            // trap HomeView's card documents.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                tracker.unit.isEmpty ? tracker.name : "\(tracker.name), \(tracker.unit)"
+            )
+            .accessibilityValue(text.isEmpty ? "Empty" : text)
+            .accessibilityAddTraits(isActive ? [.isSelected] : [])
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        .id(tracker.id)
+        .accessibilityHint("Types here")
+    }
+
+    /// Drawn always and hidden with opacity rather than added and removed, so
+    /// stepping between fields cannot shift the row's width under the thumb
+    /// that is stepping.
+    ///
+    /// Scaled rather than fixed: it stands beside `.title3` text, and a fixed
+    /// bar next to text that grows is the mismatch item 11 found three times.
+    /// It does not blink — a repeating animation for a caret that is already
+    /// the only coloured thing on the row buys nothing and never stops.
+    private var caret: some View {
+        Capsule()
+            .fill(Color.accentColor)
+            .frame(width: 2, height: caretHeight)
     }
 
     // There is deliberately no row of recently-used values here.
@@ -299,18 +508,11 @@ struct LogSheet: View {
     // deliberately kept: item 14's search-and-repeat is the feature these
     // chips were a bad guess at, and it wants exactly that data.
 
-    private func binding(for tracker: UUID) -> Binding<String> {
-        Binding(
-            get: { typed[tracker] ?? "" },
-            set: { typed[tracker] = $0 }
-        )
-    }
-
     /// Only what this sheet is showing — one log, one batch. Switching clears
     /// the fields, so there is nothing else it could be hiding.
     private var amounts: [UUID: Double] {
         trackers.reduce(into: [:]) { result, tracker in
-            if let value = NumberInput.parse(typed[tracker.id] ?? "") {
+            if let value = NumberInput.parse(typed[tracker.id] ?? "", locale: locale) {
                 result[tracker.id] = value
             }
         }
