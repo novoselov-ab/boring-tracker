@@ -428,32 +428,46 @@ private struct TrackerCard: View {
     /// clipping "1,234 kcal" to "1,23…" at AX5 on an iPhone SE. A clipped total
     /// is worse than a small one, and that is no less true where the type is
     /// large on purpose.
+    @ViewBuilder
     private func headlineText(_ headline: Headline) -> some View {
-        Text(headline.text)
-            .font(.title2.weight(.medium))
-            .monospacedDigit()
-            // The one piece of motion in the app, and the whole of item 15:
-            // logging a number should show the number changing. Until now the
-            // only acknowledgement of a log was the sheet closing, and the card
-            // behind it already read as though it had always said that.
-            //
-            // `value:` gives the digits their direction, so a total rolls up
-            // and an undo rolls back down.
-            .contentTransition(.numericText(value: headline.amount ?? 0))
-            // On the card rather than at the place that writes, which is what
-            // keeps it honest in both directions. Nothing waits on it: `log()`
-            // still writes and dismisses in the same breath, and this animates
-            // behind the sheet on its way out. And it belongs to the number
-            // rather than to the log sheet, so a repeat from History — which
-            // changes the same total by another door — gets it for free, as
-            // does an undo, an edit and a deletion.
-            //
-            // Brief, and an ease rather than a spring: a spring is a bounce,
-            // and a number that bounces is congratulating you (docs/TODO.md
-            // item 15, docs/PHILOSOPHY.md "Quiet").
-            .animation(.easeOut(duration: 0.3), value: headline.text)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
+        Group {
+            if let amount = headline.amount {
+                // Counts to the new number instead of swapping to it
+                // (docs/TODO.md item 20). Item 15 rolled the digits with
+                // `.contentTransition(.numericText)`, which is a handsome
+                // 0.3s and shows you a *different* number rather than the
+                // addition: 1,690 became 1,780 and you were left to work out
+                // that a 90 had gone in. Counting says which way and roughly
+                // how much before you have read a digit.
+                CountingNumber(value: amount) { tracker.format($0) }
+            } else {
+                // A measurement tracker nobody has logged yet. There is no
+                // number to count from, so the em dash is simply replaced.
+                Text(headline.text)
+            }
+        }
+        .font(.title2.weight(.medium))
+        // Load-bearing while it counts, not a nicety: proportional digits
+        // change width on every frame, so the number would shiver through the
+        // whole animation and drag the name beside it along.
+        .monospacedDigit()
+        // On the card rather than at the place that writes, which is what
+        // keeps it honest in both directions. Nothing waits on it: `log()`
+        // still writes and dismisses in the same breath, and this counts
+        // behind the sheet on its way out — measured, see the commit and
+        // docs/TODO.md item 15. And it belongs to the number rather than to
+        // the log sheet, so logging again — which changes the same total by
+        // another door — gets it for free, as does an undo, an edit and a
+        // deletion.
+        //
+        // 0.8s, where item 15 was 0.3s: at 0.3 a count is a flicker and reads
+        // as the swap it replaced. It is still an ease rather than a spring —
+        // a spring is a bounce, and a number that bounces is congratulating
+        // you (docs/PHILOSOPHY.md "Quiet") — and easing out means the count
+        // arrives rather than stopping dead.
+        .animation(.easeOut(duration: 0.8), value: headline.amount)
+        .lineLimit(1)
+        .minimumScaleFactor(0.6)
     }
 
     /// The bottom Log button, scaled down: same fill, same tint, same meaning.
@@ -533,6 +547,39 @@ private struct TrackerCard: View {
                 $0.date.formatted(.relative(presentation: .named))
             }
         }
+    }
+}
+
+/// A number that counts to its new value rather than swapping to it.
+///
+/// `Animatable` on the view itself, which is the whole mechanism: SwiftUI
+/// interpolates `animatableData` across whatever animation is in flight and
+/// calls `body` for each frame, so the *value* is what animates and the text is
+/// simply drawn from it. There is no timer, no `TimelineView` and no state —
+/// nothing runs when nothing is changing.
+///
+/// It formats per frame, deliberately. A tracker's own `format` is what makes
+/// 1,690 read as "1,690 kcal" and 79.5 as "79.5 kg", and counting through
+/// numbers drawn by a second, simpler rule is how the card would disagree with
+/// itself mid-count — decimals and grouping included. Roughly fifty
+/// `FormatStyle` calls over the animation, on the one card whose number
+/// changed.
+private struct CountingNumber: View, Animatable {
+    var value: Double
+    /// `@Sendable`, and `nonisolated` below, because SwiftUI interpolates the
+    /// value off the main actor: `Animatable` is not main-actor isolated and a
+    /// `View` is, so under Swift 6 the conformance only compiles when the part
+    /// the animator touches stands outside the isolation. It touches the
+    /// number, never the formatting.
+    let format: @Sendable (Double) -> String
+
+    nonisolated var animatableData: Double {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        Text(format(value))
     }
 }
 
