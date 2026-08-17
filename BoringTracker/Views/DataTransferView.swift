@@ -81,7 +81,7 @@ struct DataTransferView: View {
         do {
             exportDocument = ExportDocument(data: try store.exportData())
             exportType = .json
-            exportName = "boring-tracker"
+            exportName = ExportName.dated("boring-tracker")
             isExporting = true
         } catch {
             show(error, action: "export")
@@ -91,7 +91,7 @@ struct DataTransferView: View {
     private func exportCSV() {
         exportDocument = ExportDocument(data: store.exportCSV())
         exportType = .commaSeparatedText
-        exportName = "boring-tracker-entries"
+        exportName = ExportName.dated("boring-tracker-entries")
         isExporting = true
     }
 

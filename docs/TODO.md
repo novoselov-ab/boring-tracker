@@ -1284,8 +1284,28 @@ the numbered items is going near the same code.
 
 - [ ] **Export through the share sheet.** A `ShareLink` gives AirDrop,
       Messages, Mail and any app that takes a file, with Files still among
-      them. About three lines. Give the file a dated name so a folder of
-      exports is readable.
+      them. About three lines. **It is not three lines, and the three-line
+      version does not work at all** — see below. The *dated name* half is
+      done: both exports are offered as `boring-tracker-2026-08-16`, verified
+      by saving one into Files.
+
+      **`ShareLink` does not present from the settings list.** Tapping it does
+      nothing — no sheet, no log line, no error. Bisected to a 40-line app: a
+      `ShareLink` in a `Form` row presents normally until the same `Form`
+      carries a `.sheet(item:)` modifier anywhere in it, and then it silently
+      stops. Settings has exactly that — the tracker editor. In the same build
+      the editor sheet still opens, a `Button` in the same section still works,
+      and the same `ShareLink` in home's toolbar opens the share sheet, so it is
+      the pairing rather than the control, the screen or the simulator.
+      Attaching the editor's `.sheet` to a different section, or to a
+      `Color.clear` background, does not help.
+
+      What is left is a decision rather than a fix: present
+      `UIActivityViewController` directly (about fifteen lines and the app's
+      first UIKit, and it does work from that screen — probed), move the export
+      rows out of the settings list, or leave the Files exporter alone. Not
+      taken here, because a small-things pass is the wrong place to add the
+      first UIKit bridge.
 - [x] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Fixed by moving
       `Signing.xcconfig` into `Config/`. With `createIntermediateGroups` on, a
       config file beside `project.yml` makes XcodeGen build a group for the
