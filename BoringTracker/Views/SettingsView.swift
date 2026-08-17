@@ -145,7 +145,7 @@ struct SettingsView: View {
         // 13c) and that other name still resolves a catalog that does not
         // exist. A wash behind a row is a fill, which is the one thing the
         // accent is still allowed to be — nothing is written in it, and the
-        // label on top is the ordinary one at 0.18 opacity of teal.
+        // label on top is the ordinary one at 0.18 opacity of the accent.
         //
         // One style with a switched opacity rather than a choice between two:
         // a fill at zero opacity draws exactly what `.clear` did, and no

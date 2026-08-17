@@ -128,7 +128,7 @@ struct LogSheet: View {
                     fieldStep(1, "chevron.down", "Next field")
                     Spacer()
                     Button(action: log) {
-                        // Dark on the teal (see `Color.onAccent`), and inside
+                        // Dark on the fill (see `Color.onAccent`), and inside
                         // the label rather than on the button: this is the one
                         // prominent button in the app that is routinely
                         // disabled — the sheet opens that way, with no number
@@ -244,7 +244,7 @@ struct LogSheet: View {
                 .font(.system(size: 17, weight: .medium))
                 // Drawn in the ordinary label colour, which is what `.plain`
                 // gives them and what the tint now resolves to anyway. They
-                // used to be teal, which is a foreground use of the accent and
+                // used to be the accent, which is a foreground use of it and
                 // measured 1.89:1 on this sheet's background in light mode
                 // (docs/TODO.md item 13c). A chevron is a glyph you aim at, so
                 // it has the same 3:1 floor as any other control.

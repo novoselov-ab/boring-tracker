@@ -53,11 +53,14 @@ struct TrackerChart: View {
                         x: .value("Day", point.date, unit: .day),
                         y: .value(tracker.name, point.value)
                     )
-                    // The ordinary label colour, not the accent. These were
-                    // teal, which is 1.90:1 against the chart's own background
-                    // in light mode — a bar you cannot see is a chart that
-                    // doesn't work, and teal is a fill for a dark label rather
-                    // than something to draw with (docs/TODO.md item 13c).
+                    // The ordinary label colour, not the accent. These were the
+                    // accent, which as the old teal was 1.90:1 against the
+                    // chart's own background in light mode — a bar you cannot
+                    // see is a chart that doesn't work — and the accent is a
+                    // fill for a dark label rather than something to draw with
+                    // (docs/TODO.md item 13c). The colour has changed since and
+                    // the rule has not: a bar carries a value, not an
+                    // affordance, so it has nothing to say in a tint.
                     .foregroundStyle(.primary)
                 }
             case .measurement:

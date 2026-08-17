@@ -16,13 +16,14 @@ struct BoringTrackerApp: App {
                 // The ordinary label colour, not the accent. A tint is what
                 // every standard control *writes* with — a nav bar glyph, a
                 // form picker's value, the Undo in a bar — and the accent is a
-                // light teal, which on the ordinary background measured 1.95:1
-                // in light mode against a 3:1 floor (docs/TODO.md item 13c).
-                // Item 13b settled that pairing for the fills by moving the
-                // label; there is nothing to move here, because the teal *is*
-                // the label. So teal stops being the tint and stays what item
-                // 13b made it: a fill, named `Color.accentFill`, applied at the
-                // handful of places that genuinely fill something.
+                // light mint, which measures a shade worse than the teal that
+                // failed this at 1.95:1 on the ordinary background in light
+                // mode against a 3:1 floor (docs/TODO.md item 13c). Item 13b settled that pairing
+                // for the fills by moving the label; there is nothing to move
+                // here, because the accent *is* the label. So the accent is not
+                // the tint and stays what item 13b made it: a fill, named
+                // `Color.accentFill`, applied at the handful of places that
+                // genuinely fill something.
                 //
                 // `.primary`, not "no tint at all": the default is the system
                 // blue this app deliberately stopped using.
@@ -41,8 +42,8 @@ struct BoringTrackerApp: App {
                 // names: nothing may paint with `Color.accentColor`, which
                 // resolves from an asset catalog that does not exist yet
                 // (item 18) and is still blue, and nothing may paint with the
-                // `.tint` shape style expecting teal, because this is what it
-                // resolves to.
+                // `.tint` shape style expecting the accent, because this is what
+                // it resolves to.
                 .tint(.primary)
         }
         .onChange(of: scenePhase) { _, phase in

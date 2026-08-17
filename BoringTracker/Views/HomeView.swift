@@ -48,7 +48,7 @@ struct HomeView: View {
                             .frame(
                                 maxWidth: horizontalSizeClass == .regular ? 440 : .infinity
                             )
-                            // Dark on the teal, not the white iOS draws by
+                            // Dark on the fill, not the white iOS draws by
                             // default — see `Color.onAccent`. Inside the label,
                             // because that is where a `.disabled` outside can
                             // still reach it.
@@ -56,8 +56,9 @@ struct HomeView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     // The accent is named here rather than inherited: the
-                    // environment tint is the ordinary label colour now, and
-                    // teal is a fill (docs/TODO.md item 13c, `Color.accentFill`).
+                    // environment tint is the ordinary label colour now, and the
+                    // accent is a fill (docs/TODO.md item 13c,
+                    // `Color.accentFill`).
                     .tint(Color.accentFill)
                     .controlSize(.large)
                     .padding(.horizontal)
@@ -118,7 +119,7 @@ struct HomeView: View {
             Text("Add one to start counting whatever you like.")
         } actions: {
             // Spelled out rather than the string convenience so the label can
-            // be drawn dark on the teal like every other prominent button here.
+            // be drawn dark on the fill like every other prominent button here.
             // It is a rare screen, but a screen that says the same thing a
             // different way is what item 13 is named after.
             NavigationLink(value: Route.settings) {
@@ -417,11 +418,11 @@ private struct TrackerCard: View {
                 // door. A control that is already a comfortable target at
                 // every size has nothing to gain by growing.
                 .font(.system(size: 15, weight: .bold))
-                // The same dark-on-teal the Log pill uses, for the same
+                // The same dark-on-accent the Log pill uses, for the same
                 // measured reason: this glyph sits on the identical fill six to
-                // ten times down the main screen, so it was the identical
-                // 1.86:1. The two move together or the screen has two design
-                // languages again (docs/TODO.md item 13b).
+                // ten times down the main screen, so on the old teal it was the
+                // identical 1.86:1. The two move together or the screen has two
+                // design languages again (docs/TODO.md item 13b).
                 .foregroundStyle(Color.onAccent)
                 .frame(width: 30, height: 30)
                 // `Color.accentFill`, not `.tint` and not `Color.accentColor`:

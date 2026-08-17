@@ -85,9 +85,9 @@ struct HistoryView: View {
                     // for a case that only happens at the top of the range.
                     .padding(.vertical, 6)
                 Spacer()
-                // It used to be teal *text* on the bar, which is the pairing
-                // item 13c removes: 1.89:1 in light mode, on the one control in
-                // the app that exists to be found in a hurry. `UndoButton`
+                // It used to be the accent as *text* on the bar, which is the
+                // pairing item 13c removes: 1.89:1 in light mode, on the one
+                // control in the app that exists to be found in a hurry. `UndoButton`
                 // carries the shape and the reasons, and the tracker detail
                 // screen's own undo row draws the same one.
                 UndoButton(action: undo)
@@ -239,7 +239,7 @@ private struct HistoryRow: View {
                 .foregroundStyle(canRepeat ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
                 .frame(width: 30, height: 30)
                 // `Color.accentFill`, not `.tint`: the environment tint is the
-                // ordinary label colour now, and teal is only ever a fill
+                // ordinary label colour now, and the accent is only ever a fill
                 // (docs/TODO.md item 13c).
                 .background(
                     canRepeat ? AnyShapeStyle(Color.accentFill) : AnyShapeStyle(.quaternary),
