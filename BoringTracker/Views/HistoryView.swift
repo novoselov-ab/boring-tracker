@@ -49,7 +49,7 @@ struct HistoryView: View {
             } else {
                 List {
                     ForEach(days, id: \.day) { group in
-                        Section(title(for: group.day)) {
+                        Section {
                             ForEach(group.items) { item in
                                 HistoryRow(item: item, trackers: trackers) { editing = item }
                                     // The accent, at a fifth, over the fill a
@@ -110,6 +110,31 @@ struct HistoryView: View {
                                         // 20).
                                         .tint(.red)
                                     }
+                            }
+                        } header: {
+                            Text(title(for: group.day))
+                        } footer: {
+                            // Both gestures this screen offers are invisible:
+                            // swipe-to-delete is invisible by iOS's design, and
+                            // a row that opens an editor when tapped looks
+                            // exactly like a row that does nothing (docs/TODO.md
+                            // item 22). One sentence in the ordinary footer
+                            // idiom, which the log sheet already uses, costs no
+                            // tap and no chrome — a hint that never moves is
+                            // cheaper than a gesture nobody finds.
+                            //
+                            // **Under the first day only.** A footer under the
+                            // last section is at the bottom of a list that is a
+                            // year long, which is nowhere; this one is the first
+                            // thing under the rows you arrive looking at, and
+                            // repeating it under all 365 sections would be the
+                            // app nagging.
+                            //
+                            // No icon and no colour: the plain footer style is
+                            // already secondary, and anything louder competes
+                            // with the rows for the same glance.
+                            if group.day == days.first?.day {
+                                Text("Tap a row to edit it, or swipe to delete.")
                             }
                         }
                     }

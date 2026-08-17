@@ -594,20 +594,45 @@ review and fix and delete. **Log again is "do that again"** — deduplicated,
 ranked, one tap and gone. Sharing a search and a repeat action is fine; sharing
 a screen is not.
 
-## 22. Say that a History row can be tapped and swiped
+## 22. Say that a History row can be tapped and swiped — done
 
 Neither affordance announces itself. Swipe-to-delete is invisible by design in
 iOS, and tapping a row to edit is invisible too — both are discoverable only if
 you already know the platform, and one of us wondered aloud whether they were
 findable, which is the evidence.
 
-- [ ] A quiet footer saying both: a row can be **tapped to edit** and **swiped
+- [x] A quiet footer saying both: a row can be **tapped to edit** and **swiped
       to delete**. One line, label-secondary, no icon.
-- [ ] Put it where it is actually seen — under the first day's section, not at
+
+      "Tap a row to edit it, or swipe to delete." One sentence, in the plain
+      footer style, which is already secondary — no icon and no colour, because
+      anything louder competes with the rows for the same glance. "Swipe", not
+      "swipe left": the gesture is on the trailing edge, which is the other side
+      in a right-to-left layout, and the word buys nothing the gesture does not
+      already teach on the first try.
+- [x] Put it where it is actually seen — under the first day's section, not at
       the bottom of a list that may be a year long.
-- [ ] Same question for the Log again sheet: check whether anything there is
+
+      Under the first section only, not under all 365 — repeating it every day
+      would be the app nagging.
+- [x] Same question for the Log again sheet: check whether anything there is
       similarly silent, and say so rather than assuming History is the only
       screen with this problem.
+
+      **Checked, and it does not have this problem.** Its rows have one gesture
+      and it is drawn: every row carries the repeat disc, which is the same
+      glyph home's bar and History's rows use, and the whole row is that button.
+      A footer would explain what the disc already says, in a sheet that opens
+      at half height where a line of text costs a row of list. The drag
+      indicator says how to leave.
+
+      **What is silent there is not a gesture but the search.** Since item 21
+      the list carries unnamed rows, and the field matches names only, so typing
+      anything empties them out of it. The prompt says "Search names" and that
+      is the honest reading of it, but a row you can see and cannot search for
+      is a real edge — recorded here rather than fixed, because a fallback to
+      tracker names would return every unnamed calorie row for "calories" and
+      answer a different question from the one the field asks.
 
 It costs no tap and it is the ordinary iOS idiom — the app already uses footers
 this way on the log sheet. A hint that never moves is cheaper than a gesture
