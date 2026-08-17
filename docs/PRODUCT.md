@@ -185,9 +185,11 @@ tracker editor.
 
 **Favourite**, if a label is ever needed for the things you log again. It is
 the word people already have for it, and it beats "preset", which no consumer
-app uses. Still not needed: the screen those things live on is called
-**Repeat**, which names the *action* rather than a category of thing, so there
-is no noun on screen to get wrong and nothing for the user to curate.
+app uses. Still not needed: the sheet those things live on is called **Log
+again**, which names the *action* rather than a category of thing, so there is
+no noun on screen to get wrong and nothing for the user to curate. It was
+called **Repeat** first — also an action, but a concept you have to interpret,
+where "Log again" is the app's own verb and says what the tap does.
 
 **Log, and Save.** The button that records something happening says **Log** —
 you are not saving a document, and *log* is the verb the whole product already
@@ -250,12 +252,12 @@ So, in order of importance:
      PHILOSOPHY.md). A brief undo after logging is the right trade; a
      confirmation on every repeat is not.
 
-   **It is its own screen, not a field inside the log sheet.** That was the
-   original design and it was replaced before it was built: the sheet is where
-   you type a number that is *new*, and logging something again is a different
-   job that never needs a keypad at all. So it gets a quiet door of its own
-   beside home's Log button — see **Repeat** under Screens — and the log sheet
-   keeps none of it.
+   **It is its own presentation, not a field inside the log sheet.** That was
+   the original design and it was replaced before it was built: the sheet is
+   where you type a number that is *new*, and logging something again is a
+   different job that never needs a keypad at all. So it gets a quiet door of
+   its own beside home's Log button — see **Log again** under Screens — and the
+   log sheet keeps none of it.
 
    Call these **presets** if they need a name at all, and never *recipes*. A
    recipe is ingredients, and ingredients are permanently out of scope — see
@@ -285,24 +287,27 @@ Small enough to list completely.
   fit without scrolling** on a current iPhone, which is the density to hold a
   change to: four trackers must never fill a screen.
 
-  **The card's number is the one thing in this app that animates**, rolling
-  from the old value to the new over 0.3s when it changes. It is the single
-  deliberate exception to "nothing animates that you have to wait for"
-  (PHILOSOPHY.md), and it earns it by delaying nothing: the log sheet still
-  closes in the same breath and the number catches up behind it. An ease, not a
-  spring — a number that bounces is congratulating you. It also rolls down to
-  zero when you open the app the morning after, which is left alone: the number
-  really did change, and the alternative is putting the animation back in the
-  hands of everything that writes.
+  **The card's number is the one thing in this app that animates**, counting up
+  to its new value over 0.8s when it changes. It is the single deliberate
+  exception to "nothing animates that you have to wait for" (PHILOSOPHY.md),
+  and it earns it by delaying nothing: the log sheet still closes in the same
+  breath, in the same measured time as a build without any of this, and the
+  number is still counting behind it half a second after the sheet has gone. An
+  ease, not a spring — a number that bounces is congratulating you. It counts
+  rather than swapping because the swap showed you a *different* number and
+  left you to work out what had been added. It also counts down to zero when
+  you open the app the morning after, which is left alone: the number really
+  did change, and the alternative is putting the animation back in the hands of
+  everything that writes.
 - **Log sheet** — number pad, tracker(s), date/time (defaults to now, tappable
   to change), optional name, Log. One group's trackers, or one loose tracker;
   its title is how you switch between them, and the keypad never goes down to
   do it. Backdating is first-class: you *will* forget dinner until the next
   morning. There is no row of recent *values* — people do not log the same
-  number twice, they log the same food, which is what the Repeat screen is
+  number twice, they log the same food, which is what the Log again sheet is
   for.
 - **History** — everything you've logged, newest first, grouped by day, and
-  searchable by name through the same matcher the Repeat screen uses. Today
+  searchable by name through the same matcher the Log again sheet uses. Today
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
   10 g", deleted or edited once, not once per tracker. Without this screen,
   fixing a mistyped food means visiting each tracker's detail separately and
@@ -314,14 +319,18 @@ Small enough to list completely.
   search-and-repeat's idea arriving through a different door — you don't search
   for a food, you scroll to the last time you ate it — and the undo it needs
   sits in a bar at the bottom of the screen, which also carries the undo for a
-  swipe-delete.
+  swipe-delete. **The row it writes arrives marked**, washed in the accent, and
+  the mark fades out by itself after a couple of seconds: a new row dated now
+  lands among rows dated a few minutes ago, and without it you are comparing
+  timestamps to find the one your tap made. It fades because a mark that stays
+  is a second state to reason about.
 
   **A row leads with what identifies it** — your name for it, or the tracker or
   group when you typed none — and the numbers follow. Reading order is what
   makes a list scannable, and the numbers are not the part that tells two rows
   apart. An entry with no name disappears under a non-empty query, because this
   searches names and the field says so.
-- **Repeat** — the things you have logged and named, the ones you log most
+- **Log again** — the things you have logged and named, the ones you log most
   often first, one tap each to log again. Reached by a small bordered control
   beside home's Log button, deliberately quieter than it: the bottom of home
   holds the most frequent action in the app, and a second equal button there
@@ -329,6 +338,18 @@ Small enough to list completely.
   logging. Searchable by name, like History. The whole row is the button —
   there is nothing else a tap here could mean, so the target is the full width
   rather than a disc on the end of it.
+
+  **It comes up over home at half height and leaves as soon as you have
+  logged.** It was a pushed screen first, and a pushed screen with a title, a
+  list and a search field is what History already is — so it read as a second
+  History rather than as a fast way to log. A presentation that stops short of
+  the top, with home still visible behind it, is the difference between a thing
+  that came up and somewhere you went. The cost is that nothing here can be a
+  destination: no editing a row, no deleting one, no second tap. That is the
+  point, and History is still there for all of it.
+
+  The undo lives on home, where the sheet leaves you — a bar that appears only
+  after a repeat and goes when there is nothing left to take back.
 
   **One row per thing you ate, not per time you ate it.** Rows sharing both a
   name and their values collapse into the newest of them, so forty logs of

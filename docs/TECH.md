@@ -538,6 +538,17 @@ inherited the shape of Apple's decision without inheriting its number. Nothing
 may paint with `Color.accentColor`, which resolves from an asset catalog that
 does not exist and is still the system blue.
 
+**The cost of inheriting nothing is that some controls want a tint, and get
+`.primary`.** A `Toggle` under this root tint is a solid white capsule in dark
+mode, on and off indistinguishable — measured in review when the rule went in,
+and noted as the shape of the problem rather than a bug, since the app has no
+`Toggle`. History's delete swipe action turned out to be the same case for real:
+`role: .destructive` asks for red, loses to the inherited tint, and drew as a
+blank white capsule with an invisible label — no glyph and no word — on the one
+control in the app that destroys a record (TODO item 20). It names `.tint(.red)`
+itself now. **A control whose meaning is carried by colour has to state that
+colour where it is used**, the same way a bar button states `navBarAccent()`.
+
 **The light-mode foreground failure is real and unfixed.** One system hue cannot
 be both a legible fill and a legible foreground on white. The fix is an accent
 colour *set* with a deliberate darker light-mode value — TODO item 18 — and it
@@ -596,6 +607,28 @@ every body pass of the settings list, including during a reorder drag, and
 `StoreDocument` is a struct of arrays so holding one is a retain. The encode and
 the write to a temporary file happen in its `FileRepresentation`, once a
 destination has been chosen.
+
+## `withAnimation` does not reach a list row's background
+
+The mark on the row a repeat just wrote fades out (TODO item 20), and the fade
+has to be attached to the colour rather than to the state change:
+
+```swift
+.listRowBackground(
+    Color.accentFill
+        .opacity(highlighted == item.id ? 0.2 : 0)
+        .animation(.easeOut(duration: 0.9), value: highlighted)
+)
+```
+
+Written the other way — `withAnimation(.easeOut(duration: 0.9)) { highlighted =
+nil }`, which is how every other animation in this app is triggered — the mark
+cuts off between two frames instead of fading. That is not a judgement from
+looking at it: a screen recording decoded frame by frame shows the row's colour
+constant for the whole hold and then at background in the very next frame,
+against a smooth ~785ms decay once the modifier moved. Row *content* animates
+from an ambient transaction as usual; the background view a `List` installs
+behind the cell does not.
 
 ## Testing
 
