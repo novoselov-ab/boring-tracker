@@ -1,5 +1,9 @@
 # TODO
 
+Numbers are stable once assigned — commit messages refer to them, so a gap
+means an item was merged into another one, not that something was lost. Item 8
+is now part of item 17.
+
 In implementation order. Short by design — if it's not here, it's either done
 or in the "not now" parts of [PRODUCT.md](PRODUCT.md).
 
@@ -37,7 +41,7 @@ One version bump, while there's no data to migrate:
 - [x] **`batchID` on Entry.** One logged food is two entries — 100 kcal and
       10 g protein — and this is what makes them one thing to edit or delete.
       Optional UUID, free now, a migration later.
-- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 17), which needs
+- [x] **Delete `Pin`.** Superseded by search-and-repeat (item 16), which needs
       no stored preset at all. Not merely an unused struct — it sits in the
       serialized document with merge and tombstone handling, so removing it is
       a schema change and belongs in this window.
@@ -329,25 +333,6 @@ the crash report. It now uses `uniquingKeysWith`, the form `Store.reorderAll`
 already uses, so bad data stays survivable the way the rest of the store layer
 intends.
 
-## 8. Can a double-tap log twice?
-
-Raised by the item 7 review and **deliberately left unresolved**: `log()` does
-not disable the button before `dismiss()`, so a fast double-tap might write two
-entries. The reviewer could not land synthetic clicks fast enough to trigger it
-and reported it as *unverified in either direction* rather than guessing —
-which is the right call, and why it gets its own item instead of a shrug in a
-commit body.
-
-- [ ] **Settle whether it reproduces**, on a real device, with a real thumb.
-- [ ] If it does, disable the action on first tap rather than debouncing by
-      time — the action is idempotent per presentation, so state is the honest
-      fix.
-- [ ] If it doesn't, say so here and close it.
-
-Pre-existing, not introduced by item 7. It matters more than its size suggests:
-a silent duplicate entry on the most frequent action in the app is exactly the
-kind of wrong number nobody notices until a graph looks strange months later.
-
 ## 9. History screen — done
 
 Everything logged, newest first, grouped by day — today is just the top of it.
@@ -380,11 +365,11 @@ animation on save is later.
       and the same idiom as Log, smaller. Tapping the card itself still opens
       that tracker's detail.
 - [x] **Remove the recent-value bubbles from the log sheet.** People don't log
-      the same number twice — they log the same *food*, which is what item 17
+      the same number twice — they log the same *food*, which is what item 16
       is for. `Store.recentValues` was kept on the grounds that
       search-and-repeat would want it — **that reasoning looks wrong**: it keys
       on tracker UUID and ignores names entirely, which is the opposite of what
-      item 14 needs. Decide when building item 17 whether to rewrite it around
+      item 14 needs. Decide when building item 16 whether to rewrite it around
       names or delete it; do not keep it out of habit.
 - [x] **Move between fields without leaving the keypad.** Typing calories then
       reaching for protein costs a tap on the field; put previous/next chevrons
@@ -512,7 +497,7 @@ trackers, today's timestamp.
 
 This is **search-and-repeat's idea arriving early through a different door**:
 you don't search for a food, you scroll to the last time you ate it and tap
-once. It is worth building before item 17 rather than after, because it may
+once. It is worth building before item 16 rather than after, because it may
 turn out to be most of what search-and-repeat was for — and if it is, item 17
 gets smaller instead of duplicating it.
 
@@ -521,19 +506,7 @@ gets smaller instead of duplicating it.
 - [ ] Undo, since a mistap now writes data.
 - [ ] Works for a batch and for a single entry, without two code paths.
 
-## 15. Export through the share sheet
-
-Exporting currently goes through Files. A `ShareLink` gives the system share
-sheet instead — AirDrop, Messages, Mail, any app that accepts a file, and Files
-still among them.
-
-**This is about three lines, not a project.** It was worth asking whether it
-was hard; it isn't.
-
-- [ ] JSON and CSV both go through the share sheet.
-- [ ] Sensible filename with a date, so a folder of exports is readable.
-
-## 16. Make a save feel like it landed
+## 15. Make a save feel like it landed
 
 Logging a number should **show the number changing**. Today nothing
 acknowledges a log beyond the sheet closing: you tap Log, the sheet goes, and
@@ -554,7 +527,7 @@ carve-out and it needs to earn the name.
 Deliberately after a week of real use: whether this is satisfying or annoying
 is exactly the kind of thing that cannot be decided from a simulator.
 
-## 17. Search and repeat
+## 16. Search and repeat
 
 A search field at the **bottom** of the log sheet, in thumb reach. Empty query
 lists your most-used foods by frequency and recency — the common case, with no
@@ -575,14 +548,32 @@ The one thing to watch for during the week: an experiment that needs a fact the
 document doesn't record. That's a stored decision, and it's the expensive kind —
 flag it early rather than working around it.
 
-## 17b. One VoiceOver pass, on a device
+## 17. One pass on a real device
 
-Unresolved and unresolvable from the accessibility tree, so it waits for the
-same phone trip as item 8. Commit `0564080` claims `.accessibilityLabel`
-on the card's + "had no effect at all", but `logButton` a few lines below and
-`HistoryView` both do exactly that and work. Either the claim is wrong, or
-`children: .ignore` makes that button a container and the hint has to move
-inside it.
+Three things that no agent can settle, because each needs a thumb, an ear, or
+a real phone rather than a simulator. **One errand, not three** — they were
+separate items and that was wrong.
+
+**Can a double-tap log twice?** `log()` does not disable the button before
+`dismiss()`, so a fast double-tap might write two entries. Two reviewers tried
+and could not land synthetic clicks fast enough, and both reported it as
+*unverified in either direction* rather than guessing.
+
+- [ ] Settle whether it reproduces, with a real thumb.
+- [ ] If it does, disable the action on first tap rather than debouncing by
+      time — the action is idempotent per presentation, so state is the honest
+      fix.
+- [ ] If it doesn't, say so and close it.
+
+It matters more than its size suggests: a silent duplicate on the most frequent
+action in the app is the kind of wrong number nobody notices until a graph
+looks strange months later.
+
+**VoiceOver.** Commit `0564080` claims `.accessibilityLabel` on the card's +
+"had no effect at all", while `logButton` a few lines below and `HistoryView`
+both do exactly that and work. Either the claim is wrong, or `children: .ignore`
+makes that button a container and the hint has to move inside it. It cannot be
+settled from the accessibility tree.
 
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
@@ -603,9 +594,14 @@ reassurance rather than safety.
 
 ## Small things, unscheduled
 
-Flagged by reviews in passing, real but not worth their own item. Grouped here
-so they stop being lost between commits.
+Real, small, and not worth a session each — the overhead of reading the docs,
+testing and reviewing dwarfs the work. **Do them in one pass**, whenever one of
+the numbered items is going near the same code.
 
+- [ ] **Export through the share sheet.** A `ShareLink` gives AirDrop,
+      Messages, Mail and any app that takes a file, with Files still among
+      them. About three lines. Give the file a dated name so a folder of
+      exports is readable.
 - [ ] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Real diff noise in
       a repo that commits its `.xcodeproj` on purpose, and noise makes review
       worse. Pre-existing.
