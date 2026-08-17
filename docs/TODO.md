@@ -613,6 +613,27 @@ inside it.
 
 Neither exists. Needed before TestFlight, not before daily use.
 
+## Small things, unscheduled
+
+Flagged by reviews in passing, real but not worth their own item. Grouped here
+so they stop being lost between commits.
+
+- [ ] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Real diff noise in
+      a repo that commits its `.xcodeproj` on purpose, and noise makes review
+      worse. Pre-existing.
+- [ ] **`(max ?? -1) + 1` traps on `Int.max`.** Reachable only from a store file
+      with an absurd `sortIndex` — which was "you would have to hand-edit it"
+      when it was found, but the app has an **import** now, so a foreign or
+      hand-edited file is a real way in. A crash, however unlikely.
+- [ ] **The log sheet has no signposted exit** since Cancel was removed. Swiping
+      down works and nothing advertises it; `.presentationDragIndicator(.visible)`
+      buys it back for one line. Wait until item 12 settles, since the pad may
+      change the sheet anyway.
+- [ ] **Releasing a settings drag outside the list commits it** rather than
+      cancelling. Deliberate — requiring the finger inside would break dragging
+      to the top edge to reach the first row — but it is nowhere in the docs, so
+      the next person to see it will read it as a bug.
+
 ## After v1
 
 - [ ] Home screen widget, Lock Screen widget, App Shortcuts / Siri.
