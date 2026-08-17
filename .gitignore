@@ -30,3 +30,18 @@ Config/Local.xcconfig
 # Task briefs handed to agent sessions. Per-task scratch, not project history —
 # the reasoning that matters ends up in the commit message instead.
 .claude/briefs/
+
+# Measurement artefacts. Screenshots, recordings and captures are how sessions
+# verify UI work, and they keep wanting to land next to the document that cites
+# them — 1.2 MB of accent comparisons had to be purged from history once
+# already. The numbers belong in the repo; the pictures belong on the machine
+# that took them.
+*.png
+*.jpg
+*.jpeg
+*.mov
+*.mp4
+*.xcresult/
+docs/accent/
+!BoringTracker/**/*.png
+!**/Assets.xcassets/**/*.png
