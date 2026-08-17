@@ -466,16 +466,35 @@ the list is still built once when the sheet opens (re-measured, and counted),
 and the counting animation delays nothing (three runs against a build without
 it).
 
-## 20b. Make the undo offers agree
+## 20b. Make the undo offers agree — done
 
 Item 20 gave home's undo offer a ten-second life. History's still never
 expires, so the same bar behaves differently depending on which screen wrote
 it — and a bar that never leaves stops meaning *just now*, which is the only
 thing it was ever saying.
 
-- [ ] History's undo offer expires like home's.
-- [ ] Both read their expiry from one place. Two screens with the same ten
+- [x] History's undo offer expires like home's.
+- [x] Both read their expiry from one place. Two screens with the same ten
       hard-coded twice is how they drifted in the first place.
+
+      The place is `UndoBar.repeatOffer`, and the expiry moved into `UndoBar`
+      with it — the predicate and the sleep both, since the bar is already the
+      one view both screens draw. Home kept the ten and History kept none, so
+      the fix was not to give History a copy of home's timer but to stop home
+      owning one: home now answers only *whose* write it is, which is a question
+      about the screen, and `UndoBar` answers *how old*, which is a question
+      about the write. It is a net deletion on home — a constant, a `.task` and
+      half a predicate.
+
+      **The deletion offer is not expired, deliberately, and that is the one
+      asymmetry left.** The two undos are not the same kind of thing: undoing a
+      repeat *removes* entries by id, so an offer that outlives its write
+      destroys data, which is why it expires. Undoing a deletion only puts
+      records back — and it is the only way back from the app's one destructive
+      gesture, since a swipe takes a row with no confirmation and nothing else
+      restores it. Expiring it would trade a stale but harmless offer for data
+      gone for good eleven seconds after a wrong swipe. `Store.forgetRepeatUndo`
+      already recorded half of this reasoning at the model layer.
 
 **Not doing: undo on the Log sheet.** Item 20 noticed the asymmetry — logging
 again offers undo, logging does not — and it is deliberate rather than an

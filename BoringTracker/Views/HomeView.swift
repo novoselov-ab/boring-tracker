@@ -61,17 +61,15 @@ struct HomeView: View {
                     // undo slot.
                     //
                     // **Only what the sheet wrote from here.** The store's slot
-                    // is global and a repeat's offer never expires, so reading
-                    // it directly meant that repeating a row on History and
-                    // tapping Back pinned "Logged again" over the main screen
-                    // for the rest of the session — an offer for something done
-                    // on another screen, which is exactly what
-                    // `offersDeletion: false` exists to stop in the other
-                    // direction, and one whose Undo silently removes a batch if
-                    // it is tapped ten minutes later. Matching `wroteRow`
-                    // narrows it to this screen's own write, which is what the
-                    // bar has always meant: the undo of the screen that wrote
-                    // the thing.
+                    // is global, so reading it directly meant that repeating a
+                    // row on History and tapping Back pinned "Logged again" over
+                    // the main screen — an offer for something done on another
+                    // screen, which is exactly what `offersDeletion: false`
+                    // exists to stop in the other direction. The bar expires
+                    // itself since item 20b, so this is no longer the thing
+                    // standing between you and an Undo tapped ten minutes later;
+                    // it is still what the bar means, which is the undo of the
+                    // screen that wrote the thing.
                     //
                     // `offersDeletion: false` for the reason the sheet used to
                     // pass it: home has deleted nothing, and a deletion's offer
@@ -116,66 +114,26 @@ struct HomeView: View {
                 // it fired.
                 RepeatView { wroteRow = store.lastLoggedAgainRow }
             }
-            // The clock the offer expires on, and the thing that redraws home
-            // when it does — `offersUndo` cannot do that half, because elapsed
-            // time is not state SwiftUI observes.
-            //
-            // **Both halves are needed and each covers the other's hole.**
-            // Pushing settings or History takes the stack root off screen and
-            // cancels this task, so a timer alone let a write made before the
-            // trip come back with a fresh ten seconds on the way home
-            // (screenshotted: the bar was still there 32 seconds after the
-            // write). And a predicate alone leaves the bar drawn until
-            // something else happens to invalidate the body, which coming back
-            // from a pushed screen does not — same screenshot, other cause. So
-            // the task recomputes what is *left* of the offer each time home
-            // reappears, and the predicate keeps any redraw honest meanwhile.
-            //
-            // The store's own slot never expires —
-            // a repeat's undo stands until something newer is written — which
-            // was right when the bar lived on a screen you left, and is wrong on
-            // the one screen you are always on: nothing else here would clear
-            // it, so a bar could sit above the log button for the rest of the
-            // session and an idle tap on Undo twenty minutes later would remove
-            // a batch with no tombstone behind it.
-            //
-            // Ten seconds is the count-up finishing (0.8s) plus long enough to
-            // read the number, decide it was the wrong row and reach the button
-            // — and short enough that the offer belongs to the tap that made it.
-            // After that the undo is still there on History, which is where a
-            // deliberate correction goes anyway.
-            .task(id: wroteRow) {
-                guard wroteRow != nil, let at = store.lastLoggedAgainAt else { return }
-                // What is left of the ten seconds, not ten seconds. This runs
-                // again every time home comes back, so a write made before a
-                // trip to settings is already over when the task restarts and
-                // is cleared in the same breath rather than being given a
-                // second full offer.
-                let remaining = Self.undoOffer - Date().timeIntervalSince(at)
-                if remaining > 0 {
-                    try? await Task.sleep(for: .seconds(remaining))
-                    guard !Task.isCancelled else { return }
-                }
-                wroteRow = nil
-            }
+            // No clock here any more. The expiry is `UndoBar`'s, on every screen
+            // that draws the bar (docs/TODO.md item 20b): the bar empties itself
+            // ten seconds after the write, so this screen only has to answer the
+            // other question — whose write is it. Home kept its own copy of the
+            // ten and History kept none, which is exactly the drift 20b names.
         }
     }
 
-    /// How long home offers to take a repeat back.
-    private static let undoOffer: TimeInterval = 10
-
-    /// Whether the bar is drawn: this screen wrote the pending repeat, and it
-    /// wrote it recently.
+    /// Whether the bar is drawn: this screen wrote the pending repeat.
     ///
-    /// Both halves are read from the store rather than from a flag, so neither
-    /// can be left standing by a screen that stopped running. The row says whose
-    /// write it is; the date says how old, which is what makes the answer
-    /// correct on the way back from a pushed screen where the timer above was
-    /// cancelled.
+    /// Only whose write it is. How old it is belongs to `UndoBar`, which asks it
+    /// the same way on every screen since item 20b, so this cannot be the screen
+    /// that answers it a second time and differently.
+    ///
+    /// The row it compares against comes from the store rather than from a flag
+    /// of its own, so an offer cannot be left standing by a screen that stopped
+    /// running: the sheet reports the row it wrote, and if something newer takes
+    /// the store's one slot the two stop matching.
     private var offersUndo: Bool {
-        guard wroteRow != nil, store.lastLoggedAgainRow == wroteRow,
-              let at = store.lastLoggedAgainAt else { return false }
-        return Date().timeIntervalSince(at) < Self.undoOffer
+        wroteRow != nil && store.lastLoggedAgainRow == wroteRow
     }
 
     /// The bottom bar: the one big thing, and one small one beside it.

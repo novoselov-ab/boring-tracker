@@ -19,6 +19,11 @@ import SwiftUI
 /// differently.
 struct UndoBar: View {
     @Environment(Store.self) private var store
+    /// Whether the repeat offer is still standing, as far as the last time this
+    /// view was told. The predicate below is the truth; this is what makes a
+    /// redraw happen at the moment it changes, because elapsed time is not
+    /// state SwiftUI observes.
+    @State private var repeatOfferStands = true
     /// Whether a pending *deletion* is offered here as well as a repeat.
     ///
     /// True on History, which is where deleting happens. False on Repeat, which
@@ -31,7 +36,55 @@ struct UndoBar: View {
     /// because the slot survives the trip.
     var offersDeletion = true
 
+    /// How long an offer to undo a **repeat** stands, on every screen that draws
+    /// this bar.
+    ///
+    /// **One place, because the same ten hard-coded twice is how the two screens
+    /// drifted** (docs/TODO.md item 20b). Item 20 gave home's offer ten seconds
+    /// and History's went on standing for the rest of the session, so one bar
+    /// meant "just now" on one screen and "at some point today" on the other.
+    ///
+    /// Ten seconds is the count-up finishing (0.8s), plus long enough to read
+    /// the number, decide it was the wrong row and reach the button — and short
+    /// enough that the offer belongs to the tap that made it.
+    ///
+    /// **The deletion offer is deliberately not expired, here or anywhere.** The
+    /// two are not symmetric and `Store.forgetRepeatUndo` already records half
+    /// of why: undoing a repeat *removes* entries by id, so an offer outliving
+    /// its write destroys data, while undoing a deletion only puts records back.
+    /// The other half is that it is the only way back from the app's one
+    /// destructive gesture — a swipe takes a row with no confirmation and
+    /// nothing else restores it — so expiring it would trade a stale but
+    /// harmless offer for data gone for good eleven seconds after a wrong swipe.
+    static let repeatOffer: TimeInterval = 10
+
     var body: some View {
+        content
+            // The other half of the expiry, and each half covers the other's
+            // hole. A predicate alone leaves the bar drawn until something else
+            // invalidates the body, which nothing here would do; a sleep alone
+            // hands out a fresh ten seconds every time the view comes back,
+            // because pushing a screen cancels this task and restarting it is
+            // indistinguishable from a new write unless the arithmetic is done
+            // against the clock (docs/TODO.md item 20b, and the hole item 20
+            // fell into on home).
+            //
+            // So it sleeps for what is *left* of the offer, recomputed each
+            // time this bar reappears, and the predicate keeps any redraw in
+            // between honest.
+            .task(id: store.lastLoggedAgainAt) {
+                guard let at = store.lastLoggedAgainAt else { return }
+                let remaining = Self.repeatOffer - Date().timeIntervalSince(at)
+                repeatOfferStands = remaining > 0
+                guard remaining > 0 else { return }
+                try? await Task.sleep(for: .seconds(remaining))
+                guard !Task.isCancelled else { return }
+                repeatOfferStands = false
+            }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         if let message {
             HStack {
                 Text(message)
@@ -64,6 +117,13 @@ struct UndoBar: View {
     /// order the two are read in, not a priority between them.
     private var message: String? {
         if let logged = store.lastLoggedAgain {
+            // Expired, so nothing: the store keeps one slot, and a repeat is in
+            // it. Undo is not gone — the write is an ordinary batch in History
+            // and a swipe removes it — but the *offer* stops being one, which
+            // is what a bar reading "Logged again" is for.
+            guard repeatOfferStands, let at = store.lastLoggedAgainAt,
+                  Date().timeIntervalSince(at) < Self.repeatOffer
+            else { return nil }
             // Named honestly when the row was only partly repeatable: the tap
             // promised the row and wrote less than the row, and the alternative
             // is a button that quietly does something other than what it says.
