@@ -1315,6 +1315,42 @@ who don't exist yet — the suite already runs on every change because every
 session runs it, so until this repo has someone else pushing to it, CI buys
 reassurance rather than safety.
 
+## Noted, not scheduled
+
+Wanted, not yet queued. Written down with the part that isn't obvious, so
+picking one up doesn't start with rediscovering why it's awkward.
+
+- [ ] **Appearance switch in settings — light / dark / system.** Ordinary
+      `.preferredColorScheme` driven by a stored preference. It is **UI state,
+      so it lives in `UserDefaults`, not the document** — it must not sync or
+      appear in an export. iOS offers a per-app setting too, but in-app is more
+      discoverable and there is no reason not to have both.
+
+- [ ] **A configurable time for the daily reset.** Note that this **reverses a
+      decision recorded in TECH.md** ("the day starts at midnight, local. No
+      configurable day start; it multiplies edge cases in every aggregation for
+      a minority want"). That is allowed — the reason was cost, not principle,
+      and a person who eats at 1am is not a minority of one here.
+
+      The cost is lower than it was written to be: entries store absolute
+      dates, so a day-start offset is a **displayed** decision computed at read
+      time, with no schema change and no migration. What it does touch is
+      everything that derives a day — `DayKey`, totals, charts, History
+      grouping — and every day-boundary test, including the DST ones. Cheap in
+      storage, expensive in surface area.
+
+- [ ] **An About screen, with a link to the repository.** Apple permits linking
+      out to a website; the rule is about external *purchase* mechanisms, which
+      this isn't. Worth having once the repo is public, because for the people
+      who care about this app's promises the source is the proof — that
+      argument is already in SHIPPING.md's listing strategy.
+
+- [ ] **A subtle "add tracker" at the end of the home list.** Worth trying to
+      see how it looks. The thing to watch: home already has a bottom Log
+      button, and a second control down there competes with the most frequent
+      action in the app. Inline at the end of the list, scrolling with it,
+      rather than pinned above it.
+
 ## Small things, unscheduled
 
 Real, small, and not worth a session each — the overhead of reading the docs,
