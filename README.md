@@ -27,6 +27,8 @@ source and ship it themselves.
   screens, the scope.
 - [Tech](docs/TECH.md) — how it's built, and why, with the benchmarks behind
   the storage decision.
+- [Scale](docs/scale.md) — what five years of use (29,756 entries) does to the
+  app, measured screen by screen.
 - [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
   submission.
 - [TODO](docs/TODO.md) — what's left, in implementation order.

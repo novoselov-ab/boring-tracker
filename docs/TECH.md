@@ -213,10 +213,30 @@ service — it needs the file to be in a directory Apple already backs up.
 
 ### The ceiling, honestly
 
-This design is comfortable into the low hundreds of thousands of entries —
-far past anything this app will see. If that were ever wrong, the fix is to
-put SQLite behind the same store interface, which is a contained change
-because nothing in the UI knows how persistence works.
+**Measured at 29,756 entries — five years of real use — in
+[scale.md](scale.md), and the claim that used to be here was half wrong.** It
+said the design is comfortable into the low hundreds of thousands of entries.
+It was written from the document benchmark above rather than from the app, and
+it measured the right thing about the wrong layer.
+
+**The store holds, and comfortably.** The 8.6MB file decodes in 122ms, costs
+about 5MB of memory, merges with another five years in 96ms, and re-encodes on
+every save in 100ms off the main actor. Launch grows by 135ms against a
+1,028-entry store and nothing else on the common path grows at all: the log
+sheet opens and accepts a number in exactly the time it does with two months of
+history, because neither it nor logging touches the entry list. Extrapolating
+the decode, 100,000 entries is roughly 400ms at launch and some 17MB in memory.
+There is still no reason to put SQLite behind the store interface, and if there
+ever is, it remains a contained change.
+
+**Two screens do not hold, and they are already past it.** History and tracker
+detail build a row per entry and a section per day — 17,679 rows and 1,825
+sections at five years. Opening History blocks the main thread for **1.5
+seconds** and each keystroke in its search field for **0.1–0.6s**, on a
+simulator faster than any phone. The walk that feeds them is 31ms and 40ms; the
+rest is the `List`. So the honest ceiling is **below 30,000 entries for those
+two screens and well above it for everything else**, and the fix is fewer rows
+on screen at once, not a different way to store the numbers.
 
 ## Two classes of decision
 
@@ -433,7 +453,9 @@ Numbers to hold the design to, measured on the oldest supported device:
 - **Cold launch to interactive: under 400ms.** No splash, no async gate before
   the UI draws. Loading the store is a synchronous decode of a small file
   because doing it asynchronously would flash an empty state for longer than
-  the decode takes.
+  the decode takes. Measured at five years of history (docs/scale.md):
+  622–669ms in an iPhone 17 Pro simulator, against 488–505ms with a 60-day
+  store, so the data costs 135ms of it and the rest is the app starting at all.
 - **Tap + to sheet visible: one frame.** The log sheet is trivial and pre-warmed;
   nothing is fetched when it opens. The app adds no presentation animation;
   the numeric keypad's system animation is the remaining wait before typing.
@@ -455,6 +477,11 @@ Numbers to hold the design to, measured on the oldest supported device:
   `log stream` — **one build when the sheet opens and none for focusing the
   search field or typing three letters**. The count is the half a timing number
   cannot show.
+
+  Re-measured again at five years of use (docs/scale.md): **93.6ms over 29,756
+  entries in Debug and 41.4ms in Release**, counted the same way — one build
+  when the sheet opens, and none for anything else. Opening that sheet blocks
+  the main thread for 216ms, most of which is the list rather than the walk.
 
 ## Smaller decisions, settled
 
