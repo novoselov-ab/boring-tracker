@@ -291,6 +291,13 @@ struct DayBoundaryTests {
         // entry, not the calendar.
         #expect(store.today == DayKey(year: 2026, month: 3, day: 15))
         #expect(store.day(of: supper) == DayKey(year: 2026, month: 3, day: 14))
+
+        // Put it back. No other test reads the key — the designated init takes
+        // the hour and only the app's convenience init consults `UserDefaults`
+        // — but a unit test is hosted *by the app*, so leaving 4 here means the
+        // next person to launch Boring Tracker on this simulator finds their
+        // day starting at four in the morning.
+        store.setDayStartHour(DayStart.midnight)
     }
 
     @Test("Before the cut, the store is still on yesterday")

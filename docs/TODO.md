@@ -972,7 +972,9 @@ picking one up doesn't start with rediscovering why it's awkward.
 
       The existing day-boundary suite was the specification and none of it
       moved: every one of those tests still asserts midnight behaviour, because
-      the parameter defaults to 0. 232 tests before the batch, 249 after.
+      the parameter defaults to 0. The count is in the commit, where it is a
+      statement about that commit — the CI item learned an hour earlier that a
+      number written into a done entry goes stale on its own.
 
       One thing found by a test rather than by reading: `Date.formatted`
       defaults to the *device's* time zone, so the picker's "4:00 AM" label came
