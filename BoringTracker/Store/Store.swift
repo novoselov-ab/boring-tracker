@@ -440,12 +440,24 @@ final class Store {
     /// The Repeat screen's list: one row per distinct thing you have logged to
     /// a daily total, the ones logged most often lately first.
     ///
-    /// **Membership is `HistoryItem.belongsInRepeatList`, which reads the
-    /// tracker's kind and not the name** (docs/TODO.md item 21). The rule lives
-    /// there, with the reasoning; what it means here is that the list gained every
-    /// unnamed daily total — 450 kcal and 30 g is a dinner you can eat again
-    /// whether or not you typed a word — and lost every measurement, named or
-    /// not, along with the batches that mix the two.
+    /// **Membership is the projection, not a filter.** Every row is cut down to
+    /// the members this screen is about — present, a daily total, archived or
+    /// not — and a row with nothing left drops out. The kind decides and the
+    /// name decides nothing (docs/TODO.md item 21): the list holds every
+    /// unnamed daily total, because 450 kcal and 30 g is a dinner you can eat
+    /// again whether or not you typed a word, and holds no measurement, however
+    /// carefully one was named.
+    ///
+    /// **A batch that mixes the two is listed as its daily totals.** It used to
+    /// be refused whole, by a predicate that could only accept or reject a row
+    /// — and refusing was right for the list even after item 23 made the tap
+    /// safe, because `repeatKey` carries every value, so thirty daily weigh-ins
+    /// of one breakfast keyed as thirty rows, each drawing a weight the tap
+    /// would not write. Projecting first answers both: they are one row, and it
+    /// shows what the tap writes. The cost is that a weigh-in breakfast now
+    /// collapses onto the plain one — the right answer for "do that again", a
+    /// surprise for anyone reading this list as history, which History still
+    /// is.
     ///
     /// **That costs 2–3ms on a realistic history and 4–7ms on the worst one.**
     /// More rows reach the collapse and the sort; the filter itself is a
@@ -612,23 +624,26 @@ final class Store {
         var index: [HistoryItem.RepeatKey: Int] = [:]
         var rows: [(item: HistoryItem, count: Int, lifetime: Int, canRepeat: Bool)] = []
         let targets = repeatTargets
-        // Built once for the walk, like `targets` above and for the same reason:
-        // `tracker(_:)` is a linear scan and this is asked of every entry of
-        // every row.
+        // The two sets are not the same question, and keeping them apart is
+        // what makes this work.
         //
-        // **Archived trackers are in here and not in `targets`, and since item
-        // 23 that is the only thing separating the two.** Both read the kind
-        // now — `targets` because a repeat may not write a measurement, this
-        // because a measurement does not qualify a row for the list — so the
-        // kind rule is written once, in `repeatTargets`, and once as a
-        // membership question, in `HistoryItem.belongsInRepeatList`. A third
-        // copy is what item 23 was about; the place it is tempting to add one
-        // is a new control, and the answer there is `repeatableEntries`.
-        let kinds = Dictionary(
-            trackers.map { ($0.id, $0.kind) }, uniquingKeysWith: { first, _ in first }
-        )
+        // `targets` is what a tap may **write**: present, not archived, a daily
+        // total. `listable` is what this screen is **about**: present and a
+        // daily total, archived or not. Archiving is deliberately not part of
+        // membership — item 16's rule is that archiving a tracker must not make
+        // your food disappear, so those rows stay listed, sink to the bottom
+        // and grey — while it very much is part of what a tap writes.
+        let listable = repeatListTargets
         let windowStart = countingWindowStart
-        for item in historyItems where item.belongsInRepeatList(kinds: kinds) {
+        for row in historyItems {
+            // **Projected before anything else reads it.** The row is built
+            // from the members that belong on this screen rather than from
+            // everything the batch holds, so a weigh-in is listed as its
+            // calories and collapses onto the plain breakfast of the same
+            // calories — right for "do that again", and the only way thirty
+            // daily weigh-ins of one breakfast become one row instead of
+            // thirty (`HistoryItem.keeping`).
+            guard let item = row.keeping({ listable.contains($0.trackerID) }) else { continue }
             let key = item.repeatKey
             // The only thing the window touches. Every row is still built and
             // still listed; one outside it simply adds nothing to its count.
@@ -754,7 +769,7 @@ final class Store {
     /// caller of `logAgain` inherits it.
     ///
     /// **The choke point rather than the control.** Disabling the disc on any
-    /// row `HistoryItem.belongsInRepeatList` rejects reads more simply, but it
+    /// row the Log again list would refuse reads more simply, but it
     /// refuses a weigh-in batch whole — its calories with its weight — and
     /// leaves `logAgain` willing to write a measurement for whatever calls it
     /// next. Dropping the member instead writes the calories, says "Logged 1 of 2
@@ -789,6 +804,18 @@ final class Store {
     /// this set rather than in the three views that draw the disc.
     private var repeatTargets: Set<UUID> {
         Set(trackers.lazy.filter { !$0.isArchived && $0.kind != .measurement }.map(\.id))
+    }
+
+    /// Every tracker the Log again *list* is about: still present, a daily
+    /// total, **archived or not**.
+    ///
+    /// The one difference from `repeatTargets`, and it is item 16's rule: a
+    /// tracker you archive is one you have said you are done logging, not one
+    /// whose history should vanish from a screen. Those rows stay listed, sort
+    /// to the bottom and draw greyed. Deciding membership on what a tap can
+    /// write instead would take them straight back out.
+    private var repeatListTargets: Set<UUID> {
+        Set(trackers.lazy.filter { $0.kind != .measurement }.map(\.id))
     }
 
 

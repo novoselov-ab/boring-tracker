@@ -47,79 +47,29 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return names.count > 1 ? "Mixed names" : names.first
     }
 
-    /// Whether this row belongs on the Log again list — which is a question
-    /// about the trackers it was logged to, not about what you called it.
+    /// The same row with only the members `isIncluded` keeps, or `nil` when
+    /// that leaves nothing.
     ///
-    /// **It is not "can this be repeated", and the name says so since item 23**:
-    /// a live weigh-in batch is rejected here and `logAgain` still writes its
-    /// calories. The question a *control* asks is `Store.repeatableEntries`,
-    /// which is what decides both the write and the greying — guarding a new
-    /// repeat control on this predicate instead would refuse the whole weigh-in
-    /// row, which is the "at the control" shape item 23 weighed and turned
-    /// down. It was called `isRepeatable` until then, when the two questions
-    /// still had one answer.
+    /// **This is what a Log again row is built from since item 6.** The screen
+    /// promises what a tap *writes*, and the row used to be built from what the
+    /// batch *holds* — so a weigh-in of 200 kcal and 79.2 kg drew a weight the
+    /// tap would not write, and thirty daily weigh-ins of the identical
+    /// breakfast keyed as thirty rows rather than one, because `repeatKey`
+    /// carries every value and the weight is different every morning. That is
+    /// History with a search field, which is the one thing that screen must not
+    /// become. Projecting first fixes the listing and the value line at once.
     ///
-    /// **The kind decides, and the name decides nothing** (docs/TODO.md item
-    /// 21). A **daily total** can be logged again whether or not you named it:
-    /// 450 kcal and 30 g is the same dinner however it was typed, and item 16's
-    /// rule — a name is what makes something repeatable — was hiding every one
-    /// of those. A **measurement** cannot, however carefully it was named:
-    /// repeating yesterday's weight does not weigh you, it writes a reading you
-    /// never took.
+    /// It replaced `belongsInRepeatList`, which asked the same question the
+    /// other way round — is this row *entirely* about trackers the screen is
+    /// about — and had to refuse a mixed batch whole because it had no way to
+    /// keep half of one.
     ///
-    /// **A batch mixing kinds is not listed, and item 21's reason for that has
-    /// gone.** It was that one tap would write a false weight to save retyping
-    /// the calories; since item 23 the tap writes the calories alone, from
-    /// `Store.repeatableEntries`, so the row could be offered here without
-    /// writing anything nobody logged.
-    ///
-    /// **What keeps it out now is this list rather than that write.** A row here
-    /// is `repeatKey`, and the key holds every value the row carries — including
-    /// the weight, which is different every morning. Listing mixed rows
-    /// therefore collapses none of them: measured on thirty daily weigh-ins of
-    /// the identical 200 kcal breakfast, thirty rows, each drawing a weight it
-    /// would not write, and a plain 200 kcal logged without the scale makes a
-    /// thirty-first rather than joining one of them. That is History with a
-    /// search field, which is the one thing this screen must not become. Making
-    /// it right means a Log again row being built from what a tap *writes*
-    /// rather than from what the batch *holds* — a change to what a row on this
-    /// screen is, and its own item.
-    ///
-    /// The app produces these whenever a measurement tracker shares a log group
-    /// with a daily total, so it is an ordinary shape, not an imported one.
-    ///
-    /// **A member whose tracker has been deleted is neither**, so it can
-    /// neither qualify a row nor veto one: there is no record left to read a
-    /// kind from, and nothing writes to it anyway. A row with no surviving
-    /// tracker at all therefore drops out of the list, where item 16 kept it —
-    /// a row that can never be written is a record rather than a thing to do
-    /// again, and it is still in History. Item 16's reason for keeping it was
-    /// that *archiving* a tracker must not make your food disappear, and
-    /// archiving still cannot: an archived tracker is still a record, still has
-    /// a kind, and its rows stay listed and sink to the bottom, greyed.
-    ///
-    /// **Archiving is not part of this question at all**, which is why the kind
-    /// is read from the tracker whether or not it is archived. Deciding
-    /// membership on what a tap would *write* instead would take the rows item
-    /// 16 protected straight back out: archive a tracker and its rows would
-    /// stop being listed, where the rule is that they stay, sink to the bottom
-    /// and grey.
-    ///
-    /// Until item 23 this paragraph gave the mirror-image reason — that a
-    /// write-based rule would let archiving your scale silently *add* the
-    /// weigh-in batches above. That half is spent, and is left recorded rather
-    /// than quietly swapped: a tap never writes a measurement now, so those
-    /// batches are exactly as writable archived as not.
-    func belongsInRepeatList(kinds: [UUID: Tracker.Kind]) -> Bool {
-        // No `compactMap` and no intermediate array: `Store.repeatItems` asks
-        // this of every row in the history, on a walk measured in milliseconds.
-        var found = false
-        for entry in entries {
-            guard let kind = kinds[entry.trackerID] else { continue }
-            if kind == .measurement { return false }
-            found = true
-        }
-        return found
+    /// Returns `self` untouched when everything is kept, which is the common
+    /// case and the one on the hot path: `Store.repeatItems` asks this of every
+    /// row in the history.
+    func keeping(_ isIncluded: (Entry) -> Bool) -> HistoryItem? {
+        if entries.allSatisfy(isIncluded) { return self }
+        return HistoryItem(entries: entries.filter(isIncluded))
     }
 
     /// What makes two rows the same thing you ate: the names you typed, and

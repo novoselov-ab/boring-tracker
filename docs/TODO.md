@@ -897,20 +897,27 @@ picking one up doesn't start with rediscovering why it's awkward.
       override doing its job rather than the simulator's setting leaking
       through.
 
-- [ ] **A Log again row should show what a tap writes.** The row is built from
-      what the batch *holds* — `HistoryItem` and its `repeatKey` — while the
-      screen promises what a tap *does*, and item 23 pulled those apart: a
-      repeat writes daily totals only. Consequence measured there: a mixed
-      weigh-in batch cannot be listed at all, because thirty daily weigh-ins of
-      the same breakfast key as thirty rows, each drawing a weight it would not
-      write.
+- [x] **A Log again row should show what a tap writes.** Done, and it turned
+      out to *delete* a concept rather than add one: `belongsInRepeatList` is
+      gone. It could only accept or reject a whole row, which is why a mixed
+      weigh-in batch had to be refused; `HistoryItem.keeping` projects instead,
+      and "is anything left" is then the same question asked where the
+      projection already is.
 
-      Building the row from the writable members fixes the listing and the
-      value line at once. What is not obvious is the two things it changes
-      underneath: it collapses a weigh-in breakfast onto the plain one — the
-      right answer for "do that again", a surprise for anyone reading the list
-      as history — and it makes "Logged 1 of 2 again" correct from History and
-      wrong from Log again, where nothing you could see was skipped.
+      The two sets that came out of it are the thing to remember, because they
+      are nearly the same and must not be merged. **Listable** is present and a
+      daily total, *archived included* — item 16's rule, that archiving a
+      tracker must not make your food vanish. **Writable** is
+      `Store.repeatableEntries`: present, unarchived, a daily total. Deciding
+      membership on the second empties the list the moment you archive
+      something.
+
+      Both predicted consequences happened. A weigh-in breakfast collapses onto
+      the plain one, and two tests now say so on purpose. And "Logged 1 of 2
+      again" is right from History and never appears from Log again, because
+      `skipped` counts what the row holds and the row on that screen no longer
+      holds anything the tap will not write — which is a better answer than the
+      note expected, and it is why the undo bar needed no new wording.
 
 - [ ] **Say why a repeat disc is off.** Three reasons now — the tracker was
       deleted, it was archived, or it is a measurement and a copy would be a

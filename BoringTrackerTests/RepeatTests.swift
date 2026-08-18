@@ -82,8 +82,8 @@ struct RepeatTests {
         #expect(store.repeatItems.map(\.displayName) == ["porridge"])
     }
 
-    @Test("A batch mixing kinds is not listed, because the list cannot collapse it")
-    func mixedKindBatchesAreNotListed() {
+    @Test("A batch mixing kinds is listed as the part a tap writes, and collapses onto it")
+    func mixedKindBatchesAreListedAsTheirWritablePart() throws {
         // The shape the app produces on its own: a measurement sharing a log
         // group with a daily total, so one sheet writes both.
         let calories = Tracker(name: "Calories", unit: "kcal", group: "Morning")
@@ -91,30 +91,81 @@ struct RepeatTests {
             name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 1,
             group: "Morning"
         )
-        let batch = UUID()
+        let monday = UUID()
+        let tuesday = UUID()
         let store = repeatStore(
             StoreDocument(
                 trackers: [calories, weight],
                 entries: [
                     Entry(
                         trackerID: calories.id, value: 200, date: time(10),
-                        name: "weigh-in", batchID: batch
+                        name: "weigh-in", batchID: monday
                     ),
                     Entry(
                         trackerID: weight.id, value: 79.2, date: time(10),
-                        name: "weigh-in", batchID: batch
+                        name: "weigh-in", batchID: monday
+                    ),
+                    // The next morning: same breakfast, a different reading.
+                    Entry(
+                        trackerID: calories.id, value: 200, date: time(30),
+                        name: "weigh-in", batchID: tuesday
+                    ),
+                    Entry(
+                        trackerID: weight.id, value: 78.9, date: time(30),
+                        name: "weigh-in", batchID: tuesday
                     ),
                     Entry(trackerID: calories.id, value: 320, date: time(20), name: "porridge"),
                 ]
             )
         )
 
-        // Not because a tap would write the weight any more — since item 23 it
-        // writes the 200 kcal alone — but because `repeatKey` holds the weight,
-        // so every morning's weigh-in would be its own row and this list would
-        // stop being a collapsed one. The row is still in History, which is
-        // where a row you want to act on one member of lives.
-        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+        // **This reverses item 21's answer, which is what item 6 is.** The row
+        // was kept off the list entirely, because `repeatKey` holds every value
+        // and the weight is different every morning — so two mornings of the
+        // identical breakfast keyed as two rows and the list stopped being a
+        // collapsed one. Built from the members a tap writes instead, both
+        // mornings are one row.
+        #expect(store.repeatItems.map(\.displayName) == ["weigh-in", "porridge"])
+
+        // And the row holds only what would be written, so the value line
+        // cannot draw a weight the tap will not copy.
+        let row = try #require(store.repeatItems.first)
+        #expect(row.entries.map(\.value) == [200])
+        #expect(store.repeatableEntries(of: row).map(\.value) == [200])
+    }
+
+    @Test("A plain breakfast and a weigh-in of the same breakfast are one row")
+    func theWeighInCollapsesOntoThePlainOne() {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Morning")
+        let weight = Tracker(
+            name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 1,
+            group: "Morning"
+        )
+        let withScale = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, weight],
+                entries: [
+                    Entry(
+                        trackerID: calories.id, value: 200, date: time(10),
+                        name: "toast", batchID: withScale
+                    ),
+                    Entry(
+                        trackerID: weight.id, value: 79.2, date: time(10),
+                        name: "toast", batchID: withScale
+                    ),
+                    // The same breakfast on a day nobody stood on the scale.
+                    Entry(trackerID: calories.id, value: 200, date: time(40), name: "toast"),
+                ]
+            )
+        )
+
+        // One row, and it is the right answer for "do that again" — both taps
+        // write 200 kcal and nothing else. It is a surprise for anyone reading
+        // this list as history, which it is not: History is the screen that
+        // keeps the two mornings apart, and it still does.
+        #expect(store.repeatItems.count == 1)
+        #expect(store.repeatItems.map(\.displayName) == ["toast"])
     }
 
     @Test("Archiving a tracker changes where a row sorts, never whether it is listed")
@@ -135,31 +186,47 @@ struct RepeatTests {
                 ]
             )
         )
-        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+        // Two rows since item 6: the weigh-in is listed as its 200 kcal, under
+        // the tracker's name because nobody named it. Porridge leads on the
+        // recency tie-break — both rows are logged once inside the window.
+        #expect(store.repeatItems.map(\.displayName) == ["porridge", nil])
+        #expect(store.repeatItems.allSatisfy { !store.repeatableEntries(of: $0).isEmpty })
 
-        // Archive the tracker whose row *is* listed. It stays listed, and it is
-        // now unwritable, so it is the greyed row item 16 protects: a list that
-        // dropped your food when you archived a tracker would be the app
-        // editing your history. This is the half of the rule item 23 left
-        // standing, and the half that actually discriminates — a membership
-        // rule reading what a tap would write empties the list here.
+        // Archive the tracker every listed row is now about. They stay listed
+        // and become unwritable, which is the greyed row item 16 protects: a
+        // list that dropped your food when you archived a tracker would be the
+        // app editing your history. Membership reads the kind, never the
+        // archived flag.
         var archivedCalories = calories
         archivedCalories.isArchived = true
         store.update(archivedCalories)
-        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
-        let porridge = store.repeatItems[0]
-        #expect(store.repeatableEntries(of: porridge).isEmpty)
+        #expect(store.repeatItems.map(\.displayName) == ["porridge", nil])
+        #expect(store.repeatItems.allSatisfy { store.repeatableEntries(of: $0).isEmpty })
 
-        // And archiving the scale does not *add* the weigh-in batch either: the
-        // kind is a property of the tracker, read whether or not it is
-        // archived. Until item 23 this was the whole of this test, and it was
-        // the discriminating half then, because a tap on a live scale wrote a
-        // weight; it no longer writes one archived or not, so it is kept as the
-        // cheaper of the two checks rather than as the point.
+        // And archiving the scale changes nothing either way: a measurement is
+        // projected out of the row whether or not it is archived.
         var archivedWeight = weight
         archivedWeight.isArchived = true
         store.update(archivedWeight)
-        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+        #expect(store.repeatItems.map(\.displayName) == ["porridge", nil])
+    }
+
+    @Test("A measurement-only batch is still not listed, because nothing is left of it")
+    func measurementOnlyBatchesAreStillNotListed() {
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1)
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [weight],
+                entries: [
+                    Entry(trackerID: weight.id, value: 79.2, date: time(10), name: "morning"),
+                ]
+            )
+        )
+
+        // The projection empties the row, which is the same answer item 21 gave
+        // and now the same rule rather than a second one: repeating a reading
+        // writes a weight nobody took.
+        #expect(store.repeatItems.isEmpty)
     }
 
     @Test("A batch is one row, and one named member is enough to list it")

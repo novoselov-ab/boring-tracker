@@ -14,11 +14,17 @@ import SwiftUI
 /// grouping of a batch into one row and the ordering are the same question both
 /// screens ask, and answering it twice is how they come to disagree.
 ///
-/// **The filter is the tracker's kind, not the name** — see
-/// `HistoryItem.belongsInRepeatList` (docs/TODO.md item 21). So an unnamed row
-/// is here, identified by its values the way History identifies it, and a weight
-/// is not. A search only matches names, so any query empties the unnamed rows out
-/// of the list; the field says "Search names" and that is the whole of it.
+/// **The tracker's kind decides what is here, not the name** — see
+/// `Store.repeatItems` (docs/TODO.md item 21). So an unnamed row is here,
+/// identified by its values the way History identifies it, and a weight is not.
+/// A search only matches names, so any query empties the unnamed rows out of
+/// the list; the field says "Search names" and that is the whole of it.
+///
+/// **A row here is what a tap writes, not what the batch holds.** Every row is
+/// projected onto its writable members before it is collapsed
+/// (`HistoryItem.keeping`), so a weigh-in is listed as its calories, its value
+/// line shows only those, and every morning's weigh-in of the same breakfast is
+/// one row rather than one per reading.
 ///
 /// **A sheet, not a pushed screen, and a tap on a row closes it** (docs/TODO.md
 /// item 20). Pushed, it was a titled screen with a list and a search field —
@@ -189,9 +195,9 @@ struct RepeatView: View {
 /// archived. Kept in the list rather than hidden: the row is still a true
 /// statement about what you ate, and a food that vanishes from the list when you
 /// archive a tracker would be a screen quietly editing your history. (A row
-/// whose trackers were *deleted* no longer reaches this screen at all — it has
-/// no kind left to qualify it, see `HistoryItem.belongsInRepeatList` — so in
-/// practice this state is the archived one.)
+/// whose trackers were *deleted* no longer reaches this screen at all — the
+/// projection leaves nothing of it, see `Store.repeatItems` — so in practice
+/// this state is the archived one.)
 ///
 /// **Disabling greys the whole row here, where History greys only its disc**,
 /// because here the whole row *is* the button. Raised in review as a
