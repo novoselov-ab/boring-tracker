@@ -1010,11 +1010,22 @@ picking one up doesn't start with rediscovering why it's awkward.
       skipped entirely at midnight where the notification already does the job.
       The graph's staleness key gained the hour for the same class of reason.
 
-- [ ] **An About screen, with a link to the repository.** Apple permits linking
-      out to a website; the rule is about external *purchase* mechanisms, which
-      this isn't. Worth having once the repo is public, because for the people
-      who care about this app's promises the source is the proof — that
-      argument is already in SHIPPING.md's listing strategy.
+- [x] **An About screen, with a link to the repository.** A pushed screen at
+      the end of Settings: the version, a plain `Link` to the repo, and the two
+      sentences that say what this app does not do. Nothing to test — it draws
+      two rows and reads `CFBundleShortVersionString`.
+
+      The version is read from the bundle rather than written into the source,
+      so it cannot disagree with what was built, and the build number is shown
+      beside it because a bug report naming only "0.1.0" cannot say which
+      build. It reads **0.1.0 (1)** today.
+
+      Pushed rather than folded into Settings as rows: the version and the
+      promises are read once ever, and the screen that arranges trackers should
+      not spend rows on them. The link draws as the app's other rows do — plain
+      label under `.tint(.primary)`, no blue — which is consistent and does not
+      advertise that it leaves the app. Left that way rather than inventing a
+      third treatment for one row.
 
 - [x] **A subtle "add tracker" at the end of the home list.** Tried, and it
       reads better than expected — which is entirely down to it not being a

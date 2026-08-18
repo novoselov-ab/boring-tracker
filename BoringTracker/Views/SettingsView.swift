@@ -120,6 +120,13 @@ struct SettingsView: View {
             }
 
             DataTransferView()
+
+            // Last, and a pushed screen rather than rows here: the version and
+            // the promises are read once, and the screen that arranges trackers
+            // should not spend rows on them.
+            Section {
+                NavigationLink("About", destination: AboutView())
+            }
         }
         // Both ends of the comparison a drop makes — every row's frame and the
         // finger's location — are read in `.global`, and nothing else. A named
