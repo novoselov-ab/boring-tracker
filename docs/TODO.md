@@ -1057,8 +1057,18 @@ picking one up doesn't start with rediscovering why it's awkward.
       just below the last card with the whole lower half of the screen empty
       beneath it, and it still does not compete with the Log pill, because it
       is grey text in the scroll and the pill is a filled bar in the safe-area
-      inset. With four or more trackers it is below the fold, which is the
-      right place for something you do a handful of times ever.
+      inset.
+
+      **Corrected in review: it is not below the fold, and nothing about it
+      depends on being.** This entry and the code comment both said "four or
+      more trackers and it is below the fold". Measured on the iPhone 17 the
+      work was checked on (1206×2622, default type size, loose cards with no
+      groups): nine cards still leave the row fully visible above the Log bar,
+      and it takes ten to push it off the screen — so on any realistic set it
+      is on screen. What keeps it out of the way is that it is grey text and
+      not a card, which is the claim that did survive checking. The row does
+      scroll rather than pin, which is the thing that mattered: at ten cards it
+      is off the screen at rest and comes back by scrolling.
 
       The thing to watch turned out not to bite, because it was answered by
       *not* pinning: nothing was added to the bottom bar, so Log and the Log

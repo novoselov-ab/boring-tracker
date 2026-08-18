@@ -421,9 +421,12 @@ private struct HistoryRow: View {
     /// **On the quiet line, not beside the disc.** There is no room by the disc
     /// — it is 44pt of a row whose other end is the time — and the identity
     /// line is already where this row says what it is, and where "Deleted
-    /// tracker" has always appeared. A word there costs no height at any type
-    /// size, wraps with the line it is on, and is read in the same glance as
-    /// the thing it is about.
+    /// tracker" has always appeared. A word there adds no element of its own:
+    /// it wraps with the line it is on and is read in the same glance as the
+    /// thing it is about. It is not free at every type size, which the commit
+    /// that added it claimed — at AX5 "chocolate shake · Archived" wraps two
+    /// lines further than the name alone — but a line of its own would cost
+    /// those lines on every row, and this costs them only where the disc is off.
     ///
     /// Nothing is appended while the disc works: a row that can be repeated has
     /// nothing to explain, and a label on every row would be noise on the

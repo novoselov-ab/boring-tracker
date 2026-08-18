@@ -333,9 +333,13 @@ struct HomeView: View {
     /// by scrolling past everything you actually came for.
     ///
     /// **Not a card.** A clear row background and secondary text, so it reads
-    /// as a line under the last tracker rather than as another tracker. On a
-    /// four-card screen it is below the fold, which is right: somebody
-    /// arriving to log a number should not have their eye caught by it.
+    /// as a line under the last tracker rather than as another tracker. That
+    /// quietness is the whole of what keeps it out of the way of somebody who
+    /// arrived to log a number — **not the fold**, which it is nowhere near.
+    /// Measured on an iPhone 17 (1206×2622) at the default type size: nine
+    /// loose cards still leave the row fully visible above the Log bar, and it
+    /// takes ten to push it off the screen. The commit that added it recorded
+    /// "four or more and it is below the fold", and that does not reproduce.
     ///
     /// It opens the editor rather than pushing Settings. Settings is where the
     /// same button lives, and going there costs a screen change and a second
