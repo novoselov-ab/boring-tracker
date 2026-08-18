@@ -256,6 +256,10 @@ struct HistoryView: View {
     /// The clear background is what keeps the day boundary visible: the rows
     /// either side of it sit on the card colour, so a row that does not draws
     /// the same gap two cards used to leave.
+    ///
+    /// `TrackerDetailView.dayHeading` is the same heading with the day's total
+    /// beside it, and the two have already drifted once over where the header
+    /// trait goes — see the comment there before changing either.
     private func dayHeading(_ title: String) -> some View {
         Text(title)
             .font(.headline)
