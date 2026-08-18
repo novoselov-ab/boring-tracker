@@ -229,14 +229,27 @@ the decode, 100,000 entries is roughly 400ms at launch and some 17MB in memory.
 There is still no reason to put SQLite behind the store interface, and if there
 ever is, it remains a contained change.
 
-**Two screens do not hold, and they are already past it.** History and tracker
-detail build a row per entry and a section per day — 17,679 rows and 1,825
-sections at five years. Opening History blocks the main thread for **1.5
-seconds** and each keystroke in its search field for **0.1–0.6s**, on a
-simulator faster than any phone. The walk that feeds them is 31ms and 40ms; the
-rest is the `List`. So the honest ceiling is **below 30,000 entries for those
-two screens and well above it for everything else**, and the fix is fewer rows
-on screen at once, not a different way to store the numbers.
+**Two screens did not hold, and the reason was a `Section`.** History and
+tracker detail built a row per entry and a *section per day* — 17,679 rows and
+1,825 sections at five years — and a `List` pays about **0.8ms for every section
+it is handed, whatever is in it**. Opening History blocked the main thread for
+1.5 seconds; all 17,647 rows in a single section cost 185ms. Both screens now
+draw one section with the day heading as a row, and open in **321–327ms** and
+**363–586ms**, still showing every row (docs/scale.md).
+
+The paragraph that used to be here concluded that the fix was "fewer rows on
+screen at once — a windowed or paged history". That was wrong on both halves:
+the rows were not the cost, and hiding rows is the one thing History may not do.
+Left recorded because it is the more useful half of the lesson — **the honest
+move was to find what the list was being charged for, and the plausible move was
+to reduce the obvious quantity.**
+
+So the ceiling is now the ordinary linear one: both screens grow with rows and no
+longer with days, the store is fine well past 100,000 entries, and **nothing on
+the common path — launching, opening the log sheet, logging a number — grows
+with history at all.** The one thing left that scales and is not a list is Swift
+Charts drawing 1,826 bars for the "All" range, at 255–262ms; it is its own item
+and it is not on any common path.
 
 ## Two classes of decision
 

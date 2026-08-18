@@ -5,28 +5,58 @@ synthetic document. The storage design was chosen on a benchmark of a *file*
 (see "Measured, not assumed" in [TECH.md](TECH.md)); nothing had ever run the
 app itself at that size. This is that measurement.
 
-**The short version.** Storage is not the problem: the file decodes in 122ms,
-merges in 96ms and costs 5MB of memory. Two screens are. **Opening History
-freezes the app for 1.5 seconds, and every keystroke in its search field blocks
-the main thread for 0.1–0.6s.** Both are the list, not the data — the model work
-behind them is 31ms and 40ms. The ceiling claim in TECH.md was wrong about the
-app and right about the store, so it now says which.
+**The short version.** Storage was never the problem: the file decodes in
+122ms, merges in 96ms and costs 5MB of memory. Two screens were — History and a
+tracker's detail — and they had one cause between them. **A `List` builds every
+`Section` it is given, and a section costs about 0.8ms whatever is inside it**,
+so 1,733 days of history were 1.4 seconds of blocked main thread before a single
+row was drawn. The rows were never the problem: all 17,647 of them in *one*
+section cost 185ms.
+
+Both screens now draw the same rows in one section, with the day heading as a
+row that looks like the header it replaced. **History opens in 321–327ms against
+1,517–1,543ms, and its worst keystroke is 235ms against 519ms. A tracker's
+detail opens in 363–586ms against 820–1,033ms.** Nothing was removed from either
+screen to get there.
+
+Two things are left, and they are honest rather than fixed. **A keystroke costs
+90–110ms whatever the store holds** — a 60-day store types at the same speed, so
+that floor is `.searchable` and the keyboard, not five years of data. And
+**Chart → All still costs 255–262ms**, which is Swift Charts drawing 1,826 bars;
+the data behind it is 2.4ms. That one is its own problem and is written up at
+the bottom.
 
 ## The fixture
 
 Deterministic, generated from a seed by a throwaway tool compiled against the
 app's own `Model/` and `StoreCoding`, so the file is shaped exactly like one the
-app saved. 1,826 days ending today, with the things a real history has:
+app saved.
 
-| | |
-|---|---|
-| entries | 29,756 (16.3 a day) |
-| logs (batches) | 17,679 — meals write three entries, water one |
-| named | 17,566 (59%); water, steps, weight and coffee are not named |
-| trackers | 10 — 8 daily totals, 2 measurements, 3 of them archived |
-| tombstones | 89, of which 64 survive the 180-day compaction |
-| shape | four meals and 2–4 waters a day, a morning weigh-in on 76% of days, a smoking habit that stops at 18 months, a pushup phase that lasts four, a cat weighed monthly until she dies, two 13-day holidays with nothing logged, 3.5% of ordinary days missed |
-| file | 9,044,537 bytes (8.63 MiB), 304 bytes an entry |
+**Rebuilt for the fix, because the first generator was thrown away with its
+worktree** — so the numbers on this page come from two different fixtures of the
+same shape, and the before/after pairs below were all re-measured on the second
+one rather than compared across the two. The rebuild lands within 0.1% of the
+original: 29,729 entries against 29,756, 17,647 logs against 17,679, 64
+surviving tombstones against 64. It reproduces the old numbers too — 1,517ms for
+opening History against the 1,527ms first recorded here — with one exception
+noted in the chart section. Names are shorter, so the file is 8.34MB rather than
+9.04MB and the identifier arithmetic further down is the original's.
+
+1,826 days ending today, with the things a real history has:
+
+| | first fixture | the rebuild |
+|---|---|---|
+| entries | 29,756 (16.3 a day) | 29,729 (16.3 a day) |
+| logs (batches) | 17,679 — meals write three entries, water one | 17,647 |
+| named | 17,566 (59%); water, steps, weight and coffee are not named | 17,039 (57%) |
+| trackers | 10 — 8 daily totals, 2 measurements, 3 of them archived | the same 10 |
+| tombstones | 89, of which 64 survive the 180-day compaction | 89, of which 64 |
+| file | 9,044,537 bytes (8.63 MiB), 304 bytes an entry | 8,335,014 (7.95 MiB), 280 |
+
+The shape, in both: four meals and 2–4 waters a day, a morning weigh-in on 76%
+of days, a smoking habit that stops at 18 months, a pushup phase that lasts
+four, a cat weighed monthly until she dies, two 13-day holidays with nothing
+logged, 3.5% of ordinary days missed.
 
 Repeated logs are the point of the shape: "chicken rice" at one portion collapses
 to a single Log again row, a bigger portion is its own, and the 17,679 logs
@@ -39,10 +69,15 @@ collapse to **1,694** rows.
   faster than an old iPhone. Every number below should be read as a floor.
 - **Release builds**, with Debug alongside where the existing numbers in TECH.md
   are Debug. Nothing in the app changed: the probe lived in a throwaway
-  `git worktree` and is not in this history.
+  `git worktree` and is not in this history. It was rebuilt for the fix, from
+  the same description, and the before column was re-measured with it rather
+  than quoted from the first pass — the two agree to within 1% on opening
+  History, which is the check that the rebuilt harness measures the same thing.
 - **The counterfactual is the same build with a 1,028-entry store** (60 days from
-  the same generator). Absolute numbers here carry an environment; the pair
-  carries the answer.
+  the same generator; 1,010 in the rebuild). Absolute numbers here carry an
+  environment; the pair carries the answer. It earns its keep twice over below,
+  where it shows that the per-keystroke cost that looked like a data problem is
+  the same at two months.
 - **Model-level timings** ran *inside the app*, on the real `Store` loaded from
   the file, five runs each, reported as range and median.
 - **Launch** is `kinfo_proc.p_starttime` to the first main-queue turn after
@@ -74,10 +109,19 @@ is not what these numbers test — the **delta** is. Five years of data costs
 637–747ms, and the decode is unchanged at 126ms because it is Foundation's, not
 ours.
 
+**This misses the budget and the budget has not been changed to suit it.** 400ms
+is the number TECH.md holds the design to and this environment is over it at
+*both* sizes, five years or two months, so what these runs establish is the
+delta and not a verdict. Either the budget is wrong for a simulator on a desktop
+or the launch is genuinely too slow; deciding which needs a real device, and it
+is not decided here. It is the one measurement on this page that is still
+waiting for someone.
+
 ## Every screen, at 29,756 entries
 
 Release. "Worst frame" is the longest the main thread was blocked; the
-counterfactual column is the same measurement at 1,028 entries.
+counterfactual column is the same measurement at 1,028 entries. These are the
+original fixture's numbers, before the section fix.
 
 | | model work | worst frame | at 1,028 |
 |---|---|---|---|
@@ -93,6 +137,38 @@ counterfactual column is the same measurement at 1,028 entries.
 | Log again, one search keystroke | 1.1 ms | — | — |
 | Log a number, and the save after it | 1.3 ms | 55 ms | 63 ms |
 
+### The same screens after the fix
+
+Three runs of each on the rebuilt fixture, 29,729 entries, Release, same
+`CADisplayLink` and the same XCUITest script driving both columns. The
+counterfactual is the fixed build against 1,010 entries.
+
+| | before | after | after, at 1,010 |
+|---|---|---|---|
+| Open History | 1,517–1,543 ms | **321–327 ms** | 162 ms |
+| History, seven search keystrokes | 505–519, 231–233, 142–148, 106, 84–102, 93–102, 90–101 ms | **235–237, 115–122, 100–104, 95–101, 80–93, 93–100, 92–106 ms** | 112, 95, 103, 93, 116, 94, 90 ms |
+| Tap into the search field | 204–207 ms | 200–224 ms | 190 ms |
+| Open a tracker's detail | 820–1,033 ms | **363–586 ms** | 168 ms |
+| Chart → Month | 40–46 ms | 44–45 ms | 37 ms |
+| Chart → Year | 74–89 ms | 75–90 ms | 64 ms |
+| Chart → All (1,826 bars) | 255–262 ms | 255–258 ms | 62 ms |
+
+The first run of each three is the slow one on the detail screen — 1,033 and 586
+against 820/823 and 363/369 — and it is the run straight after an install, on
+both columns, so it is a cold Swift Charts rather than anything in the diff.
+
+**Read the last column first.** After the fix, every keystroke at five years
+costs what a keystroke costs at two months, and so does opening the search
+field. That was already true of the tail before the fix and is now true of the
+whole series. What is left is a per-keystroke floor of **90–110ms that has
+nothing to do with the store** — `.searchable`, the keyboard and one `List`
+diff — and no amount of work on the data will move it.
+
+**Chart → All did not move, and was not expected to.** It is the one number on
+this page that scales with the data and is not a `Section`: 255–262ms to draw
+1,826 bars, against 62ms for 60. The data behind it is 2.4ms, measured inside
+`TrackerChart.recompute`. See "The chart is its own problem" below.
+
 Read across the last two rows: **the log sheet and logging are exactly as fast
 with five years behind them as with two months**, which is what the design
 promised — neither touches the entry list. Everything above them is a list or a
@@ -101,10 +177,59 @@ chart built from every entry there is.
 **History's search rebuilds the list once per keystroke, and only once.** Counted,
 not assumed: an `NSLog` in `historyItems` prints 8 times across the whole test —
 one for the screen opening and one for each of seven letters — and none for ten
-flings. The 31ms is honest; the other 100–545ms is SwiftUI diffing a `List` of
-1,825 sections and 17,679 rows against a new one. That is why the first
-keystrokes are the expensive ones: they replace the whole list, and by "chick"
-there is little left to draw.
+flings. The 31ms is honest; the other 100–545ms is SwiftUI, and the sentence
+that used to be here guessed *which* SwiftUI. It said the cost was diffing 1,825
+sections and 17,679 rows against a new one. Half right: it was the sections
+alone, and the rows were nearly free.
+
+## It was the sections, and only the sections
+
+Four builds at 29,729 entries, one variable each, everything else identical.
+Every one of them draws the whole history — none of them shows less.
+
+| | sections | rows | opening History |
+|---|---|---|---|
+| as shipped | 1,733 | 17,647 full rows | **1,646 ms** |
+| one section, the same full rows | 1 | 17,647 | **185 ms** |
+| every section, one trivial `Text` each | 1,733 | 1,733 | **1,375 ms** |
+| every section, all rows trivial `Text` | 1,733 | 17,647 | **1,434 ms** |
+| one section, plus a heading row per day | 1 | 19,380 | **261 ms** |
+
+Read the second and third rows against each other: **17,647 real rows in one
+section cost 185ms, and 1,733 sections holding one `Text` apiece cost 1,375ms.**
+That is about **0.8ms per `Section`**, paid whatever the section contains, and it
+is the whole of the freeze. Two more builds took the header away and moved to
+`.listStyle(.plain)`; they came in at 1,379ms and 1,481ms, so it is not the
+header and not the style either.
+
+Where it goes is not in app code. Timing buckets inside the shipped build
+account for only 69ms of the 1,646: `historyItems` and the grouping 36ms, the
+1,733 day labels 24ms — a date format per section header, which was the first
+suspect and is not the answer — and the row bodies and their repeat discs 10ms
+between them. The rows are also genuinely lazy: 1,745 row bodies were built for
+17,647 rows, one per section, while every section header was built twice.
+
+**The fix is therefore one section and a day heading that is a row.** Both
+screens keep every row, newest first, grouped by day, with tap to edit, swipe to
+delete, search, repeat and the undo bar; a throwaway XCUITest exercises each of
+those against the new structure at 29,729 entries.
+
+**What it costs is the card per day.** `.insetGrouped` draws one rounded card per
+section, so one section is one card: the day heading is still a heading — same
+`.headline` in `.secondary`, matched against a real section header in a probe
+build, and still `.isHeader` to VoiceOver — and the gap between days is still
+there, but the white block behind each day no longer has rounded corners. That
+is the only visible difference, and it is not recoverable without either the
+sections or a hand-drawn corner radius that would have to be re-measured every
+time iOS restyles a list.
+
+**Two smaller things on the detail screen, found on the way.** Its `days` was a
+computed property asked four questions per redraw, so one tracker's entries were
+walked, grouped and sorted four times — 35ms where one walk is 9ms. And
+`.accessibilityElement(children: .combine)` on the new day heading cost **180ms
+of 400**, because combining children is not lazy the way a row body is: all
+1,733 headings resolve their children whether or not they are on screen. It was
+dropped, which is what the section header it replaced did anyway.
 
 **Log again is still one build per open**, which is what TECH.md claims: the
 same `NSLog` prints `repeatItems` exactly once — and `historyItems` once, inside
@@ -206,10 +331,34 @@ So `batchID` is not redundant with the clock: dropping it would merge unrelated
 logs *and* split real ones. If those 1.6 MiB are ever wanted back, the honest
 version is a shorter id, not a derived one.
 
+## The chart is its own problem
+
+Chart → All is the one thing on this page that scales with the data and is not a
+`Section`, so the section fix did nothing for it and was not expected to:
+**255–262ms to draw 1,826 bars, against 62ms for 60 days of them.** The work
+behind it is 2.4ms — `TrackerChart.recompute` already aggregates once per range
+change and holds the points in `@State`, which is what TECH.md's "graph redraw"
+budget asked for and it is doing its job. The rest is Swift Charts laying out
+1,826 `BarMark`s.
+
+It is left alone deliberately. The obvious cure is to draw fewer bars — bucket
+the "All" range by week or by month above some length — and that is a different
+decision from this one: it changes what the chart *says*, where everything above
+only changed how the same rows are put into a list. It wants its own item, its
+own before-and-after, and someone deciding whether a five-year chart of weekly
+bars is the better chart anyway. Note also that it is a range you have to ask
+for by tapping "All", not something every visit to the screen pays.
+
+Chart → Year was 305ms in the first fixture and is 74–89ms in the rebuild. That
+is the one number the rebuilt fixture does not reproduce, and the likely reason
+is the shape of what Calories holds rather than the code — worth knowing before
+anyone treats the 305ms as a regression that was fixed here, because nothing in
+this change touches it.
+
 ## The ceiling, honestly, again
 
 TECH.md said this design is "comfortable into the low hundreds of thousands of
-entries". **At 30,000 — a fifth of the way there — two screens are already
+entries". **At 30,000 — a fifth of the way there — two screens were already
 unpleasant on a machine faster than any phone.** The claim was written from a
 document benchmark and it measured the right thing about the wrong layer:
 
@@ -217,12 +366,20 @@ document benchmark and it measured the right thing about the wrong layer:
   roughly 400ms at launch, a merge is roughly a third of a second, and the whole
   history costs some 17MB of memory. All of that is fine, and none of it is a
   reason to put SQLite behind the store interface.
-- **The screens do not.** `HistoryView` and `TrackerDetailView` build a row per
-  entry and a section per day — 17,679 rows and 1,825 sections today — and the
-  cost is in the `List`, not in the walk that feeds it. That is what a fix has to
-  address: fewer rows on screen at once (a windowed or paged history, a day
-  section that draws one summary until it is opened), not a different way to
-  store the same numbers.
+- **The screens did not, and the reason was one line of structure.** `HistoryView`
+  and `TrackerDetailView` built a section per day, and a `List` pays for every
+  section it is handed. One section each, with the day heading as a row, takes
+  History from 1.5s to a third of a second and detail from a second to under
+  four tenths — while still drawing every row there is. The earlier conclusion
+  here, that the fix had to be "fewer rows on screen at once", was wrong twice:
+  the rows were not the cost, and showing fewer of them would have been the one
+  thing this screen may not do.
 
-The honest ceiling for the app as it stands is **somewhere below 30,000 entries
-for History and tracker detail, and well above it for everything else.**
+**What the ceiling is now.** Both screens are linear in rows and no longer in
+days, so 100,000 entries would be roughly three times the 321ms History costs
+today — about a second, and unpleasant again, but reached at fifteen years of
+this use rather than five. Nothing else on the common path grows at all. The
+honest statement is that the app is **comfortable at 30,000 entries and the next
+thing to give way is the same `List`, at a size no one on this design will
+reach** — and if someone does, the answer will be the same shape as this one:
+find what the list is being charged for, not how much data there is.

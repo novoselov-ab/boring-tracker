@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Everything logged, newest first. Today is one day section like every other;
-/// it merely happens to sort to the top.
+/// Everything logged, newest first, under a heading per day. Today is one day
+/// like every other; it merely happens to sort to the top.
 struct HistoryView: View {
     @Environment(Store.self) private var store
     @State private var editing: HistoryItem?
@@ -48,8 +48,30 @@ struct HistoryView: View {
                 )
             } else {
                 List {
-                    ForEach(days, id: \.day) { group in
-                        Section {
+                    // **One section for the whole log, not one per day.** This
+                    // is the entire fix for the 1.5s freeze this screen used
+                    // to open with, and it is not about how much is drawn: a
+                    // `Section` costs about 0.8ms to put into a `List`
+                    // regardless of what is in it, so 1,733 days cost 1.4
+                    // seconds of blocked main thread before a row is drawn.
+                    // 1,517–1,543ms before, 321–327ms after, three runs each.
+                    //
+                    // Measured four ways at 29,729 entries, because the obvious
+                    // suspects were all wrong (docs/scale.md): every row in one
+                    // section is 185ms, every section with one trivial row each
+                    // is 1,375ms, and taking the header away or moving to
+                    // `.plain` changes neither. The rows are cheap and the
+                    // sections are not.
+                    //
+                    // What it costs is the card per day — one section is one
+                    // card — so the day heading is a row that looks like the
+                    // header it replaces, and the gap between days is the
+                    // heading's clear background rather than the space between
+                    // two cards. Nothing else about the screen changes: every
+                    // row is still here, newest first, grouped by day.
+                    Section {
+                        ForEach(days, id: \.day) { group in
+                            dayHeading(title(for: group.day))
                             ForEach(group.items) { item in
                                 HistoryRow(item: item, trackers: trackers) { editing = item }
                                     // The accent, at a fifth, over the fill a
@@ -111,9 +133,6 @@ struct HistoryView: View {
                                         .tint(.red)
                                     }
                             }
-                        } header: {
-                            Text(title(for: group.day))
-                        } footer: {
                             // Both gestures this screen offers are invisible:
                             // swipe-to-delete is invisible by iOS's design, and
                             // a row that opens an editor when tapped looks
@@ -123,18 +142,31 @@ struct HistoryView: View {
                             // tap and no chrome — a hint that never moves is
                             // cheaper than a gesture nobody finds.
                             //
-                            // **Under the first day only.** A footer under the
-                            // last section is at the bottom of a list that is a
-                            // year long, which is nowhere; this one is the first
-                            // thing under the rows you arrive looking at, and
-                            // repeating it under all 365 sections would be the
+                            // **Under the first day only.** A hint under the
+                            // last day is at the bottom of a list that is five
+                            // years long, which is nowhere; this one is the
+                            // first thing under the rows you arrive looking at,
+                            // and repeating it under all 1,733 days would be the
                             // app nagging.
+                            //
+                            // A row rather than a `Section` footer since the
+                            // sections went: same words, same place, same
+                            // secondary footnote the footer style drew it in.
                             //
                             // No icon and no colour: the plain footer style is
                             // already secondary, and anything louder competes
                             // with the rows for the same glance.
                             if group.day == days.first?.day {
                                 Text("Tap a row to edit it, or swipe to delete.")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(
+                                        EdgeInsets(
+                                            top: 6, leading: 16, bottom: 6, trailing: 16
+                                        )
+                                    )
                             }
                         }
                     }
@@ -208,6 +240,35 @@ struct HistoryView: View {
             guard !Task.isCancelled else { return }
             highlighted = nil
         }
+    }
+
+    /// The day heading, as a row rather than a section header.
+    ///
+    /// It has to *be* a header without being one, so it is drawn as the header
+    /// it replaced and says so to VoiceOver. `.headline` in `.secondary` is not
+    /// a guess: a probe build put the candidate fonts in a list beside a real
+    /// inset-grouped header at this OS version and compared them on screen, and
+    /// `.headline` is the one that matches — same size, same weight, same grey.
+    /// If iOS restyles its headers, this stops matching and will need looking
+    /// at again; that is the price of the section going, and it is written down
+    /// here so the next person knows where to look.
+    ///
+    /// The clear background is what keeps the day boundary visible: the rows
+    /// either side of it sit on the card colour, so a row that does not draws
+    /// the same gap two cards used to leave.
+    private func dayHeading(_ title: String) -> some View {
+        Text(title)
+            .font(.headline)
+            .foregroundStyle(.secondary)
+            // Sections announce their headers; a `Text` in a row does not, so
+            // it is said explicitly. Without this the rotor loses every day
+            // heading in the history, which is the one thing that makes a
+            // five-year list navigable without scrolling it.
+            .accessibilityAddTraits(.isHeader)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            // Leading 16 to line up with `HistoryRow`, which sets its own.
+            .listRowInsets(EdgeInsets(top: 18, leading: 16, bottom: 6, trailing: 16))
     }
 
     private struct DayGroup {

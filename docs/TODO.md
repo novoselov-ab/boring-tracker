@@ -795,13 +795,13 @@ pattern is right: a way to *go* somewhere, not a filter that hides the rest.
 - [ ] Landing on a day with nothing logged goes to the nearest day that has
       something, rather than an empty screen or a dead control.
 
-**This is not the answer to History's 1.5s freeze**, and it must not be used as
-one. Loading only around a chosen date would make scrolling back slow or
-impossible and quietly turn the record into a window onto it. The freeze is
-being fixed as a freeze; this is navigation for a list that is genuinely long.
-
-Worth doing after that fix, so it is judged on whether it helps you find
-things — not on whether it makes a number look better.
+**This was never the answer to History's 1.5s freeze**, and it must not be used
+as one. Loading only around a chosen date would make scrolling back slow or
+impossible and quietly turn the record into a window onto it. The freeze has
+since been fixed as a freeze — it was one `Section` per day, not the number of
+rows (docs/scale.md) — so this item is now free to be judged on the only thing
+it was ever about: whether it helps you find something in a list that is
+genuinely long.
 
 ## Noted, not scheduled
 
