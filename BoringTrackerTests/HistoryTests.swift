@@ -436,6 +436,9 @@ struct HistoryTests {
         // that does not move the number on the home screen has not logged
         // anything as far as the user is concerned.
         #expect(store.total(for: calories.id, on: store.today) == 100)
+        // Nothing skipped: two daily totals are both writable, and item 23's
+        // rule must not quietly take a member off a row it does not apply to.
+        #expect(store.lastLoggedAgain == Store.LoggedAgain(count: 2, skipped: 0))
     }
 
     @Test("Repeating a single entry takes the same path as repeating a batch")
@@ -582,19 +585,108 @@ struct HistoryTests {
         #expect(store.lastLoggedAgain == Store.LoggedAgain(count: 1, skipped: 1))
     }
 
+    @Test("A weigh-in batch repeats its calories and never its weight")
+    func repeatDropsAMeasurementMember() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1)
+        let batch = UUID()
+        let reading = Entry(trackerID: weight.id, value: 79.2, date: time(10),
+                            name: "weigh-in", batchID: batch)
+        let store = historyStore(StoreDocument(trackers: [calories, weight], entries: [
+            Entry(trackerID: calories.id, value: 200, date: time(10),
+                  name: "weigh-in", batchID: batch),
+            reading,
+        ]))
+
+        let item = try #require(store.historyItems.first)
+        #expect(store.repeatableEntries(of: item).map(\.value) == [200])
+        #expect(store.logAgain(item))
+
+        // The calories are written, the weight is not: a copy would be a
+        // reading nobody took (docs/TODO.md item 23).
+        let written = store.entries.filter { $0.batchID != batch }
+        #expect(written.map(\.value) == [200])
+        #expect(written.allSatisfy { $0.trackerID == calories.id })
+        #expect(written.allSatisfy { $0.name == "weigh-in" })
+        // The wording the archived case already has, reused rather than a
+        // second phrasing: the tap promised the row and wrote less than it.
+        #expect(store.lastLoggedAgain == Store.LoggedAgain(count: 1, skipped: 1))
+
+        // Home's Weight card reads the latest entry and the chart takes every
+        // point, so a false weight would show as today's reading with a "just
+        // now" caption and draw a point that never happened. Both clean: the
+        // scale still holds exactly the one reading, at the time it was taken.
+        #expect(store.entries(for: weight.id) == [reading])
+        #expect(store.latestEntry(for: weight.id) == reading)
+
+        // The 200 reaches the totals index, not only the entry list: a repeat
+        // that does not move the number on home has not logged anything as far
+        // as the user is concerned — and without this the assertion after the
+        // undo passes whether or not the write ever landed.
+        #expect(store.total(for: calories.id, on: store.today) == 200)
+
+        // Undo takes back exactly what the tap wrote, which is now fewer
+        // entries than the row displays.
+        store.undoLastLog()
+        #expect(store.entries.map(\.batchID) == [batch, batch])
+        #expect(store.total(for: calories.id, on: store.today) == 0)
+    }
+
+    @Test("A measurement row has nothing to write, so its disc is off")
+    func repeatRefusesAMeasurementRow() throws {
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1)
+        let reading = Entry(trackerID: weight.id, value: 79.2, date: time(10), name: "morning")
+        let store = historyStore(StoreDocument(trackers: [weight], entries: [reading]))
+
+        // The same rule as the mixed batch above, not a second one: every
+        // member is dropped, so there is nothing left to write and the view
+        // greys the disc off this empty list.
+        let item = try #require(store.historyItems.first)
+        #expect(store.repeatableEntries(of: item).isEmpty)
+        #expect(store.logAgain(item) == false)
+        #expect(store.entries == [reading])
+        // A refused repeat writes nothing, so it must not claim the undo slot.
+        #expect(store.lastLoggedAgain == nil)
+    }
+
+    @Test("A weigh-in whose only total is archived cannot be repeated at all")
+    func repeatRefusesAnArchivedTotalBesideAMeasurement() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", isArchived: true)
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1)
+        let batch = UUID()
+        let entries = [
+            Entry(trackerID: calories.id, value: 200, date: time(10), batchID: batch),
+            Entry(trackerID: weight.id, value: 79.2, date: time(10), batchID: batch),
+        ]
+        let store = historyStore(
+            StoreDocument(trackers: [calories, weight], entries: entries)
+        )
+
+        // Two reasons to drop a member, both of them the same question — what
+        // may this write — and between them the row keeps nothing.
+        let item = try #require(store.historyItems.first)
+        #expect(store.repeatableEntries(of: item).isEmpty)
+        #expect(store.logAgain(item) == false)
+        #expect(store.entries.map(\.id).sorted() == entries.map(\.id).sorted())
+        #expect(store.lastLoggedAgain == nil)
+    }
+
     @Test("Deleting a tracker with its history withdraws a repeat's undo for it")
     func deleteWithHistoryInvalidatesRepeatUndo() throws {
         let calories = Tracker(name: "Calories")
-        let weight = Tracker(name: "Weight", kind: .measurement)
+        // Two daily totals rather than a daily total and a weight: this used to
+        // repeat a weight reading, which item 23 stopped writing at all, and the
+        // question here is about the undo slot rather than about the kind.
+        let water = Tracker(name: "Water", unit: "ml")
         let logged = Entry(trackerID: calories.id, value: 100, date: time(10))
-        let reading = Entry(trackerID: weight.id, value: 78, date: time(20))
+        let drunk = Entry(trackerID: water.id, value: 250, date: time(20))
         let store = historyStore(
-            StoreDocument(trackers: [calories, weight], entries: [logged, reading])
+            StoreDocument(trackers: [calories, water], entries: [logged, drunk])
         )
 
-        let item = try #require(store.historyItems.first { $0.entries.first?.id == reading.id })
+        let item = try #require(store.historyItems.first { $0.entries.first?.id == drunk.id })
         #expect(store.logAgain(item))
-        store.deleteWithHistory(weight)
+        store.deleteWithHistory(water)
         store.undoLastLog()
 
         // Nothing left to take back, and nothing else disturbed.

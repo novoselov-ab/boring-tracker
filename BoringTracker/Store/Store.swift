@@ -66,9 +66,14 @@ final class Store {
         /// Entries written. Never zero: a repeat that can write nothing does
         /// not happen and does not take the slot.
         var count: Int
-        /// Members of the row left out because their tracker has been deleted
-        /// or archived. The screen says so rather than writing part of a row
-        /// under a button that promised the whole of it.
+        /// Members of the row left out because a repeat may not write them:
+        /// their tracker has been deleted or archived, or it is a measurement
+        /// and a copy would be a reading nobody took (docs/TODO.md item 23).
+        /// The measurement is the common one — a weigh-in batch with both
+        /// trackers live and unarchived still skips its weight — so a hunt for
+        /// a deleted tracker is the wrong place to start. The screen says so
+        /// rather than writing part of a row under a button that promised the
+        /// whole of it.
         var skipped: Int
     }
 
@@ -377,9 +382,9 @@ final class Store {
     /// The Repeat screen's list: one row per distinct thing you have logged to
     /// a daily total, the ones logged most often lately first.
     ///
-    /// **Membership is `HistoryItem.isRepeatable`, which reads the tracker's
-    /// kind and not the name** (docs/TODO.md item 21). The rule lives there,
-    /// with the reasoning; what it means here is that the list gained every
+    /// **Membership is `HistoryItem.belongsInRepeatList`, which reads the
+    /// tracker's kind and not the name** (docs/TODO.md item 21). The rule lives
+    /// there, with the reasoning; what it means here is that the list gained every
     /// unnamed daily total — 450 kcal and 30 g is a dinner you can eat again
     /// whether or not you typed a word — and lost every measurement, named or
     /// not, along with the batches that mix the two.
@@ -551,14 +556,21 @@ final class Store {
         let targets = repeatTargets
         // Built once for the walk, like `targets` above and for the same reason:
         // `tracker(_:)` is a linear scan and this is asked of every entry of
-        // every row. Archived trackers are in here — the kind is a property of
-        // the tracker, and whether a repeat may *write* to it is `targets`'
-        // separate question (see `HistoryItem.isRepeatable`).
+        // every row.
+        //
+        // **Archived trackers are in here and not in `targets`, and since item
+        // 23 that is the only thing separating the two.** Both read the kind
+        // now — `targets` because a repeat may not write a measurement, this
+        // because a measurement does not qualify a row for the list — so the
+        // kind rule is written once, in `repeatTargets`, and once as a
+        // membership question, in `HistoryItem.belongsInRepeatList`. A third
+        // copy is what item 23 was about; the place it is tempting to add one
+        // is a new control, and the answer there is `repeatableEntries`.
         let kinds = Dictionary(
             trackers.map { ($0.id, $0.kind) }, uniquingKeysWith: { first, _ in first }
         )
         let windowStart = countingWindowStart
-        for item in historyItems where item.isRepeatable(kinds: kinds) {
+        for item in historyItems where item.belongsInRepeatList(kinds: kinds) {
             let key = item.repeatKey
             // The only thing the window touches. Every row is still built and
             // still listed; one outside it simply adds nothing to its count.
@@ -673,6 +685,23 @@ final class Store {
     /// logging — the log sheet reaches neither. Writing to them from here would
     /// put a number somewhere no other screen in the app offers to put one, and
     /// somewhere home would never show it.
+    ///
+    /// **A measurement is not writable from here either, and that is the same
+    /// rule rather than a second one** (docs/TODO.md item 23). Repeating a
+    /// reading does not take one: it writes a weight nobody stood on the scale
+    /// for, dated now, which home's Weight card then shows as today's reading
+    /// and the chart draws as a point that never happened. Item 21 settled that
+    /// and enforced it only in `repeatItems`, so the disc on a History row went
+    /// on writing one — the rule lives here now, beside the kind, where every
+    /// caller of `logAgain` inherits it.
+    ///
+    /// **The choke point rather than the control.** Disabling the disc on any
+    /// row `HistoryItem.belongsInRepeatList` rejects reads more simply, but it
+    /// refuses a weigh-in batch whole — its calories with its weight — and
+    /// leaves `logAgain` willing to write a measurement for whatever calls it
+    /// next. Dropping the member instead writes the calories, says "Logged 1 of 2
+    /// again" through `lastLoggedAgain`, and greys the disc by itself on a row
+    /// with nothing writable left.
     func repeatableEntries(of item: HistoryItem) -> [Entry] {
         repeatableEntries(of: item, targets: repeatTargets)
     }
@@ -697,9 +726,11 @@ final class Store {
         item.entries.filter { targets.contains($0.trackerID) }
     }
 
-    /// Every tracker a repeat may write to: still present, and not archived.
+    /// Every tracker a repeat may write to: still present, not archived, and a
+    /// daily total. See `repeatableEntries(of:)` for why the kind belongs in
+    /// this set rather than in the three views that draw the disc.
     private var repeatTargets: Set<UUID> {
-        Set(trackers.lazy.filter { !$0.isArchived }.map(\.id))
+        Set(trackers.lazy.filter { !$0.isArchived && $0.kind != .measurement }.map(\.id))
     }
 
     /// Logs a history row again, now: the same values against the same trackers,
@@ -712,6 +743,9 @@ final class Store {
     /// Refusing the whole row because one of three trackers was deleted would
     /// make a normal state — deleting a tracker and keeping its history is a
     /// supported choice — quietly disable a button on every row it ever touched.
+    /// A measurement member is partial in exactly that way and drops out here
+    /// too, so a weigh-in batch repeats its calories and not its weight
+    /// (`repeatableEntries(of:)`, docs/TODO.md item 23).
     @discardableResult
     func logAgain(_ item: HistoryItem) -> Bool {
         let repeatable = repeatableEntries(of: item)

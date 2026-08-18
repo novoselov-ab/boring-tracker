@@ -47,8 +47,17 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return names.count > 1 ? "Mixed names" : names.first
     }
 
-    /// Whether this row is a thing you could do again — which is a question
+    /// Whether this row belongs on the Log again list — which is a question
     /// about the trackers it was logged to, not about what you called it.
+    ///
+    /// **It is not "can this be repeated", and the name says so since item 23**:
+    /// a live weigh-in batch is rejected here and `logAgain` still writes its
+    /// calories. The question a *control* asks is `Store.repeatableEntries`,
+    /// which is what decides both the write and the greying — guarding a new
+    /// repeat control on this predicate instead would refuse the whole weigh-in
+    /// row, which is the "at the control" shape item 23 weighed and turned
+    /// down. It was called `isRepeatable` until then, when the two questions
+    /// still had one answer.
     ///
     /// **The kind decides, and the name decides nothing** (docs/TODO.md item
     /// 21). A **daily total** can be logged again whether or not you named it:
@@ -58,12 +67,24 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// repeating yesterday's weight does not weigh you, it writes a reading you
     /// never took.
     ///
-    /// **A batch mixing kinds is not listed, and that is the deliberate half.**
-    /// One tap writes every member the row can write, so a "weigh-in breakfast"
-    /// of 200 kcal and 79.2 kg would put a false weight in the history to save
-    /// retyping the calories. Refusing the whole row is the conservative
-    /// direction and it costs nothing that is gone: the row is still in
-    /// History, which is where a row you want to act on individually lives.
+    /// **A batch mixing kinds is not listed, and item 21's reason for that has
+    /// gone.** It was that one tap would write a false weight to save retyping
+    /// the calories; since item 23 the tap writes the calories alone, from
+    /// `Store.repeatableEntries`, so the row could be offered here without
+    /// writing anything nobody logged.
+    ///
+    /// **What keeps it out now is this list rather than that write.** A row here
+    /// is `repeatKey`, and the key holds every value the row carries — including
+    /// the weight, which is different every morning. Listing mixed rows
+    /// therefore collapses none of them: measured on thirty daily weigh-ins of
+    /// the identical 200 kcal breakfast, thirty rows, each drawing a weight it
+    /// would not write, and a plain 200 kcal logged without the scale makes a
+    /// thirty-first rather than joining one of them. That is History with a
+    /// search field, which is the one thing this screen must not become. Making
+    /// it right means a Log again row being built from what a tap *writes*
+    /// rather than from what the batch *holds* — a change to what a row on this
+    /// screen is, and its own item.
+    ///
     /// The app produces these whenever a measurement tracker shares a log group
     /// with a daily total, so it is an ordinary shape, not an imported one.
     ///
@@ -79,9 +100,17 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     ///
     /// **Archiving is not part of this question at all**, which is why the kind
     /// is read from the tracker whether or not it is archived. Deciding
-    /// membership on what a tap would *write* instead would mean archiving your
-    /// scale silently added the weigh-in batches above to this list.
-    func isRepeatable(kinds: [UUID: Tracker.Kind]) -> Bool {
+    /// membership on what a tap would *write* instead would take the rows item
+    /// 16 protected straight back out: archive a tracker and its rows would
+    /// stop being listed, where the rule is that they stay, sink to the bottom
+    /// and grey.
+    ///
+    /// Until item 23 this paragraph gave the mirror-image reason — that a
+    /// write-based rule would let archiving your scale silently *add* the
+    /// weigh-in batches above. That half is spent, and is left recorded rather
+    /// than quietly swapped: a tap never writes a measurement now, so those
+    /// batches are exactly as writable archived as not.
+    func belongsInRepeatList(kinds: [UUID: Tracker.Kind]) -> Bool {
         // No `compactMap` and no intermediate array: `Store.repeatItems` asks
         // this of every row in the history, on a walk measured in milliseconds.
         var found = false

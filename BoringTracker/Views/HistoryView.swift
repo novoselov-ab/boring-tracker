@@ -312,8 +312,12 @@ private struct HistoryRow: View {
     /// opening an empty sheet — the plus in it says a log is written either way.
     ///
     /// Off when the row has nothing left to write: every tracker it named has
-    /// been deleted or archived. A control that looks live and does nothing is
-    /// worse than one that plainly cannot be used.
+    /// been deleted or archived, or is a measurement — a weight-only row greys
+    /// its disc because a repeat drops measurement members rather than copying
+    /// a reading nobody took (docs/TODO.md item 23). One rule, not two: the
+    /// greying is `Store.repeatableEntries` coming back empty, the same call
+    /// that decides what a tap writes. A control that looks live and does
+    /// nothing is worse than one that plainly cannot be used.
     ///
     /// **A deleted tracker's row explains itself and an archived one does not.**
     /// The row prints "Deleted tracker" where the record is gone — on the

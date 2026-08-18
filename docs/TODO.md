@@ -565,7 +565,9 @@ Two things from use.
       into History with a filter, which is the direction that blurs them; the
       right rule does the work without a control.
 
-      Done: the filter is `HistoryItem.isRepeatable(kinds:)`. Three things it
+      Done: the filter is `HistoryItem.isRepeatable(kinds:)` — renamed
+      `belongsInRepeatList` by item 23, which split the question it answers from
+      the one a control asks. Three things it
       decided that the item did not say:
 
       **A batch that mixes kinds is not listed.** One tap writes every member a
@@ -648,7 +650,7 @@ It costs no tap and it is the ordinary iOS idiom — the app already uses footer
 this way on the log sheet. A hint that never moves is cheaper than a gesture
 nobody finds.
 
-## 23. History's disc still repeats a weight
+## 23. History's disc still repeats a weight — done
 
 Item 21 settled that repeating a measurement is meaningless — you would take a
 new reading, and a copy writes one nobody took — and it enforced that in exactly
@@ -665,22 +667,75 @@ to list *for this reason*: a "weigh-in" of 200 kcal and 79.2 kg is hidden from
 Log again because one tap would write a false weight, while the disc on that
 same row in History writes both. One rule, two answers, in the same app.
 
-Two ways to close it, and they are not equivalent:
+- [x] **Closed at the choke point, not at the control.** `Store.repeatTargets`
+      — the set `repeatableEntries` filters a row against — drops measurement
+      trackers now, beside the deleted and archived ones it already dropped. So
+      `logAgain` writes only what may be written, and every caller of it
+      inherits that without knowing the rule exists.
 
-- **At the choke point.** `Store.repeatableEntries` drops measurement members,
-  so `logAgain` writes only what may be written and the mixed row writes its
-  calories alone. The rule then lives beside the kind, one place, and the disc
-  greys itself on a weight-only row because there is nothing left to write.
-  Silent partial writes are already a shape the bar words honestly — "Logged 1
-  of 2 again" — which exists for archived members.
-- **At the control.** `HistoryRow` disables the disc on any row
-  `HistoryItem.isRepeatable` rejects. Simpler to read, but it refuses the whole
-  weigh-in row rather than its calories, and it leaves `logAgain` willing to
-  write a measurement for any caller that comes along later.
+      **Why not the control.** Disabling the disc on any row
+      `HistoryItem.belongsInRepeatList` rejects reads more simply, but it
+      refuses the whole weigh-in row rather than only its weight, and it leaves
+      `logAgain` willing to write a measurement for whatever calls it next. At
+      the choke point the rule lives beside the kind, in one place, and the
+      weight-only row still greys its disc — because `repeatableEntries` comes
+      back empty, which is the same call that decides the write. The greying is
+      a consequence of the rule rather than a second copy of it.
 
-Leaning to the first, which is why it is written first. **Not done here**: it is
-a change to what a tap writes, and the brief that raised it was scoped to the
-list. Item 14's undo covers a mistap either way.
+      **`isRepeatable` is now `belongsInRepeatList`**, because after this the
+      name asserted something false: a live weigh-in batch is rejected by it and
+      `logAgain` writes the batch's calories all the same. The trap the old name
+      set is the next control to be wired up — a swipe action, a Shortcuts
+      intent — guarding on it and refusing the whole row, which is the "at the
+      control" shape this item turned down. What a control asks is
+      `repeatableEntries`.
+
+      A weigh-in of 200 kcal and 79.2 kg writes the 200 kcal and says **"Logged
+      1 of 2 again"** — the wording archived and deleted members already had,
+      reused rather than a second phrasing invented for this. Home's Weight card
+      and the chart are clean afterwards: the scale still holds exactly the
+      reading it had, at the time it was taken, so nothing shows as today's
+      reading and no point is drawn that never happened. Undo takes back what
+      the tap wrote, which is now sometimes fewer entries than the row displays.
+
+- [x] **The mixed row is still hidden from Log again, and item 21's reason for
+      hiding it has gone.** It was that one tap would write a false weight to
+      save retyping the calories; the tap now writes the calories alone, so that
+      objection is spent. What keeps the row out is no longer the write but the
+      list.
+
+      **Measured before deciding**, by listing them and counting: a row on that
+      screen is `repeatKey`, and the key holds every value the row carries —
+      including the weight, which is different every morning. Thirty daily
+      weigh-ins of the identical 200 kcal breakfast list as **thirty rows**,
+      each drawing a weight it would not write, and a plain 200 kcal logged
+      without the scale makes a thirty-first rather than joining one of them.
+      That is History with a search field, which is the one thing this screen
+      must not become (see "Why History and Log again stay separate" above).
+
+      So the honest answer is that the two screens still differ, and the
+      difference is now only about *listing*: what a tap writes is one rule with
+      one answer everywhere, which is what this item existed to fix.
+
+      **The design problem underneath, for whoever picks it up:** a Log again row
+      is built from what the batch *holds*, and the screen promises what a tap
+      *writes*. Those were the same thing until this item, and the fix is to
+      build the row from the writable members — which collapses the weigh-in
+      breakfast onto the plain one, gives the row a value line it will actually
+      write, and makes the "1 of 2" wording differ by screen (from History the
+      tap skipped a member you could see; from Log again it did not). That is a
+      change to what a row on that screen *is*, and it wants its own item rather
+      than a rider on this one — queued in "Noted, not scheduled" below so that
+      closing item 23 does not close it too.
+
+      **Two things review raised and this item deliberately did not change**,
+      because the brief settled both and they are questions about what a screen
+      *says* rather than what a tap *writes*. Recorded rather than argued:
+      a weight row's disc is now permanently greyed with nothing on the row
+      saying why — and unlike the deleted case, which prints "Deleted tracker",
+      the tracker is live and on home; and "Logged 1 of 2 again" is now most
+      often produced by a weigh-in whose trackers are both live, which is a
+      cause the sentence cannot express. Both are in the noted list below.
 
 ## Noted, not scheduled
 
@@ -692,6 +747,39 @@ picking one up doesn't start with rediscovering why it's awkward.
       so it lives in `UserDefaults`, not the document** — it must not sync or
       appear in an export. iOS offers a per-app setting too, but in-app is more
       discoverable and there is no reason not to have both.
+
+- [ ] **A Log again row should show what a tap writes.** The row is built from
+      what the batch *holds* — `HistoryItem` and its `repeatKey` — while the
+      screen promises what a tap *does*, and item 23 pulled those apart: a
+      repeat writes daily totals only. Consequence measured there: a mixed
+      weigh-in batch cannot be listed at all, because thirty daily weigh-ins of
+      the same breakfast key as thirty rows, each drawing a weight it would not
+      write.
+
+      Building the row from the writable members fixes the listing and the
+      value line at once. What is not obvious is the two things it changes
+      underneath: it collapses a weigh-in breakfast onto the plain one — the
+      right answer for "do that again", a surprise for anyone reading the list
+      as history — and it makes "Logged 1 of 2 again" correct from History and
+      wrong from Log again, where nothing you could see was skipped.
+
+- [ ] **Say why a repeat disc is off.** Three reasons now — the tracker was
+      deleted, it was archived, or it is a measurement and a copy would be a
+      reading nobody took — and the row says so for exactly one of them
+      ("Deleted tracker"). The measurement case is the one that will be seen
+      most: somebody who weighs in daily gets a greyed disc on a large share of
+      their History rows, beside a tracker that is live and on home.
+
+      Item 14 already recorded the archived version of this and left it, and
+      item 14b's answer — the row leads with the tracker's name — is more than
+      it used to say but is not a reason. The cheap options are a word on the
+      row and no disc at all on a row that can never be repeated; the second is
+      a bigger change than it looks, because "no control" is how History says
+      nothing about a row rather than how it says "not this one".
+
+      The same gap is in the undo bar's wording: "Logged 1 of 2 again" is now
+      most often a weigh-in with both trackers live, and the sentence cannot
+      say which member was dropped or why (`Store.LoggedAgain.skipped`).
 
 - [ ] **A configurable time for the daily reset.** Note that this **reverses a
       decision recorded in TECH.md** ("the day starts at midnight, local. No

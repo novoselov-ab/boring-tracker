@@ -15,9 +15,9 @@ import SwiftUI
 /// screens ask, and answering it twice is how they come to disagree.
 ///
 /// **The filter is the tracker's kind, not the name** — see
-/// `HistoryItem.isRepeatable` (docs/TODO.md item 21). So an unnamed row is here,
-/// identified by its values the way History identifies it, and a weight is not.
-/// A search still only matches names, so any query empties the unnamed rows out
+/// `HistoryItem.belongsInRepeatList` (docs/TODO.md item 21). So an unnamed row
+/// is here, identified by its values the way History identifies it, and a weight
+/// is not. A search only matches names, so any query empties the unnamed rows out
 /// of the list; the field says "Search names" and that is the whole of it.
 ///
 /// **A sheet, not a pushed screen, and a tap on a row closes it** (docs/TODO.md
@@ -190,8 +190,8 @@ struct RepeatView: View {
 /// statement about what you ate, and a food that vanishes from the list when you
 /// archive a tracker would be a screen quietly editing your history. (A row
 /// whose trackers were *deleted* no longer reaches this screen at all — it has
-/// no kind left to qualify it, see `HistoryItem.isRepeatable` — so in practice
-/// this state is the archived one.)
+/// no kind left to qualify it, see `HistoryItem.belongsInRepeatList` — so in
+/// practice this state is the archived one.)
 ///
 /// **Disabling greys the whole row here, where History greys only its disc**,
 /// because here the whole row *is* the button. Raised in review as a

@@ -82,7 +82,7 @@ struct RepeatTests {
         #expect(store.repeatItems.map(\.displayName) == ["porridge"])
     }
 
-    @Test("A batch mixing kinds is not listed, because one tap would write both")
+    @Test("A batch mixing kinds is not listed, because the list cannot collapse it")
     func mixedKindBatchesAreNotListed() {
         // The shape the app produces on its own: a measurement sharing a log
         // group with a daily total, so one sheet writes both.
@@ -109,9 +109,11 @@ struct RepeatTests {
             )
         )
 
-        // Listing it would put a false weight in the history to save retyping
-        // 200 kcal. The row is still in History, which is where a row you want
-        // to act on one member of lives.
+        // Not because a tap would write the weight any more — since item 23 it
+        // writes the 200 kcal alone — but because `repeatKey` holds the weight,
+        // so every morning's weigh-in would be its own row and this list would
+        // stop being a collapsed one. The row is still in History, which is
+        // where a row you want to act on one member of lives.
         #expect(store.repeatItems.map(\.displayName) == ["porridge"])
     }
 
@@ -135,13 +137,28 @@ struct RepeatTests {
         )
         #expect(store.repeatItems.map(\.displayName) == ["porridge"])
 
-        var archived = weight
-        archived.isArchived = true
-        store.update(archived)
+        // Archive the tracker whose row *is* listed. It stays listed, and it is
+        // now unwritable, so it is the greyed row item 16 protects: a list that
+        // dropped your food when you archived a tracker would be the app
+        // editing your history. This is the half of the rule item 23 left
+        // standing, and the half that actually discriminates — a membership
+        // rule reading what a tap would write empties the list here.
+        var archivedCalories = calories
+        archivedCalories.isArchived = true
+        store.update(archivedCalories)
+        #expect(store.repeatItems.map(\.displayName) == ["porridge"])
+        let porridge = store.repeatItems[0]
+        #expect(store.repeatableEntries(of: porridge).isEmpty)
 
-        // The kind is a property of the tracker, not of what a tap would
-        // manage to write. Deciding membership on the latter would mean
-        // archiving your scale silently added weigh-in batches to this list.
+        // And archiving the scale does not *add* the weigh-in batch either: the
+        // kind is a property of the tracker, read whether or not it is
+        // archived. Until item 23 this was the whole of this test, and it was
+        // the discriminating half then, because a tap on a live scale wrote a
+        // weight; it no longer writes one archived or not, so it is kept as the
+        // cheaper of the two checks rather than as the point.
+        var archivedWeight = weight
+        archivedWeight.isArchived = true
+        store.update(archivedWeight)
         #expect(store.repeatItems.map(\.displayName) == ["porridge"])
     }
 
