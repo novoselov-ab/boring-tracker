@@ -648,6 +648,40 @@ It costs no tap and it is the ordinary iOS idiom — the app already uses footer
 this way on the log sheet. A hint that never moves is cheaper than a gesture
 nobody finds.
 
+## 23. History's disc still repeats a weight
+
+Item 21 settled that repeating a measurement is meaningless — you would take a
+new reading, and a copy writes one nobody took — and it enforced that in exactly
+one place: `Store.repeatItems`, which is the Log again list. **The action itself
+never learned the rule.**
+
+So on History, the disc beside "morning / 79.2 kg" is live, and one tap writes a
+weight entry dated now. Home's Weight card reads `latestEntry`, so it shows the
+copied number as today's reading with a "just now" caption, and the chart gains
+a point that never happened. Found by review, not by use.
+
+The mixed-kind batch is the sharper case, because it is the one item 21 refuses
+to list *for this reason*: a "weigh-in" of 200 kcal and 79.2 kg is hidden from
+Log again because one tap would write a false weight, while the disc on that
+same row in History writes both. One rule, two answers, in the same app.
+
+Two ways to close it, and they are not equivalent:
+
+- **At the choke point.** `Store.repeatableEntries` drops measurement members,
+  so `logAgain` writes only what may be written and the mixed row writes its
+  calories alone. The rule then lives beside the kind, one place, and the disc
+  greys itself on a weight-only row because there is nothing left to write.
+  Silent partial writes are already a shape the bar words honestly — "Logged 1
+  of 2 again" — which exists for archived members.
+- **At the control.** `HistoryRow` disables the disc on any row
+  `HistoryItem.isRepeatable` rejects. Simpler to read, but it refuses the whole
+  weigh-in row rather than its calories, and it leaves `logAgain` willing to
+  write a measurement for any caller that comes along later.
+
+Leaning to the first, which is why it is written first. **Not done here**: it is
+a change to what a tap writes, and the brief that raised it was scoped to the
+list. Item 14's undo covers a mistap either way.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
