@@ -145,6 +145,29 @@ struct StoreFile: Sendable {
         try data.write(to: url, options: .atomic)
     }
 
+    /// Throws away the rolling save backup.
+    ///
+    /// **Only a clear does this**, and it is the difference between "removes
+    /// every tracker and entry from this device" being true and being nearly
+    /// true. `write` copies the old `store.json` aside before every save, so
+    /// the write that lands the empty document leaves the entire pre-clear
+    /// history in `store.backup.json` — and `load` falls back to that file
+    /// whenever the main one fails to decode. Nothing rewrites it until the
+    /// next save, which for somebody who cleared the app and put the phone down
+    /// is never.
+    ///
+    /// The one copy a clear leaves is the recovery slot, which the confirmation
+    /// names out loud. An undisclosed second copy of a history somebody has
+    /// just asked to be rid of is not a safety net; it is the opposite of the
+    /// thing they asked for.
+    ///
+    /// Safe to lose here specifically: what it protects against is a torn or
+    /// unreadable `store.json`, and the file this runs after is a freshly
+    /// written, complete, empty document. The next ordinary save recreates it.
+    func discardSaveBackup() {
+        try? FileManager.default.removeItem(at: backupURL)
+    }
+
     /// Keeps the exact in-memory document that an import is about to change.
     /// This is separate from the rolling save backup: recent edits may not have
     /// reached that file yet when the user imports.

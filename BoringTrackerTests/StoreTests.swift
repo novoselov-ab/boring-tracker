@@ -1129,6 +1129,34 @@ struct StoreTests {
         #expect(store.document.isEmpty)
     }
 
+    @Test("A clear takes the undisclosed copy with it, not just the visible one")
+    func clearAllDiscardsTheRollingBackup() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let current = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))]
+        )
+        let store = makeStore(current, file: file, window: .seconds(60))
+        // A save first, so the rolling backup exists and holds real history —
+        // which is the state anybody who has used the app is in.
+        try file.write(current)
+        try file.write(current)
+        #expect(try file.read(file.backupURL) == current)
+
+        try await store.clearAll()
+
+        // The recovery slot keeps the document, because the confirmation says
+        // it will. `store.backup.json` does not, because nothing says it does:
+        // `StoreFile.load` reads it whenever the main file will not decode, so
+        // leaving it would let a cleared history come back on a later launch,
+        // long after the copy the user was told about had been spent.
+        #expect(try file.read(file.importBackupURL) == current)
+        #expect(!FileManager.default.fileExists(atPath: file.backupURL.path))
+        #expect(store.document.isEmpty)
+    }
+
     @Test("A document Restore would refuse is not promised back")
     func restorabilityOfTheCurrentDocument() {
         let tracker = Tracker(name: "Calories", modified: time(1))

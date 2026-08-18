@@ -139,7 +139,12 @@ struct DataTransferView: View {
                 }
                 .disabled(!hasAnything)
             } footer: {
-                Text("Removes every tracker and entry from this device. The document you have now is kept as a recoverable copy, so this can be undone until the next import or clear replaces it.")
+                // Hedged, and deliberately: whether the copy can be read back
+                // depends on the document, the check is O(n) over every entry,
+                // and a footer is drawn on every pass of this screen's body
+                // while a confirmation is built once. So the footer says what
+                // normally happens and points at the sentence that knows.
+                Text("Removes every tracker and entry from this device. The document you have now is normally kept as a recoverable copy, so this can be undone until the next import or clear replaces it — the confirmation says if it cannot be.")
             }
         }
     }
@@ -235,7 +240,13 @@ struct DataTransferView: View {
                     // number on the screen that means anything.
                     detail: "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) "
                         + "and \(count(summary.entriesRemoved, "entry", "entries"))."
-                        + (summary.keptBackup
+                        // `keptBackup` only says the copy was *written*.
+                        // Whether it can be read back out again is the other
+                        // question, and it is the one the confirmation just
+                        // answered — so a document that was warned about as
+                        // unrecoverable must not be told, one alert later, that
+                        // Restore brings it back.
+                        + (summary.keptBackup && isRecoverable
                             ? " Restore Previous Data brings it back."
                             : "")
                 )

@@ -1262,7 +1262,15 @@ final class Store {
     /// point is to end up with nothing.
     @discardableResult
     func clearAll() async throws -> ImportSummary {
-        try await applyIncoming(StoreDocument(), mode: .replace)
+        let summary = try await applyIncoming(StoreDocument(), mode: .replace)
+        // The rolling save backup still holds the whole pre-clear document —
+        // `StoreFile.write` copies the old file aside before every save — and
+        // `load` reads it whenever the main file will not decode. That is a
+        // second copy nobody was told about, of the data somebody has just
+        // asked to be rid of. The disclosed recovery slot is the copy a clear
+        // keeps; this one goes. See `StoreFile.discardSaveBackup`.
+        file.discardSaveBackup()
+        return summary
     }
 
     /// The transaction both of the above are: flush, decide, keep a copy, write,
