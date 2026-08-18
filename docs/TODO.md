@@ -398,30 +398,35 @@ for three reviews running. A thumb has none of that problem.
       same batch of hexes item 13b has since corrected, so it is a number to
       re-take rather than to trust.
 
-## 18. Asset catalog: the accent, then the icon
+## 18. Measure mint in light, then the icon
 
-Neither exists, and the accent question that 13c, 13d and 13e keep circling is
-really a missing asset catalog.
+**Rewritten — its old premise is gone.** This item argued that the accent had
+to become a colour set with light and dark variants, because one system hue
+could not serve both appearances: the teal measured 2.13:1 on a light-mode nav
+bar where the system blue Apple ships measures 3.89:1.
 
-**Define the accent as a colour set with light and dark variants.** One system
-hue has to work on both appearances and doesn't: on a nav bar in light mode
-this teal measures 2.13:1 where the system blue Apple ships measures 3.89:1.
-Apple tuned that background for the hue it shipped, so 13d's carve-out
-inherited the shape of Apple's decision without inheriting its number.
+That teal no longer exists. Item 13f replaced it with a mint, chosen from
+twelve candidates measured on the real screens — **but that comparison was
+dark-mode only**, at the user's direction, because dark is what this app is
+used in.
 
-That is not an argument for abandoning a system colour for a hand-picked hex.
-It is an argument for doing what the system colours themselves do: **two
-deliberate values, one per appearance.** A darker teal in light, the current
-bright one in dark — the mode this app is actually used in, and the one that
-already works.
+So the question is open again, and it is now a smaller one:
 
-- [ ] An accent colour set, light and dark variants, measured on both.
-- [ ] It resolves **13e** in passing: `Form` buttons, `.alert` and
-      `.confirmationDialog` all take the tint, including the import's
-      *Merge / Replace Everything…* dialog. 13e now carries the numbers this
-      has to beat — a tinted form row is **9.57:1 dark and 2.12:1 light** — and
-      the note that the tint reaches the row's text but not its icon.
+- [ ] **Measure mint in light mode**: as a nav bar tint, as a `Form` button
+      foreground (that is item 13e, still unresolved and waiting on exactly
+      this number), and as a fill behind a dark label.
+- [ ] **If it clears 3:1 in light, there is no colour set to build.** Say so,
+      tick 13e, and this item becomes the app icon alone. "The thing we already
+      have works in both" is a result.
+- [ ] **If it fails light, build the colour set**: a darker mint for light, the
+      current one for dark. Two deliberate values, one per appearance, which is
+      what the system colours themselves do — not a hand-picked hex replacing a
+      principled choice.
 - [ ] Then the app icon.
+
+The reasoning that survives from the old version: a single hue serving two
+appearances is a real constraint, and where it binds, a colour set is the
+answer rather than abandoning system colours. It simply may not bind here.
 
 ## 18b. Get the export into the share sheet — done
 
