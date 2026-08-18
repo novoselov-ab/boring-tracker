@@ -19,11 +19,18 @@ import SwiftUI
 /// differently.
 struct UndoBar: View {
     @Environment(Store.self) private var store
-    /// Whether the repeat offer is still standing, as far as the last time this
-    /// view was told. The predicate below is the truth; this is what makes a
-    /// redraw happen at the moment it changes, because elapsed time is not
-    /// state SwiftUI observes.
-    @State private var repeatOfferStands = true
+    /// The write whose offer has already run out, if one has.
+    ///
+    /// **It names the write rather than answering the question**, and that is
+    /// the whole of the design. Elapsed time is not state SwiftUI observes, so
+    /// something has to change to make a redraw happen at the moment the offer
+    /// lapses — but a plain `false` would be a second answer to "does the offer
+    /// stand", and a stale one: this view is mounted for the life of the screen,
+    /// so one instance serves every offer, and a flag left `false` by the last
+    /// one would suppress the bar for the next write until the task got round to
+    /// setting it back. Naming the write cannot go stale, because the next write
+    /// is a different date.
+    @State private var lapsed: Date?
     /// Whether a pending *deletion* is offered here as well as a repeat.
     ///
     /// True on History, which is where deleting happens. False on Repeat, which
@@ -75,11 +82,11 @@ struct UndoBar: View {
             .task(id: store.lastLoggedAgainAt) {
                 guard let at = store.lastLoggedAgainAt else { return }
                 let remaining = Self.repeatOffer - Date().timeIntervalSince(at)
-                repeatOfferStands = remaining > 0
-                guard remaining > 0 else { return }
-                try? await Task.sleep(for: .seconds(remaining))
-                guard !Task.isCancelled else { return }
-                repeatOfferStands = false
+                if remaining > 0 {
+                    try? await Task.sleep(for: .seconds(remaining))
+                    guard !Task.isCancelled else { return }
+                }
+                lapsed = at
             }
     }
 
@@ -121,7 +128,12 @@ struct UndoBar: View {
             // it. Undo is not gone — the write is an ordinary batch in History
             // and a swipe removes it — but the *offer* stops being one, which
             // is what a bar reading "Logged again" is for.
-            guard repeatOfferStands, let at = store.lastLoggedAgainAt,
+            //
+            // The clock decides and `lapsed` only says which write the task has
+            // already seen out, so the worst a missed task can do is leave the
+            // bar drawn until the next redraw — never hide the offer for a write
+            // that has just happened.
+            guard let at = store.lastLoggedAgainAt, lapsed != at,
                   Date().timeIntervalSince(at) < Self.repeatOffer
             else { return nil }
             // Named honestly when the row was only partly repeatable: the tap
