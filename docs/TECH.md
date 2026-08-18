@@ -231,9 +231,9 @@ ever is, it remains a contained change.
 
 **Two screens did not hold, and the reason was a `Section`.** History built a
 row per *log* and tracker detail a row per entry, and both a *section per day* —
-17,679 rows and **1,733** sections at five years, one per day that has anything
-in it rather than one per day on the calendar — and a `List` pays about **0.8ms
-for every section it is handed, whatever is in it**. Opening History blocked the
+for History, **17,647 rows and 1,733 sections** at five years, one section per
+day that has anything in it rather than one per day on the calendar — and a
+`List` pays about **0.8ms for every section it is handed, whatever is in it**. Opening History blocked the
 main thread for 1.5 seconds; all 17,647 rows in a single section cost 185ms.
 Both screens now draw one section with the day heading as a row, and open in
 **321–327ms** and **363–586ms**, still showing every row (docs/scale.md).

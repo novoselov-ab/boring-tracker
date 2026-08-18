@@ -178,8 +178,9 @@ chart built from every entry there is.
 not assumed: an `NSLog` in `historyItems` prints 8 times across the whole test —
 one for the screen opening and one for each of seven letters — and none for ten
 flings. The 31ms is honest; the other 100–545ms is SwiftUI, and the sentence
-that used to be here guessed *which* SwiftUI. It said the cost was diffing 1,733
-sections and 17,679 rows against a new one. Half right: it was the sections
+that used to be here guessed *which* SwiftUI. It said the cost was diffing the
+day sections and every row against a new one — 1,733 and 17,647 on this fixture,
+where the sentence had 1,825 sections and the first fixture's 17,679 rows. Half right: it was the sections
 alone, and the rows were nearly free.
 
 ## It was the sections, and only the sections
@@ -237,9 +238,11 @@ whole problem was that it is 1,733 days long.
 computed property asked **three** questions per redraw — the chart's guard, the
 empty state's, and the `ForEach` — so one tracker's entries were walked, grouped
 and sorted three times. Counted rather than estimated, with a counter in the
-property itself: **three reads costing 31.3–31.7ms, against one costing
-12.0–13.0ms after**. The "four questions … 35ms where one walk is 9ms" first
-recorded here had the shape right and both numbers a little wrong. And
+property itself: **three reads costing 31.3–31.7ms between them, against one
+costing 12.0–13.0ms after**. Three reads are not three times one — the first
+walk is the dear one and the two behind it run on warm caches — which is why the
+"35ms where one walk is 9ms" first recorded here is close enough on the timings.
+It was the count that was wrong. And
 `.accessibilityElement(children: .combine)` on the new day heading cost **180ms
 of 400**, because combining children is not lazy the way a row body is: all
 1,733 headings resolve their children whether or not they are on screen. It was
@@ -263,7 +266,11 @@ independent of the two the fix was built on: 29,320 entries, 17,272 logs, 1,726
 days with something in them, 8,285,677 bytes. The probe is not XCUITest and
 needs no clicker — a `CADisplayLink` in the app, and a launch argument that
 pushes the screen programmatically once the app has settled, so it runs against
-a locked Mac. Release, iPhone 17 Pro simulator, three runs each, worst frame:
+a locked Mac. The accessibility tree this page says was unavailable *is*
+readable that way — `simctl spawn defaults write com.apple.Accessibility
+ApplicationAccessibilityEnabled 1` starts the server, and the probe then walks
+the live `UICollectionView`'s cells from inside the app. Release, iPhone 17 Pro
+simulator, three runs each, worst frame:
 
 | | before | after |
 |---|---|---|
@@ -294,11 +301,15 @@ heading carries the header trait; the day with nothing has none.
 **One thing the review found rather than confirmed.** Tracker detail's heading
 put `.accessibilityAddTraits(.isHeader)` on the `HStack`, and a trait set on a
 container reaches every child, so the day's *total* became a heading too — the
-same tree read as `Today`, `250 kcal`, `Sun, Aug 16`, `5,550 kcal`, which is
-3,466 rotor stops for 1,733 days, half of them bare numbers. The same read of
-the section header it replaced shows that header marking its label and leaving
-its total alone. The trait moved onto the label, which restores it at no cost;
-detail still opens in 257–306ms. History's heading is a single `Text` and was
+same tree read as `Today`, `250 kcal`, `Sun, Aug 16`, `5,550 kcal`, half of
+them bare numbers — 3,452 rotor stops for this fixture's 1,726 days, and 3,466
+for the 1,733 the fix was measured on. The same read of the section header it
+replaced shows that header marking its label and leaving its total alone. The
+trait moved onto the label, which costs nothing: 258–306ms before the move and
+258–306ms after, three runs each on the same probe build, where the run straight
+after an install is the slow one exactly as it is everywhere else on this page.
+(The table's 237–267ms is the build with no counter in it, which is why it is not
+the number quoted here.) History's heading is a single `Text` and was
 never affected — the two hand-drawn copies of one heading had come apart, which
 is the thing this app usually spends a shared component to avoid.
 

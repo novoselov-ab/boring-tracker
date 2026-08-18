@@ -785,9 +785,10 @@ opened and read. But you read names and values; ids are noise at any length.
 ## 25. Jump to a date in History
 
 At five years History is 1,733 days of rows in one section, and reaching last
-March means scrolling past everything since — about 1,300 flings (docs/scale.md).
-Photos solves this with a scrubber, and the pattern is right: a way to *go*
-somewhere, not a filter that hides the rest.
+March means scrolling past everything since. Measured: 30 fast flings go 41 days
+back, so the far end of five years is about 1,300 flings away and last spring is
+a few hundred (docs/scale.md). Photos solves this with a scrubber, and the
+pattern is right: a way to *go* somewhere, not a filter that hides the rest.
 
 - [ ] A control that jumps the list to a chosen date — a scrubber, a compact
       date picker, or a month index, whichever reads best at that length.

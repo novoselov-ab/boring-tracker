@@ -254,8 +254,13 @@ struct HistoryView: View {
     /// here so the next person knows where to look.
     ///
     /// The clear background is what keeps the day boundary visible: the rows
-    /// either side of it sit on the card colour, so a row that does not draws
-    /// the same gap two cards used to leave.
+    /// either side of it sit on the card colour, so a row that does not draws a
+    /// gap where two cards used to leave one. **Not the same gap** — the review
+    /// measured this one at about 17 points a day wider, and the first heading
+    /// 47 points lower than the first card was, because these insets are paid on
+    /// top of what a headerless `Section` already reserves rather than instead
+    /// of it. Left as it is and parked in docs/TODO.md under "Noted, not
+    /// scheduled"; the numbers are in docs/scale.md.
     ///
     /// `TrackerDetailView.dayHeading` is the same heading with the day's total
     /// beside it, and the two have already drifted once over where the header
