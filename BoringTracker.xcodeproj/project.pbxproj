@@ -46,6 +46,7 @@
 		DB7398BCB98F2E2DF4B6E50B /* TrackerChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56577BF218740A2F6BE440BC /* TrackerChart.swift */; };
 		F1CF8099B0D58833A89EF2A3 /* StoreDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A969A39BC7CB25B3D09CCB18 /* StoreDocument.swift */; };
 		F3CA641D45F0D2640F1FF9ED /* RepeatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3DF2D06C5E4CCDF594F527 /* RepeatView.swift */; };
+		F54F8D831922A7B54D46BA41 /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D7080C724834E175BAFC840 /* Appearance.swift */; };
 		FA023783678C32DAFED319A5 /* TrackerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FEF582BB28BAC2425B52542 /* TrackerDetailView.swift */; };
 		FC7CEDE59CFB7B5247178990 /* MergeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9294BF10816F1BD93987BC0B /* MergeTests.swift */; };
 /* End PBXBuildFile section */
@@ -94,6 +95,7 @@
 		97360C9D3403639D7FCCA007 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		9B8C3613C99FFF55FC53AFE4 /* CSVExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportTests.swift; sourceTree = "<group>"; };
 		9C0ADCD149B1C513DBDA3274 /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
+		9D7080C724834E175BAFC840 /* Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Appearance.swift; sourceTree = "<group>"; };
 		9DE9A4618A2A9716EAAD9D24 /* DataTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferView.swift; sourceTree = "<group>"; };
 		9FEF582BB28BAC2425B52542 /* TrackerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerDetailView.swift; sourceTree = "<group>"; };
 		A459D3E53C6D189A1607B841 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 		6567DFEE7620DBD6C87BB698 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				9D7080C724834E175BAFC840 /* Appearance.swift */,
 				B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */,
 				C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */,
 				5B941541BF6510B5BEF12183 /* DayKey.swift */,
@@ -310,6 +313,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F54F8D831922A7B54D46BA41 /* Appearance.swift in Sources */,
 				B2B2A91BCFE51F52536FAC2D /* BatchEditor.swift in Sources */,
 				90F6373A0190CF5CB7D6A78E /* BoringTrackerApp.swift in Sources */,
 				77B806464D7C20CCA40A15D6 /* CSVExport.swift in Sources */,

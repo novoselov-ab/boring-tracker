@@ -8,6 +8,11 @@ struct BoringTrackerApp: App {
     /// longer than reading the file takes.
     @State private var store = Store()
     @Environment(\.scenePhase) private var scenePhase
+    /// Light, dark or system. `UserDefaults` rather than the document, and read
+    /// here rather than in a view, because it has to be applied above every
+    /// screen the app has — including the sheets, which are presented outside
+    /// the navigation stack. See `Appearance`.
+    @AppStorage(Appearance.key) private var appearance = Appearance.system
 
     var body: some Scene {
         WindowGroup {
@@ -45,6 +50,11 @@ struct BoringTrackerApp: App {
                 // `.tint` shape style expecting the accent, because this is what
                 // it resolves to.
                 .tint(.primary)
+                // `nil` for `.system`, which is the absence of an override
+                // rather than a third colour scheme — so the app follows the
+                // phone, including the phone's own per-app setting, until
+                // somebody says otherwise here.
+                .preferredColorScheme(appearance.colorScheme)
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase != .active else {

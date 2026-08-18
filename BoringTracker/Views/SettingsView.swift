@@ -10,6 +10,9 @@ import SwiftUI
 /// editor, which is five fields and genuinely does not fit in a row.
 struct SettingsView: View {
     @Environment(Store.self) private var store
+    /// The same key the app root reads, so the switch and what it switches
+    /// cannot come apart. UI state, in `UserDefaults` — see `Appearance`.
+    @AppStorage(Appearance.key) private var appearance = Appearance.system
     @State private var editing: Tracker?
     @State private var rowFrames: [UUID: CGRect] = [:]
     @State private var visibleBounds: CGRect = .zero
@@ -77,6 +80,31 @@ struct SettingsView: View {
                 } footer: {
                     Text("Hidden from the home screen. Nothing logged against them is lost.")
                 }
+            }
+
+            // Below the trackers and above the data actions: it is a
+            // preference about this phone rather than a thing you own, so it
+            // belongs with the app's own settings and not among the records.
+            Section {
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(Appearance.allCases) { option in
+                        Text(option.label).tag(option)
+                    }
+                }
+                // Three short words, and all three fit — so the choice is
+                // visible without a tap, the way the tracker editor already
+                // shows both kinds. `.tint(.primary)` does not spoil this the
+                // way it spoils a `Toggle`: a segmented control's selection is
+                // a background, not a fill drawn in the tint.
+                .pickerStyle(.segmented)
+            } header: {
+                // The segmented style drops the picker's own label, so the
+                // heading is what names the row. Without it the section is
+                // three words and a paragraph about "System", and nothing
+                // saying what is being chosen.
+                Text("Appearance")
+            } footer: {
+                Text("System follows the phone, including its own per-app setting. This is stored on this device only — it is not part of your data and does not export.")
             }
 
             DataTransferView()
