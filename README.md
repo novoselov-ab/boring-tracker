@@ -1,5 +1,7 @@
 # Boring Tracker
 
+[![Build and test](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml)
+
 iPhone app for tracking whatever you want — macros, habits, or any other data.
 
 Free, open source, no ads, no accounts, no subscription, no server. Type a

@@ -1,0 +1,103 @@
+name: Build and test
+
+# Every push and every pull request, with no path filters. The 200 tests are
+# the thing being protected and there is no change to this repo that cannot
+# break them.
+on:
+  push:
+  pull_request:
+
+# A workflow is where secrets and code execution meet, so it gets the least it
+# can do its job with. Nothing here writes to the repository.
+permissions:
+  contents: read
+
+# One run per ref. This repo is private, so macOS minutes bill at 10x, and a
+# superseded commit's run is minutes spent on an answer nobody will read.
+# Cancelling means an intermediate commit can end with no result, which is the
+# trade: what matters is that the tip of a branch is green.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned rather than left to the image default. A hosted runner's default
+  # Xcode moves without warning, and a suite that goes red because someone
+  # else shipped a toolchain is worse than no CI. This is the Xcode the app is
+  # developed and verified with (docs/TECH.md), so red here means the code
+  # broke. When the runner image eventually drops this version the failure is
+  # loud and obvious — `xcode-select` says the directory does not exist —
+  # which is the trade being taken: a break we can read beats a drift we
+  # cannot see.
+  XCODE_APP: /Applications/Xcode_26.3.app
+  # The version that generated the committed .xcodeproj. Pinning it is what
+  # makes the regenerate check below mean anything: an unpinned xcodegen would
+  # eventually change its output and fail the check on a diff nobody authored.
+  # (Measured 2026-08-17: 2.46.0 still produces a byte-identical project.pbxproj
+  # for this spec, but its release notes change target ordering, and this spec
+  # is only immune by the accident of being alphabetical already.)
+  XCODEGEN_VERSION: 2.45.4
+  XCODEGEN_SHA256: 090ec29491aad50aec10631bf6e62253fed733c50f3aab0f5ffc86bc170bdbef
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: macos-26
+    # A hung xcodebuild otherwise runs to the 6-hour default, at 10x billing.
+    # The whole job takes a few minutes; 30 is loose enough to absorb a slow
+    # runner and tight enough that a hang is cheap.
+    timeout-minutes: 30
+
+    steps:
+      # Pinned to a commit, not a tag: a tag can be moved to point at other
+      # code, and this is the one action here that runs before anything else.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "$XCODE_APP"
+          xcodebuild -version
+
+      - name: project.yml and .xcodeproj agree
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          echo "$XCODEGEN_SHA256  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 -c -
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate
+          if [ -n "$(git status --porcelain -- BoringTracker.xcodeproj)" ]; then
+            git --no-pager diff -- BoringTracker.xcodeproj
+            echo "::error::BoringTracker.xcodeproj does not match project.yml. Run xcodegen generate and commit the result."
+            exit 1
+          fi
+
+      # The destination is resolved here rather than written into the command,
+      # because every fixed form breaks on a runner image update: a device name
+      # ("iPhone 17") vanishes when the image drops it, an OS number is wrong
+      # the moment the runtime moves — and it is reported as "26.3.1" where the
+      # runtime calls itself "26.3", so OS=26.3 does not match either. Measured
+      # 2026-08-17: `platform=iOS Simulator,OS=latest` on its own does not
+      # resolve at all, because xcodebuild still needs a device to identify.
+      # Any available iPhone simulator will do — the app deploys to iOS 18 and
+      # these are logic tests with no UI target — so take the first one the
+      # selected Xcode says is available and say in the log which it was.
+      - name: Test
+        run: |
+          set -euo pipefail
+          # `grep -m1 ... || true`, not `grep | head -1`: under `pipefail` a
+          # no-match grep aborts the step before the check below can report
+          # anything, and a downstream `head` that exits first can leave grep
+          # dead of SIGPIPE on a run that actually succeeded.
+          simulator=$(xcrun simctl list devices available | grep -m1 -E '^[[:space:]]+iPhone' || true)
+          if [ -z "$simulator" ]; then
+            xcrun simctl list devices available
+            echo "::error::No iPhone simulator available for $(xcodebuild -version | head -1)."
+            exit 1
+          fi
+          echo "Simulator: $simulator"
+          udid=$(printf '%s\n' "$simulator" | sed -E 's/.*\(([0-9A-Fa-f-]{36})\).*/\1/')
+          NSUnbufferedIO=YES xcodebuild test \
+            -project BoringTracker.xcodeproj \
+            -scheme BoringTracker \
+            -destination "id=$udid"
