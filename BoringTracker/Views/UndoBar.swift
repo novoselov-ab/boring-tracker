@@ -25,11 +25,15 @@ struct UndoBar: View {
     /// the whole of the design. Elapsed time is not state SwiftUI observes, so
     /// something has to change to make a redraw happen at the moment the offer
     /// lapses — but a plain `false` would be a second answer to "does the offer
-    /// stand", and a stale one: this view is mounted for the life of the screen,
-    /// so one instance serves every offer, and a flag left `false` by the last
-    /// one would suppress the bar for the next write until the task got round to
-    /// setting it back. Naming the write cannot go stale, because the next write
-    /// is a different date.
+    /// stand", and a stale one: History mounts this bar for the life of the
+    /// screen, so one instance serves every offer there, and a flag left `false`
+    /// by the last one would suppress the bar for the next write until the task
+    /// got round to setting it back. Naming the write cannot go stale, because
+    /// the next write is a different date.
+    ///
+    /// It is a second condition all the same, and the clock is the one that
+    /// normally decides — the pair only comes apart if the wall clock moves
+    /// backwards during an offer, where this is what still ends it.
     @State private var lapsed: Date?
     /// Whether a pending *deletion* is offered here as well as a repeat.
     ///
@@ -129,10 +133,10 @@ struct UndoBar: View {
             // and a swipe removes it — but the *offer* stops being one, which
             // is what a bar reading "Logged again" is for.
             //
-            // The clock decides and `lapsed` only says which write the task has
-            // already seen out, so the worst a missed task can do is leave the
-            // bar drawn until the next redraw — never hide the offer for a write
-            // that has just happened.
+            // The clock decides in every ordinary case and `lapsed` only says
+            // which write the task has already seen out, so the worst a missed
+            // task can do is leave the bar drawn until the next redraw — never
+            // hide the offer for a write that has just happened.
             guard let at = store.lastLoggedAgainAt, lapsed != at,
                   Date().timeIntervalSince(at) < Self.repeatOffer
             else { return nil }
