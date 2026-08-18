@@ -49,7 +49,7 @@ position on a screen doubling as its membership. `0862976`
 *Save* became *Log*, the presentation animation went, and the confirm moved
 from the nav bar to directly above the keypad. `8cbbe54`
 
-## 6. Make settings and home agree
+## 6. Make settings and home agree — done
 
 Found by the item 4 review. Settings and home can disagree about where a
 grouped tracker sits, and a settings drag can be a **visible no-op**: with the
@@ -111,7 +111,7 @@ again rather than by reasoning about where a `List` is laid out.
 
 Not on the common path, so it is judged by correctness rather than taps.
 
-## 7. Put home's + in the thumb
+## 7. Put home's + in the thumb — done
 
 Found by the item 5 review, and it is the same mistake that item caught one
 screen earlier. Item 5 moved the log sheet's confirm into the thumb zone, but
