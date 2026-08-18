@@ -178,7 +178,7 @@ chart built from every entry there is.
 not assumed: an `NSLog` in `historyItems` prints 8 times across the whole test —
 one for the screen opening and one for each of seven letters — and none for ten
 flings. The 31ms is honest; the other 100–545ms is SwiftUI, and the sentence
-that used to be here guessed *which* SwiftUI. It said the cost was diffing 1,825
+that used to be here guessed *which* SwiftUI. It said the cost was diffing 1,733
 sections and 17,679 rows against a new one. Half right: it was the sections
 alone, and the rows were nearly free.
 
@@ -218,14 +218,28 @@ those against the new structure at 29,729 entries.
 section, so one section is one card: the day heading is still a heading — same
 `.headline` in `.secondary`, matched against a real section header in a probe
 build, and still `.isHeader` to VoiceOver — and the gap between days is still
-there, but the white block behind each day no longer has rounded corners. That
-is the only visible difference, and it is not recoverable without either the
-sections or a hand-drawn corner radius that would have to be re-measured every
-time iOS restyles a list.
+there, but the white block behind each day no longer has rounded corners. It is
+not recoverable without either the sections or a hand-drawn corner radius that
+would have to be re-measured every time iOS restyles a list.
+
+**It is not the only visible difference, and the sentence that used to say so
+was corrected on measurement — see "What the review measured" below.** The
+heading's `listRowInsets(top: 18, …)` is paid *on top of* the spacing a
+headerless `Section` already reserves rather than instead of it, so History also
+gained a band of empty space it did not have: **3.0% more list, about 17 points
+a day, and the first heading roughly 47 points further down the screen you
+arrive on.** It is left as it is, deliberately: it is spacing rather than
+structure, and what the right gap between two days looks like now that there is
+no card is nobody's decision yet. But it is not nothing — this is a list whose
+whole problem was that it is 1,733 days long.
 
 **Two smaller things on the detail screen, found on the way.** Its `days` was a
-computed property asked four questions per redraw, so one tracker's entries were
-walked, grouped and sorted four times — 35ms where one walk is 9ms. And
+computed property asked **three** questions per redraw — the chart's guard, the
+empty state's, and the `ForEach` — so one tracker's entries were walked, grouped
+and sorted three times. Counted rather than estimated, with a counter in the
+property itself: **three reads costing 31.3–31.7ms, against one costing
+12.0–13.0ms after**. The "four questions … 35ms where one walk is 9ms" first
+recorded here had the shape right and both numbers a little wrong. And
 `.accessibilityElement(children: .combine)` on the new day heading cost **180ms
 of 400**, because combining children is not lazy the way a row body is: all
 1,733 headings resolve their children whether or not they are on screen. It was
@@ -239,6 +253,60 @@ it — for opening the sheet at 29,756 entries.
 or two dropped frames per fling, unchanged at any depth — but 30 fast flings from
 today reach 7 July, 41 days back. The far end of a five-year history is about
 1,300 flings away.
+
+### What the review measured
+
+The fix was reviewed in a fresh session that did not trust this page, and the
+numbers above were reproduced from scratch rather than read. **A third fixture**,
+generated from this page's description by a third throwaway tool, so it is
+independent of the two the fix was built on: 29,320 entries, 17,272 logs, 1,726
+days with something in them, 8,285,677 bytes. The probe is not XCUITest and
+needs no clicker — a `CADisplayLink` in the app, and a launch argument that
+pushes the screen programmatically once the app has settled, so it runs against
+a locked Mac. Release, iPhone 17 Pro simulator, three runs each, worst frame:
+
+| | before | after |
+|---|---|---|
+| open History | 1,186–1,191 ms | **210–214 ms** |
+| open a tracker's detail | 458–676 ms | **237–267 ms** |
+| sections in History's `List` | 1,726 | **1** |
+| items in it | 17,272 | **18,999** |
+| content height | 958,965 pt | 988,067 pt |
+| reads of detail's `days` per open | 3, costing 31.3–31.7 ms | **1, costing 12.0–13.0 ms** |
+
+Lower absolute numbers than the columns above and the same shape: **5.6× on
+History against the 4.7× recorded here, on a fixture 1.4% smaller and a probe
+that does not carry XCUITest's overhead.** The per-section cost implied by the
+pair is 0.57ms rather than 0.8ms, which is the same finding at a different
+machine's speed — 1,725 sections went away, 1,726 heading rows and one hint row
+arrived in their place, and 978ms of blocked main thread went with the sections.
+
+**Nothing is hidden, counted rather than assumed.** 18,999 items is exactly
+17,272 rows + 1,726 headings + one hint, and the collection view scrolls to item
+18,998 — the oldest day in the fixture, drawn with its heading. The pre-fix build
+reaches its own last row the same way. A second, hand-made fixture put the awkward
+days on screen: a day with one entry, a day with twenty, a day with nothing, the
+first day, the last day, and a batch written either side of midnight — which is
+drawn once, under its newest member's day, exactly as item 23 settled. Read off
+the live accessibility tree, every day with entries has one heading and every
+heading carries the header trait; the day with nothing has none.
+
+**One thing the review found rather than confirmed.** Tracker detail's heading
+put `.accessibilityAddTraits(.isHeader)` on the `HStack`, and a trait set on a
+container reaches every child, so the day's *total* became a heading too — the
+same tree read as `Today`, `250 kcal`, `Sun, Aug 16`, `5,550 kcal`, which is
+3,466 rotor stops for 1,733 days, half of them bare numbers. The same read of
+the section header it replaced shows that header marking its label and leaving
+its total alone. The trait moved onto the label, which restores it at no cost;
+detail still opens in 257–306ms. History's heading is a single `Text` and was
+never affected — the two hand-drawn copies of one heading had come apart, which
+is the thing this app usually spends a shared component to avoid.
+
+**Not verified here, and taken on trust:** the keystroke timings, the four
+single-variable builds behind the 0.8ms figure, and swipe-to-delete and
+tap-to-edit as *gestures* — the Mac's screen was locked, so there was no way to
+touch the screen. The controls themselves were read off the accessibility tree
+on the first and last rows of the list, where they are still a button apiece.
 
 ## Logging, saving, exporting, importing, merging
 

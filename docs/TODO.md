@@ -784,9 +784,10 @@ opened and read. But you read names and values; ids are noise at any length.
 
 ## 25. Jump to a date in History
 
-At five years History is 1,826 day sections, and reaching last March means
-scrolling past everything since. Photos solves this with a scrubber, and the
-pattern is right: a way to *go* somewhere, not a filter that hides the rest.
+At five years History is 1,733 days of rows in one section, and reaching last
+March means scrolling past everything since — about 1,300 flings (docs/scale.md).
+Photos solves this with a scrubber, and the pattern is right: a way to *go*
+somewhere, not a filter that hides the rest.
 
 - [ ] A control that jumps the list to a chosen date — a scrubber, a compact
       date picker, or a month index, whichever reads best at that length.
@@ -807,6 +808,24 @@ genuinely long.
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
 picking one up doesn't start with rediscovering why it's awkward.
+
+- [ ] **What the gap between two days should be, now that there is no card.**
+      The section fix left the day heading's `listRowInsets(top: 18, …)` sitting
+      *on top of* the spacing a headerless `Section` already reserves rather
+      than instead of it, and the review measured what that costs: History is
+      **3.0% taller — about 17 points a day — and its first heading starts some
+      47 points further down** the screen you arrive on (docs/scale.md). The
+      commit's claim that the rounded corners were the only visible difference
+      was corrected there.
+
+      Not fixed on the spot, deliberately: it is spacing, the screens read
+      perfectly well as they are, and picking a number is a taste decision
+      nobody has made — the old spacing was the *card's*, and the card is gone.
+      What makes it worth writing down rather than shrugging at is the length
+      of this particular list: 17 points a day over five years is 29,000 points
+      of extra scrolling in the one screen whose whole problem was its length.
+      `.listSectionSpacing` on Home and `.contentMargins(.top, 8)` on Repeat are
+      where this app has tuned the same thing before.
 
 - [ ] **Appearance switch in settings — light / dark / system.** Ordinary
       `.preferredColorScheme` driven by a stored preference. It is **UI state,
