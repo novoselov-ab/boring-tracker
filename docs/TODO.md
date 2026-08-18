@@ -919,6 +919,19 @@ picking one up doesn't start with rediscovering why it's awkward.
       holds anything the tap will not write — which is a better answer than the
       note expected, and it is why the undo bar needed no new wording.
 
+      **The review found that last paragraph half true, and it is now whole.**
+      Deciding *membership* on listable is right, but the row's *content* was
+      being decided on it too — so a batch that logged a live daily total
+      beside one you have since archived was drawn with both values while a tap
+      wrote only the live one. On an iPhone 17: a lunch of 300 kcal and 20 g of
+      an archived Protein listed as "300 kcal, 20 g" with a live disc, and the
+      bar said "Logged 1 of 2 again" from the very screen this item exists to
+      keep honest. The projection now runs twice — listable to decide whether
+      the row is here at all, writable to decide what it shows — and the
+      listable row is kept only where writable leaves nothing, which is the
+      fully archived row item 16 protects. Two tests, and the greyed
+      "shake · Archived" row is unchanged.
+
 - [x] **Say why a repeat disc is off.** Done with the first of the two cheap
       options — a word on the row — and it goes on the *identity* line, after
       the identity, in the same footnote grey, only when the disc is off.

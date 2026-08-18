@@ -229,6 +229,115 @@ struct RepeatTests {
         #expect(store.repeatItems.isEmpty)
     }
 
+    @Test("A row holding an archived member is listed as the live half a tap writes")
+    func archivedMembersAreProjectedOutOfALiveRow() throws {
+        // The shape an ordinary retirement produces: two daily totals logged by
+        // one sheet, and later you stop tracking one of them.
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        var protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food")
+        protein.isArchived = true
+        let batch = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, protein],
+                entries: [
+                    // The batch is the **newer** of the two, deliberately. The
+                    // collapse keeps a row per key and `historyItems` is
+                    // newest first, so dating the batch older would leave `row`
+                    // holding the plain entry, which never held the archived
+                    // member — the count assertion below would still catch the
+                    // bug, but the three that are about what a row *holds*
+                    // would pass without touching it.
+                    Entry(
+                        trackerID: calories.id, value: 300, date: time(40),
+                        name: "lunch", batchID: batch
+                    ),
+                    Entry(
+                        trackerID: protein.id, value: 20, date: time(40),
+                        name: "lunch", batchID: batch
+                    ),
+                    // The same lunch on a day the protein tracker was already
+                    // gone. One row with the one above, because both taps write
+                    // the same 300 kcal and nothing else.
+                    Entry(trackerID: calories.id, value: 300, date: time(10), name: "lunch"),
+                ]
+            )
+        )
+
+        // Listed once, and holding only what a tap writes. Membership is still
+        // decided archived-or-not — item 16 — but the content is not, or the
+        // row promises a protein figure `logAgain` drops.
+        let row = try #require(store.repeatItems.first)
+        #expect(store.repeatItems.count == 1)
+        #expect(row.entries.map(\.value) == [300])
+        #expect(store.repeatableEntries(of: row).map(\.value) == [300])
+
+        // And the bar the tap raises says "Logged again", not "Logged 1 of 2
+        // again": nothing visible on this screen was skipped.
+        store.logAgain(row)
+        #expect(store.lastLoggedAgain?.skipped == 0)
+    }
+
+    @Test("A collapsed row is dated by the last time it was logged, after projecting")
+    func collapsedRowsTakeTheNewestProjectedDate() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Food")
+        var protein = Tracker(name: "Protein", unit: "g", sortIndex: 1, group: "Food")
+        protein.isArchived = true
+        let batch = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, protein],
+                entries: [
+                    // A batch whose members were edited apart across the clock,
+                    // which `HistoryItem` supports on purpose. Unprojected the
+                    // row dates from the protein at 100 and so sorts first;
+                    // projected it is the 300 kcal at 10, which is older than
+                    // the plain lunch below.
+                    Entry(
+                        trackerID: calories.id, value: 300, date: time(10),
+                        name: "lunch", batchID: batch
+                    ),
+                    Entry(
+                        trackerID: protein.id, value: 20, date: time(100),
+                        name: "lunch", batchID: batch
+                    ),
+                    Entry(trackerID: calories.id, value: 300, date: time(50), name: "lunch"),
+                ]
+            )
+        )
+
+        // One row, dated by the last time you actually logged it. Keeping the
+        // first row met instead dates it 10 — a day label naming a time the
+        // projection invented, a sort tie-break reading it, and, at the edge of
+        // the counting window, a row counted out on a date nobody logged.
+        let row = try #require(store.repeatItems.first)
+        #expect(store.repeatItems.count == 1)
+        #expect(row.date == time(50))
+    }
+
+    @Test("A row with every member archived stays listed, unwritable and whole")
+    func fullyArchivedRowsStayListed() throws {
+        var calories = Tracker(name: "Calories", unit: "kcal")
+        calories.isArchived = true
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories],
+                entries: [
+                    Entry(trackerID: calories.id, value: 300, date: time(10), name: "lunch"),
+                ]
+            )
+        )
+
+        // The projection onto what a tap writes empties this one, and emptying
+        // it is not allowed to drop it: item 16's rule is that archiving a
+        // tracker must not take your food off this screen. It stays, greyed,
+        // whole, and `repeatBlockedReason` says which of the three it is.
+        let row = try #require(store.repeatItems.first)
+        #expect(row.entries.map(\.value) == [300])
+        #expect(store.repeatableEntries(of: row).isEmpty)
+        #expect(row.repeatBlockedReason(trackers: [calories.id: calories]) == "Archived")
+    }
+
     @Test("A batch is one row, and one named member is enough to list it")
     func batches() {
         let calories = Tracker(name: "Calories", unit: "kcal")

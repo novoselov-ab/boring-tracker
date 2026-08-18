@@ -353,6 +353,12 @@ Small enough to list completely.
   The undo lives on home, where the sheet leaves you — a bar that appears only
   after a repeat and goes when there is nothing left to take back.
 
+  **A row is what a tap writes, not everything the batch held.** A weigh-in
+  breakfast is listed as its calories, and a lunch logged beside a tracker you
+  have since archived is listed as the half still live — because a row here is
+  an offer to do that again, and an offer showing a number the tap will drop is
+  not one. History is the screen that still holds both, and still says so.
+
   **One row per thing you ate, not per time you ate it.** Rows sharing both a
   name and their values collapse into the newest of them, so forty logs of
   "chicken rice — 620 kcal, 45 g" are one row while the same food at a bigger
@@ -381,11 +387,19 @@ Small enough to list completely.
 
   **Nothing ever leaves this list.** A row with nothing inside the window
   counts zero and sinks; it does not disappear. Neither does one that can no
-  longer be written at all because every tracker it named has been archived or
-  deleted — it sorts below every row that can, with the whole row greyed and
-  disabled, and **the row says which of those it is** rather than leaving a
-  grey control to be interpreted. A screen that drops food when you archive a
-  tracker is editing your history.
+  longer be written at all because every tracker it named has been archived —
+  it sorts below every row that can, with the whole row greyed and disabled,
+  and **the row says why** rather than leaving a grey control to be
+  interpreted. A screen that drops food when you archive a tracker is editing
+  your history.
+
+  Two honest edges of that promise. A row whose every tracker was *deleted* is
+  not here at all — there is nothing left of it to log again, and History is
+  where a record with no tracker belongs. And a row can stop being its own row
+  by *merging*: since a row is what a tap writes, two rows that write the same
+  thing are one, even where the batches behind them differed in a part that is
+  not written. Neither is a row going missing; both follow from what this
+  screen is for.
 
   History says the same thing the same way. A row whose repeat disc is off
   carries the reason on its quiet identity line — *Archived*, *Measurement*, or

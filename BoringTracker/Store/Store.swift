@@ -448,6 +448,23 @@ final class Store {
     /// again whether or not you typed a word, and holds no measurement, however
     /// carefully one was named.
     ///
+    /// **Then a second cut, onto what a tap actually writes.** Membership has
+    /// to keep archived members or a listed row could vanish; the row's
+    /// *content* must not, or a batch logging a live total beside an archived
+    /// one draws a value the tap drops. The loop below does both, in that
+    /// order.
+    ///
+    /// **The second cut costs about 1ms, and about 2ms on twice the history.**
+    /// Measured the same way as the figures below — a Debug build on the
+    /// iPhone 17 simulator from a temporary test in this target, ten runs each,
+    /// the two alternating in one binary behind a temporary flag, over a
+    /// fixture of four named meal batches, two unnamed totals, a water and a
+    /// weight a day: **21.9–23.5ms against 20.9–22.5ms over 7,644 entries and
+    /// 44.6–51.3ms against 42.4–46.2ms over 15,288**, reproduced twice. At the
+    /// smaller size the ranges overlap, so the honest reading there is that it
+    /// is at the edge of the noise; at the larger one the gap is consistent.
+    /// It buys a row that does not lie about what a tap writes.
+    ///
     /// **A batch that mixes the two is listed as its daily totals.** It used to
     /// be refused whole, by a predicate that could only accept or reject a row
     /// — and refusing was right for the list even after item 23 made the tap
@@ -643,7 +660,21 @@ final class Store {
             // calories — right for "do that again", and the only way thirty
             // daily weigh-ins of one breakfast become one row instead of
             // thirty (`HistoryItem.keeping`).
-            guard let item = row.keeping({ listable.contains($0.trackerID) }) else { continue }
+            guard let listed = row.keeping({ listable.contains($0.trackerID) }) else { continue }
+            // **Twice, and the second one is what makes the promise true.**
+            // Membership is decided on `listable` above, because item 16 says
+            // archiving a tracker must not take your food off this screen. But
+            // a batch that logged a live total *and* one you have since
+            // archived survives that first cut whole, and a tap writes only the
+            // live half — so the row drew a value it would not write and the
+            // bar said "Logged 1 of 2 again", which is the gap this screen
+            // exists to close, moved from measurements onto archiving.
+            //
+            // So the content is projected again onto what a tap writes, and the
+            // listable row is kept only when that leaves nothing: a row whose
+            // every member is archived is unwritable, greyed, and says
+            // "Archived" — a record rather than a promise.
+            let item = listed.keeping({ targets.contains($0.trackerID) }) ?? listed
             let key = item.repeatKey
             // The only thing the window touches. Every row is still built and
             // still listed; one outside it simply adds nothing to its count.
@@ -651,6 +682,18 @@ final class Store {
             if let at = index[key] {
                 rows[at].count += counted
                 rows[at].lifetime += 1
+                // **The newest row wins the slot, by its projected date.**
+                // `historyItems` is newest first, so the first row met is
+                // normally already the newest — but it is sorted by the date
+                // the row had *before* projection, and projection can drop the
+                // member that date came from. A batch whose members were
+                // edited apart, holding a live total at 00:10 and an archived
+                // one at 01:40, arrives ahead of a plain log of the same thing
+                // at 00:50 and then projects down to 00:10. Keeping it would
+                // date the row before the last time you logged it, which the
+                // day label states outright, the tie-break below sorts on, and
+                // the counting window can drop a row on the strength of.
+                if item.date > rows[at].item.date { rows[at].item = item }
             } else {
                 index[key] = rows.count
                 // Once per collapsed row, not once per comparison, and it is the
@@ -661,9 +704,11 @@ final class Store {
                 )
             }
         }
-        // `historyItems` is newest first, so the tie-break is already in hand:
-        // a stable sort would do, and Swift's is not stable, hence the explicit
-        // date and `sortID` below.
+        // The tie-break is explicit rather than left to the sort's stability,
+        // which Swift's does not promise. It also cannot be left to the order
+        // `rows` was built in: that is `historyItems` order, which is the
+        // date each row had *before* projection, and the slot above now holds
+        // whichever collapsed row is newest after it.
         return rows
             .sorted { lhs, rhs in
                 if lhs.canRepeat != rhs.canRepeat { return lhs.canRepeat }
@@ -814,6 +859,11 @@ final class Store {
     /// whose history should vanish from a screen. Those rows stay listed, sort
     /// to the bottom and draw greyed. Deciding membership on what a tap can
     /// write instead would take them straight back out.
+    ///
+    /// **Membership only.** What a listed row *shows* is `repeatTargets` where
+    /// that leaves anything, so an archived member is projected out of a row
+    /// that still has a live one — and a row whose every member is archived
+    /// keeps them all, because it is the greyed record this set exists for.
     private var repeatListTargets: Set<UUID> {
         Set(trackers.lazy.filter { $0.kind != .measurement }.map(\.id))
     }

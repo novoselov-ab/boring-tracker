@@ -66,7 +66,12 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     ///
     /// Returns `self` untouched when everything is kept, which is the common
     /// case and the one on the hot path: `Store.repeatItems` asks this of every
-    /// row in the history.
+    /// row in the history, **twice** — once to decide membership and once to cut
+    /// the row down to what a tap writes. The second ask costs one `allSatisfy`
+    /// and no allocation on a document with nothing archived, which is why it is
+    /// two calls rather than one merged predicate: merging them would decide
+    /// membership on what a tap writes, and that empties the list the moment you
+    /// archive anything (`Store.repeatListTargets`).
     func keeping(_ isIncluded: (Entry) -> Bool) -> HistoryItem? {
         if entries.allSatisfy(isIncluded) { return self }
         return HistoryItem(entries: entries.filter(isIncluded))
