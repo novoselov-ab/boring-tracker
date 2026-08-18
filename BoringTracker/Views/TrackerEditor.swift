@@ -71,7 +71,7 @@ struct TrackerEditor: View {
             .pickerStyle(.segmented)
         } footer: {
             Text(draft.wrappedValue.kind == .dailyTotal
-                 ? "Entries add up over the day and start again at midnight."
+                 ? "Entries add up over the day and start again at \(resetsAt)."
                  : "Each entry is a reading on its own. Nothing resets.")
         }
 
@@ -100,6 +100,19 @@ struct TrackerEditor: View {
             Text("Trackers in a group are logged together, in one sheet — "
                 + "calories and protein come from the same meal.")
         }
+    }
+
+    /// When a daily total starts again, in this phone's terms.
+    ///
+    /// **Not the word "midnight".** It was hard-coded here, and the day start
+    /// became settable — so the one screen that explains what a daily total
+    /// *is* went on promising a boundary the app had stopped using. Found by
+    /// looking at the editor rather than by reading the diff, which is the
+    /// point of looking.
+    private var resetsAt: String {
+        store.dayStartHour == DayStart.midnight
+            ? "midnight"
+            : DayStart.label(store.dayStartHour, calendar: store.calendar)
     }
 
     /// The one place deleting a tracker is offered, because it is the only one

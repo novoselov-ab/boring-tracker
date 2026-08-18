@@ -1012,6 +1012,13 @@ picking one up doesn't start with rediscovering why it's awkward.
       skipped entirely at midnight where the notification already does the job.
       The graph's staleness key gained the hour for the same class of reason.
 
+      **And one the review did not find, because looking at a screen found it
+      instead.** `TrackerEditor`'s footer — the one sentence in the app that
+      explains what a daily total *is* — said "start again at midnight", hard
+      coded. It reads the setting now. It turned up while screenshotting the
+      new add-tracker sheet for a different item, which is the argument for
+      looking at the screen rather than only at the diff.
+
 - [x] **An About screen, with a link to the repository.** A pushed screen at
       the end of Settings: the version, a plain `Link` to the repo, and the two
       sentences that say what this app does not do. Nothing to test — it draws

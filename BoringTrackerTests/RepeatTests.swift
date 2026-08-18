@@ -323,6 +323,59 @@ struct RepeatTests {
         #expect(store.repeatItems.isEmpty)
     }
 
+    @Test("A projected row is still the same row History and home are pointing at")
+    func projectionKeepsTheRowIdentity() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal", group: "Morning")
+        let weight = Tracker(
+            name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 1,
+            group: "Morning"
+        )
+        let batch = UUID()
+        let store = repeatStore(
+            StoreDocument(
+                trackers: [calories, weight],
+                entries: [
+                    Entry(
+                        trackerID: calories.id, value: 200, date: time(10),
+                        name: "weigh-in", batchID: batch
+                    ),
+                    // The *newest* member, and the one the projection drops —
+                    // which is what makes this worth pinning: `HistoryItem`
+                    // takes its id from the newest entry it holds.
+                    Entry(
+                        trackerID: weight.id, value: 79.2, date: time(11),
+                        name: "weigh-in", batchID: batch
+                    ),
+                ]
+            )
+        )
+
+        let listed = try #require(store.repeatItems.first)
+        let full = try #require(store.historyItems.first)
+        // Same row, seen two ways. Every member of a batch shares its id, so
+        // dropping the newest one cannot change the answer — and if it ever
+        // did, `HomeView.wroteRow` would stop matching
+        // `Store.lastLoggedAgainRow` and the undo bar would silently never
+        // appear after a repeat from the Log again sheet.
+        #expect(listed.id == full.id)
+        #expect(listed.id == HistoryItem.ID.batch(batch))
+
+        // And that is the comparison home actually makes.
+        #expect(store.logAgain(listed))
+        let written = try #require(store.lastLoggedAgainRow)
+        #expect(written != listed.id)
+        // Nothing visible was skipped, because the row held only what the tap
+        // writes — so the bar says "Logged again" rather than "1 of 2".
+        #expect(store.lastLoggedAgain?.skipped == 0)
+        #expect(store.lastLoggedAgain?.count == 1)
+
+        // From History the same batch still reports the weight as skipped,
+        // because that row really does hold more than the tap writes.
+        store.undoLastLog()
+        #expect(store.logAgain(full))
+        #expect(store.lastLoggedAgain?.skipped == 1)
+    }
+
     // MARK: - Why a disc is off (docs/TODO.md)
 
     @Test("A greyed disc says which of the three reasons it is")
