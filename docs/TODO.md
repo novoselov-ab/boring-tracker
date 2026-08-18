@@ -919,23 +919,33 @@ picking one up doesn't start with rediscovering why it's awkward.
       holds anything the tap will not write — which is a better answer than the
       note expected, and it is why the undo bar needed no new wording.
 
-- [ ] **Say why a repeat disc is off.** Three reasons now — the tracker was
-      deleted, it was archived, or it is a measurement and a copy would be a
-      reading nobody took — and the row says so for exactly one of them
-      ("Deleted tracker"). The measurement case is the one that will be seen
-      most: somebody who weighs in daily gets a greyed disc on a large share of
-      their History rows, beside a tracker that is live and on home.
+- [x] **Say why a repeat disc is off.** Done with the first of the two cheap
+      options — a word on the row — and it goes on the *identity* line, after
+      the identity, in the same footnote grey, only when the disc is off.
+      "morning · Measurement", "shake · Archived", and nothing at all on a row
+      that can be repeated. The deleted case stays silent here because the
+      identity line already prints "Deleted tracker" and saying it twice on one
+      row is what item 14b's `identitySaysDeleted` exists to stop.
 
-      Item 14 already recorded the archived version of this and left it, and
-      item 14b's answer — the row leads with the tracker's name — is more than
-      it used to say but is not a reason. The cheap options are a word on the
-      row and no disc at all on a row that can never be repeated; the second is
-      a bigger change than it looks, because "no control" is how History says
-      nothing about a row rather than how it says "not this one".
+      Three reasons, one label, and the classification is **not** a second
+      opinion about whether the row can be repeated: `Store.repeatableEntries`
+      answers that, `HistoryItem.repeatBlockedReason` only says which of the
+      reasons it was. A third copy of the writability rule is exactly what item
+      23 was about.
 
-      The same gap is in the undo bar's wording: "Logged 1 of 2 again" is now
-      most often a weigh-in with both trackers live, and the sentence cannot
-      say which member was dropped or why (`Store.LoggedAgain.skipped`).
+      A row mixing an archived total with a live measurement says "Archived",
+      which is the actionable half — it names the thing you could unarchive.
+
+      **The undo bar needed no new wording, because item 6 removed the gap.**
+      "Logged 1 of 2 again" can now only come from History, where the row
+      visibly holds more than the tap writes and now says why; from Log again a
+      row holds only what the tap writes, so `skipped` is zero and the sentence
+      never appears. The answer is on the row you tapped rather than in the bar,
+      which is better than either option this note listed.
+
+      No disc at all on an unrepeatable row was the other option and is still
+      not taken, for the reason recorded: "no control" is how History says
+      nothing about a row, not how it says "not this one".
 
 - [x] **A configurable time for the daily reset.** Done, and it was the
       largest of the seven by some way — the estimate above is right about

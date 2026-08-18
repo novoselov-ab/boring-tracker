@@ -242,7 +242,14 @@ private struct RepeatRow: View {
             HStack(spacing: 8) {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(line.identity)
+                        // The same word History puts here, from the same
+                        // call, for the same reason: a dimmed row says
+                        // "unavailable" and does not say why. On this screen
+                        // the answer is always "Archived" — a deleted
+                        // tracker's row is not listed at all and a measurement
+                        // member is projected away before the row is built —
+                        // but the sentence is not written twice to prove it.
+                        Text(identityLine(line, canRepeat: canRepeat))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         Text(line.values)
@@ -272,6 +279,13 @@ private struct RepeatRow: View {
 
     private var day: DayKey {
         store.dayKey(item.date)
+    }
+
+    private func identityLine(_ line: HistoryItem.Line, canRepeat: Bool) -> String {
+        guard !canRepeat, let reason = item.repeatBlockedReason(trackers: trackers) else {
+            return line.identity
+        }
+        return "\(line.identity) · \(reason)"
     }
 }
 

@@ -342,6 +342,10 @@ private struct HistoryRow: View {
     /// of them.
     var body: some View {
         let line = line
+        // Asked once for the row and handed to both halves. It is the same call
+        // that decides what a tap writes, and asking it twice per row on a list
+        // as long as your history is a linear scan of the trackers per ask.
+        let canRepeat = !store.repeatableEntries(of: item).isEmpty
         // Two plain buttons with disjoint frames, the same shape a home card
         // uses: tapping the row edits it, tapping the disc logs it again.
         return HStack(spacing: 8) {
@@ -351,7 +355,7 @@ private struct HistoryRow: View {
                 // things belong together above the one loud one.
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(line.identity)
+                        Text(identityLine(line, canRepeat: canRepeat))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         Text(line.values)
@@ -366,7 +370,7 @@ private struct HistoryRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
-            repeatButton
+            repeatButton(canRepeat: canRepeat)
         }
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
     }
@@ -399,8 +403,7 @@ private struct HistoryRow: View {
     /// after item 14b: an archived tracker's row now leads with that tracker's
     /// name, which is more than it used to say, and "Archived" on the row is a
     /// label about the tracker rather than about the thing that was logged.
-    private var repeatButton: some View {
-        let canRepeat = !store.repeatableEntries(of: item).isEmpty
+    private func repeatButton(canRepeat: Bool) -> some View {
         // `RepeatDisc`, not a disc drawn here: this action appears in three
         // places and drawing it three times is what let home's copy come out a
         // different colour (docs/TODO.md item 21). The greying follows the
@@ -413,6 +416,24 @@ private struct HistoryRow: View {
 
     private var line: HistoryItem.Line { item.line(trackers: trackers) }
 
+    /// The identity line, with the reason the disc is off appended when it is.
+    ///
+    /// **On the quiet line, not beside the disc.** There is no room by the disc
+    /// — it is 44pt of a row whose other end is the time — and the identity
+    /// line is already where this row says what it is, and where "Deleted
+    /// tracker" has always appeared. A word there costs no height at any type
+    /// size, wraps with the line it is on, and is read in the same glance as
+    /// the thing it is about.
+    ///
+    /// Nothing is appended while the disc works: a row that can be repeated has
+    /// nothing to explain, and a label on every row would be noise on the
+    /// screen you scroll most.
+    private func identityLine(_ line: HistoryItem.Line, canRepeat: Bool) -> String {
+        guard !canRepeat, let reason = item.repeatBlockedReason(trackers: trackers) else {
+            return line.identity
+        }
+        return "\(line.identity) · \(reason)"
+    }
 }
 
 #Preview {

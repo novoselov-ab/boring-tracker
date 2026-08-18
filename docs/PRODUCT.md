@@ -383,8 +383,14 @@ Small enough to list completely.
   counts zero and sinks; it does not disappear. Neither does one that can no
   longer be written at all because every tracker it named has been archived or
   deleted — it sorts below every row that can, with the whole row greyed and
-  disabled. A screen that drops food when you archive a tracker is editing your
-  history.
+  disabled, and **the row says which of those it is** rather than leaving a
+  grey control to be interpreted. A screen that drops food when you archive a
+  tracker is editing your history.
+
+  History says the same thing the same way. A row whose repeat disc is off
+  carries the reason on its quiet identity line — *Archived*, *Measurement*, or
+  the *Deleted tracker* it has always printed — and a row whose disc works
+  carries nothing extra.
 
 - **Tracker detail** — the graph on top, that tracker's entries below, grouped
   by day. Swipe to delete, tap to edit.

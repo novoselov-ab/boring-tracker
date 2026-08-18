@@ -323,6 +323,54 @@ struct RepeatTests {
         #expect(store.repeatItems.isEmpty)
     }
 
+    // MARK: - Why a disc is off (docs/TODO.md)
+
+    @Test("A greyed disc says which of the three reasons it is")
+    func repeatBlockedReasons() throws {
+        let calories = Tracker(name: "Calories", unit: "kcal")
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1)
+        var archived = calories
+        archived.isArchived = true
+        let known = [calories.id: calories, weight.id: weight]
+
+        // A weigh-in on a live, unarchived scale. This is the case that will be
+        // seen most: a greyed disc on a large share of somebody's History rows,
+        // beside a tracker that is on the home screen.
+        let reading = try #require(
+            HistoryItem(entries: [
+                Entry(trackerID: weight.id, value: 79.2, date: time(10), name: "morning"),
+            ])
+        )
+        #expect(reading.repeatBlockedReason(trackers: known) == "Measurement")
+
+        // An archived daily total. Item 14 recorded that this row says nothing
+        // at all about why its disc is off; now it does.
+        let archivedRow = try #require(
+            HistoryItem(entries: [
+                Entry(trackerID: calories.id, value: 200, date: time(10), name: "toast"),
+            ])
+        )
+        #expect(archivedRow.repeatBlockedReason(trackers: [calories.id: archived]) == "Archived")
+
+        // Every tracker gone. The identity line already prints "Deleted
+        // tracker", so this adds nothing rather than saying it twice.
+        #expect(archivedRow.repeatBlockedReason(trackers: [:]) == nil)
+
+        // An archived total logged with a live measurement: nothing writable,
+        // and "Archived" is the half you could act on.
+        let batch = UUID()
+        let mixed = try #require(
+            HistoryItem(entries: [
+                Entry(trackerID: calories.id, value: 200, date: time(10), batchID: batch),
+                Entry(trackerID: weight.id, value: 79.2, date: time(10), batchID: batch),
+            ])
+        )
+        #expect(
+            mixed.repeatBlockedReason(trackers: [calories.id: archived, weight.id: weight])
+                == "Archived"
+        )
+    }
+
     @Test("The same name at the same values is one row, a bigger portion is its own")
     func dedupesByNameAndValues() throws {
         let tracker = Tracker(name: "Calories", unit: "kcal")

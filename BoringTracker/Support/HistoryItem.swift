@@ -72,6 +72,33 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return HistoryItem(entries: entries.filter(isIncluded))
     }
 
+    /// Which of the three reasons a repeat is not offered for this row, in one
+    /// word — or `nil` when the row has already said it.
+    ///
+    /// **Ask this only about a row that cannot be repeated.** It decides *which*
+    /// reason, never *whether*: that question is `Store.repeatableEntries`, and
+    /// a second implementation of it here is exactly the third copy item 23 was
+    /// about. So the branches below are a classification of an answer already
+    /// given, not a second opinion.
+    ///
+    /// A uniformly grey disc explained none of the three (docs/TODO.md). The
+    /// deleted case was the only one the row spoke to, through "Deleted
+    /// tracker" on the identity line — so it returns `nil` rather than saying
+    /// it twice. The measurement case is the one that will be seen most:
+    /// somebody who weighs in daily gets a greyed disc on a large share of
+    /// their History rows, beside a tracker that is live and on the home
+    /// screen.
+    ///
+    /// A row mixing an archived total with a live measurement gets "Archived",
+    /// which is the actionable half — it names the thing you could unarchive to
+    /// make the row repeatable again. "Measurement" is reserved for the rows
+    /// where unarchiving nothing would help.
+    func repeatBlockedReason(trackers: [UUID: Tracker]) -> String? {
+        let resolved = entries.compactMap { trackers[$0.trackerID] }
+        guard !resolved.isEmpty else { return nil }
+        return resolved.allSatisfy { $0.kind == .measurement } ? "Measurement" : "Archived"
+    }
+
     /// What makes two rows the same thing you ate: the names you typed, and
     /// every value against the tracker it was logged to.
     ///
