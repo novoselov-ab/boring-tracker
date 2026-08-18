@@ -150,10 +150,30 @@ coalescing; the one action a person takes and then immediately quits is not.
 
 **Every import has a one-step safety net, merge included.** It writes the exact
 current document — including edits still inside the save debounce — to
-`store.before-import.json`. Settings exposes **Restore Data Before Last Import…**
+`store.before-import.json`. Settings exposes **Restore Previous Data…**
 whenever that file exists. Restoring swaps the documents: the current one becomes
 the recoverable backup, so a mistaken restore can be reversed too. A later import
 intentionally advances this one-step backup.
+
+**Deleting all data is the same transaction with an empty argument.**
+`Store.clearAll` is a replacing import of `StoreDocument()`, run through the
+same `applyIncoming` — so it inherits the drained save queue, the staged copy,
+and the restore row, and one confirmation naming the counts is then enough
+(docs/TODO.md item 24). The row is called *Restore Previous Data…* rather than
+*Restore Data Before Last Import…* because a clear fills the slot too. It writes
+**no tombstones** for what it removes, which is `replace`'s meaning inherited:
+the document afterwards is the argument, so an older export merged back in
+returns the data, and "start over" does not leave a file as long as the history
+it just removed.
+
+**The recovery promise is conditional, because restoring is stricter than
+loading.** `StoreFile.load` validates nothing, so a hand-edited `store.json`
+with a duplicate id or `decimals` outside 0…3 opens fine — and
+`restoreImportBackup` runs `validateImport` and refuses it, which would make a
+clear irreversible under a dialog that had just said it was not.
+`Store.currentDocumentIsRestorable` asks the question before either destructive
+confirmation words itself, and both say the other thing when the answer is no.
+No document this app can produce fails it.
 
 The copy is **staged beside the slot and committed only once the imported
 document is safely on disk.** The slot holds one document, so overwriting it is

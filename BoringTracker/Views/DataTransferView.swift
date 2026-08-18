@@ -2,8 +2,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The escape hatch promised by rule 6: complete JSON out and back in, plus a
-/// CSV view for spreadsheets. Import is the app's only destructive workflow,
-/// so merge and replace are said apart before either one runs.
+/// CSV view for spreadsheets, and the one action that ends with nothing left.
+/// These are the app's destructive workflows, so merge and replace are said
+/// apart before either one runs and a clear says what it is about to remove.
 struct DataTransferView: View {
     @Environment(Store.self) private var store
 
@@ -11,15 +12,25 @@ struct DataTransferView: View {
     @State private var pendingImport: Data?
     @State private var isRestoringBackup = false
     @State private var isChoosingImportMode = false
+    /// Whether the document a destructive action is about to replace could come
+    /// back out of the recovery slot — see `Store.currentDocumentIsRestorable`.
+    ///
+    /// Captured when the button is tapped rather than read from inside the
+    /// alert: the check walks every tracker and entry, and an alert's content
+    /// is not somewhere to put an O(n) question about a document that cannot
+    /// change while the alert is up.
+    @State private var isRecoverable = true
     @State private var presentedAlert: PresentedAlert?
 
     private enum PresentedAlert: Identifiable {
         case confirmReplace
+        case confirmClear
         case message(title: String, detail: String)
 
         var id: String {
             switch self {
             case .confirmReplace: "confirm-replace"
+            case .confirmClear: "confirm-clear"
             case .message(let title, let detail): "message:\(title):\(detail)"
             }
         }
@@ -63,8 +74,14 @@ struct DataTransferView: View {
                     isRestoringBackup = false
                     isImporting = true
                 }
+                // "Previous Data", not "Data Before Last Import", since item 24:
+                // the slot is filled by a clear as well as by an import, and a
+                // row offering to undo the import you did last week when what
+                // it holds is the document you cleared a minute ago is a wrong
+                // sentence about the one action that undoes a destructive one.
+                // The alert this row raises has always called it that.
                 if store.hasImportBackup {
-                    Button("Restore Data Before Last Import…", systemImage: "arrow.uturn.backward") {
+                    Button("Restore Previous Data…", systemImage: "arrow.uturn.backward") {
                         isRestoringBackup = true
                         presentedAlert = .confirmReplace
                     }
@@ -91,7 +108,39 @@ struct DataTransferView: View {
             } message: {
                 Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, anything this changes is kept here as a recoverable backup.")
             }
+            // Left on the import section, where it has always presented from.
+            // It now serves the clear confirmation below as well as import's
+            // own two alerts — one `.alert(item:)` for the screen, rather than a
+            // second presentation attached to a section carrying a
+            // `.confirmationDialog`, which is the shape that silently broke
+            // `ShareLink` above.
             .alert(item: $presentedAlert, content: alert)
+
+            // The third whole-document action, beside the two that already move
+            // the whole document (docs/TODO.md item 24). One button, one
+            // confirmation, and the safety is the recoverable copy rather than
+            // the ceremony — see `Store.clearAll`.
+            //
+            // Off when there is nothing to delete, rather than raising a dialog
+            // that offers to remove nothing.
+            Section {
+                Button(role: .destructive) {
+                    isRecoverable = store.currentDocumentIsRestorable
+                    presentedAlert = .confirmClear
+                } label: {
+                    // **"All Data", not "Everything".** `TrackerEditor` already
+                    // has a *Delete Everything* — the one that takes a single
+                    // tracker with its history — and it says, correctly, that it
+                    // cannot be undone. Two buttons with one name and opposite
+                    // promises, both reached from this screen, is how somebody
+                    // learns here that "Delete Everything" is recoverable and
+                    // then finds out there that it is not.
+                    Label("Delete All Data…", systemImage: "trash")
+                }
+                .disabled(!hasAnything)
+            } footer: {
+                Text("Removes every tracker and entry from this device. The document you have now is kept as a recoverable copy, so this can be undone until the next import or clear replaces it.")
+            }
         }
     }
 
@@ -123,6 +172,7 @@ struct DataTransferView: View {
             let hasAccess = url.startAccessingSecurityScopedResource()
             defer { if hasAccess { url.stopAccessingSecurityScopedResource() } }
             pendingImport = try Data(contentsOf: url)
+            isRecoverable = store.currentDocumentIsRestorable
             isChoosingImportMode = true
         } catch {
             if !isCancellation(error) { show(error, action: "open") }
@@ -155,14 +205,44 @@ struct DataTransferView: View {
     /// Both directions, for both record types. A replace that removes trackers
     /// has to say so — see `Store.ImportSummary`.
     private func describe(_ summary: Store.ImportSummary) -> String {
-        func phrase(_ count: Int, _ singular: String, _ plural: String) -> String {
-            "\(count) \(count == 1 ? singular : plural)"
-        }
-        let added = "Added \(phrase(summary.trackersAdded, "tracker", "trackers")) and "
-            + "\(phrase(summary.entriesAdded, "entry", "entries"))."
-        let removed = "Removed \(phrase(summary.trackersRemoved, "tracker", "trackers")) and "
-            + "\(phrase(summary.entriesRemoved, "entry", "entries"))."
+        let added = "Added \(count(summary.trackersAdded, "tracker", "trackers")) and "
+            + "\(count(summary.entriesAdded, "entry", "entries"))."
+        let removed = "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) and "
+            + "\(count(summary.entriesRemoved, "entry", "entries"))."
         return "\(added) \(removed)"
+    }
+
+    /// "1 tracker", "1,247 entries". Grouped, because the number is the whole
+    /// point of the clear confirmation and `1247` is a number you skim past.
+    private func count(_ value: Int, _ singular: String, _ plural: String) -> String {
+        "\(value.formatted()) \(value == 1 ? singular : plural)"
+    }
+
+    /// Whether there is anything for a clear to remove.
+    private var hasAnything: Bool {
+        !store.trackers.isEmpty || !store.entries.isEmpty
+    }
+
+    private func clearEverything() {
+        Task {
+            do {
+                let summary = try await store.clearAll()
+                presentedAlert = .message(
+                    title: "Everything deleted",
+                    // Not `describe(_:)`, which leads with what was added. A
+                    // clear can never add anything, so that sentence would put
+                    // "Added 0 trackers and 0 entries" in front of the only
+                    // number on the screen that means anything.
+                    detail: "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) "
+                        + "and \(count(summary.entriesRemoved, "entry", "entries"))."
+                        + (summary.keptBackup
+                            ? " Restore Previous Data brings it back."
+                            : "")
+                )
+            } catch {
+                show(error, action: "delete")
+            }
+        }
     }
 
     private func alert(_ alert: PresentedAlert) -> Alert {
@@ -172,7 +252,9 @@ struct DataTransferView: View {
                 title: Text(isRestoringBackup ? "Restore previous data?" : "Replace all current data?"),
                 message: Text(isRestoringBackup
                     ? "Every current tracker and entry will be replaced by the document saved before the last import. The current document will take its place as the recoverable backup."
-                    : "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next import."),
+                    : isRecoverable
+                    ? "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next import."
+                    : "Every current tracker and entry will be removed and replaced by this file, and this one cannot be undone: the file on this device holds records that Restore would refuse. Share a copy from Export first if you want to keep anything."),
                 primaryButton: .destructive(Text(isRestoringBackup ? "Restore Previous Data" : "Replace Everything")) {
                     if isRestoringBackup {
                         restoreBackup()
@@ -184,6 +266,30 @@ struct DataTransferView: View {
                     pendingImport = nil
                     isRestoringBackup = false
                 }
+            )
+        case .confirmClear:
+            // **One confirmation, and it names the count.** A number is what
+            // makes somebody stop; "are you sure" is what they tap through, and
+            // a second dialog behind the first protects nothing the first did
+            // (docs/TODO.md item 24).
+            //
+            // Destructive, and not the default button: `.cancel` is the bold
+            // one in a two-button alert, so the tap your thumb finds is the one
+            // that keeps your data.
+            //
+            // Export is *suggested* rather than required. Gating a clear behind
+            // an export would put a file-picker in front of somebody who has
+            // already decided, and the recoverable copy — not the export — is
+            // what makes the decision safe to make. The Export rows are two
+            // sections up on this same screen, so pointing at them is a real
+            // offer rather than a shrug.
+            Alert(
+                title: Text("Delete \(count(store.trackers.count, "tracker", "trackers")) and \(count(store.entries.count, "entry", "entries"))?"),
+                message: Text(isRecoverable
+                    ? "Everything logged on this device goes. What you have now is kept as a recoverable copy, so Restore Previous Data brings it all back — until the next import or clear takes its place. If you want a copy that outlives that, share one from Export first."
+                    : "Everything logged on this device goes, and this one cannot be undone: the file on this device holds records that Restore would refuse, so no copy worth keeping can be made here. Share a copy from Export first if you want to keep anything."),
+                primaryButton: .destructive(Text("Delete All Data")) { clearEverything() },
+                secondaryButton: .cancel()
             )
         case .message(let title, let detail):
             Alert(title: Text(title), message: Text(detail), dismissButton: .default(Text("OK")))
@@ -204,7 +310,10 @@ struct DataTransferView: View {
     /// fail before they touch memory, whichever step threw.
     private func show(_ error: any Error, action: String) {
         pendingImport = nil
-        let unchanged = action == "import" || action == "restore" ? " Nothing was changed." : ""
+        // True of a clear for the same reason it is true of the other two: the
+        // transaction is one `Store.applyIncoming`, and every way it can fail
+        // throws before memory or the live file has moved.
+        let unchanged = ["import", "restore", "delete"].contains(action) ? " Nothing was changed." : ""
         let detail: String
         if let storeError = error as? StoreError {
             detail = storeError.errorDescription ?? "This file uses a schema this version cannot read.\(unchanged)"

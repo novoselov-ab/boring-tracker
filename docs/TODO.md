@@ -738,7 +738,7 @@ same row in History writes both. One rule, two answers, in the same app.
       often produced by a weigh-in whose trackers are both live, which is a
       cause the sentence cannot express. Both are in the noted list below.
 
-## 24. Delete everything, recoverably
+## 24. Delete everything, recoverably — done
 
 There is no way to start over without deleting the app. Settings should offer
 it, beside export and import where the other whole-document actions live.
@@ -750,16 +750,61 @@ through them, and the third one protects nothing the first did not. Import's
 restorable copy *before* destroying anything, and offers *Restore Data Before
 Last Import*. Clearing everything is the same action with a smaller argument.
 
-- [ ] Write the same pre-clear copy first, through the mechanism replace
+- [x] Write the same pre-clear copy first, through the mechanism replace
       already uses, and let the existing restore path cover it.
-- [ ] **One confirmation, naming what goes.** Not "are you sure" — say the
+- [x] **One confirmation, naming what goes.** Not "are you sure" — say the
       count: *"Delete 5 trackers and 1,247 entries?"* A number is what makes
       someone stop; a generic warning is what they tap through.
-- [ ] Destructive styling, and it is not the default button.
-- [ ] Say in the dialog that it can be undone from Restore, because that is
+- [x] Destructive styling, and it is not the default button.
+- [x] Say in the dialog that it can be undone from Restore, because that is
       the fact that makes the decision safe to make.
-- [ ] Export offers to run first if there is anything to lose — a suggestion,
+- [x] Export offers to run first if there is anything to lose — a suggestion,
       not a gate.
+
+`Store.clearAll` is `applyIncoming(StoreDocument(), mode: .replace)` — the
+import transaction with a smaller argument, not a second copy of it. So the
+drained save queue, the staged copy committed only once the empty document is
+durable, and the restore row all arrive for free, and the confirmation is the
+only thing that had to be written.
+
+**Five things this turned up that the item did not say**, three from building
+it and two from the review.
+
+The restore row was called *Restore Data Before Last Import…*, and a clear
+fills the same slot — so after clearing, the one action that undoes it offered
+to undo an import instead. Renamed to **Restore Previous Data…**, which is what
+the alert it raises has always called itself.
+
+**No tombstones for what goes**, inherited from `replace` rather than decided
+again, and now held by a test. A tombstone per record would have made "start
+over" leave a file as long as the history it removed — 29,756 of them after
+five years (docs/scale.md) — for the six months `tombstoneLifetime` keeps a
+deletion. The cost is `replace`'s cost: merge an older export afterwards and
+the data comes back.
+
+**Export is offered in words, not as a button.** A `ShareLink` cannot be an
+alert action, and presenting the share sheet from code would be this app's
+first UIKit bridge — turned down for the same reason in item 18b. The Export
+rows are two sections up on the same screen, so the sentence points at
+something that is actually there. If that ever reads as a shrug, the fix is a
+share row *inside* the clear section, not a second dialog.
+
+**The button is called *Delete All Data*.** *Delete Everything* was the obvious
+name and it was already taken: the tracker editor's second deletion says
+exactly that, means one tracker with its history, and tells you — correctly —
+that it cannot be undone. Two buttons with one name and opposite promises, both
+two taps apart on the Settings screen, is how somebody learns the wrong thing
+here and acts on it there.
+
+**The promise is conditional, because restoring is stricter than loading.**
+`StoreFile.load` validates nothing and `restoreImportBackup` runs
+`validateImport`, so a hand-edited `store.json` — a duplicate id, `decimals`
+outside 0…3 — opens fine and can then be refused on the way back. The dialog
+would have promised an undo that was not there, in the one case where the
+sentence is doing all the work. `Store.currentDocumentIsRestorable` is asked
+before the wording is chosen, and the replacing import says the same thing for
+the same reason. The gap itself is older than this item; the unconditional
+promise was new.
 
 ## The ids stay UUIDs — decided
 

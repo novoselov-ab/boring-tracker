@@ -396,8 +396,12 @@ Small enough to list completely.
   trackers sharing a group, bare rows for loose ones, and **membership changed
   only in the tracker editor**, never by where a row sits. They agree on order
   and shape but not on density: home's rows were tuned and settings' were not,
-  so it is visibly the looser of the two. Also export, import,
-  appearance, about + link to the GitHub repo. One screen, no subscreens if
+  so it is visibly the looser of the two. Also export, import, **delete all
+  data** — one confirmation naming what goes, undone from *Restore Previous
+  Data* — appearance, about + link to the GitHub repo. It is called *Delete
+  All Data* and not *Delete Everything* because the tracker editor already has
+  a *Delete Everything*, which takes one tracker with its history and genuinely
+  cannot be undone. One screen, no subscreens if
   avoidable. **A reorder drag commits wherever you let go, including outside
   the list** — it lands on the nearest row that is on screen. That is
   deliberate, not a missed cancel: the nearest row is defined from any

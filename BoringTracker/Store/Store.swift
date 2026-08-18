@@ -1197,6 +1197,29 @@ final class Store {
 
     var hasImportBackup: Bool { file.hasImportBackup }
 
+    /// Whether the document a destructive action is about to put in the
+    /// recovery slot could actually come back out of it.
+    ///
+    /// **Loading is deliberately tolerant and restoring is not.** `StoreFile.load`
+    /// runs no validation at all, so a hand-edited `store.json` carrying a
+    /// duplicate id, `decimals` outside 0…3, or an id that is both live and
+    /// tombstoned opens perfectly well — and `restoreImportBackup` then runs
+    /// `validateImport` and refuses it. The copy gets written and cannot be
+    /// read back.
+    ///
+    /// That gap is older than clearing, but a confirmation saying "this can be
+    /// undone" is what makes it matter: the sentence that makes the decision
+    /// safe to make would be false in the one case where it is load-bearing.
+    /// So the screens that promise the safety net ask first, and say the other
+    /// thing when the answer is no.
+    ///
+    /// Every document this app can produce passes — the editor bounds
+    /// `decimals`, `add` renumbers a `sortIndex` near `Int.max`, and ids come
+    /// from `UUID()` — so this is false only for a file somebody else wrote.
+    var currentDocumentIsRestorable: Bool {
+        (try? validateImport(document)) != nil
+    }
+
     /// Takes a document in, and does not report success until the result is the
     /// document on disk.
     ///
@@ -1211,6 +1234,45 @@ final class Store {
         let incoming = try StoreMigration.migrate(data)
         try validateImport(incoming)
         try validateImportedNames(incoming)
+        return try await applyIncoming(incoming, mode: mode)
+    }
+
+    /// Removes every tracker and entry, keeping what was here as the
+    /// recoverable copy.
+    ///
+    /// **It is a replacing import with an empty argument**, and it runs through
+    /// `applyIncoming(_:mode:)` rather than reimplementing it. That is the whole design
+    /// of the item (docs/TODO.md item 24): the instinct is a stack of
+    /// confirmations, and confirmations are a poor defence because people learn
+    /// to tap through them. What actually makes this safe is the pre-clear copy,
+    /// and the code that writes one correctly already exists — drained save
+    /// queue, staged copy committed only once the empty document is durable, the
+    /// slot untouched if the write fails. A second implementation of that
+    /// sequence is a second place for the safety net to be quietly wrong, and
+    /// nothing about it would look wrong.
+    ///
+    /// **No tombstones are written for what goes**, which is `replace`'s meaning
+    /// inherited rather than a separate decision: the document afterwards is the
+    /// argument, so merging an older export of this data brings it back. The
+    /// alternative — a tombstone per record — would leave "start over" holding a
+    /// file the size of the history it just removed, since tombstones are only
+    /// compacted after `StoreDocument.tombstoneLifetime`. Five years of use is
+    /// 29,756 entries (docs/scale.md); clearing them would produce 29,756
+    /// deletions to carry around for six months, on the one action whose whole
+    /// point is to end up with nothing.
+    @discardableResult
+    func clearAll() async throws -> ImportSummary {
+        try await applyIncoming(StoreDocument(), mode: .replace)
+    }
+
+    /// The transaction both of the above are: flush, decide, keep a copy, write,
+    /// swap memory. Split out of `importData` when clearing everything turned
+    /// out to be the same thing with a smaller argument.
+    ///
+    /// It takes a validated document, not bytes. `validateImport` is about what
+    /// a *foreign* file has to satisfy, and the empty document this app builds
+    /// for a clear is not one.
+    private func applyIncoming(_ incoming: StoreDocument, mode: ImportMode) async throws -> ImportSummary {
         while true {
             let before = document
             let startingRevision = revision

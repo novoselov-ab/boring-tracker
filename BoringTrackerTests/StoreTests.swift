@@ -1041,6 +1041,149 @@ struct StoreTests {
         #expect(store.entries.map(\.id) == [doomed.id])
     }
 
+    // MARK: - Clearing everything (docs/TODO.md item 24)
+
+    @Test("Clearing everything leaves nothing, and leaves it recoverable")
+    func clearAllKeepsBackup() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        // Explicit indices: `replaceState` sorts by (sortIndex, id), so two
+        // trackers sharing index 0 come back in whichever order their random
+        // ids fall in and the comparison below would pass about half the time.
+        let tracker = Tracker(name: "Calories", sortIndex: 0, modified: time(1))
+        let archived = Tracker(name: "Steps", sortIndex: 1, isArchived: true, modified: time(2))
+        let current = StoreDocument(
+            trackers: [tracker, archived],
+            entries: [
+                Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10)),
+                Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20)),
+            ]
+        )
+        // A save window long enough that the debounced saver cannot have
+        // written anything yet: the copy has to come from the flush the clear
+        // itself performs, not from a write that happened to have landed.
+        let store = makeStore(current, file: file, window: .seconds(60))
+
+        try await store.clearAll()
+
+        #expect(store.trackers.isEmpty)
+        #expect(store.entries.isEmpty)
+        #expect(store.hasImportBackup)
+        // The archived tracker goes too. "Everything" is the whole document,
+        // not the part of it home draws.
+        #expect(try file.read(file.importBackupURL) == current)
+
+        try await store.restoreImportBackup()
+        #expect(store.document == current)
+    }
+
+    @Test("A clear says how much it removed")
+    func clearAllSummary() async throws {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10)),
+                    Entry(trackerID: tracker.id, value: 250, date: time(20), modified: time(20)),
+                ]
+            )
+        )
+
+        let summary = try await store.clearAll()
+
+        #expect(
+            summary == Store.ImportSummary(
+                trackersAdded: 0, trackersRemoved: 1,
+                entriesAdded: 0, entriesRemoved: 2,
+                keptBackup: true
+            )
+        )
+    }
+
+    @Test("A clear writes no tombstones for what it removed")
+    func clearAllLeavesNoTombstones() async throws {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: (0..<5).map {
+                    Entry(
+                        trackerID: tracker.id, value: 100,
+                        date: time(10 + $0), modified: time(10 + $0)
+                    )
+                }
+            )
+        )
+
+        try await store.clearAll()
+
+        // Deliberate, and the reason is size rather than tidiness: a tombstone
+        // per record would leave "start over" holding a file as long as the
+        // history it just removed, for the six months
+        // `StoreDocument.tombstoneLifetime` keeps deletions. Clearing inherits
+        // `replace`'s meaning instead — the document afterwards is the empty
+        // one, and an older export merged back in returns the data
+        // (docs/TODO.md item 24).
+        #expect(store.document.tombstones.isEmpty)
+        #expect(store.document.isEmpty)
+    }
+
+    @Test("A document Restore would refuse is not promised back")
+    func restorabilityOfTheCurrentDocument() {
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let ordinary = makeStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [Entry(trackerID: tracker.id, value: 600, date: time(10))]
+            )
+        )
+        #expect(ordinary.currentDocumentIsRestorable)
+
+        // A shape only a hand-edited or foreign file produces: `StoreFile.load`
+        // runs no validation, so this opens — and `restoreImportBackup` runs
+        // `validateImport`, so the copy taken before a clear could never be read
+        // back. The confirmation has to say so rather than promise an undo that
+        // is not there (docs/TODO.md item 24).
+        let duplicated = UUID()
+        let broken = makeStore(
+            StoreDocument(
+                trackers: [tracker],
+                entries: [
+                    Entry(id: duplicated, trackerID: tracker.id, value: 600, date: time(10)),
+                    Entry(id: duplicated, trackerID: tracker.id, value: 250, date: time(20)),
+                ]
+            )
+        )
+        #expect(!broken.currentDocumentIsRestorable)
+    }
+
+    @Test("Clearing an already empty document does not spend the recovery slot")
+    func clearAllOnEmptyKeepsTheOlderBackup() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let original = StoreDocument(
+            trackers: [tracker],
+            entries: [Entry(trackerID: tracker.id, value: 600, date: time(10), modified: time(10))]
+        )
+        let store = makeStore(original, file: file)
+
+        try await store.clearAll()
+        #expect(try file.read(file.importBackupURL) == original)
+
+        // The second clear removes nothing, so there is nothing to recover from
+        // it — and spending the slot would destroy the copy that holds the
+        // whole history. Same rule as a no-op import, inherited rather than
+        // written again.
+        let summary = try await store.clearAll()
+
+        #expect(!summary.keptBackup)
+        #expect(try file.read(file.importBackupURL) == original)
+        try await store.restoreImportBackup()
+        #expect(store.document == original)
+    }
+
     @Test("An import that changes nothing does not spend the recovery slot")
     func noOpImportKeepsTheOlderBackup() async throws {
         let file = temporaryStoreFile()
