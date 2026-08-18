@@ -742,6 +742,46 @@ same row in History writes both. One rule, two answers, in the same app.
       often produced by a weigh-in whose trackers are both live, which is a
       cause the sentence cannot express. Both are in the noted list below.
 
+## 24. Delete everything, recoverably
+
+There is no way to start over without deleting the app. Settings should offer
+it, beside export and import where the other whole-document actions live.
+
+**Make it recoverable rather than ceremonious.** The instinct is a stack of
+confirmations, and confirmations are a poor defence: people learn to tap
+through them, and the third one protects nothing the first did not. Import's
+`replace` already solves this properly — it writes the current document to a
+restorable copy *before* destroying anything, and offers *Restore Data Before
+Last Import*. Clearing everything is the same action with a smaller argument.
+
+- [ ] Write the same pre-clear copy first, through the mechanism replace
+      already uses, and let the existing restore path cover it.
+- [ ] **One confirmation, naming what goes.** Not "are you sure" — say the
+      count: *"Delete 5 trackers and 1,247 entries?"* A number is what makes
+      someone stop; a generic warning is what they tap through.
+- [ ] Destructive styling, and it is not the default button.
+- [ ] Say in the dialog that it can be undone from Restore, because that is
+      the fact that makes the decision safe to make.
+- [ ] Export offers to run first if there is anything to lose — a suggestion,
+      not a gate.
+
+## The ids stay UUIDs — decided
+
+Asked whether the 36-character ids in `store.json` need to be that long.
+
+**They do.** They are load-bearing for the merge design: two devices generate
+ids independently, with no coordination, and must never collide. That is what a
+UUID buys. A shorter id means writing a generator and owning a collision
+argument forever, in the one part of this app where being wrong is silent.
+
+Size is not the problem it appears to be. Five years of heavy use is about 2 MB
+and decodes in 41 ms, and the file is deliberately pretty-printed with sorted
+keys — which costs more than the id length does. Shrinking ids while keeping
+that would be optimising the smaller half of a cost we chose on purpose.
+
+The honest argument the other way is readability, since the file is meant to be
+opened and read. But you read names and values; ids are noise at any length.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
