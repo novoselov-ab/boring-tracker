@@ -18,7 +18,7 @@ makes:
 
 | Kind | Meaning | Day boundary | Examples |
 |---|---|---|---|
-| **Daily total** | Entries *add up* over the day | Resets at midnight | Calories, protein, water, cigarettes, pushups |
+| **Daily total** | Entries *add up* over the day | Resets at the day start — midnight unless you move it | Calories, protein, water, cigarettes, pushups |
 | **Measurement** | Each entry is a standalone reading | No reset, just points in time | Weight, cat's weight, blood pressure, sleep hours |
 
 Everything else follows from this. A daily-total tracker shows "today: 1,340"
@@ -398,7 +398,8 @@ Small enough to list completely.
   and shape but not on density: home's rows were tuned and settings' were not,
   so it is visibly the looser of the two. Also export, import, **delete all
   data** — one confirmation naming what goes, undone from *Restore Previous
-  Data* — appearance, about + link to the GitHub repo. It is called *Delete
+  Data* — appearance, **the hour the day starts at**, about + link to the
+  GitHub repo. It is called *Delete
   All Data* and not *Delete Everything* because the tracker editor already has
   a *Delete Everything*, which takes one tracker with its history and genuinely
   cannot be undone. One screen, no subscreens if

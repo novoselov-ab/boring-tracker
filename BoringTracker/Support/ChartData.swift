@@ -58,14 +58,24 @@ enum ChartData {
     /// One bar per day, including the days with nothing in them — a gap in a
     /// calorie chart is information, and closing it up would draw a week of
     /// eating as if it were continuous.
+    ///
+    /// A bar sits at the moment its day *begins*, which is midnight unless the
+    /// day start has been moved (`DayStart`). Drawing it at midnight regardless
+    /// would put a 4am-to-4am day's bar four hours before the first thing it
+    /// could contain, and the axis under it would then disagree with the
+    /// heading History gives the same day.
     static func dailyTotals(
-        from start: DayKey, to end: DayKey, calendar: Calendar, total: (DayKey) -> Double
+        from start: DayKey, to end: DayKey, calendar: Calendar, dayStartHour: Int = 0,
+        total: (DayKey) -> Double
     ) -> [ChartPoint] {
         var points: [ChartPoint] = []
         var day = start
         while day <= end {
             points.append(
-                ChartPoint(date: day.startOfDay(calendar: calendar), value: total(day))
+                ChartPoint(
+                    date: day.startOfDay(calendar: calendar, dayStartHour: dayStartHour),
+                    value: total(day)
+                )
             )
             day = day.adding(days: 1, calendar: calendar)
         }

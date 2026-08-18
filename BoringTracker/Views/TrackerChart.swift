@@ -20,6 +20,11 @@ struct TrackerChart: View {
         var range: ChartRange
         var revision: UInt64
         var today: DayKey
+        /// Moving the day start rebuilds every bucket while changing neither
+        /// `revision`'s meaning nor, at any hour past the new boundary,
+        /// `today` — so without this the bars stay as they were while History
+        /// and the home total show the new ones.
+        var dayStart: Int
     }
 
     var body: some View {
@@ -37,7 +42,8 @@ struct TrackerChart: View {
                 .frame(height: 180)
                 .chartXSelection(value: $scrubbed)
         }
-        .onChange(of: Key(range: range, revision: store.revision, today: store.today),
+        .onChange(of: Key(range: range, revision: store.revision, today: store.today,
+                          dayStart: store.dayStartHour),
                   initial: true) {
             recompute()
         }
@@ -159,13 +165,14 @@ struct TrackerChart: View {
         switch tracker.kind {
         case .dailyTotal:
             points = ChartData.dailyTotals(
-                from: start, to: store.today, calendar: store.calendar
+                from: start, to: store.today, calendar: store.calendar,
+                dayStartHour: store.dayStartHour
             ) { store.total(for: tracker.id, on: $0) }
             average = []
         case .measurement:
             points = ChartData.readings(
                 store.entries(for: tracker.id),
-                from: start.startOfDay(calendar: store.calendar)
+                from: start.startOfDay(calendar: store.calendar, dayStartHour: store.dayStartHour)
             )
             average = ChartData.movingAverage(points)
         }

@@ -930,18 +930,68 @@ picking one up doesn't start with rediscovering why it's awkward.
       most often a weigh-in with both trackers live, and the sentence cannot
       say which member was dropped or why (`Store.LoggedAgain.skipped`).
 
-- [ ] **A configurable time for the daily reset.** Note that this **reverses a
-      decision recorded in TECH.md** ("the day starts at midnight, local. No
-      configurable day start; it multiplies edge cases in every aggregation for
-      a minority want"). That is allowed — the reason was cost, not principle,
-      and a person who eats at 1am is not a minority of one here.
+- [x] **A configurable time for the daily reset.** Done, and it was the
+      largest of the seven by some way — the estimate above is right about
+      where the cost is. **It reverses a decision recorded in TECH.md** ("the
+      day starts at midnight, local. No configurable day start; it multiplies
+      edge cases in every aggregation for a minority want"), and both of that
+      document's copies of the line now say so and why.
 
-      The cost is lower than it was written to be: entries store absolute
-      dates, so a day-start offset is a **displayed** decision computed at read
-      time, with no schema change and no migration. What it does touch is
-      everything that derives a day — `DayKey`, totals, charts, History
-      grouping — and every day-boundary test, including the DST ones. Cheap in
-      storage, expensive in surface area.
+      No schema change, no migration, nothing stored: `DayStart` is one
+      `UserDefaults` key, `DayKey` takes a `dayStartHour` defaulted to 0, and
+      `Store.dayKey(_:)` is the single place inside the store that applies it.
+      Turning it back re-derives exactly the totals that were there before,
+      which a test holds.
+
+      **The trap is arithmetic, and it is not the one the estimate names.**
+      Subtracting `hour × 3600` from the date before deriving the day is the
+      obvious implementation and it is wrong across DST: on a spring-forward
+      morning, 04:30 minus four *absolute* hours walks back through the hour
+      that never happened, lands at 23:30 the previous evening, and files the
+      entry under yesterday. Reading the wall-clock hour and stepping one
+      calendar day cannot do that. Six new tests cover it, including both
+      passes through the repeated hour and the day whose 2am does not exist —
+      where a 2am day start simply begins at 3am.
+
+      The existing day-boundary suite was the specification and none of it
+      moved: every one of those tests still asserts midnight behaviour, because
+      the parameter defaults to 0. 232 tests before the batch, 249 after.
+
+      One thing found by a test rather than by reading: `Date.formatted`
+      defaults to the *device's* time zone, so the picker's "4:00 AM" label came
+      out as "9:00 PM" the moment a test pinned a calendar to another zone. The
+      app never saw it, because there the two zones are the same one.
+
+      **Four things the review found, and two of them were real bugs shipped
+      under passing tests.**
+
+      `startOfDay` **added** the offset in absolute hours instead of setting a
+      wall-clock hour. Spring forward survives that; fall back does not — on
+      3 November 2019 in New York every start from 2am to 5am landed an hour
+      early and round-tripped to the *2nd*, so on that one day a year the chart
+      drew the bar before the day began, the measurement range pulled in an
+      hour belonging to yesterday, and the counting window sat an hour wide.
+      The fall-back test passed because it asserted the day was 25 hours long
+      and the bug made it exactly that: cut at 4am the long day is the **2nd**,
+      not the 3rd. An expectation and a bug agreeing with each other is the
+      thing a round trip catches and a length does not, so there is now a round
+      trip over all 24 hours and the tiling test runs on both DST days instead
+      of a June one.
+
+      `setDayStartHour` wrote `UserDefaults.standard` and `Store.init` read it,
+      so one day-boundary test moved every other suite's midnight — in process,
+      in parallel, and on a simulator across runs. The **app's** convenience
+      init reads the key now; the designated init takes the hour and defaults
+      to midnight, so nothing under test touches `UserDefaults` at all.
+
+      And a regression the feature introduced rather than found: the only thing
+      that rolls the day automatically is
+      `significantTimeChangeNotification`, which fires at **midnight**. Move
+      the boundary to 4am and nothing announces it — an app left open overnight
+      went on showing yesterday's total under today's heading. There is now one
+      sleeping task, rescheduled only when the moment it waits for moves, and
+      skipped entirely at midnight where the notification already does the job.
+      The graph's staleness key gained the hour for the same class of reason.
 
 - [ ] **An About screen, with a link to the repository.** Apple permits linking
       out to a website; the rule is about external *purchase* mechanisms, which

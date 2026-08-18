@@ -25,6 +25,7 @@
 		54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448B1DFA3C2C0226744A5DD7 /* NumberInput.swift */; };
 		57FD846D7584CBB6511F05B5 /* DayBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */; };
 		59C99FC257AE0E8CAD01633A /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = A459D3E53C6D189A1607B841 /* Store.swift */; };
+		6A961D806BDF355E33C21969 /* DayStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2BDB7520A5674D63F4AFAB /* DayStart.swift */; };
 		6B57D79A245A869FCD38FA05 /* LogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */; };
 		6D30109F8D99D25059652053 /* UndoBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A41B0D09D319C37A1FF6883 /* UndoBar.swift */; };
 		72A057B7838BFB3294CDFB12 /* ExportFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E25A93ECF6643CE4AFD002 /* ExportFile.swift */; };
@@ -82,6 +83,7 @@
 		5817F8C4CA51B7DCE31DFD64 /* StoreCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreCoding.swift; sourceTree = "<group>"; };
 		59216142E80C1D1498852B21 /* TrackerEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerEditor.swift; sourceTree = "<group>"; };
 		5B941541BF6510B5BEF12183 /* DayKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayKey.swift; sourceTree = "<group>"; };
+		5C2BDB7520A5674D63F4AFAB /* DayStart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStart.swift; sourceTree = "<group>"; };
 		5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSheet.swift; sourceTree = "<group>"; };
 		5E1EDF5A3BEDAB08D1FAE73B /* RepeatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatTests.swift; sourceTree = "<group>"; };
 		5F34ADAEE0EB8F446DDF5A80 /* NumberInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberInputTests.swift; sourceTree = "<group>"; };
@@ -168,6 +170,7 @@
 				B8C7B4E5F316CB7FDA51BE52 /* ChartData.swift */,
 				C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */,
 				5B941541BF6510B5BEF12183 /* DayKey.swift */,
+				5C2BDB7520A5674D63F4AFAB /* DayStart.swift */,
 				43E25A93ECF6643CE4AFD002 /* ExportFile.swift */,
 				BD1685BCF244DBCB15D66573 /* ExportName.swift */,
 				0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */,
@@ -320,6 +323,7 @@
 				D11F5992161D57E1C95EAD4B /* ChartData.swift in Sources */,
 				9029759421C7D1EE21A41347 /* DataTransferView.swift in Sources */,
 				9D0D944F40B37978E9DA7E9B /* DayKey.swift in Sources */,
+				6A961D806BDF355E33C21969 /* DayStart.swift in Sources */,
 				D91E3EFB4B5DA1008E5D362D /* Entry.swift in Sources */,
 				0AE1F1E46CC38DD6DACB2513 /* EntryEditor.swift in Sources */,
 				72A057B7838BFB3294CDFB12 /* ExportFile.swift in Sources */,

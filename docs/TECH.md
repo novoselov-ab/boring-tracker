@@ -474,11 +474,24 @@ tested hard.
   totals can shift. The alternative — freezing each entry's day at write time —
   is worse, because then your totals disagree with the calendar you're
   currently living in.
-- Day rollover is midnight local. No configurable "my day starts at 4am"
-  setting in v1; it's a real want for some people but it multiplies the
-  edge cases in every aggregation.
-- Tests cover: DST forward and back, year boundaries, time zone travel, and
-  entries logged at 23:59:59 and 00:00:00.
+- Day rollover is midnight local **by default, and the hour is now settable**
+  (`DayStart`). This reverses the line that used to sit here, and the line
+  under "Decisions worth writing down" — see that entry for why the cost turned
+  out to be lower than it was written to be. Nothing about the offset is
+  stored: it is applied where a day is derived, so turning it back re-derives
+  exactly what was there before.
+- Everything inside the store derives its day through `Store.dayKey(_:)`, and
+  everything on screen through the `DayKey` calls that take the store's hour.
+  The offset is applied in one place for the same reason the day itself is: a
+  second copy of the rule is how the totals index comes to disagree with the
+  screen reading from it.
+- **The offset is read off the wall clock, not subtracted in seconds.** Taking
+  `hour × 3600` off the date first is the obvious version and it is wrong
+  across DST — on a spring-forward morning it walks back through the hour that
+  never happened and files 04:30 under yesterday.
+- Tests cover: DST forward and back, year boundaries, time zone travel,
+  entries logged at 23:59:59 and 00:00:00, and every one of those again with
+  the day cut somewhere other than midnight.
 
 ## Performance budget
 
@@ -527,8 +540,18 @@ So they don't get re-argued mid-build:
 - **English only in v1**, but all numbers and dates go through system
   formatters, so they display correctly in any region. Translations are a
   welcome pull request, not a blocker.
-- **The day starts at midnight, local.** No configurable day start in v1; it
-  multiplies edge cases in every aggregation for a minority want.
+- **The day starts at midnight, local — and you can move it.** This entry used
+  to end "No configurable day start in v1; it multiplies edge cases in every
+  aggregation for a minority want", and it has been reversed deliberately. The
+  reason recorded was **cost, not principle**, and the cost was overstated:
+  entries store absolute dates, so the day start is a *displayed* decision
+  computed at read time, with no schema change, no migration and no way for two
+  devices to disagree about the data. What it does touch is everything that
+  derives a day — `DayKey`, the totals index, the charts, History's grouping —
+  which is why the whole day-boundary suite runs twice over, once at midnight
+  and once offset. Somebody who eats at 1am is also not a minority of one.
+  It lives in `UserDefaults` beside the appearance switch, for the same reason:
+  it says how this phone reads the numbers, not what the numbers are.
 - **Negative values are allowed.** They're meaningful (weight change, a
   correction) and rejecting them costs a validation rule and an error state.
 - **Tombstones are compacted after 180 days**, comfortably longer than any

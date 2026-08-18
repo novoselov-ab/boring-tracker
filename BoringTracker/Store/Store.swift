@@ -145,6 +145,13 @@ final class Store {
     }
 
     private(set) var calendar: Calendar
+    /// The hour the day is cut at. Midnight unless somebody has moved it — see
+    /// `DayStart`, which is also where the reversal of TECH.md's "no
+    /// configurable day start" is argued.
+    ///
+    /// Read by everything that derives a day and stored by nothing, so changing
+    /// it is a rebuild rather than a migration.
+    private(set) var dayStartHour: Int
     /// False when a test pinned the calendar, so system time-zone changes do
     /// not yank it back to the device's.
     private let followsSystemCalendar: Bool
@@ -176,6 +183,10 @@ final class Store {
     /// points are stale without watching every array.
     private(set) var revision: UInt64 = 0
     private var timeObserver: (any NSObjectProtocol)?
+    /// The sleeping task that rolls the day when the boundary is not midnight,
+    /// and the moment it is waiting for. See `scheduleDayRoll`.
+    private var dayRollTask: Task<Void, Never>?
+    private var dayRollAt: Date?
 
     // MARK: - Life cycle
 
@@ -183,7 +194,17 @@ final class Store {
     /// would flash an empty home screen for longer than the decode takes.
     convenience init(file: StoreFile = .standard()) {
         let loaded = file.load()
-        self.init(document: loaded.document, origin: loaded.origin, file: file)
+        // **The one place `UserDefaults` is read**, and it is the app's
+        // entry point rather than the designated init below. Reading it there
+        // instead made every `Store` a test builds inherit whatever the last
+        // test to call `setDayStartHour` had written — in the same process, in
+        // parallel, and on a simulator across runs — so one day-boundary test
+        // could move another suite's midnight. Nothing under test now reads the
+        // key at all.
+        self.init(
+            document: loaded.document, origin: loaded.origin, file: file,
+            dayStartHour: DayStart.hour(UserDefaults.standard.integer(forKey: DayStart.key))
+        )
     }
 
     init(
@@ -192,6 +213,7 @@ final class Store {
         file: StoreFile = .standard(),
         calendar: Calendar? = nil,
         now: Date? = nil,
+        dayStartHour: Int = DayStart.midnight,
         saveWindow: Duration = .milliseconds(500)
     ) {
         let document = document.compactingTombstones()
@@ -202,17 +224,23 @@ final class Store {
         self.calendar = calendar ?? .current
         self.followsSystemCalendar = calendar == nil
         self.pinnedNow = now
-        self.today = DayKey(now ?? Date(), calendar: calendar ?? .current)
+        let dayStart = DayStart.hour(dayStartHour)
+        self.dayStartHour = dayStart
+        self.today = DayKey(
+            now ?? Date(), calendar: calendar ?? .current, dayStartHour: dayStart
+        )
         self.file = file
         self.saver = StoreSaver(file: file, window: saveWindow)
         rebuildTotals()
         watchForTimeChanges()
+        scheduleDayRoll()
     }
 
     isolated deinit {
         if let timeObserver {
             NotificationCenter.default.removeObserver(timeObserver)
         }
+        dayRollTask?.cancel()
     }
 
     /// The document as it would be written or exported. Assembled on demand —
@@ -348,7 +376,37 @@ final class Store {
     }
 
     func day(of entry: Entry) -> DayKey {
-        DayKey(entry.date, calendar: calendar)
+        dayKey(entry.date)
+    }
+
+    /// Which day a moment falls in, for this store. **Every day derived inside
+    /// the store goes through here**, so the offset is applied once rather than
+    /// remembered at seven call sites — which is how one of them comes to
+    /// disagree with the totals index.
+    func dayKey(_ date: Date) -> DayKey {
+        DayKey(date, calendar: calendar, dayStartHour: dayStartHour)
+    }
+
+    /// Moves where the day is cut, and re-derives everything that depended on
+    /// it. Persists, because this is the app's own setting rather than a value
+    /// a caller owns; tests inject through `init` and never come here.
+    func setDayStartHour(_ hour: Int) {
+        let hour = DayStart.hour(hour)
+        guard hour != dayStartHour else { return }
+        dayStartHour = hour
+        UserDefaults.standard.set(hour, forKey: DayStart.key)
+        // Both, and in this order: the totals index is keyed by day, so it is
+        // stale the instant the offset moves, and `today` may now be yesterday.
+        rebuildTotals()
+        refreshToday()
+        // `refreshToday` only reschedules when the day actually changed, and
+        // moving the boundary from 4am to 6am on an afternoon changes the next
+        // roll without changing today.
+        scheduleDayRoll()
+        // No `revision += 1`. Nothing in the document changed, and that counter
+        // is what tells the saver a late write is stale. What it was reached
+        // for — the graph noticing its buckets moved — belongs in the graph's
+        // own staleness key, which now carries the hour (`TrackerChart.Key`).
     }
 
     /// Every row in the complete history, newest first. `batchID` is consumed
@@ -622,7 +680,7 @@ final class Store {
     var countingWindowStart: Date {
         today
             .adding(days: -(Self.countingWindowDays - 1), calendar: calendar)
-            .startOfDay(calendar: calendar)
+            .startOfDay(calendar: calendar, dayStartHour: dayStartHour)
     }
 
     // MARK: - Entries
@@ -732,6 +790,7 @@ final class Store {
     private var repeatTargets: Set<UUID> {
         Set(trackers.lazy.filter { !$0.isArchived && $0.kind != .measurement }.map(\.id))
     }
+
 
     /// Logs a history row again, now: the same values against the same trackers,
     /// each keeping its own name, with today's timestamp and a **new** batch id.
@@ -1526,8 +1585,52 @@ final class Store {
                 rebuildTotals()
             }
         }
-        let day = DayKey(now, calendar: calendar)
-        if day != today { today = day }
+        let day = dayKey(now)
+        if day != today {
+            today = day
+            scheduleDayRoll()
+        }
+    }
+
+    /// Wakes the app when the day rolls at an hour the system says nothing
+    /// about.
+    ///
+    /// **`significantTimeChangeNotification` fires at midnight**, which is
+    /// exactly where the boundary used to be — so the moment the day start is
+    /// moved to 4am, nothing announces the roll any more. Left open overnight
+    /// with a 4am start, the home screen went on showing yesterday's total
+    /// under today's heading until something else happened to call
+    /// `refreshToday`. That is a regression the feature introduced, not an old
+    /// gap: the notification and the boundary used to coincide.
+    ///
+    /// One sleeping task, replaced only when the moment it is waiting for
+    /// moves. `refreshToday` runs on every mutation, so rescheduling
+    /// unconditionally would spawn a task per logged number.
+    ///
+    /// Nothing at midnight, where the notification already does this, and
+    /// nothing in a store with a pinned clock, where a live timer would be a
+    /// test holding a task open against a `now` that never advances. Being
+    /// backgrounded across the boundary is covered already — the app calls
+    /// `refreshToday` when the scene becomes active.
+    private func scheduleDayRoll() {
+        guard dayStartHour != DayStart.midnight, pinnedNow == nil else {
+            dayRollTask?.cancel()
+            dayRollTask = nil
+            dayRollAt = nil
+            return
+        }
+        let next = today
+            .adding(days: 1, calendar: calendar)
+            .startOfDay(calendar: calendar, dayStartHour: dayStartHour)
+        guard next != dayRollAt else { return }
+        dayRollAt = next
+        dayRollTask?.cancel()
+        let delay = next.timeIntervalSince(now)
+        dayRollTask = Task { [weak self] in
+            if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
+            guard !Task.isCancelled else { return }
+            self?.refreshToday()
+        }
     }
 
     /// Moves the store to another calendar, as if the device had been carried
@@ -1536,7 +1639,10 @@ final class Store {
     func travel(to calendar: Calendar) {
         self.calendar = calendar
         rebuildTotals()
-        let day = DayKey(now, calendar: calendar)
+        // The boundary is a wall-clock hour, so stepping off a plane moves it.
+        dayRollAt = nil
+        scheduleDayRoll()
+        let day = dayKey(now)
         if day != today { today = day }
     }
 
@@ -1564,7 +1670,7 @@ final class Store {
         var counts: [DayTotal: Int] = [:]
         result.reserveCapacity(entries.count / 4)
         for entry in entries {
-            let key = DayTotal(tracker: entry.trackerID, day: DayKey(entry.date, calendar: calendar))
+            let key = DayTotal(tracker: entry.trackerID, day: dayKey(entry.date))
             result[key, default: 0] += entry.value
             counts[key, default: 0] += 1
         }
@@ -1579,7 +1685,7 @@ final class Store {
     /// up to zero, and repeated addition and subtraction of decimals leaves a
     /// residue that would never compare equal to it.
     private func apply(_ sign: Double, to entry: Entry) {
-        let key = DayTotal(tracker: entry.trackerID, day: DayKey(entry.date, calendar: calendar))
+        let key = DayTotal(tracker: entry.trackerID, day: dayKey(entry.date))
         let count = (entryCounts[key] ?? 0) + Int(sign)
         guard count > 0 else {
             entryCounts[key] = nil

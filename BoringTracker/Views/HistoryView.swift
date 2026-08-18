@@ -306,7 +306,7 @@ struct HistoryView: View {
     private var days: [DayGroup] {
         var groups: [DayKey: [HistoryItem]] = [:]
         for item in store.historyItems where item.matches(query) {
-            groups[DayKey(item.date, calendar: store.calendar), default: []].append(item)
+            groups[store.dayKey(item.date), default: []].append(item)
         }
         return groups.sorted { $0.key > $1.key }.map { DayGroup(day: $0.key, items: $0.value) }
     }
@@ -412,6 +412,7 @@ private struct HistoryRow: View {
     }
 
     private var line: HistoryItem.Line { item.line(trackers: trackers) }
+
 }
 
 #Preview {

@@ -265,7 +265,7 @@ private struct RepeatRow: View {
     }
 
     private var day: DayKey {
-        DayKey(item.date, calendar: store.calendar)
+        store.dayKey(item.date)
     }
 }
 

@@ -107,6 +107,18 @@ struct SettingsView: View {
                 Text("System follows the phone, including its own per-app setting. This is stored on this device only — it is not part of your data and does not export.")
             }
 
+            // A menu picker rather than a segmented one: twenty-four options
+            // are not three, and this is a thing you set once.
+            Section {
+                Picker("Day starts at", selection: dayStart) {
+                    ForEach(DayStart.hours, id: \.self) { hour in
+                        Text(DayStart.label(hour, calendar: store.calendar)).tag(hour)
+                    }
+                }
+            } footer: {
+                Text("When a daily total starts again. Move it later if your day ends after midnight — a 2am snack then counts towards the day you have been awake for. Nothing is rewritten: your entries keep the time they were logged at, and putting this back gives you exactly the totals you had.")
+            }
+
             DataTransferView()
         }
         // Both ends of the comparison a drop makes — every row's frame and the
@@ -136,6 +148,15 @@ struct SettingsView: View {
     }
 
     // MARK: - Rows
+
+    /// Bound to the store rather than to `@AppStorage`, because moving the day
+    /// start has to re-derive the totals index and `today` in the same breath —
+    /// see `Store.setDayStartHour`. The store owns the key; a second writer
+    /// here would change the number without changing any of the numbers that
+    /// depend on it.
+    private var dayStart: Binding<Int> {
+        Binding(get: { store.dayStartHour }, set: { store.setDayStartHour($0) })
+    }
 
     private var runs: [[Tracker]] {
         store.activeTrackerRuns
