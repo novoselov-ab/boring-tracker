@@ -999,11 +999,28 @@ picking one up doesn't start with rediscovering why it's awkward.
       who care about this app's promises the source is the proof — that
       argument is already in SHIPPING.md's listing strategy.
 
-- [ ] **A subtle "add tracker" at the end of the home list.** Worth trying to
-      see how it looks. The thing to watch: home already has a bottom Log
-      button, and a second control down there competes with the most frequent
-      action in the app. Inline at the end of the list, scrolling with it,
-      rather than pinned above it.
+- [x] **A subtle "add tracker" at the end of the home list.** Tried, and it
+      reads better than expected — which is entirely down to it not being a
+      card. A section with a clear row background and secondary text draws as a
+      grey line *under* the last tracker rather than as another tracker, so the
+      eye that came to log a number goes past it. On the starter set it sits
+      just below the last card with the whole lower half of the screen empty
+      beneath it, and it still does not compete with the Log pill, because it
+      is grey text in the scroll and the pill is a filled bar in the safe-area
+      inset. With four or more trackers it is below the fold, which is the
+      right place for something you do a handful of times ever.
+
+      The thing to watch turned out not to bite, because it was answered by
+      *not* pinning: nothing was added to the bottom bar, so Log and the Log
+      again disc keep the thumb arc to themselves — the same answer item 16
+      gave when it made Repeat visibly not a peer.
+
+      It opens the tracker editor directly rather than pushing Settings. The
+      empty state's button still pushes Settings, and that difference is
+      deliberate: a label reading "add tracker" that delivers a screen with an
+      *Add Tracker* button on it is a promise kept a step late, while somebody
+      with no trackers at all has more to do on that screen than make one.
+      Home's third sheet, and the only editor it owns.
 
 ## Small things, unscheduled
 

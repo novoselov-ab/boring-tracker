@@ -20,6 +20,9 @@ struct HomeView: View {
     /// what makes it self-clearing: an undo empties the slot and a repeat made
     /// on History replaces it, and either way this stops matching.
     @State private var wroteRow: HistoryItem.ID?
+    /// The tracker being made from the row at the end of the list. Home's only
+    /// editor, and the only reason this screen owns a third sheet.
+    @State private var addingTracker: Tracker?
     @State private var path: [Route] = []
 
     /// Everything reachable from here. An enum rather than a bare `UUID` so
@@ -106,6 +109,9 @@ struct HomeView: View {
             }
             .sheet(item: $logging) { target in
                 LogSheet(target: target)
+            }
+            .sheet(item: $addingTracker) { tracker in
+                TrackerEditor(tracker: tracker)
             }
             .sheet(isPresented: $loggingAgain) {
                 // Told by the sheet rather than watched for: the write and the
@@ -302,6 +308,8 @@ struct HomeView: View {
                     }
                 }
             }
+
+            addTrackerRow
         }
         .listStyle(.insetGrouped)
         // Every loose tracker is its own section (see `runs`), so the gap
@@ -310,6 +318,48 @@ struct HomeView: View {
         // than two whole cards. Compact is the standard shorter value; nothing
         // here is hand-tuned.
         .listSectionSpacing(.compact)
+    }
+
+    /// A quiet way to make another tracker, at the end of the cards.
+    ///
+    /// **Inline and scrolling with the list, not pinned above it.** Home's
+    /// bottom already holds Log and the Log again disc, and those two are the
+    /// most frequent action in the app and the second most; a third control
+    /// down there competes with them for the same thumb, which is the risk item
+    /// 16 already weighed once and answered by making Repeat visibly not a peer
+    /// (docs/PHILOSOPHY.md, "frequent actions live low"). Making a tracker is
+    /// the opposite kind of thing — you do it a handful of times ever — so it
+    /// gets no permanent screen and no reserved thumb space, and it is reached
+    /// by scrolling past everything you actually came for.
+    ///
+    /// **Not a card.** A clear row background and secondary text, so it reads
+    /// as a line under the last tracker rather than as another tracker. On a
+    /// four-card screen it is below the fold, which is right: somebody
+    /// arriving to log a number should not have their eye caught by it.
+    ///
+    /// It opens the editor rather than pushing Settings. Settings is where the
+    /// same button lives, and going there costs a screen change and a second
+    /// tap to reach a sheet this one opens directly — a label that says "add
+    /// tracker" and delivers a screen with an *Add Tracker* button on it is a
+    /// promise kept a step late. The empty state still pushes Settings, because
+    /// somebody with no trackers at all has more to do there than make one.
+    private var addTrackerRow: some View {
+        Section {
+            Button {
+                // No group, for the reason the settings button gives: a group
+                // is a claim about the new tracker that nobody has made yet.
+                addingTracker = Tracker(name: "")
+            } label: {
+                Label("Add tracker", systemImage: "plus")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 16))
+        }
     }
 }
 
