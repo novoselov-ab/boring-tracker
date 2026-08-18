@@ -22,9 +22,16 @@ struct AboutView: View {
             }
 
             Section {
+                // The sixth action row, and the one item 13e's list forgot. A
+                // `Link` draws its label in the environment tint, which is
+                // `.primary` here, so without this it is the ordinary label
+                // colour with no chevron — pixel-identical to the static
+                // *Version* row one section up, on the one row of this screen
+                // that goes anywhere.
                 Link(destination: Self.repository) {
                     Label("Source on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
                 }
+                .formRowAccent()
             } footer: {
                 Text("The whole app is open source. If this project is ever abandoned, the copy you have keeps working, your data exports to a plain readable file, and anyone can fork it.")
             }

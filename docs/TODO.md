@@ -256,7 +256,7 @@ identity line. `e62a599`, `bce288a`, `437cfac`
 The accent restored on nav bar buttons alone, named per button rather than
 inherited. `5aa96bf`
 
-## 13e. Form buttons lost the only thing that said they were buttons
+## 13e. Form buttons lost the only thing that said they were buttons — done
 
 Found by the 13d review, and left for a decision rather than folded into 13d,
 whose brief says to leave every other 13c change alone.
@@ -282,12 +282,23 @@ buttons take the tint too, so the import's *Merge Documents* / *Replace
 Everything…* sheet is drawn the same way.
 
 - [x] Measure mint as a `Form` button foreground, in dark and light.
-- [ ] Decide whether a form action row is chrome, like a bar button, or writing,
-      like a chart bar. **Blocked on item 18** — see the measurement below.
-- [ ] If chrome: it is `navBarAccent()` under a better name at five call sites,
-      and the name in `OnAccent.swift` should stop saying "nav bar".
-- [ ] If writing: they need something that is not colour, and "a row that looks
-      exactly like a label" is not an answer either.
+- [x] Decide whether a form action row is chrome, like a bar button, or writing,
+      like a chart bar. **Chrome** — it is the case the nav bar already settled,
+      arriving at the one other control the app has that cannot say "tappable"
+      any other way. Unblocked by item 18, which gave light a value that clears
+      the floor as a foreground: **3.59:1** on the row's `#FFFFFF`, against the
+      system blue control's 3.52 and the system mint's failing 2.12.
+- [x] It is `formRowAccent()`, at **six** call sites — *Share JSON…*, *Share
+      CSV…*, *Import JSON*, *Restore Previous Data…*, *Add Tracker*, and
+      *Source on GitHub*, which this item's list of five had missed. **Not
+      `navBarAccent()` under a better name**, which is what this item expected:
+      the two carve-outs are one idea with two mechanisms, and sharing a
+      modifier would have shipped a defect either way round. See below.
+- [x] **The About screen was the same bug one screen further out**, found by the
+      review of this change. `Link("Source on GitHub")` draws its label in the
+      environment tint, which is `.primary`, so it was the label colour with no
+      chevron — pixel-identical to the static *Version* row above it, on the one
+      row of that screen that goes anywhere.
 
 **The mint was measured as a form button foreground, and it splits the same way
 the nav bar does.** Built with `.tint(Color.accentFill)` on the settings action
@@ -316,6 +327,40 @@ Symbol at the label colour — measured on the same screenshots, the glyph is
 against the row. So "restore the tint" does not undo 13c's change; it produces a
 two-colour row, mint word beside a label-coloured glyph. Whatever item 18
 settles has to say what the icon does too.
+
+**Two things this item asserted did not survive being checked.** The tracker
+rows above *Add Tracker* do not keep a chevron because they are
+`NavigationLink`s — `SettingsView.rowButton` is a `.plain` `Button` drawing
+`Image(systemName: "chevron.right")` itself, in `.tertiary`. The affordance
+argument is unchanged; the mechanism named for it was wrong, and it matters
+because "the platform draws that chevron" is a belief under which somebody
+deletes the image. And the list of affected rows was five, not six.
+
+**Resolved by item 18's colour set, and the `.tint` this item kept assuming
+turned out to be the wrong mechanism.** Both halves measured on an iPhone 17 Pro
+/ iOS 26.3, reading the screenshots' own IDAT bytes:
+
+| | `.tint` | `.foregroundStyle` |
+|---|---|---|
+| the row's SF Symbol | label colour — `#000000` light, `#FFFFFF` dark | the accent, with the text |
+| the row when disabled | plain black, indistinguishable from a static row | `#7FCBC3`, a 50% blend that reads as off |
+
+So `.foregroundStyle` at each row, which answers the icon question this item
+raised — the glyph goes with the word, and there is no two-colour row.
+
+**And that is why it is not one shared modifier.** The same test run the other
+way says the opposite for a bar button: `TrackerEditor`'s *Save*, disabled with
+an empty name, draws `#B0B0B2` grey under `.tint` and the full `#009888` under
+`.foregroundStyle` — a dead button that reads as live. `navBarAccent()` keeps
+`.tint` and keeps its name; `formRowAccent()` is `.foregroundStyle`. One name
+over both would have taken a defect with it whichever mechanism won.
+
+**`.alert` and `.confirmationDialog` did not need deciding after all.** This
+item expected a section-level tint to reach them; the accent is stated per row
+instead, so nothing is applied to those buttons and they are unchanged. That
+was not re-tested — there was nothing left to test — and a button in a dialog is
+already unmistakably a button. Naming each row is also what keeps *Delete All
+Data…* red rather than accented.
 
 ## 13f. The accent is a mint — done
 
@@ -398,35 +443,67 @@ for three reviews running. A thumb has none of that problem.
       same batch of hexes item 13b has since corrected, so it is a number to
       re-take rather than to trust.
 
-## 18. Measure mint in light, then the icon
+## 18. The app icon — the colour set half is done
 
-**Rewritten — its old premise is gone.** This item argued that the accent had
-to become a colour set with light and dark variants, because one system hue
-could not serve both appearances: the teal measured 2.13:1 on a light-mode nav
-bar where the system blue Apple ships measures 3.89:1.
+**All that is left here is the icon**, which is a design decision for the user
+rather than something to generate in passing. The colour question this item was
+named after is settled and the numbers are below.
 
-That teal no longer exists. Item 13f replaced it with a mint, chosen from
-twelve candidates measured on the real screens — **but that comparison was
-dark-mode only**, at the user's direction, because dark is what this app is
-used in.
+The item originally argued that the accent had to become a colour set with light
+and dark variants, because one system hue could not serve both appearances: the
+teal measured 2.13:1 on a light-mode nav bar where the system blue Apple ships
+measures 3.41:1. Item 13f then replaced that teal with a mint chosen from twelve
+candidates measured on the real screens — **but that comparison was dark-mode
+only**, at the user's direction, because dark is what this app is used in, so
+the question reopened as a smaller one: does the mint need the colour set too?
 
-So the question is open again, and it is now a smaller one:
+It does.
 
-- [ ] **Measure mint in light mode**: as a nav bar tint, as a `Form` button
-      foreground (that is item 13e, still unresolved and waiting on exactly
-      this number), and as a fill behind a dark label.
-- [ ] **If it clears 3:1 in light, there is no colour set to build.** Say so,
-      tick 13e, and this item becomes the app icon alone. "The thing we already
-      have works in both" is a result.
-- [ ] **If it fails light, build the colour set**: a darker mint for light, the
-      current one for dark. Two deliberate values, one per appearance, which is
-      what the system colours themselves do — not a hand-picked hex replacing a
-      principled choice.
-- [ ] Then the app icon.
+- [x] **Measure mint in light mode**: as a nav bar tint, as a `Form` button
+      foreground, and as a fill behind a dark label. **It fails, on both
+      foreground uses**, and the constraint binds after all.
+- [x] **Build the colour set.** `AccentFill` in a new asset catalog: `#009888`
+      light, `#00DAC3` dark.
+- [x] 13e resolves with it — the `Form` action rows have their colour back.
+- [ ] Then the app icon. **That is all this item has left.**
 
-The reasoning that survives from the old version: a single hue serving two
-appearances is a real constraint, and where it binds, a colour set is the
-answer rather than abandoning system colours. It simply may not bind here.
+**The numbers.** iPhone 17 Pro / iOS 26.3, `simctl io screenshot`, sRGB-tagged
+PNGs read through their own IDAT bytes rather than `NSBitmapImageRep` — black
+reads `#000000` and white `#FFFFFF`, and so does every value between, which is
+the part the old sanity check could not tell you. Each candidate rendered on the
+real screens by a probe build that reports the argv it received, so a stale
+install fails loudly. Contrast is the WCAG 2.x ratio against a 3:1 floor.
+
+| | fill | nav-bar glyph on `#FBFBFF` | `Form` row fg on `#FFFFFF` | black label on the fill |
+|---|---|---|---|---|
+| **mint, light** — `Color(.systemMint)` | `#00C8B3` | **2.05** | **2.12** | 9.91 |
+| **blue, light** — the control Apple ships | `#0088FF` | 3.41 | 3.52 | 5.97 |
+| **the new light value** | `#009888` | 3.48 | 3.59 | 5.85 |
+| *mint, dark — unchanged, for reference* | `#00DAC3` | 9.89 (on `#191919`) | 9.57 (on `#1C1C1E`) | 11.82 |
+
+**`#009888` is the mint darkened, not a new colour.** Same hue (173.7°) and the
+same full saturation as `Color(.systemMint)`, brightness taken down until it
+measures what the system blue measures on those two surfaces — which is the
+honest reference, since it is the one Apple tuned that bar for. The window is
+narrower than it looks: `#00A493` clears the bar circle by 0.02 and `#009081` is
+deeper than the mint has to be. Both were rendered before this one was picked.
+
+**Dark did not move.** The dark value is the byte the system mint already
+rendered, and the check is a pixel diff rather than an assurance: the settings
+screen before and after is a **byte-identical** PNG, and home differs in six
+near-black anti-aliasing pixels, each off by one.
+
+**What did not need building.** `Color.onAccent` stays black. The new light
+value would carry iOS's white label at 3.59:1, so for the first time a label
+that flipped with the appearance would be legal in both — it stays black because
+the dark value has no such choice at 1.78:1, and one control should not be two
+designs. The colour set is called `AccentFill` and not `AccentColor` for the
+reason in `OnAccent.swift`: the magic name would restore the inherited tint item
+13c removed, by filename.
+
+The reasoning that survived from the old version was right: a single hue serving
+two appearances is a real constraint, and where it binds, a colour set is the
+answer rather than abandoning system colours. It binds here.
 
 ## 18b. Get the export into the share sheet — done
 

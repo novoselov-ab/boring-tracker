@@ -20,15 +20,22 @@ struct BoringTrackerApp: App {
                 .environment(store)
                 // The ordinary label colour, not the accent. A tint is what
                 // every standard control *writes* with — a nav bar glyph, a
-                // form picker's value, the Undo in a bar — and the accent is a
-                // light mint, which measures a shade worse than the teal that
-                // failed this at 1.95:1 on the ordinary background in light
-                // mode against a 3:1 floor (docs/TODO.md item 13c). Item 13b settled that pairing
-                // for the fills by moving the label; there is nothing to move
-                // here, because the accent *is* the label. So the accent is not
-                // the tint and stays what item 13b made it: a fill, named
-                // `Color.accentFill`, applied at the handful of places that
-                // genuinely fill something.
+                // form picker's value, the Undo in a bar — and inheriting the
+                // accent there is what item 13c removed.
+                //
+                // It stays `.primary` even though item 18 fixed the number that
+                // first justified it. The accent used to be a single
+                // light mint that measured 2.05:1 as a light-mode bar glyph, and
+                // the colour set has since given light its own darker value at
+                // 3.48:1, so "the accent is illegal as a foreground" is no
+                // longer true. What is still true is that a root tint applies
+                // itself to controls nobody looked at: it reaches every alert
+                // button, every picker value, and whatever standard control
+                // arrives next, and it did so twice before by accident. So the
+                // accent is a fill named `Color.accentFill`, plus exactly two
+                // foreground carve-outs that name themselves — `navBarAccent()`
+                // and `formRowAccent()`, both for system chrome that has no
+                // other way to say it is tappable.
                 //
                 // `.primary`, not "no tint at all": the default is the system
                 // blue this app deliberately stopped using.
@@ -39,16 +46,19 @@ struct BoringTrackerApp: App {
                 // in dark mode — white track, white knob, on and off
                 // indistinguishable. There is no `Toggle` in the app, and the
                 // first one to arrive needs its own `.tint`, the way the nav bar
-                // buttons name `navBarAccent()` and the prominent buttons name
+                // buttons name `navBarAccent()`, the form action rows name
+                // `formRowAccent()` and the prominent buttons name
                 // `Color.accentFill`. What this rules out is *inheritance*, not
                 // colour.
                 //
                 // The corollary from item 13 still holds and now covers two
-                // names: nothing may paint with `Color.accentColor`, which
-                // resolves from an asset catalog that does not exist yet
-                // (item 18) and is still blue, and nothing may paint with the
-                // `.tint` shape style expecting the accent, because this is what
-                // it resolves to.
+                // names: nothing may paint with `Color.accentColor`, and nothing
+                // may paint with the `.tint` shape style expecting the accent,
+                // because this is what it resolves to. There is an asset catalog
+                // since item 18, but the colour set in it is called `AccentFill`
+                // and not `AccentColor` precisely so that `Color.accentColor`
+                // stays the system blue nothing here draws — a colour set under
+                // the magic name would restore the inheritance by its filename.
                 .tint(.primary)
                 // `nil` for `.system`, which is the absence of an override
                 // rather than a third colour scheme — so the app follows the

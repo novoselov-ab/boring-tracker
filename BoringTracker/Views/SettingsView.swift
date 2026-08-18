@@ -68,6 +68,7 @@ struct SettingsView: View {
                     // 3) a wrong guess here puts Steps in your meal sheet.
                     editing = Tracker(name: "")
                 }
+                .formRowAccent()
             }
 
             if !store.archivedTrackers.isEmpty {
@@ -198,10 +199,14 @@ struct SettingsView: View {
         .opacity(carried.contains(tracker.id) ? 0.4 : 1)
         // `Color.accentFill`, not `.tint` and not `Color.accentColor`: the
         // environment tint is the ordinary label colour now (docs/TODO.md item
-        // 13c) and that other name still resolves a catalog that does not
-        // exist. A wash behind a row is a fill, which is the one thing the
-        // accent is still allowed to be — nothing is written in it, and the
-        // label on top is the ordinary one at 0.18 opacity of the accent.
+        // 13c), and `Color.accentColor` is still the system blue — the catalog
+        // added by item 18 names its colour set `AccentFill` precisely so that
+        // it is not the app's global accent. A wash behind a row is a fill,
+        // which is what the accent mostly is; nothing is written in it, and the
+        // label on top is the ordinary one at 0.18 opacity of the accent. The
+        // two places the accent *is* written with name themselves —
+        // `navBarAccent()` and `formRowAccent()`, the latter one screen up in
+        // this same file.
         //
         // One style with a switched opacity rather than a choice between two:
         // a fill at zero opacity draws exactly what `.clear` did, and no

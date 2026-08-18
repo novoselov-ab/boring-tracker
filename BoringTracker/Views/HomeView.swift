@@ -638,8 +638,9 @@ private struct TrackerCard: View {
                 .frame(width: 30, height: 30)
                 // `Color.accentFill`, not `.tint` and not `Color.accentColor`:
                 // the environment tint is the ordinary label colour now, and
-                // the catalog colour that second name resolves does not exist
-                // yet (docs/TODO.md items 13c and 18).
+                // `Color.accentColor` is still the system blue — item 18's
+                // catalog deliberately does not claim that magic name
+                // (docs/TODO.md items 13c and 18).
                 .background(Color.accentFill, in: .circle)
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)

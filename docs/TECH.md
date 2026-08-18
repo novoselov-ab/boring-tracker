@@ -587,40 +587,64 @@ unreadable, and coupled tightly enough that breaking one takes the others under
 the floor with it. The measurements live beside the code in
 `BoringTracker/Views/OnAccent.swift`; what is here is the shape of the decision.
 
-**One constant names the hue.** `Color.accentFill` is `Color(.systemMint)` and
-nothing else in the app names a colour. A system colour rather than a
-hand-picked hex, because both of its values are Apple's, tuned against Apple's own
-backgrounds, and there is nothing to keep in step by hand — *not* because a
-system colour desaturates itself for dark mode, which is a claim from a web
-article that does not survive measurement.
+**One constant names the hue.** `Color.accentFill` is the `AccentFill` colour
+set and nothing else in the app names a colour. **Two deliberate values, one per
+appearance** — `#009888` light, `#00DAC3` dark — because one hue could not serve
+both: the system mint it replaced measured 2.05:1 as a light-mode bar glyph and
+2.12:1 as a light-mode `Form` row, both under the floor, against 9.89 and 9.57
+for the same colour in dark (TODO item 18). The dark value *is* the system
+mint's own byte, so the appearance this app is used in did not move; the light
+value is that mint at the same hue and saturation, darkened until it measures
+what the system blue Apple ships measures on those two surfaces. It is not a hex
+picked to taste — the numbers and the two rejected neighbours are in
+`OnAccent.swift`.
 
-**It is a fill, never a foreground.** The accent as *text* measures around
-2.1:1 on the ordinary background in light mode, against the 3:1 floor a UI
-element needs, so it may only ever sit behind something. That is why the chart
-is monochrome: bars and the readings line are the label colour and the moving
-average is `.secondary`, so the two are told apart by weight rather than by a
-hue one of them cannot legibly have.
+The colour set is named `AccentFill` rather than `AccentColor` on purpose. A
+colour set under the magic name becomes `Color.accentColor` and the app's global
+tint, which would restore the inheritance the rule below removes — by filename,
+with no Swift changing. A test asserts both values and that nothing claims the
+magic name.
+
+**It is a fill, and a foreground only where the OS uses colour to mean
+"tappable".** Two carve-outs, both named at their call sites: `navBarAccent()`
+for bar buttons and `formRowAccent()` for list action rows — a `Button`, a
+`ShareLink` or a `Link` in a `List`, none of which get a disclosure chevron, so
+they have no other way to say they are buttons. Note that the *navigating* rows
+in settings do not get theirs from the platform either: `rowButton` draws its
+own `chevron.right`. Everything
+else that used to be accent-coloured text stays the label colour. That is why
+the chart is monochrome: bars and the readings line are the label colour and the
+moving average is `.secondary`, so the two are told apart by weight rather than
+by a hue that was, until the colour set, not legible as text at all.
 
 **What sits on the accent is `Color.onAccent`, which is black, and that is
 load-bearing rather than tidy.** iOS draws a prominent button's label white
-whatever the tint, and white on this fill is the worst pairing in the whole
-candidate set — under 2:1 in both appearances, against about 11:1 for the black
-label the app forces. A blue would have cleared the floor with either label;
-mint clears it with one. So a new control that draws its own white label on the
+whatever the tint, and white on the dark fill is the worst pairing in the whole
+candidate set — 1.78:1, against 11.82:1 for the black label the app forces. The
+colour set's darker light value would in fact carry a white label at 3.59:1, so
+the label could now flip with the appearance and clear the floor twice; it does
+not, because what sits on the accent is decided by the accent and the dark value
+has no such choice. So a new control that draws its own white label on the
 accent does not look slightly different, it takes every accent-filled site in
-the app under the floor at once.
+the app under the floor in the appearance it is used in.
 
 **Nothing inherits it.** The root tint is `.tint(.primary)`, not the accent. A
 tint is inherited by every standard control there is, which is exactly how a
 foreground use of the accent twice appeared by accident; with nothing to
-inherit, a new one has to name itself. Navigation bar buttons do, through
-`navBarAccent()` — a deliberate carve-out for system chrome, where a tint is the
-platform saying "tappable" rather than the app writing in colour. It is also the
-one place the rule costs rather than buys: a bar glyph measures about 2:1 in
-light mode where Apple's own blue on that bar measures 3.89:1, so the carve-out
-inherited the shape of Apple's decision without inheriting its number. Nothing
-may paint with `Color.accentColor`, which resolves from an asset catalog that
-does not exist and is still the system blue.
+inherit, a new one has to name itself. Two kinds of control do: bar buttons
+through `navBarAccent()` and `Form` action rows through `formRowAccent()` —
+deliberate carve-outs for system chrome, where colour is the platform saying
+"tappable" rather than the app writing in colour. **The two are separate
+modifiers because the mechanism differs, and that was measured both ways.** A
+bar button uses `.tint`, which a disabled button correctly drops — `TrackerEditor`'s
+*Save* with an empty name draws `#B0B0B2` grey — while `.foregroundStyle` there
+is *not* dropped and paints the same disabled *Save* full accent, a dead button
+that reads as live. A `Form` row is the other way round: `.tint` colours the
+text and leaves the SF Symbol at the label colour, giving a two-colour row, and
+a disabled tinted row drops to plain black, indistinguishable from a static one;
+`.foregroundStyle` takes the glyph with it and dims to a 50% blend when
+disabled. Nothing may paint with `Color.accentColor`, which is still the system
+blue — there is an asset catalog now, but see the naming note above.
 
 **The cost of inheriting nothing is that some controls want a tint, and get
 `.primary`.** A `Toggle` under this root tint is a solid white capsule in dark
@@ -645,10 +669,17 @@ happened to Undo one item earlier. **Prominence is carried by size and shape,
 not by hue**: home's copy stays secondary because it is a 30pt disc with no word
 against a full-width pill.
 
-**The light-mode foreground failure is real and unfixed.** One system hue cannot
-be both a legible fill and a legible foreground on white. The fix is an accent
-colour *set* with a deliberate darker light-mode value — TODO item 18 — and it
-resolves the `Form` buttons, `.alert` and `.confirmationDialog` in passing.
+**The light-mode foreground failure was real, and the colour set is the fix.**
+One system hue could not be both a legible fill and a legible foreground on
+white — that is the whole reason there are two values rather than one. With the
+darker light value the accent measures 3.48:1 as a bar glyph and 3.59:1 as a
+`Form` row foreground, against the system blue control's 3.41 and 3.52, so both
+appearances clear the floor and the `Form` action rows have their colour back
+(TODO items 18 and 13e). The accent is stated per row rather than on the
+`Section`, so `.alert` and `.confirmationDialog` buttons have nothing applied to
+them and are unchanged — a button in a dialog is already unmistakably a button —
+and *Delete All Data…* keeps the red its `role` gives it rather than inheriting
+an accent.
 
 **The back chevron takes no tint at all**, and this was proved rather than
 assumed. Set at the app root, on the `NavigationStack`, on the destination, or

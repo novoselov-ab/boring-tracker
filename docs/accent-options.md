@@ -363,6 +363,15 @@ violet — the same four that clear the dark white label. A colour set with two
 hand-picked values can rescue a light hue in light mode, but nothing in that
 column needs rescuing if the accent is a blue.
 
+**Since taken up, and the mint's row here reproduces.** The accent went to mint
+(item 13f) rather than to a blue, so the rescue in that sentence is what item 18
+built: `#009888` for light and the mint's own `#00DAC3` for dark. This table's
+mint row was re-measured first, on a different build and a different probe, and
+came back `#00C8B3` with the bar glyph at 2.05 and the white label at 2.12 —
+identical to what is written above. The system blue control reproduces at 3.41
+and 3.52 too. See item 18 in `docs/TODO.md` for the light value's own numbers
+and for the two neighbouring candidates that were rendered and rejected.
+
 ---
 
 ## Recommendation

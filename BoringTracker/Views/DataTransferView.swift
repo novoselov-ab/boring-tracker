@@ -60,9 +60,11 @@ struct DataTransferView: View {
                 ShareLink(item: json, preview: SharePreview(json.filename)) {
                     Label("Share JSON…", systemImage: "square.and.arrow.up")
                 }
+                .formRowAccent()
                 ShareLink(item: csv, preview: SharePreview(csv.filename)) {
                     Label("Share CSV…", systemImage: "square.and.arrow.up")
                 }
+                .formRowAccent()
             } header: {
                 Text("Export")
             } footer: {
@@ -74,6 +76,7 @@ struct DataTransferView: View {
                     isRestoringBackup = false
                     isImporting = true
                 }
+                .formRowAccent()
                 // "Previous Data", not "Data Before Last Import", since item 24:
                 // the slot is filled by a clear as well as by an import, and a
                 // row offering to undo the import you did last week when what
@@ -85,6 +88,7 @@ struct DataTransferView: View {
                         isRestoringBackup = true
                         presentedAlert = .confirmReplace
                     }
+                    .formRowAccent()
                 }
             } header: {
                 Text("Import")
