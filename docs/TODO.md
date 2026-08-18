@@ -438,15 +438,11 @@ no UIKit was needed. `dd25193`
 Both *Save to Files* rows removed, and the whole `.fileExporter` path with
 them. `35a5fd0`
 
-## 19. CI
+## 19. CI — done
 
-GitHub Actions build + test on push. Cheap, and the test suite is already good
-enough to be worth protecting.
-
-Moved to the end deliberately. CI protects a shared branch from contributors
-who don't exist yet — the suite already runs on every change because every
-session runs it, so until this repo has someone else pushing to it, CI buys
-reassurance rather than safety.
+Build, 200 tests and an `xcodegen` drift check on every push, pinned to Xcode
+26.3 and with no third-party actions. Watched go red on a broken test and on a
+stale `.xcodeproj` before it landed. `267cc4f`
 
 ## 20. Five things from using it — done
 
