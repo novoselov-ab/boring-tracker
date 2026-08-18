@@ -782,6 +782,27 @@ that would be optimising the smaller half of a cost we chose on purpose.
 The honest argument the other way is readability, since the file is meant to be
 opened and read. But you read names and values; ids are noise at any length.
 
+## 25. Jump to a date in History
+
+At five years History is 1,826 day sections, and reaching last March means
+scrolling past everything since. Photos solves this with a scrubber, and the
+pattern is right: a way to *go* somewhere, not a filter that hides the rest.
+
+- [ ] A control that jumps the list to a chosen date — a scrubber, a compact
+      date picker, or a month index, whichever reads best at that length.
+- [ ] It **navigates, it does not filter.** Nothing leaves the list, and
+      scrolling away from wherever you land keeps working in both directions.
+- [ ] Landing on a day with nothing logged goes to the nearest day that has
+      something, rather than an empty screen or a dead control.
+
+**This is not the answer to History's 1.5s freeze**, and it must not be used as
+one. Loading only around a chosen date would make scrolling back slow or
+impossible and quietly turn the record into a window onto it. The freeze is
+being fixed as a freeze; this is navigation for a list that is genuinely long.
+
+Worth doing after that fix, so it is judged on whether it helps you find
+things — not on whether it makes a number look better.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
