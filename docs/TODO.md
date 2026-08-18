@@ -441,8 +441,12 @@ them. `35a5fd0`
 ## 19. CI — done
 
 Build, the whole test suite and an `xcodegen` drift check on every push, pinned
-to Xcode 26.3 and with no third-party actions. Watched go red on a broken test
-and on a stale `.xcodeproj` before it landed. `267cc4f`
+to Xcode 26.3 and with no third-party actions. **Both gates were proven to
+fail** before it landed rather than assumed: breaking `DayKey.adding` turned
+the run red after 6m15s, and drifting `project.yml` from the committed
+`.xcodeproj` turned it red in 13s — the regenerate check runs first and fails
+fast, so a stale project is caught before six minutes of simulator time is
+spent. `267cc4f`
 
 ## 20. Five things from using it — done
 
@@ -869,11 +873,29 @@ picking one up doesn't start with rediscovering why it's awkward.
       `.listSectionSpacing` on Home and `.contentMargins(.top, 8)` on Repeat are
       where this app has tuned the same thing before.
 
-- [ ] **Appearance switch in settings — light / dark / system.** Ordinary
-      `.preferredColorScheme` driven by a stored preference. It is **UI state,
-      so it lives in `UserDefaults`, not the document** — it must not sync or
-      appear in an export. iOS offers a per-app setting too, but in-app is more
-      discoverable and there is no reason not to have both.
+- [x] **Appearance switch in settings — light / dark / system.** Done as
+      written: a segmented picker under an *Appearance* heading, between the
+      trackers and the data actions, driving `.preferredColorScheme` from
+      `@AppStorage`. `.system` is `nil` rather than a third scheme, which is
+      what makes it "follow the phone" including the phone's own per-app
+      setting.
+
+      **No test, and that is the point of where it lives.** There is no code
+      path from the preference to `Store` — the app root reads it and the
+      picker writes it, and nothing in between — so "it must not appear in an
+      export" is a property of the wiring rather than something an assertion
+      could usefully hold. Putting it in the document is what would have needed
+      one.
+
+      Two things worth knowing next time. The segmented style **drops the
+      picker's own label**, so without a section heading the row is three words
+      and a paragraph about "System" with nothing saying what is being chosen.
+      And a segmented picker survives this app's `.tint(.primary)` where a
+      `Toggle` does not (docs/TODO.md item 13c): its selection is a background,
+      not a fill drawn in the tint. Checked on an iPhone 17 with the *system*
+      in light mode and the app set to dark — the app draws dark, which is the
+      override doing its job rather than the simulator's setting leaking
+      through.
 
 - [ ] **A Log again row should show what a tap writes.** The row is built from
       what the batch *holds* — `HistoryItem` and its `repeatKey` — while the
