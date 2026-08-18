@@ -440,9 +440,9 @@ them. `35a5fd0`
 
 ## 19. CI — done
 
-Build, 200 tests and an `xcodegen` drift check on every push, pinned to Xcode
-26.3 and with no third-party actions. Watched go red on a broken test and on a
-stale `.xcodeproj` before it landed. `267cc4f`
+Build, the whole test suite and an `xcodegen` drift check on every push, pinned
+to Xcode 26.3 and with no third-party actions. Watched go red on a broken test
+and on a stale `.xcodeproj` before it landed. `267cc4f`
 
 ## 20. Five things from using it — done
 
