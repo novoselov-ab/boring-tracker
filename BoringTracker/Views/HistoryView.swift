@@ -684,15 +684,17 @@ private struct HistoryRow: View {
                 }
                 .contentShape(.rect)
             }
-            // `.row`, not `.plain`: this half of the row is a button and
-            // pressed like nothing until item 28. It now goes down and greys
-            // the way the disc beside it goes down and darkens — same travel,
-            // same curve, the row's own colour (`RowButtonStyle`).
+            // `.row`, not `.plain`: this half of the row is a button, and
+            // `.plain`'s press — the label at 75% over what is behind it — was
+            // not something anyone noticed (docs/TODO.md item 28). It now goes
+            // down and greys the way the disc beside it goes down and darkens:
+            // same travel, same curve, the row's own colour
+            // (`RowButtonStyle`).
             .buttonStyle(.row)
             .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
             repeatButton(canRepeat: canRepeat)
         }
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
+        .listRowInsets(.listRow)
     }
 
     /// Log this row again, now. One tap: no sheet, no confirmation, and no

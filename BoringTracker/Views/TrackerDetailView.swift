@@ -164,8 +164,8 @@ struct TrackerDetailView: View {
             // settings.
             .contentShape(.rect)
         }
-        // `.row`: this screen's rows edit an entry, and until item 28 they
-        // pressed like nothing (`RowButtonStyle`).
+        // `.row`: this screen's rows edit an entry, and until item 28 their
+        // whole press was `.plain` dimming the text 25% (`RowButtonStyle`).
         .buttonStyle(.row)
         .swipeActions(edge: .trailing) {
             Button("Delete", systemImage: "trash", role: .destructive) {

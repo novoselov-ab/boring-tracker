@@ -444,9 +444,10 @@ private struct TrackerCard: View {
                     )
             }
             // `.row`, not `.plain`: the left half of this card is a control
-            // and pressed like nothing until item 28. It presses the way the
-            // `+` beside it does now — same travel, same curve, in the row's
-            // own colour rather than the accent's (`RowButtonStyle`).
+            // whose whole press was `.plain` dimming its text 25%, which is not
+            // a press anyone noticed (docs/TODO.md item 28). It goes down the
+            // way the `+` beside it does now — same travel, same curve, in the
+            // row's own colour rather than the accent's (`RowButtonStyle`).
             .buttonStyle(.row)
             // Left on the `Button`, deliberately, though the label above had to
             // move inside. Moving this too was tried and reverted: the claim it
@@ -465,7 +466,7 @@ private struct TrackerCard: View {
         }
         // The row is as tall as the + and no taller. The default inset-grouped
         // row padding was adding 46pt of its own, which is most of a second row.
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
+        .listRowInsets(.listRow)
     }
 
     /// One line normally, stacked once the text outgrows it.

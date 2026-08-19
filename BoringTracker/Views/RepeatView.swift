@@ -344,7 +344,7 @@ private struct RepeatRow: View {
         .buttonStyle(.row)
         .disabled(!canRepeat)
         .accessibilityHint("Logs this again")
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
+        .listRowInsets(.listRow)
     }
 
     private var day: DayKey {

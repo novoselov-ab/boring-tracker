@@ -27,11 +27,13 @@ extension Color {
 ///
 /// **The same press the accent fills got in item 27, in the one place they
 /// could not reach** (docs/TODO.md item 28). A row is a control on five screens
-/// in this app and behaved like a label on all of them: no colour, no movement,
-/// nothing under the thumb saying the tap had been received. Item 26 already
-/// established that a pressed state which passes a measurement and still is not
-/// noticed means the mechanism is wrong, and item 27 answered that for the
-/// fills with a scale. This is the same answer with a row's own colour.
+/// in this app, and on all of them the press was whatever `.buttonStyle(.plain)`
+/// happens to do: the label composited at 75% over what is behind it, which
+/// this repo has measured elsewhere and which nobody noticed was there. No
+/// movement, and a change of *text* rather than of the row. That is item 26's
+/// shape exactly — a pressed state that exists and is not seen means the
+/// mechanism is wrong rather than the number — and item 27 answered it for the
+/// fills with a scale. This is the same answer in a row's own colour.
 ///
 /// **Both halves, and neither on its own.** The fill is `Color.rowPressed`,
 /// which is what iOS presses its own rows to; the movement is

@@ -53,7 +53,11 @@ struct SettingsView: View {
                             } action: { frame in
                                 rowFrames[tracker.id] = frame
                             }
-                            .listRowInsets(Self.rowInsets)
+                            // Outside `.swipeActions` on the archived rows
+                            // below, and outside `.onGeometryChange` here — see
+                            // `EdgeInsets.listRow` for why the placement is not
+                            // a style choice.
+                            .listRowInsets(.listRow)
                     }
                 } header: {
                     if let group = run.first?.group, !group.isEmpty {
@@ -188,24 +192,8 @@ struct SettingsView: View {
             .swipeActions(edge: .trailing) {
                 archiveButton(tracker)
             }
-            .listRowInsets(Self.rowInsets)
+            .listRowInsets(.listRow)
     }
-
-    /// Home's, to the point (docs/TODO.md item 28). A settings row was the
-    /// default inset-grouped one — **74pt against home's 52**, read off the
-    /// accessibility tree on an iPhone 17 Pro — and the two screens list the
-    /// same trackers one tap apart. Home's number was measured in item 11 and
-    /// this is it: 4pt above and below a 44pt row, 16pt in from the card's
-    /// leading edge, 12 from its trailing one, where the 44pt box of the
-    /// trailing control takes the rest. Both lists now report 52.
-    ///
-    /// **It has to be applied outside `.swipeActions`, and that is not a style
-    /// choice.** Written inside — `rowButton(…).listRowInsets(…).swipeActions(…)`
-    /// — it is silently ignored: the build compiles, the row draws, and it
-    /// keeps the default 74pt. Found by measuring the tree after a build that
-    /// looked exactly like the one before it, so it is written down here rather
-    /// than left for the next person to lose twenty minutes to.
-    private static let rowInsets = EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)
 
     /// The handle is drawn only where a drag could do something — see
     /// `canReorder` in `body`. The VoiceOver actions it carries go with it and

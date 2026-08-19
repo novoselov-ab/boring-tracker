@@ -136,3 +136,29 @@ struct TrackerRowName: View {
         .lineLimit(typeSize.stacksRows ? nil : 1)
     }
 }
+
+extension EdgeInsets {
+
+    /// A list row with a 44pt control at its trailing end — home's cards, a
+    /// History row, a Log again row, a settings tracker row.
+    ///
+    /// **Measured once in item 11 and written out four times until item 28.**
+    /// The default inset-grouped row adds 46pt of its own, which is most of a
+    /// second row; home cut that to 4pt above and below a 44pt row, and the
+    /// three other lists drawing the same shape copied the literal. Settings
+    /// was the one that had not, at 74pt against home's 52 — which is what item
+    /// 28 was reported for — so the number is here now and the fourth screen
+    /// got it by naming it rather than by someone noticing.
+    ///
+    /// The trailing 12 is smaller than the leading 16 because what sits there
+    /// is a 44pt box around a 30pt disc: 12 plus the box's own 7 is 19pt of
+    /// air, against 16 at the other end.
+    ///
+    /// **`.listRowInsets` has to be applied outside `.swipeActions`, and that
+    /// is not a style choice.** Written inside — `row.listRowInsets(…)
+    /// .swipeActions(…)` — it is silently ignored: the build compiles, the row
+    /// draws, and it keeps the platform's default. Two settings builds looked
+    /// identical to each other before the accessibility tree said why, so it is
+    /// written down here where the constant is rather than at one call site.
+    static let listRow = EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)
+}
