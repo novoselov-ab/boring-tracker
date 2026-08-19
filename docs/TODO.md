@@ -967,10 +967,14 @@ this item that was a taste decision rather than a code one.
   of scrolling, and seven at accessibility sizes.
 - **The calendar popover** — the same number of taps at any type size, because
   the month/year wheel behind its title crosses five years without scrolling,
-  and the only one of the three that can name a *day*. Its grid does not scale
-  with Dynamic Type at all: identical at extra-small and at AX5, checked at five
-  sizes, which is what makes its one fixed 320-point frame safe — photographed
-  whole on a 360-point iPhone 13 mini, the narrowest phone iOS 18 runs on.
+  and the only one of the three that can name a *day*. Its **day grid stays 289-306
+  points wide at every text size**, which is what makes its one fixed
+  320-point frame safe — photographed whole on a 360-point iPhone 13 mini, the
+  narrowest phone iOS 18 runs on. (This first said the picker "does not scale
+  with Dynamic Type at all", which the round below found is not true: the title
+  grows from 42 to 69 pixels of glyph height, the weekday row relabels from
+  `SUN` to `S`, and the popover gets taller. The width is the part that is
+  fixed, and the width is what the frame has to hold.)
 
 **A scrubber was not built**, on arithmetic rather than on taste: 1,737 days
 down a screen 956 points tall is at best 1.8 days a point, so a fingertip
@@ -1011,6 +1015,35 @@ with the short day *above* the target, a seconds distance and a calendar-days
 one give the same answer, so it would have passed against the bug it was written
 for. Moved so the short day is below, and checked by putting the seconds version
 back and watching it fail.
+
+**A later round re-drove all of this rather than reading it** (`b0f7fd8`, and
+docs/scale.md). What held: the list never leaves — 1 section and 17,948 items
+through every jump, both ends still reachable afterwards; nearest-day landing,
+checked on three targets inside a fourteen-day hole; and the picker really does
+report *nothing* when you tap the day already selected, proved by compiling the
+open-time assert out and watching a re-tap do nothing while a tap on another day
+moved the list 3,752 points. Opening, dismissing untouched and reopening
+re-asserts the position both times, which is what the counter in `41d5515` is
+for. The open cost has not grown: +13 and +15 ms on a 333ms open, about 4%, on
+an independent fixture and harness.
+
+**That round added the number item 25 said it did not have.** A jump costs
+**331-354ms of blocked main thread**, and it is two costs: 178ms of `body`
+re-evaluating and regrouping the whole log for a state change that cannot alter
+it, and ~176ms of `scrollTo` reaching deep into 17,948 items. Left alone
+deliberately — it is the order the screen already costs to open, on a
+once-a-week control, and the regrouping half is what a search keystroke has
+always cost here. A month wheel *drag* also fires one jump, not one per row it
+passes, so the case that would have forced the issue is not there.
+
+**One design question is left open, and it is not a bug.** When the day you pick
+has nothing logged the list goes to the nearest day that does — but the calendar
+keeps highlighting the day you tapped, and nothing on screen says the two
+differ. From the popover, landing on the 25th after tapping the 31st is
+indistinguishable from the control having failed. VoiceOver is told, by the
+`PageScrolled` announcement; a sighted user is not. Moving the selection to the
+day it landed on is the obvious answer and has a cost of its own — it would
+fight the wheels, which *are* the selection.
 
 **The design question this left is answered by item 25b** (`5aed442`): with a
 single day of history the picker opened on one selectable square with both month
