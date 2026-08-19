@@ -27,8 +27,10 @@ struct ExportFile: Transferable {
     /// below rather than stored here, because this value is built when the
     /// settings list draws and read when a destination is chosen, and those are
     /// not the same day if the list has been on screen since before midnight.
-    /// The Files exporter dates its name at the tap, so dating this one at the
-    /// draw would let the two doors disagree by a day.
+    /// An export should be named for the day it was taken, and the tap is when
+    /// it is taken. (This used to argue it from the *Save to Files* door dating
+    /// its name at the tap; `35a5fd0` deleted that door, and the reason stands
+    /// without it.)
     let stem: String
     let format: Format
     let document: StoreDocument

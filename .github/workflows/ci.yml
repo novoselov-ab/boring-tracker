@@ -1,8 +1,11 @@
 name: Build and test
 
-# Every push and every pull request, with no path filters. The 200 tests are
+# Every push and every pull request, with no path filters. The test suite is
 # the thing being protected and there is no change to this repo that cannot
-# break them.
+# break them. It said "the 200 tests" for long enough to be wrong twice — 281
+# before item 29 removed the counting-window tests, 277 after — so the count is
+# left to `xcodebuild` to print rather than restated here, where nothing checks
+# it.
 on:
   push:
   pull_request:

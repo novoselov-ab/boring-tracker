@@ -8,9 +8,14 @@ import Foundation
 /// for the copy from before something went wrong.
 enum ExportName {
 
-    /// `boring-tracker-2026-08-16`, with no extension: `fileExporter` appends
-    /// that from the content type, and a name carrying `.json` twice is what
-    /// happens if this does it too.
+    /// `boring-tracker-2026-08-16`, **with no extension**: the one caller,
+    /// `ExportFile.filename`, appends the one its format names, and a name
+    /// carrying `.json` twice is what happens if this adds one too.
+    ///
+    /// The comment here used to credit `fileExporter` with appending it from
+    /// the content type, which was true until `35a5fd0` deleted that whole path
+    /// — the export leaves by the share sheet and nothing else now
+    /// (docs/TECH.md). The rule did not change with it; what it rests on did.
     ///
     /// Year-month-day with padding, rather than anything the user's locale
     /// would write: a filename cannot hold the slashes half the world puts in a
