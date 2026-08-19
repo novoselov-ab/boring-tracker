@@ -1510,11 +1510,14 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       the top — which is the murk this item reports, arriving as a ceiling
       rather than as a mistake.
 - [ ] **So the real question is the label, and it was rendered too.** White on
-      a deep light fill measures 5.3–5.5, better than black on today's. It
-      would make `Color.onAccent` a colour set and give the app one control
-      whose word changes colour with the appearance — which that property's own
-      doc argues against, from a time when the light fill was `#009888` and
-      black worked.
+      a deep light fill measures 5.3–5.5 — a shade under today's black on
+      `#009888` at 5.85, and well over black on the deep fill itself at about
+      3.9. So the trade is a slightly quieter label for a much deeper colour,
+      not a free win; this item said "better than black on today's" and that
+      was the wrong comparison. It would also make `Color.onAccent` a colour
+      set and give the app one control whose word changes colour with the
+      appearance — which that property's own doc argues against, from a time
+      when the light fill was `#009888` and black worked.
 - [ ] Dark mode is settled and measured. **Not touched.**
 - [ ] **The user picks, and nothing was merged.** The recommendation is
       `#00796B` with a white label, or `#00857A` if the black label has to

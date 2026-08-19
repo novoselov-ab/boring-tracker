@@ -43,6 +43,11 @@ struct HomeView: View {
     /// (`Store.lastLoggedAgainRow`). That is what re-arms `logHaptic(_:)` and
     /// what restarts the clock below.
     ///
+    /// **Set, and then still checked against the store.** This says which write
+    /// the bar is acknowledging; whether that write is still standing is the
+    /// store's answer, so the disc asks both — see `logBar`. A flag alone kept
+    /// a checkmark up over an Undo tapped inside the same second.
+    ///
     /// **Not `lastLoggedAgainAt`, which was here first and is too coarse**
     /// (found in review). `Date.stamp()` canonicalises to whole seconds so the
     /// file is lossless, so two repeats inside one second carry the *same*
@@ -272,7 +277,16 @@ struct HomeView: View {
                 Button { loggingAgain = true } label: {
                     // The disc is its own target here, at 50pt, so there is no
                     // frame around it to pad it out to 44 or to reserve a slot.
-                    RepeatDisc(diameter: 50, glyph: 20, confirmed: loggedAgain != nil)
+                    // Still the store's write, not merely a flag this screen
+                    // set — the same comparison `offersUndo` makes, and for the
+                    // same reason (found in review). Undo is 44pt above this
+                    // disc and reachable well inside the second the mark is up,
+                    // and a checkmark left standing over an emptied slot is the
+                    // app acknowledging a write it has just taken back.
+                    RepeatDisc(
+                        diameter: 50, glyph: 20,
+                        confirmed: loggedAgain != nil && store.lastLoggedAgainRow == loggedAgain
+                    )
                 }
                 // `.accentFill` rather than `.plain`, so the disc reads the
                 // press and recedes to `Color.accentFillPressed` like every

@@ -491,10 +491,18 @@ mistake in the arithmetic.
 
 A deep light accent wants a *white* label, which is what iOS would draw
 unasked. On these three it measures 5.47 (`#0F766E`), 5.32 (`#00796B`) and 5.48
-(`#047857`) — better than black on today's fill. Photographed as
-`31-light-strip-black-vs-white-label.png`, and the difference on screen is
-larger than the numbers suggest: black on a deep teal reads as muddy where
-white reads as a control.
+(`#047857`).
+
+**Read that against the right number.** It is a shade *under* today's black on
+`#009888`, which is 5.85 — the comparison here said "better than" and was
+wrong. What it beats is black on the fill it is actually on: 5.32 against 3.95
+for `#00796B`. So the trade is a label a fraction quieter than today's in
+exchange for a fill that measures 5.15 as a foreground where today's measures
+3.48, which is the whole of what item 31 is asking for.
+
+Photographed as `31-light-strip-black-vs-white-label.png`, and the difference on
+screen is larger than either number suggests: black on a deep teal reads as
+muddy where white reads as a control.
 
 The cost is real and it is item 13b's: `Color.onAccent` would become a colour
 set, black in dark and white in light, and the app would have one control whose

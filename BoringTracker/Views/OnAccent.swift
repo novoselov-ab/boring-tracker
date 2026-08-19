@@ -718,7 +718,7 @@ struct RepeatDisc: View {
     /// **Not on the row inside the sheet, which was tried first and cannot
     /// work.** Marking the tapped row is item 30's own first candidate; it was
     /// built and recorded and `dismiss()` outruns it — see `HomeView`'s
-    /// `loggedAgainAt` for what the recording showed.
+    /// `loggedAgain` for what the recording showed.
     ///
     /// **No `contentTransition`.** `.symbolEffect(.replace)` was built and
     /// recorded first, and it takes about 300ms of a 60fps capture to finish —
