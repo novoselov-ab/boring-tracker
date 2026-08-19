@@ -1201,7 +1201,9 @@ settled.
 
 ## 28. Rows should behave like controls — done
 
-One problem wearing three faces, all three answered.
+One problem wearing three faces, all three answered. `3cbf54a`, and four
+review rounds' worth of corrections on top of it: `bd71d51`, `bb640b7`,
+`ae12dd1`, `7be85d3`.
 
 - [x] **Settings draws trackers at home's size now.** It drew them at **74pt
       against home's 52**, read off the accessibility tree on an iPhone 17 Pro,
@@ -1329,7 +1331,7 @@ and it is the strongest argument yet for deleting the haptic outright.
 
 ## 29. Sort Log again chronologically — done
 
-Most recently logged first.
+Most recently logged first. `703894a`
 
 - [x] Most recently logged first. The list is `canRepeat`, then the row's date
       descending, then `sortID` — three comparisons where there were five.
