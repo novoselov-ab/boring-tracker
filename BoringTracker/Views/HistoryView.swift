@@ -23,6 +23,12 @@ struct HistoryView: View {
     /// have looked away and back the answer to "which is new" is no longer a
     /// question anyone is asking.
     @State private var highlighted: HistoryItem.ID?
+
+    private struct Jump: Equatable {
+        var day: DayKey
+        var count: Int
+    }
+
     /// The day the list has been asked to scroll to, and which asking it was.
     ///
     /// A one-shot rather than a selection: the control *navigates*, so nothing
@@ -37,11 +43,6 @@ struct HistoryView: View {
     /// 17,788 rows — on a control whose month wheel fires one jump per row it
     /// passes. Found in review; the open path had been measured and the jump
     /// path had not.
-    private struct Jump: Equatable {
-        var day: DayKey
-        var count: Int
-    }
-
     @State private var jumpTarget: Jump?
     /// Whether the date picker is up, and the date it holds.
     ///
@@ -364,15 +365,25 @@ struct HistoryView: View {
     /// A nav bar is also where docs/PHILOSOPHY.md puts something you reach for
     /// once a week, and this is not on the path to logging a number.
     ///
-    /// The picker is bounded by the *span* the list holds — oldest day to
-    /// newest — so the calendar greys out everything outside five years of
-    /// history and nothing inside it. Every missed day, and both thirteen-day
-    /// holidays, are days you can still tap, which is exactly why
-    /// `DayKey.nearest` exists below: the bound stops the control asking about
-    /// a decade nothing was logged in, and the landing rule answers everything
-    /// inside. (Said the other way round in review, where the sentence read as
-    /// if a day with nothing on it could not be picked at all — which would
-    /// make the landing rule dead code.)
+    /// The picker is bounded by the span of the days *on screen* — the ends of
+    /// `days`, which is the query-filtered grouping, not the whole history. With
+    /// the field empty those are the same thing and the calendar greys out
+    /// everything outside five years of logs. With a query applied they are not:
+    /// search for something that only happened in 2026 and 2022–2025 grey out
+    /// too, even though the store still holds them. That is deliberate and it is
+    /// the rule item 25b already records (docs/TODO.md) — the control navigates
+    /// the list as displayed, the same reading that takes the control away
+    /// entirely when a search leaves one day standing. A picker bounded by the
+    /// whole history under a search would offer five years of days that all land
+    /// on the handful of matches below.
+    ///
+    /// Inside the bound every day is tappable — every missed one, and both
+    /// thirteen-day holidays — which is exactly why `DayKey.nearest` exists
+    /// below: the bound stops the control asking about a decade nothing was
+    /// logged in, and the landing rule answers everything inside. (Said the
+    /// other way round in review, where the sentence read as if a day with
+    /// nothing on it could not be picked at all — which would make the landing
+    /// rule dead code.)
     private func jumpButton(oldest: DayKey, newest: DayKey, days: [DayGroup]) -> some View {
         // `min`/`max` rather than the two ends as they come. `days` is sorted
         // newest first and these are its ends, so the range is in order by
@@ -425,14 +436,25 @@ struct HistoryView: View {
             // is where four defects on this project have come from.
             //
             // Two things make it safe, and both were photographed rather than
-            // argued. The picker inside it does not scale — the grid comes out
-            // the same size at every text size, checked at five of them from
-            // extra-small to AX5 — so there is no text growing inside a frame
-            // that cannot. And it fits the narrowest phone iOS 18 runs on,
-            // which this comment first got wrong: it said 375 points, the SE,
-            // and a review pointed out the iPhone 12 and 13 mini are **360**.
-            // The whole calendar draws on one, with a margin each side, on the
-            // same five-year fixture.
+            // argued. **What is fixed is the day grid's width** — 289–306
+            // points at every text size, checked at five of them from
+            // extra-small to AX5, nothing clipped at either end — so the frame
+            // is 320 around something that never asks for more.
+            //
+            // Not because the picker ignores Dynamic Type, which is what this
+            // comment said first and is false: the month/year title grows by
+            // about two thirds between extra-small and AX5, the weekday row
+            // relabels itself from `SUN MON TUE` to `S M T`, and the whole
+            // popover gets taller (docs/scale.md, "Checked again on a fifth
+            // fixture"). It grows *downwards*, which a fixed width does not
+            // constrain. Anyone putting a label in here should size it against
+            // the 289–306, not against a picker they believe never scales.
+            //
+            // And it fits the narrowest phone iOS 18 runs on, which this
+            // comment also first got wrong: it said 375 points, the SE, and a
+            // review pointed out the iPhone 12 and 13 mini are **360**. The
+            // whole calendar draws on one, with a margin each side, on the same
+            // five-year fixture.
             .frame(width: 320)
             .padding(8)
             // A popover, not the sheet iPhone would otherwise adapt it into. A
