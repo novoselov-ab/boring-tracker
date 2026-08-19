@@ -12,8 +12,9 @@
 > fifty-odd contrast ratios on this page were recomputed from the hex values in
 > August 2026 and every one reproduces to the second decimal — and they are why
 > item 18 exists: this table is what proved one hue could not serve both
-> appearances. Item 31 is the open half, and it needs this exercise done again
-> for light mode, which was never rendered.
+> appearances. Item 31 was the open half — the same exercise for light mode,
+> never rendered here — and it is now the last section on this page, written
+> from its own renders rather than from this one's.
 
 > The screenshots behind these numbers are **kept outside the repository**,
 > in `~/dev/boring-tracker-accent/`. They are 1.2 MB of PNGs that would sit in
@@ -433,3 +434,87 @@ item 18 rescues them by hand — a bar glyph at half the floor. Violet is the on
 interesting failure: it is the one colour that would put a white label back with
 real margin, and it pays for it with the weakest bar glyph measured and a
 near-black label that misses at 2.99.
+
+---
+
+## Light mode, rendered
+
+The exercise above, done for the other appearance, which is what item 31 asked
+for. **Nothing here has been merged**: the app still ships `#009888` in light,
+and the photographs are outside the repo in `~/dev/boring-tracker-pairing/` as
+`31-light-*.png` — six candidates on home and on settings, four strips, and
+three of the deep ones drawn with a white label.
+
+### The surfaces, sampled rather than assumed
+
+Every ratio below is arithmetic from the hex values, against backgrounds read
+out of the PNGs by decoding the IDAT bytes:
+
+| where | light |
+|---|---|
+| the circle behind a nav-bar glyph | `#FBFBFF` |
+| a `Form` row | `#FFFFFF` |
+| the bottom bar's material | `#FAFAFD` |
+| the grouped list background | `#F2F2F7` |
+
+Item 18's two published numbers for `#009888` fall out of those exactly — 3.48
+as a bar glyph and 3.59 as a `Form` row foreground — which is the check that
+this table is measuring the same thing item 18 was.
+
+### The candidates
+
+| # | hex | what it is | bar glyph | Form row | black label |
+|---|---|---|---|---|---|
+| 1 | `#009888` | today: the system mint, darkened | 3.48 | 3.59 | 5.85 |
+| 2 | `#00857A` | the same hue, deeper still | 4.39 | 4.53 | 4.64 |
+| 3 | `#0F766E` | a cooler, greyer teal | 5.30 | 5.47 | **3.84** |
+| 4 | `#00796B` | a saturated deep teal | 5.15 | 5.32 | **3.95** |
+| 5 | `#0E7490` | deep blue-teal | 5.19 | 5.36 | **3.92** |
+| 6 | `#047857` | deep green | 5.31 | 5.48 | **3.83** |
+
+### The constraint is not the one item 31 names
+
+Item 31 says the colour still has to clear 3:1 as a tint and as a form-row
+foreground. **Every candidate here clears that with room, including today's**,
+so it does not choose between them. What does is the last column: `Log` is
+drawn in `Color.onAccent`, which is black, and a deeper fill takes that down.
+Today's 5.85 is comfortable; a genuinely deep light accent lands near 3.9,
+which clears the 3:1 floor a UI element needs and misses the 4.5 ordinary text
+wants at that size.
+
+So light mode has a window rather than a floor, and today's colour is inside it
+near the top. **That is why it looks dimmed**: it is as deep as it can be while
+carrying a black word, and the murk item 31 reports is that ceiling, not a
+mistake in the arithmetic.
+
+### The way out is the label, and it was rendered too
+
+A deep light accent wants a *white* label, which is what iOS would draw
+unasked. On these three it measures 5.47 (`#0F766E`), 5.32 (`#00796B`) and 5.48
+(`#047857`) — better than black on today's fill. Photographed as
+`31-light-strip-black-vs-white-label.png`, and the difference on screen is
+larger than the numbers suggest: black on a deep teal reads as muddy where
+white reads as a control.
+
+The cost is real and it is item 13b's: `Color.onAccent` would become a colour
+set, black in dark and white in light, and the app would have one control whose
+word changes colour with the appearance. `Color.onAccent`'s own doc argues
+against exactly that — "what sits on the accent is decided by the accent, not
+by the mode" — written when the light fill was `#009888`, where black works.
+A deeper light fill is the case that argument was not made against.
+
+### Recommendation
+
+**4, `#00796B`, with a white label in light.** It is a colour chosen for light
+mode rather than the mint with its brightness taken away, it stays in the dark
+value's own green-teal family so the app does not read as two apps, and it
+clears every floor with margin. 6 (`#047857`) is the same answer in a greener
+hue and is the one to pick on taste; 5 (`#0E7490`) is the furthest from the
+mint and the one most likely to read as a different app between appearances.
+
+**If `Color.onAccent` must stay black**, it is 2, `#00857A` — deeper than
+today, clears everything, still carries a black `Log` at 4.64. But it is the
+same hue with less light in it, which is the thing item 31 asked not to do
+again, so it is the compromise rather than the answer.
+
+The user picks. Dark is untouched either way.

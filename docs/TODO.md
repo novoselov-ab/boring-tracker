@@ -1493,20 +1493,33 @@ brightness taken away.
 They are two deliberate choices, one per appearance — that was the argument for
 having a set at all, and it got applied as arithmetic instead of as a decision.
 
-- [ ] Choose light mode's accent **for light mode**, not by darkening dark
-      mode's. Something naturally deeper — a teal, a deep green, whatever
-      looks right — rather than mint with the light turned down.
-- [ ] It still has to clear 3:1 as a tint and as a form-button foreground.
-      That constraint is what created the problem; it does not go away.
-- [ ] Dark mode is settled and measured. **Do not touch it.**
-- [ ] **Render options and photograph them**, the way item 27 did the pairings,
-      outside the repo. This is taste, so it needs looking at rather than
-      arguing about, and the user picks.
-
-Worth noting for whoever does it: `docs/accent-options.md` measured twelve
-candidates but **in dark only**, at the user's direction. There is no
-equivalent evidence for light, so this is not a lookup — it is the same
-exercise, done for the other appearance.
+- [x] **Six candidates rendered and photographed**, light, iPhone 17 Pro, home
+      and settings, by the same launch-argument probe item 27 used. Outside the
+      repo in `~/dev/boring-tracker-pairing/` as `31-light-*.png`, with strips
+      for the bar, the cards, the `Form` row, and black label against white.
+      Every shot's fill was sampled back out of the PNG and matches the hex it
+      was asked for. The numbers, the surfaces they were measured against and
+      the recommendation are the last section of
+      [accent-options.md](accent-options.md).
+- [ ] **The 3:1 constraint is not what is choosing here.** Every candidate
+      clears it as a tint and as a form-row foreground, today's included, so it
+      separates nothing. What separates them is the black `Log` on the fill:
+      today measures 5.85 and a genuinely deep light accent lands near 3.9,
+      which clears the 3:1 a UI element needs and misses the 4.5 that size of
+      text wants. Light has a **window**, and today's colour sits inside it near
+      the top — which is the murk this item reports, arriving as a ceiling
+      rather than as a mistake.
+- [ ] **So the real question is the label, and it was rendered too.** White on
+      a deep light fill measures 5.3–5.5, better than black on today's. It
+      would make `Color.onAccent` a colour set and give the app one control
+      whose word changes colour with the appearance — which that property's own
+      doc argues against, from a time when the light fill was `#009888` and
+      black worked.
+- [ ] Dark mode is settled and measured. **Not touched.**
+- [ ] **The user picks, and nothing was merged.** The recommendation is
+      `#00796B` with a white label, or `#00857A` if the black label has to
+      stay — and the second one is the compromise, because it is the same hue
+      with less light in it again.
 
 ## 32. A press you can see on a fast tap — done
 
