@@ -497,8 +497,18 @@ private struct TrackerCard: View {
     private func summary(_ headline: Headline, _ caption: String?) -> some View {
         // The arrangement, the threshold and the measured `spacing: 0` all
         // moved into `StackingRow` when the three list screens turned out to
-        // want the same row and the same fallback. Nothing about this card's
-        // layout changed with them.
+        // want the same row and the same fallback. Nothing this card *draws*
+        // changed with them: home is byte-identical at `large`, `.xxxLarge` and
+        // AX5 to a build with the card back on its own copy of the layout.
+        //
+        // Two things did change shape, and are inert rather than absent —
+        // written down because whatever makes them matter will not look like a
+        // change to this card. `StackingRow`'s stacked branch adds
+        // `frame(maxWidth: .infinity)`, which the card's own `VStack` never had;
+        // the caller already fills the width, so it buys nothing here. And the
+        // `layoutPriority` below now applies in *both* branches, where the card
+        // set it on the side-by-side one only: a `List` row proposes its height
+        // freely, so inside the `VStack` there is nothing for it to arbitrate.
         StackingRow {
             nameBlock(caption)
         } trailing: {
@@ -508,7 +518,7 @@ private struct TrackerCard: View {
                 // row that has to be readable across a kitchen and a
                 // truncated name still says which tracker it is. How far
                 // that goes is bounded by `isStacked` rather than by
-                // anything here: the worst case left inside this branch is
+                // anything here: the worst case left side by side is
                 // "Calorie…" beside "1,234,567 kcal", on an SE at
                 // `.xxLarge`. A floor on the name was tried instead and
                 // reverted — `minWidth` reserves its width whether the name

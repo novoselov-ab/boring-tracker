@@ -49,6 +49,11 @@ extension DynamicTypeSize {
 /// take what it needs because a truncated timestamp is not a timestamp. What
 /// this owns is the arrangement and the threshold, which is the part that must
 /// not disagree.
+///
+/// Both halves go in **as the caller wrote them, in both branches** — so a
+/// `layoutPriority` meant for the side-by-side row also lands in the `VStack`,
+/// where it is inert only because a `List` row's height is free. Worth knowing
+/// before giving either branch a height it has to divide.
 struct StackingRow<Leading: View, Trailing: View>: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @ViewBuilder var leading: Leading
