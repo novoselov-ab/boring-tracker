@@ -469,10 +469,23 @@ struct AccentPillButtonStyle: ButtonStyle {
             .padding(.horizontal, horizontalPadding)
             .frame(minHeight: minHeight)
             .accentFilled(.capsule)
-            // After the scale, so the target is the capsule the pill lays out
-            // at and not the smaller one it is drawn at while held. A hit area
-            // that shrinks under a thumb resting on the edge lets go of its own
-            // press.
+            // The target is the capsule the pill lays out at and not the
+            // smaller one it is drawn at while held — and what makes that true
+            // is `visualEffect` being visual only, not the fact that this line
+            // comes after it. It credited the ordering until review, which is
+            // worth correcting rather than tidying: an enclosing scale
+            // transforms this shape too, so if the press did move geometry,
+            // writing `contentShape` out here would not have saved the target,
+            // and a later swap to a plain `.scaleEffect` would keep the
+            // documented order while quietly breaking it.
+            //
+            // Checked rather than argued, because that is the failure this
+            // comment exists to prevent. A synthesized press at **x = 17pt** —
+            // inside the pill's resting 16.0–307.9pt and outside the
+            // 18.0–306.0pt it shrinks to — engages, holds pressed through the
+            // shrink (288.0x49.3pt at 18.0, `#07AA9A`), and fires the action on
+            // release. A thumb on the edge does not fall out of a target that
+            // moved under it.
             .contentShape(.capsule)
             .environment(\.accentFillPressed, configuration.isPressed)
             .accentFillHaptic(configuration.isPressed)
@@ -676,6 +689,16 @@ extension View {
     /// that rests 0.2s first — because a list delays the touch. It takes
     /// somewhere between 0.2s and 0.45s of a stationary finger before the disc
     /// goes down, by which point the gesture is a press and not a scroll.
+    ///
+    /// **What that recording does not cover is a press called off** (found in
+    /// review): a finger that waits out the list's delay, goes down, and then
+    /// slides off the row to abandon the tap has already been given the impact
+    /// for an action that never runs. Left as it is — the whole point of this
+    /// is feedback at the moment of the press rather than at the moment of the
+    /// result, and a control that only buzzed when it succeeded would be back
+    /// to reporting outcomes. But it is a press with no result that nobody has
+    /// watched, so it goes to item 17 with the rest of the haptic rather than
+    /// being claimed as covered.
     ///
     /// **Whether it helps is not answered here.** The simulator has no haptics
     /// — UIKit logs "Haptics: unsupported" and nothing reaches CoreHaptics — so

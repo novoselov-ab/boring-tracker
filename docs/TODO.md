@@ -1157,6 +1157,25 @@ settled.
 Wanted, not yet queued. Written down with the part that isn't obvious, so
 picking one up doesn't start with rediscovering why it's awkward.
 
+- [ ] **What a press should do to an accent fill too small to give up 4pt.**
+      `AccentFillPress.scale(for:reduceMotion:)` moves each end of the fill's
+      longest edge 2pt, so a fill shorter than 4pt solved to a zero or negative
+      scale and turned inside out; that is guarded now and falls back to not
+      scaling. What the guard does *not* cover is the range just above it — a
+      6pt fill still solves to 0.33 and a 10pt one to 0.6, which reads as a
+      control vanishing rather than a control pressed.
+
+      Not guarded, deliberately, and this is the awkward part: every fix is a
+      number nobody has measured. A floor on the scale, or `min(travel,
+      longest / 8)`, both pick a threshold by taste on a case that does not
+      exist — the smallest accent fill in the app is a 30pt disc, which is
+      three times clear of it. Raised in review on item 27 and left, because
+      the repo's own rule is that a best practice needs a concrete failure it
+      would prevent. **The failure would be real when a small fill is actually
+      added** — a badge, a dot, an indicator between 5 and 12pt — and whoever
+      adds it should measure a press on it rather than trusting a rule
+      extrapolated from a pill twenty times its length.
+
 - [ ] **What the gap between two days should be, now that there is no card.**
       The section fix left the day heading's `listRowInsets(top: 18, …)` sitting
       *on top of* the spacing a headerless `Section` already reserves rather
