@@ -76,11 +76,36 @@ struct SettingsView: View {
                 }
             }
 
-            if canReorder {
+            // **Says the tap out loud, and keeps the chevron** (docs/TODO.md
+            // item 34). The `>` is iOS's disclosure indicator and is the right
+            // affordance — a pencil is what a row wears when editing is one of
+            // several things it does, which it is not here — but it was not
+            // obvious in use, and that is evidence rather than taste.
+            //
+            // Items 28 and 32 were the other candidate answer and are not one.
+            // They made the whole row a target and gave it a press you cannot
+            // miss, and both of those happen *after* a finger has landed. What
+            // was missing is the reason to land it. Feedback is not discovery.
+            //
+            // So it is a footer, which is what this app already does for a
+            // gesture that does not show: History and a tracker's own screen
+            // both carry "Tap a row to edit it, or swipe to delete." since item
+            // 22, in this same idiom — plain footer, no icon, no colour. And it
+            // is a footer *instead of* an icon rather than as well as one; two
+            // explanations of one tap is worse than either.
+            //
+            // Gated on there being a tracker rather than on `canReorder`,
+            // because the tap is worth explaining with one tracker and the drag
+            // is not.
+            if !store.activeTrackers.isEmpty {
                 Section {
                     EmptyView()
                 } footer: {
-                    Text("Drag a tracker's handle to reorder. Between sections, its whole group moves with it. Change membership by editing a tracker.")
+                    Text(
+                        canReorder
+                            ? "Tap a tracker to edit it, including which group it is in. Drag its handle to reorder. Between sections, its whole group moves with it."
+                            : "Tap a tracker to edit it, including which group it is in."
+                    )
                 }
             }
 
