@@ -40,9 +40,18 @@ struct HistoryView: View {
     /// replaced clearing this back to `nil` inside its own `onChange`. That
     /// worked and cost a whole extra evaluation of this screen's `body` per
     /// jump — which rebuilds `Store.historyItems`, groups 1,737 days and diffs
-    /// 17,788 rows — on a control whose month wheel fires one jump per row it
-    /// passes. Found in review; the open path had been measured and the jump
-    /// path had not.
+    /// 17,788 rows. Found in review; the open path had been measured and the
+    /// jump path had not.
+    ///
+    /// **The justification used to end "on a control whose month wheel fires
+    /// one jump per row it passes", and that was a guess the measurement then
+    /// contradicted** (docs/scale.md, "A month-wheel drag fires one jump, not
+    /// one per row it passes" — dragging across several months produced a
+    /// single 345ms burst and a single move, because the wheel reports its
+    /// selection when it settles). The counter still earns its keep on the
+    /// smaller true case: it is what makes picking the *same* day twice a
+    /// second jump. The doc that measured this named this comment; f1f08fa
+    /// corrected three others in this file and left it.
     @State private var jumpTarget: Jump?
     /// Whether the date picker is up, and the date it holds.
     ///

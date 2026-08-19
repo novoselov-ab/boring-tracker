@@ -406,9 +406,12 @@ private struct TrackerCard: View {
         let headline = headline
         let caption = caption
         return HStack(spacing: 8) {
-            // Two plain buttons with disjoint frames rather than a
-            // NavigationLink wrapping a button: a link would either swallow the
-            // + or leave its chevron stranded in the middle of the card.
+            // Two buttons with disjoint frames rather than a NavigationLink
+            // wrapping a button: a link would either swallow the + or leave its
+            // chevron stranded in the middle of the card. ("Two *plain*
+            // buttons" until review — the + has been `.accentFill` since item
+            // 26, and what matters here was never the style but that they are
+            // two buttons and not one.)
             Button(action: open) {
                 summary(headline, caption)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -431,8 +434,10 @@ private struct TrackerCard: View {
             // move inside. Moving this too was tried and reverted: the claim it
             // rested on — that these modifiers do nothing out here — is
             // contradicted twice in this repo, by `logButton` below and by
-            // HistoryView's row, both of which label a `.plain` button from
-            // outside and are read correctly. The difference may be the
+            // HistoryView's repeat disc, both of which label a button from
+            // outside and are read correctly. (Both said `.plain` here until
+            // review; item 26 made them `.accentFill`, which changes the style
+            // and not the fact being cited.) The difference may be the
             // `children: .ignore` above turning this button into a container,
             // in which case the hint belongs inside after all. Unverified
             // either way: it needs VoiceOver, not a reading of the tree, and
@@ -642,7 +647,16 @@ private struct TrackerCard: View {
                 // ten times down the main screen, so on the old teal it was the
                 // identical 1.86:1. The two move together or the screen has two
                 // design languages again (docs/TODO.md item 13b).
-                .foregroundStyle(Color.onAccent)
+                //
+                // `.onAccentFill()` and not `Color.onAccent` written out, which
+                // is what this said until review: the background below carries
+                // all three states since item 26, and a foreground that names
+                // only the enabled one is half a control. Nothing disables this
+                // button today, so it draws exactly what it drew — but the
+                // first `.disabled` put on it would have painted black on
+                // `#636366` at 3.51:1 rather than the 5.99:1 the white glyph
+                // measures there, and nothing would have said so.
+                .onAccentFill()
                 .frame(width: 30, height: 30)
                 // `Color.accentFill`, not `.tint` and not `Color.accentColor`:
                 // the environment tint is the ordinary label colour now, and

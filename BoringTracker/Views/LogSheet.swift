@@ -132,10 +132,22 @@ struct LogSheet: View {
                         // the label rather than on the button: this is the one
                         // prominent button in the app that is routinely
                         // disabled — the sheet opens that way, with no number
-                        // typed yet — and a disabled prominent button is drawn
-                        // from a neutral near-black fill that ignores the tint
-                        // entirely. `onAccentFill` reads `isEnabled` from here,
-                        // inside `.disabled`, and stands aside for it.
+                        // typed yet — so both of its states have to be right
+                        // and `onAccentFill` reads `isEnabled` from here,
+                        // inside `.disabled`, to pick between them.
+                        //
+                        // **This used to say that iOS draws the disabled state
+                        // from a neutral near-black fill and that the modifier
+                        // stands aside for it.** Both halves stopped being true
+                        // at item 26 and the sentence stayed (found in review,
+                        // the same drift f1f08fa was written for). iOS draws
+                        // nothing here now — `.accentPill` below paints all
+                        // three states — and the modifier does not stand aside:
+                        // it paints `Color.onAccentDisabled`. Measured on this
+                        // button, the disabled pill is `#AEAEB2` with a black
+                        // label in light and `#636366` with a white one in
+                        // dark, where it was a white word on a white pill on a
+                        // white bar at 1.02:1.
                         Text("Log").onAccentFill()
                     }
                     // `.accentPill`: the same fill, the same metrics, and a

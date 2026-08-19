@@ -97,11 +97,23 @@ extension Color {
     ///
     /// `.systemGray2` **rendered and sampled, not trusted by name**: it draws
     /// `#AEAEB2` on the light row and `#636366` on the dark one, which measure
-    /// **2.21:1 and 2.84:1** against the rows they sit on. Both clear the
-    /// 1.8:1 this was aimed at, and both stay well under the enabled fill's
-    /// 3.59:1 and 9.57:1, so off still reads quieter than on. A grey with no
-    /// hue in it, because the one thing a disabled control must not look like
-    /// is a mint one.
+    /// **2.21:1 and 2.84:1** against History's rows. Both clear the 1.8:1 this
+    /// was aimed at, and both stay well under the enabled fill's 3.59:1 and
+    /// 9.57:1, so off still reads quieter than on. A grey with no hue in it,
+    /// because the one thing a disabled control must not look like is a mint
+    /// one.
+    ///
+    /// **The 1.8 is met on the rows it was measured against, and not on every
+    /// row in the app** (found in review, on the screen this was not sampled
+    /// on). The Log again sheet is a `.medium` detent whose inset-grouped rows
+    /// are `#DBDBDD` in light and `#2C2C2C` in dark, not white and near-black,
+    /// and an archived row's disc measures **1.60:1** there in light — under
+    /// the aim — and 2.33:1 in dark. It is left as it is: no fixed grey clears
+    /// 1.8 on both `#FFFFFF` and `#DBDBDD` without arriving at `.systemGray`,
+    /// which is 2.36 on the sheet but **3.26 on white against the enabled
+    /// fill's 3.59**, and a disabled control that loud is the opposite
+    /// mistake. The glyph on top of it is 9.50 either way, so what the sheet
+    /// loses is the disc's edge and not the control.
     ///
     /// Two neighbours were ruled out arithmetically, from Apple's own sRGB
     /// values rather than from a render: `.systemGray3` is the nearer grey and
@@ -152,9 +164,18 @@ extension Color {
     /// rendered `#CBCBCB` on `#E8E8E8` for **1.32:1** and was the second half
     /// of a disc you could not see.
     ///
-    /// `.secondary` was the obvious middle and does not reach: composited over
-    /// the same two greys it works out at 2.43:1 in light and 2.29:1 in dark,
-    /// which is why the label colour and not the quieter one.
+    /// `.secondary` was the obvious middle and is ruled out by the light half
+    /// alone. Composited over the same two greys — `UIColor.secondaryLabel` is
+    /// `#3C3C43` at 60% in light and `#EBEBF5` at 60% in dark — it draws
+    /// `#6A6A6F` on `#AEAEB2` for **2.43:1**, under the 2.5 above, and
+    /// `#B5B5BC` on `#636366` for **2.94:1**, which clears it.
+    ///
+    /// **That dark number read 2.29 here and was arithmetic that did not work
+    /// out** (found in review, recomputed from the same two values that give
+    /// the light figure exactly). It does not move the answer: one colour has
+    /// to serve both appearances, light is where `.secondary` fails, and the
+    /// label colour clears both by a distance — 9.50 and 5.99 against 2.43 and
+    /// 2.94.
     static let onAccentDisabled = Color.primary
 }
 
@@ -238,10 +259,18 @@ struct AccentFillBackground<S: Shape>: View {
 ///
 /// **The Log again row in `RepeatView` gives up something for this**: the row
 /// is one big button, so `.plain` used to dim its text along with its disc, and
-/// now only the disc responds. That is the control the tap is about, and a row
-/// whose disc recedes while its words hold still is a smaller loss than a
-/// screen where one of the three repeat discs presses differently from the
-/// other two.
+/// now only the disc responds to a press. That is the control the tap is about,
+/// and a row whose disc recedes while its words hold still is a smaller loss
+/// than a screen where one of the three repeat discs presses differently from
+/// the other two.
+///
+/// **`.plain` dimmed a *disabled* label as well, and that half was not a
+/// trade — it was missed.** A disabled Log again row greying its whole self is
+/// a rule `RepeatRow`'s own doc argues for, and without `.plain` the row drew
+/// its value line at the same `#000000` a live row does. `RepeatRow` dims its
+/// text itself now, at the 0.5 `.plain` composited at; the numbers are there.
+/// Nothing else in the app hit it, because every other `.accentFill` button's
+/// label *is* the accent fill and `OnAccentFill` already colours that.
 struct AccentFillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label

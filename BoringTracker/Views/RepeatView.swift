@@ -263,6 +263,35 @@ private struct RepeatRow: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
+                // **Dimmed while the row is off**, which is what `.plain` used
+                // to do for free and a custom `ButtonStyle` does not. A
+                // disabled row here greys its whole self where History greys
+                // only its disc, because here the whole row *is* the button —
+                // this type's doc argues that at length and it is still the
+                // rule. Item 26 replaced `.plain` to carry the pressed colour
+                // into the disc and took this with it unnoticed: measured on
+                // the Log again sheet's archived rows, the value line came back
+                // as the `#000000` a live row draws, so a row that cannot be
+                // tapped read exactly like one that can.
+                //
+                // **0.5, because that is the opacity `.plain` composited at.**
+                // Not computed — built both ways and photographed: on the Log
+                // again sheet's archived rows this draws `#6D6D6E` where the
+                // build before item 26 drew `#6D6D6E`, and the `.secondary`
+                // identity line above it `#A4A4A5` against `#A4A4A5`, to the
+                // byte in light; `#969696` and `#616161` on the dark `#2C2C2C`
+                // row, where a live row is `#FFFFFF`. (The arithmetic alone
+                // says `#6E6E6E` — SwiftUI's disabled opacity solves to about
+                // 0.502 rather than a round half, which is one more reason to
+                // read the pixels than to trust the sum.) A shape style was the
+                // tempting alternative and would flatten the two lines into one
+                // weight.
+                //
+                // The disc is deliberately *outside* this: its off state is a
+                // named fill with a legible glyph now, and dimming that a
+                // second time is the invisible control item 26 was reported
+                // for (`Color.accentFillDisabled`).
+                .opacity(canRepeat ? 1 : 0.5)
                 // Not a `Button`. The row already is one, and a control inside
                 // a control is two tap targets where the screen means one — so
                 // the disc reads `\.isEnabled` from the `.disabled(!canRepeat)`
@@ -272,8 +301,10 @@ private struct RepeatRow: View {
             .contentShape(.rect)
         }
         // `.accentFill`, so the disc inside recedes with the press like the
-        // other two (docs/TODO.md item 26). It costs the row's text its own
-        // dimming, which `.plain` gave it — see `AccentFillButtonStyle`.
+        // other two (docs/TODO.md item 26). It costs the row's text the dimming
+        // `.plain` gave it *while pressed* — see `AccentFillButtonStyle`. The
+        // *disabled* half of that dimming is restored above, deliberately: it
+        // was load-bearing and its loss was not noticed.
         .buttonStyle(.accentFill)
         .disabled(!canRepeat)
         .accessibilityHint("Logs this again")
