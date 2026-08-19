@@ -156,6 +156,28 @@ that looked wrong because we were not standing where we thought we were.
 If a branch has to survive, say so in the report and switch back anyway. The
 branch keeps.
 
+### Check the screen is unlocked before planning to drive the UI
+
+A locked Mac takes the accessibility tree and synthesized clicks with it, so
+anything needing a touch driver becomes impossible — and it fails *late*, after
+the work is built, not when it is planned. Pressed states have gone unverified
+three separate times for exactly this reason.
+
+Check first:
+
+```sh
+ioreg -n Root -d1 -a | grep -q CGSSessionScreenIsLocked && echo locked || echo unlocked
+```
+
+The key is simply absent when unlocked. If it says `locked`, **say so at the
+start** and plan around it — screenshots through a launch-argument probe, the
+store read directly, reasoning stated as reasoning. Do not build something whose
+only verification is a tap you cannot perform, then report it as unverified at
+the end.
+
+It is the *lock* that matters, not the display sleeping. `caffeinate -dimsu`
+keeps the machine awake; the lock itself is a Settings choice.
+
 ### Talking to a running session
 
 `agtermctl session type` **types, it does not submit.** A payload containing

@@ -1019,6 +1019,51 @@ hiding it, but a control that can only go where you already are is arguably not
 worth a glyph. Drawing it whenever there is a list at all is the simpler rule,
 and the alternative needs a threshold nobody can defend.
 
+## 26. A pressed button barely shows it
+
+Reported from real use: the pressed state on the mint buttons — Log especially
+— is barely noticeable.
+
+**Three sessions have failed to verify pressed states**, each time because the
+Mac's screen was locked, which takes the touch driver and the accessibility
+tree with it. It has been sitting in item 17 as unverifiable ever since. This
+report is the verification, and it is the kind only a person using the app can
+produce.
+
+Likely cause: iOS dims a filled button slightly on press, and **mint is a light
+fill**. A small dim on a bright colour under a dark label is close to invisible,
+where the same treatment on system blue reads clearly. The accent is now an
+asset-catalog colour set (`AccentFill`, `24aff43`), so a deliberate pressed
+value is cheap and belongs beside the other two.
+
+- [ ] Make the pressed state visible on every accent fill — Log, Log again,
+      the card discs, and anything else wearing the accent.
+- [ ] Prefer a **pressed colour** over motion. `PHILOSOPHY.md` rules out bounce
+      and celebration; a button that darkens honestly is not that. If a small
+      scale is genuinely better, argue for it rather than assuming.
+- [ ] **Measure it**: state the unpressed and pressed values and the difference,
+      in light and dark. "Looks better" is what produced the current one.
+- [ ] Check the disabled state at the same time — it shares the problem and has
+      been noted before as nearly invisible.
+
+Verification needs a touch driver, so if the screen is locked again, say so
+rather than reasoning about it. That is how this went unchecked three times.
+
+## 25b. The jump control needs somewhere to go — decided
+
+Item 25 left this open: with a single day of history the picker offers one
+selectable square, which is truthful but useless, and the alternative seemed to
+need a threshold nobody could defend.
+
+**Show it only when there are at least two days with entries.** That is not an
+arbitrary number — it is the condition under which the control can do anything
+at all. One day means one destination, and a jump to where you already are is
+not a feature. Below that it is absent rather than disabled: a greyed glyph
+invites a tap that would do nothing.
+
+- [ ] Hide the control until a second day has entries.
+- [ ] Absent, not disabled.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
