@@ -1447,20 +1447,33 @@ out, or both.
 
 Things to try, and judge by thumb rather than by argument:
 
-- [ ] **The row itself confirms** — a brief marked state on the row that was
-      tapped, before or as the sheet leaves. This is the strongest candidate:
-      it is exactly where the eye is.
-- [ ] **A success haptic**, distinct from item 27's press haptic. This is the
-      one signal that reaches you regardless of where you are looking, and
-      `PHILOSOPHY.md` bans haptic *celebration*, not haptic *feedback*.
-- [ ] **The dismissal carries the information** — the sheet leaving toward the
-      card it changed, rather than simply going away.
-- [ ] Whatever it is, **it delays nothing.** Item 15's rule stands: the sheet
-      closes immediately and any acknowledgement happens alongside, never in
-      front.
+- [ ] **The row itself confirms** — built, recorded, and it **cannot work**.
+      `dismiss()` stops a presentation's content updating, so a checkmark set
+      on the same tap as the dismissal is never drawn: the sheet slides away
+      for about 300ms showing the state it had before the tap. Held for 0ms and
+      for 50ms the mark still never appeared; at 500ms it did. That is a delay
+      on the most repeated action in the app and the rule below forbids it, so
+      the row is not where this goes. Recorded at 60fps on an iPhone 17 Pro
+      with a synthesized tap.
+- [x] **A success haptic**, distinct from item 27's press haptic. `.success`
+      against the press's `.impact(.light)`, so the two say "touched" and
+      "written" rather than "touched" twice. One modifier, `logHaptic(_:)`,
+      on home and on History. Unfelt in a simulator like every haptic here —
+      item 17's device pass keeps it or deletes it.
+- [x] **The dismissal carries the information.** Home's Log again disc — the
+      control the sheet came *out* of — becomes a checkmark for a second, and
+      it is already a checkmark in the frames where the sheet is still sliding
+      away. Under the thumb that just tapped, with nothing in front of it.
+- [x] Whatever it is, **it delays nothing.** Nothing waits: the write and the
+      dismissal are unchanged, and what was added draws on the screen
+      underneath.
 
-Same question for the History repeat disc, which has the same problem for the
-same reason and should get the same answer.
+**History already had the visual half and nobody noticed.** Item 20's
+`highlighted` marks the row a repeat *wrote*, for two seconds, and it marks it
+whether the write happened on that screen or arrived from the sheet. It was
+photographed here doing exactly that. So History gets the haptic and nothing
+else; a second mark on the tapped disc would be two marks for one write. Home
+is the screen that had no answer at all, and now has the same one History has.
 
 **Do not solve this by keeping the sheet open** so the user can see the card.
 That trades a clear confirmation for a sheet that has to be dismissed by hand,

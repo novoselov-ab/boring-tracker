@@ -703,8 +703,32 @@ struct RepeatDisc: View {
     /// rendering does not.
     var glyph: CGFloat = 14
 
+    /// Drawn as a checkmark instead of the repeat glyph, for the second after
+    /// the Log again sheet has written something (docs/TODO.md item 30).
+    ///
+    /// **Home's bar is the only caller, and that is the point.** A repeat
+    /// counts its number up on home's card and offers the undo on a bar, and
+    /// item 15's animation for that is real and correct and lives at the top of
+    /// a screen that was behind the sheet you were looking at. History has an
+    /// answer to this already — it marks the row the write produced, for two
+    /// seconds, from `store.lastLoggedAgainRow` (item 20) — and home had none.
+    /// So the disc the sheet came *out* of says it, under the thumb that just
+    /// tapped, in the moment the sheet uncovers it.
+    ///
+    /// **Not on the row inside the sheet, which was tried first and cannot
+    /// work.** Marking the tapped row is item 30's own first candidate; it was
+    /// built and recorded and `dismiss()` outruns it — see `HomeView`'s
+    /// `loggedAgainAt` for what the recording showed.
+    ///
+    /// **No `contentTransition`.** `.symbolEffect(.replace)` was built and
+    /// recorded first, and it takes about 300ms of a 60fps capture to finish —
+    /// a third of the second the mark is up spent not yet being a checkmark, on
+    /// a screen whose rule is that nothing animates that you have to wait for
+    /// (docs/PHILOSOPHY.md). The swap is a swap.
+    var confirmed = false
+
     var body: some View {
-        Image(systemName: Self.symbol)
+        Image(systemName: confirmed ? "checkmark" : Self.symbol)
             // Fixed rather than a text style, for the reason home's + is: the
             // disc and its target do not scale, so a glyph that does outgrows
             // its own circle at the accessibility sizes.
@@ -804,6 +828,34 @@ extension View {
         sensoryFeedback(.impact(weight: .light, intensity: 0.6), trigger: isPressed) { _, pressed in
             pressed
         }
+    }
+
+    /// A success notification as a log lands (docs/TODO.md item 30).
+    ///
+    /// **Feedback, not celebration**, and the same line `pressHaptic(_:)`
+    /// draws: `PHILOSOPHY.md` bans a buzz for a streak or a job well done, and
+    /// this is the other thing — the answer to "did that go in?" for a tap
+    /// whose visible result is drawn on a screen behind the one you are looking
+    /// at. It is the one signal that reaches you wherever you are looking, and
+    /// it is why the checkmark on `RepeatDisc` is not the whole answer.
+    ///
+    /// `.success` rather than a second impact, deliberately: the press already
+    /// carries `.impact(.light)`, and a confirmation that felt like the press
+    /// again would say "touched" twice instead of "touched, then written".
+    ///
+    /// **Takes what was written rather than a flag**, because the two callers
+    /// need two triggers and a `Bool` serves only one of them. History passes
+    /// `store.lastLoggedAgainAt`, which is a different value for every write —
+    /// a flag there would already be `true` from an earlier repeat and the
+    /// second one would arrive in silence. Nothing fires on the way back to
+    /// `nil`, and nothing fires on arrival: `sensoryFeedback` triggers on a
+    /// change, so pushing a screen whose value is already set is silent.
+    ///
+    /// **Unfelt here, like the press.** The simulator has no haptics — UIKit
+    /// logs "Haptics: unsupported" and nothing reaches CoreHaptics — so whether
+    /// this helps is item 17's device pass, the same as `pressHaptic(_:)`.
+    func logHaptic<Wrote: Equatable>(_ wrote: Wrote?) -> some View {
+        sensoryFeedback(.success, trigger: wrote) { _, wrote in wrote != nil }
     }
 
     /// The accent back on a **nav bar button**, and nowhere else

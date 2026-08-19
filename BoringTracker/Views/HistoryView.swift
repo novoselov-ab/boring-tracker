@@ -344,6 +344,16 @@ struct HistoryView: View {
             instant.disablesAnimations = true
             withTransaction(instant) { highlighted = row }
         }
+        // The other half of item 30, and the half this screen was missing. The
+        // mark above already answers "which row did my tap make" — it is item
+        // 30's diagnosis applied here before the item existed — so what is
+        // added is the signal that does not need to be looked at.
+        //
+        // `lastLoggedAgainAt` rather than the row or a flag: repeat the same
+        // row twice and the row is the same value, so a trigger on it would go
+        // quiet on the second tap. It is silent on the way in, too — a push
+        // onto a screen whose value is already set is not a change.
+        .logHaptic(store.lastLoggedAgainAt)
         // It fades on its own, which is the half that is a decision: a mark
         // that stays is a second state to reason about. `task(id:)` restarts
         // the clock when a second repeat marks a second row, and cancels when

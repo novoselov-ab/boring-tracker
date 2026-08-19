@@ -20,6 +20,28 @@ struct HomeView: View {
     /// what makes it self-clearing: an undo empties the slot and a repeat made
     /// on History replaces it, and either way this stops matching.
     @State private var wroteRow: HistoryItem.ID?
+    /// When the Log again sheet last wrote something, while the bar is still
+    /// saying so (docs/TODO.md item 30).
+    ///
+    /// **The acknowledgement the sheet could not draw itself.** Item 30's first
+    /// candidate was the *row* marking as the sheet leaves. It was built and
+    /// recorded on an iPhone 17 Pro and it does not work: calling `dismiss()`
+    /// stops the presentation's content updating, so a checkmark set on the
+    /// same tap is never drawn — the sheet slides away for about 300ms showing
+    /// the state it had before the tap. Held for **0ms and 50ms** the mark
+    /// still never appeared; at **500ms** it did. That is a delay on the most
+    /// repeated action in the app, and the item's own rule is that this delays
+    /// nothing, so the row is not where it goes.
+    ///
+    /// So it is the disc the sheet came *out* of — the item's other candidate,
+    /// the dismissal carrying the information. It is under the thumb that just
+    /// tapped, nothing is in front of it by the time it is drawn, and it is the
+    /// same `RepeatDisc` in the same two states History's rows already use.
+    ///
+    /// **A date rather than a flag**, so two repeats a moment apart are two
+    /// different values: it is what re-arms `logHaptic(_:)` and what restarts
+    /// the clock below.
+    @State private var loggedAgainAt: Date?
     /// The tracker being made from the row at the end of the list. Home's only
     /// editor, and the only reason this screen owns a third sheet.
     @State private var addingTracker: Tracker?
@@ -118,7 +140,24 @@ struct HomeView: View {
                 // dismissal happen in the same breath, so an `onChange` on the
                 // store would have to guess whether the sheet was still up when
                 // it fired.
-                RepeatView { wroteRow = store.lastLoggedAgainRow }
+                RepeatView {
+                    wroteRow = store.lastLoggedAgainRow
+                    loggedAgainAt = store.lastLoggedAgainAt
+                }
+            }
+            // It clears itself, and `task(id:)` rather than a bare `Task` for
+            // the reason History's own mark uses one: a second repeat while the
+            // first mark is up restarts the clock instead of racing it, and
+            // leaving the screen cancels it. A second — long enough to be seen
+            // by an eye that was on the bar, short enough that the control is a
+            // Log again button again before a thumb could want it twice.
+            // Chosen rather than measured; there is nothing here to measure
+            // against.
+            .task(id: loggedAgainAt) {
+                guard loggedAgainAt != nil else { return }
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                loggedAgainAt = nil
             }
             // No clock here any more. The expiry is `UndoBar`'s, on every screen
             // that draws the bar (docs/TODO.md item 20b): the bar empties itself
@@ -221,7 +260,7 @@ struct HomeView: View {
                 Button { loggingAgain = true } label: {
                     // The disc is its own target here, at 50pt, so there is no
                     // frame around it to pad it out to 44 or to reserve a slot.
-                    RepeatDisc(diameter: 50, glyph: 20)
+                    RepeatDisc(diameter: 50, glyph: 20, confirmed: loggedAgainAt != nil)
                 }
                 // `.accentFill` rather than `.plain`, so the disc reads the
                 // press and recedes to `Color.accentFillPressed` like every
@@ -231,6 +270,13 @@ struct HomeView: View {
                 // again" is what the screen it opens is called and what
                 // History's disc already says (docs/TODO.md item 20).
                 .accessibilityLabel("Log again")
+                // The half of item 30 that reaches you wherever you are
+                // looking, and the only half a sheet's own dismissal cannot
+                // outrun. On home rather than inside `RepeatView`: the sheet
+                // stops updating the moment it is dismissed, and the one signal
+                // that has to arrive is not the one to hang off a view being
+                // torn down.
+                .logHaptic(loggedAgainAt)
             }
             .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
             .padding(.horizontal)
