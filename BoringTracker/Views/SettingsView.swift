@@ -53,6 +53,7 @@ struct SettingsView: View {
                             } action: { frame in
                                 rowFrames[tracker.id] = frame
                             }
+                            .listRowInsets(Self.rowInsets)
                     }
                 } header: {
                     if let group = run.first?.group, !group.isEmpty {
@@ -187,7 +188,24 @@ struct SettingsView: View {
             .swipeActions(edge: .trailing) {
                 archiveButton(tracker)
             }
+            .listRowInsets(Self.rowInsets)
     }
+
+    /// Home's, to the point (docs/TODO.md item 28). A settings row was the
+    /// default inset-grouped one — **74pt against home's 52**, read off the
+    /// accessibility tree on an iPhone 17 Pro — and the two screens list the
+    /// same trackers one tap apart. Home's number was measured in item 11 and
+    /// this is it: 4pt above and below a 44pt row, 16pt in from the card's
+    /// leading edge, 12 from its trailing one, where the 44pt box of the
+    /// trailing control takes the rest. Both lists now report 52.
+    ///
+    /// **It has to be applied outside `.swipeActions`, and that is not a style
+    /// choice.** Written inside — `rowButton(…).listRowInsets(…).swipeActions(…)`
+    /// — it is silently ignored: the build compiles, the row draws, and it
+    /// keeps the default 74pt. Found by measuring the tree after a build that
+    /// looked exactly like the one before it, so it is written down here rather
+    /// than left for the next person to lose twenty minutes to.
+    private static let rowInsets = EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)
 
     /// The handle is drawn only where a drag could do something — see
     /// `canReorder` in `body`. The VoiceOver actions it carries go with it and
@@ -246,30 +264,46 @@ struct SettingsView: View {
         tracker.name.isEmpty ? "Untitled" : tracker.name
     }
 
+    /// The whole row, and nothing less (docs/TODO.md item 28).
+    ///
+    /// **It used to respond on the name and on the chevron and nowhere in
+    /// between.** A `Button` hit-tests its label's drawn content unless it is
+    /// given a shape, and this label was two pieces of drawn content with a
+    /// `Spacer` between them — so the gap in the middle of every tracker row,
+    /// which is most of its width, was dead. A row tappable in two narrow
+    /// places is worse than one that is plainly not tappable: a miss teaches
+    /// you the tap failed rather than that you aimed wrong. `contentShape` is
+    /// what fixes it, and the `minHeight` is what stops the target being only
+    /// as tall as one line of `.subheadline` on the rows with no drag handle
+    /// beside them.
+    ///
+    /// `TrackerRowName` rather than this row's own fonts, and `spacing: 0` on
+    /// the `HStack` rather than the default — an `HStack` puts its spacing on
+    /// *both* sides of a `Spacer`, which `StackingRow` measured at 24pt where 8
+    /// was meant.
     private func rowButton(_ tracker: Tracker) -> some View {
         Button {
             editing = tracker
         } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(name(of: tracker))
-                    // Only in the archived list, which has no group headings of
-                    // its own. Which group a tracker rejoins when it comes back
-                    // is the one thing this row would otherwise not say.
-                    if tracker.isArchived, !tracker.group.isEmpty {
-                        Text(tracker.group)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+            HStack(spacing: 0) {
+                TrackerRowName(name: name(of: tracker), caption: archivedGroup(of: tracker))
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(.rect)
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.row)
+    }
+
+    /// Only in the archived list, which has no group headings of its own. Which
+    /// group a tracker rejoins when it comes back is the one thing that row
+    /// would otherwise not say.
+    private func archivedGroup(of tracker: Tracker) -> String? {
+        guard tracker.isArchived, !tracker.group.isEmpty else { return nil }
+        return tracker.group
     }
 
     private func archiveButton(_ tracker: Tracker) -> some View {
@@ -356,12 +390,18 @@ struct SettingsView: View {
             // What the check would buy is **not** reachability, and an earlier
             // version of this comment said it was — that the first row sits
             // half under the navigation bar, so reaching it means dragging past
-            // the top edge. It does not and it doesn't. Measured on an
-            // iPhone 17 from the frames this code actually reads: the list
-            // reports 116…840 and the first row's handle box is 166…210, 50pt
-            // clear of the band's top, so the whole span 116…254 picks it with
-            // the finger still inside. Releasing at 150 moved the dragged block
-            // onto the first row, from inside the list.
+            // the top edge. It does not and it doesn't. Measured from the
+            // frames this code actually reads, printed out of
+            // `onGeometryChange` by a temporary `NSLog`: the list reports
+            // **(0, 116, 402, 724)** and the first row **160.3…204.3**, 44pt
+            // clear of the band's top, so a wide span at the top of the list
+            // picks it with the finger still inside. Releasing at 150 moved the
+            // dragged block onto the first row, from inside the list.
+            //
+            // Re-measured for item 28, which cut a row from 74pt to 52 — the
+            // reading before it was 166…210 on an iPhone 17, against 50pt of
+            // clearance. Same conclusion with more room, and the list's own
+            // frame did not move.
             //
             // What it would cost is a drag released a few points past an edge
             // the finger cannot see — likeliest at the ends of the list, which
@@ -414,8 +454,9 @@ struct SettingsView: View {
 ///
 /// That is about a *scrolled* list. It used to be justified by the first row
 /// sitting half under the navigation bar, and that is measurably untrue — at
-/// rest the band is 116…840 and the first row is 166…210, wholly inside it.
-/// See the release comment in `reorderGesture(for:)`.
+/// rest the band is 116…840 and the first row is 160.3…204.3, wholly inside it.
+/// See the release comment in `reorderGesture(for:)`, which carries both that
+/// reading and the pre-item-28 one it replaced.
 ///
 /// Pulled out of the view and free of SwiftUI so it can be tested without a
 /// simulator. Settings has now got this answer wrong twice, in two different

@@ -157,8 +157,16 @@ struct TrackerDetailView: View {
                     // perfectly well.
                     .layoutPriority(1)
             }
+            // The whole row, not the two pieces of text in it (docs/TODO.md
+            // item 28). A `Button` hit-tests its label's drawn content unless
+            // it is given a shape, so the gap between the value and the time —
+            // most of the row's width — was dead here exactly as it was on
+            // settings.
+            .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        // `.row`: this screen's rows edit an entry, and until item 28 they
+        // pressed like nothing (`RowButtonStyle`).
+        .buttonStyle(.row)
         .swipeActions(edge: .trailing) {
             Button("Delete", systemImage: "trash", role: .destructive) {
                 store.delete(entry)

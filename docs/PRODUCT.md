@@ -410,9 +410,9 @@ Small enough to list completely.
 - **Settings** — the trackers (add/edit/archive/reorder), drawn in the same
   shape as home so the two cannot disagree — a heading above each run of
   trackers sharing a group, bare rows for loose ones, and **membership changed
-  only in the tracker editor**, never by where a row sits. They agree on order
-  and shape but not on density: home's rows were tuned and settings' were not,
-  so it is visibly the looser of the two. Also export, import, **delete all
+  only in the tracker editor**, never by where a row sits. Same density too,
+  since item 28: a tracker row is 52pt here exactly as it is on home, where it
+  used to be 74. Also export, import, **delete all
   data** — one confirmation naming what goes, undone from *Restore Previous
   Data* — appearance, **the hour the day starts at**, about + link to the
   GitHub repo. It is called *Delete
@@ -426,6 +426,16 @@ Small enough to list completely.
   finger strayed a few points past an edge it cannot see would throw away a
   drag heading for the end of the list. To undo a drag you didn't mean, drag it
   back.
+
+**A row that does something behaves like the button it is**, on every screen
+that has one — settings, History, the Log again sheet, tracker detail, home's
+cards. The whole row is the target, not the words drawn in it: a row you can hit
+on its text and on its chevron and nowhere in between is worse than one that is
+plainly not tappable, because a miss teaches you the tap failed rather than that
+you aimed wrong. And it responds to the press — the row fills with the same grey
+iOS presses its own rows to and goes down by the same 2pt the app's buttons have
+gone down by since item 27. Under Reduce Motion it takes the colour and not the
+movement, which is the rule every press in this app follows.
 
 Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 

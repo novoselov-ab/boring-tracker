@@ -292,7 +292,7 @@ private struct RepeatRow: View {
                         .layoutPriority(1)
                 }
                 // **Dimmed while the row is off**, which is what `.plain` used
-                // to do for free and a custom `ButtonStyle` does not. A
+                // to do for free and neither custom `ButtonStyle` does. A
                 // disabled row here greys its whole self where History greys
                 // only its disc, because here the whole row *is* the button —
                 // this type's doc argues that at length and it is still the
@@ -328,12 +328,20 @@ private struct RepeatRow: View {
             }
             .contentShape(.rect)
         }
-        // `.accentFill`, so the disc inside recedes with the press like the
-        // other two (docs/TODO.md item 26). It costs the row's text the dimming
-        // `.plain` gave it *while pressed* — see `AccentFillButtonStyle`. The
-        // *disabled* half of that dimming is restored above, deliberately: it
-        // was load-bearing and its loss was not noticed.
-        .buttonStyle(.accentFill)
+        // **`.row`, where the other two repeat discs are `.accentFill`, and
+        // that is this screen's shape rather than a drift** (docs/TODO.md item
+        // 28). On History and on home the disc is its own button inside a row
+        // that does something else, so the disc is what presses; here the whole
+        // row is the one button, and what presses is the whole row — colour and
+        // travel across all of it rather than on the 30pt circle at the end.
+        // The disc still moves, because it moves with the row it is drawn in.
+        //
+        // What it gives up is the disc *recolouring* under the thumb: item 26's
+        // `accentFillPressed` reaches a fill through the environment, and
+        // handing it down from here as well would scale the disc twice — once
+        // with the row and once on its own. A row that goes down whole is the
+        // louder signal of the two, which is the whole of item 28.
+        .buttonStyle(.row)
         .disabled(!canRepeat)
         .accessibilityHint("Logs this again")
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))

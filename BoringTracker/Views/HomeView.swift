@@ -377,7 +377,10 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
             }
-            .buttonStyle(.plain)
+            // The same press every other row in the app has since item 28 —
+            // this one is a row that does something, so it wears the same
+            // style as the cards above it.
+            .buttonStyle(.row)
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 16))
         }
@@ -440,7 +443,11 @@ private struct TrackerCard: View {
                             .joined(separator: ", ")
                     )
             }
-            .buttonStyle(.plain)
+            // `.row`, not `.plain`: the left half of this card is a control
+            // and pressed like nothing until item 28. It presses the way the
+            // `+` beside it does now — same travel, same curve, in the row's
+            // own colour rather than the accent's (`RowButtonStyle`).
+            .buttonStyle(.row)
             // Left on the `Button`, deliberately, though the label above had to
             // move inside. Moving this too was tried and reverted: the claim it
             // rested on — that these modifiers do nothing out here — is
@@ -533,30 +540,18 @@ private struct TrackerCard: View {
         }
     }
 
-    /// A tracker name is unbounded free text — the editor sets no limit — and
-    /// "Calories burned exercising" wrapping to three lines would put back
-    /// exactly the row height this card exists to cut. Capped on the one-line
-    /// layout, uncapped on the stacked one, which has the room.
+    /// The name and its caption, in `TrackerRowName` rather than here.
     ///
-    /// The name is drawn in the primary colour, like the number. Grey means
-    /// "secondary" and the name is not: it is the only thing on the row that
-    /// says which number you are reading, and a grey label beside a white
-    /// total reads as an annotation on it. The hierarchy is carried by size
-    /// and weight instead — `.subheadline` against a medium `.title2` — which
-    /// still puts the number first at a glance without making the label
-    /// something you have to look for. The caption stays grey, because
-    /// "8 hours ago" genuinely is secondary to the reading it dates.
+    /// **This block moved out when settings turned out to draw the same
+    /// trackers at a different size** (docs/TODO.md item 28) — the type carries
+    /// the fonts, the line cap and the argument for all of it, and settings
+    /// now draws the same one. Nothing this card renders changed with the move:
+    /// the cap asks `stacksRows`, which is what `isStacked` above reads too.
+    ///
+    /// "8 hours ago" is the caption here, and it stays grey because it
+    /// genuinely is secondary to the reading it dates.
     private func nameBlock(_ caption: String?) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(tracker.name)
-                .font(.subheadline)
-            if let caption {
-                Text(caption)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .lineLimit(isStacked ? nil : 1)
+        TrackerRowName(name: tracker.name, caption: caption)
     }
 
     /// Shrunk from `.largeTitle` to `.title2`, which is the largest size that

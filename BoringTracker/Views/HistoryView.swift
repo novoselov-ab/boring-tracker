@@ -684,7 +684,11 @@ private struct HistoryRow: View {
                 }
                 .contentShape(.rect)
             }
-            .buttonStyle(.plain)
+            // `.row`, not `.plain`: this half of the row is a button and
+            // pressed like nothing until item 28. It now goes down and greys
+            // the way the disc beside it goes down and darkens — same travel,
+            // same curve, the row's own colour (`RowButtonStyle`).
+            .buttonStyle(.row)
             .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
             repeatButton(canRepeat: canRepeat)
         }

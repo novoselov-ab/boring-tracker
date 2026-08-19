@@ -19,6 +19,7 @@
 		29208FB2BDFAC0D3ABE68B97 /* StoreSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AACECDA0A3B2528BE4DEDF5 /* StoreSaver.swift */; };
 		2D83EFD094E34B98BAA91BF0 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721C965AFA696A46040D7D36 /* HistoryView.swift */; };
 		2F33FA871520132E396FFA90 /* HistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A22F059BD5EF1A314EC3AF2 /* HistoryItem.swift */; };
+		32245FC6C0435A51268621ED /* RowPress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5375428E1D1FF14CE2FBCE /* RowPress.swift */; };
 		34229398ED9ACDC1C144B7CF /* StackingRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27A8B97A8C78AE6002C5923 /* StackingRow.swift */; };
 		38FD4B1C71D666C4D5BD99AC /* ExportName.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1685BCF244DBCB15D66573 /* ExportName.swift */; };
 		41C44088FB8828A51019C675 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECB67213A9E9B62A18C2139 /* HomeView.swift */; };
@@ -99,6 +100,7 @@
 		70F3527A089CF0B0FAC76A00 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		71EEDC4A0698106FF1991C62 /* BoringTrackerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BoringTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		721C965AFA696A46040D7D36 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		7D5375428E1D1FF14CE2FBCE /* RowPress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowPress.swift; sourceTree = "<group>"; };
 		834D5C96F8A02A42694F7BBE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		84FAA4710A9AAAE2578DFBA8 /* Tracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
 		8AD2D5E5FFF85274E09FE83C /* AccentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccentTests.swift; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 				5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */,
 				2C687D77ED317A5CABC3FA2D /* OnAccent.swift */,
 				BB3DF2D06C5E4CCDF594F527 /* RepeatView.swift */,
+				7D5375428E1D1FF14CE2FBCE /* RowPress.swift */,
 				585298500CA78CE08A1AEDAC /* SearchNames.swift */,
 				495A6545977B6595DAAAABF0 /* SettingsView.swift */,
 				B27A8B97A8C78AE6002C5923 /* StackingRow.swift */,
@@ -371,6 +374,7 @@
 				54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */,
 				47C76B6F592E98941C6192D3 /* OnAccent.swift in Sources */,
 				F3CA641D45F0D2640F1FF9ED /* RepeatView.swift in Sources */,
+				32245FC6C0435A51268621ED /* RowPress.swift in Sources */,
 				B2ED7C0DB7EA781867162036 /* SearchNames.swift in Sources */,
 				09AF7BCF35A518DFC757B803 /* SettingsView.swift in Sources */,
 				34229398ED9ACDC1C144B7CF /* StackingRow.swift in Sources */,

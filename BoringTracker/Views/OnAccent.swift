@@ -368,6 +368,9 @@ enum AccentFillPress {
     /// hold it, for the same reason the travel is pinned rather than the ratio:
     /// a later edit that moves the gate up into the `visualEffect` closure, or
     /// drops it, breaks something no screenshot of a default simulator shows.
+    /// It is also why item 28 could give list rows the same press without
+    /// writing a second gate — `RowButtonStyle` calls this, so a row and a fill
+    /// answer Reduce Motion identically by construction.
     ///
     /// The other two are sizes the rule cannot describe. A fill that has not
     /// been measured yet is `.zero`, and scaling from that would draw a
@@ -409,12 +412,12 @@ enum AccentFillPress {
 /// item 26 replaced with a named colour, and applying both would fade the
 /// pressed value a second time.
 ///
-/// **The Log again row in `RepeatView` gives up something for this**: the row
-/// is one big button, so `.plain` used to dim its text along with its disc, and
-/// now only the disc responds to a press. That is the control the tap is about,
-/// and a row whose disc recedes while its words hold still is a smaller loss
-/// than a screen where one of the three repeat discs presses differently from
-/// the other two.
+/// **Two call sites now, not three.** The Log again row took this until item
+/// 28 gave list rows a press of their own — see `RowButtonStyle` — because
+/// there the whole row is the button and the press belongs to the whole row.
+/// What is left here is the two controls whose label *is* an accent fill: a
+/// home card's `+` and History's repeat disc, each a button inside a row that
+/// does something else.
 ///
 /// **`.plain` dimmed a *disabled* label as well, and that half was not a
 /// trade — it was missed.** A disabled Log again row greying its whole self is
@@ -427,7 +430,7 @@ struct AccentFillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .environment(\.accentFillPressed, configuration.isPressed)
-            .accentFillHaptic(configuration.isPressed)
+            .pressHaptic(configuration.isPressed)
     }
 }
 
@@ -488,7 +491,7 @@ struct AccentPillButtonStyle: ButtonStyle {
             // moved under it.
             .contentShape(.capsule)
             .environment(\.accentFillPressed, configuration.isPressed)
-            .accentFillHaptic(configuration.isPressed)
+            .pressHaptic(configuration.isPressed)
     }
 
     /// Three sizes because the app uses three, each number read off the build
@@ -669,7 +672,7 @@ extension View {
         modifier(AccentFilled(shape: shape))
     }
 
-    /// A light impact as an accent-filled control goes down.
+    /// A light impact as a control goes down.
     ///
     /// **Feedback, not celebration.** `PHILOSOPHY.md` bans haptic
     /// celebrations — a buzz for a streak, a saved entry, a job well done —
@@ -704,7 +707,12 @@ extension View {
     /// — UIKit logs "Haptics: unsupported" and nothing reaches CoreHaptics — so
     /// this shipped unfelt, for the device pass in item 17 to keep or delete.
     /// It is three lines and one call site if the answer is that it is noise.
-    func accentFillHaptic(_ isPressed: Bool) -> some View {
+    ///
+    /// **`accentFillHaptic` until item 28**, which gave list rows a press of
+    /// their own and applied this to it — so the name was about the one kind of
+    /// control it started on rather than about what it does. Three call sites,
+    /// all of them button styles in this app.
+    func pressHaptic(_ isPressed: Bool) -> some View {
         sensoryFeedback(.impact(weight: .light, intensity: 0.6), trigger: isPressed) { _, pressed in
             pressed
         }

@@ -1199,24 +1199,70 @@ pill.
 The user picks from the photographs. Do not merge a favourite and call it
 settled.
 
-## 28. Rows should behave like controls
+## 28. Rows should behave like controls — done
 
-From real use, and it is one problem wearing three faces.
+One problem wearing three faces, all three answered.
 
-- [ ] **Settings draws trackers at a different size from home.** They are the
-      same things; they should read the same. Home's sizing was measured and
-      settled in item 11 — match it rather than inventing a third.
-- [ ] **A tracker row in settings only responds on the text or on a small `>`.**
-      The whole row should be the target. A row that is tappable in two narrow
-      places and dead in between is worse than one that is obviously not
-      tappable at all.
-- [ ] **Rows do not feel pressed** — here and in many other places. Item 27 gave
-      the accent *fills* a scale on press; rows never got the equivalent.
-      Whatever a row's press is, it should be as unmistakable as a button's and
-      the same everywhere: settings, History, Log again, tracker detail.
+- [x] **Settings draws trackers at home's size now.** It drew them at **74pt
+      against home's 52**, read off the accessibility tree on an iPhone 17 Pro,
+      with the name at `.body` where home's is `.subheadline`. Home's numbers
+      were settled in item 11, so they moved rather than a third size being
+      chosen: `TrackerRowName` is the card's name block extracted, and settings
+      takes home's `EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)`.
+      Both lists report 52 now, archived rows included — those carry the group
+      as the caption, in the same `.caption2` home dates a reading in.
 
-The lesson from item 26 applies: this is a perceptual goal, so **judge it with
-a thumb, not with a number**. A ratio passed there while the goal failed.
+      **`.listRowInsets` has to be applied outside `.swipeActions`.** Written
+      inside it is silently ignored — the build compiles, the row draws, and it
+      keeps the default 74. Two builds looked identical before the tree said
+      why.
+- [x] **The whole row is the target.** A `Button` hit-tests its label's drawn
+      content unless it is given a shape, and settings' row was a name and a
+      chevron with a `Spacer` between them, so the middle — most of the width —
+      was dead. `contentShape(.rect)` plus a 44pt `minHeight`. Tracker detail's
+      rows had exactly the same hole between the value and the time and got the
+      same fix. Checked by tapping the dead middle of a settings row and of a
+      detail row: the tracker editor and the entry editor open.
+- [x] **A row presses, and presses the same everywhere.** `RowButtonStyle`,
+      `.buttonStyle(.row)`, on settings, History, the Log again sheet, tracker
+      detail and home's cards. Two halves:
+
+      - **The colour is iOS's own, measured rather than picked.** Settings has
+        one row the platform draws itself — the `NavigationLink` to *About* —
+        and it presses `#FFFFFF` → `#D1D1D6` in light and `#1C1C1E` → `#3A3A3C`
+        in dark. Both are `UIColor.systemGray4` exactly, so that is the colour.
+        The app's rows now read the same two values on the same surfaces; on
+        the Log again sheet, whose rows are `#2C2C2C`, the press lands at
+        `#48484A` — the same step, through the presentation's own compositing.
+      - **The movement is item 27's, reused.** `AccentFillPress` — 2pt off each
+        end of the longest edge, 0.12s easeOut. Measured on a home card by the
+        total's trailing edge: **961 device pixels at rest, 955 held**, which
+        is exactly 2pt at 3x.
+- [x] **Reduce Motion gets the colour and not the movement**, through item 27's
+      gate rather than a second one: `AccentFillPress.scale(for:reduceMotion:)`
+      already answers 1 for the setting. Proved as a counterfactual on one
+      binary — with the setting on, the same press leaves that trailing edge at
+      **961** and still paints `#3A3A3C` behind the row.
+- [ ] **Judged by a synthesized press, not a thumb.** Item 26's lesson is that
+      a perceptual goal is not a number, and what is above is screenshots of a
+      held row, not a hand. It reads as unmistakable in the images and it is the
+      platform's own colour, which is the best a simulator can say. **Item 17's
+      device pass is what settles it**, with the haptic and item 27's scale.
+
+**A row wearing this draws into its own layer, and it costs 14,485 pixels at
+rest.** Text rasterised inside a `visualEffect` lands fractionally differently,
+so home at rest differs from the build before this in 14,485 of 3,162,132 pixels
+— 0.46%, the widest single move being a card's total one point narrower on its
+leading edge with its trailing edge unmoved. Deleting the `visualEffect` line
+makes home byte-identical to before, which is how the cause was pinned. Kept:
+the alternative is a row press with no movement in it.
+
+**What a Log again row gives up.** It was `.buttonStyle(.accentFill)` so that
+the disc inside it recoloured on press; it is `.row` now, so the whole row goes
+down and greys and the disc only moves with it. Handing the accent's pressed
+state down as well would scale the disc twice. On History and home the disc is
+its own button inside a row that does something else, so those two keep
+`.accentFill` and are unchanged.
 
 ## 29. Sort Log again chronologically — done
 

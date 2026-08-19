@@ -79,3 +79,50 @@ struct StackingRow<Leading: View, Trailing: View>: View {
         }
     }
 }
+
+/// A tracker's name, and the quiet line under it — drawn one way on the two
+/// screens that list trackers.
+///
+/// **Extracted because settings and home disagreed about it** (docs/TODO.md
+/// item 28). Home's card has read `.subheadline` over a `.caption2` since item
+/// 11, where the point of the item was that a name and a number fit on one
+/// short row; settings drew the same trackers at `.body` in a 74pt row against
+/// home's 52pt, which is the same list of the same things in two sizes, on two
+/// screens one tap apart. The measured answer already existed, so this is home's
+/// block moved rather than a third size chosen.
+///
+/// The caption is what the row has to say about the tracker underneath its
+/// name: home dates the last reading, settings names the group an archived
+/// tracker would come back to. Absent on most rows, and `.caption2` in
+/// `.secondary` when it is there — the name is what identifies the row and the
+/// caption annotates it.
+///
+/// **One line until the text outgrows it**, at `stacksRows` — the same
+/// threshold `StackingRow` above uses, asked in the same way. A name is
+/// unbounded free text (the editor sets no limit), so "Calories burned
+/// exercising" wrapping to three lines would put back exactly the row height
+/// item 11 cut; past the threshold the row has given up on one line anyway and
+/// the cap would only clip it.
+struct TrackerRowName: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    let name: String
+    var caption: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Primary, like the number beside it on home. Grey means
+            // "secondary" and the name is not: it is the only thing on the row
+            // that says which tracker you are reading. The hierarchy is carried
+            // by size and weight instead — `.subheadline` against home's medium
+            // `.title2` — which still puts the number first at a glance.
+            Text(name)
+                .font(.subheadline)
+            if let caption {
+                Text(caption)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .lineLimit(typeSize.stacksRows ? nil : 1)
+    }
+}
