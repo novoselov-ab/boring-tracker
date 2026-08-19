@@ -1207,10 +1207,11 @@ One problem wearing three faces, all three answered.
       against home's 52**, read off the accessibility tree on an iPhone 17 Pro,
       with the name at `.body` where home's is `.subheadline`. Home's numbers
       were settled in item 11, so they moved rather than a third size being
-      chosen: `TrackerRowName` is the card's name block extracted, and settings
-      takes home's `EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)`.
-      Both lists report 52 now, archived rows included — those carry the group
-      as the caption, in the same `.caption2` home dates a reading in.
+      chosen: `TrackerRowName` is the card's name block extracted, and the row
+      metrics are `EdgeInsets.listRow`, one constant that home, History, the
+      Log again sheet and settings all name. Both lists report 52 now, archived
+      rows included — those carry the group as the caption, in the same
+      `.caption2` home dates a reading in.
 
       **`.listRowInsets` has to be applied outside `.swipeActions`.** Written
       inside it is silently ignored — the build compiles, the row draws, and it
