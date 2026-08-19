@@ -386,6 +386,91 @@ all of it. **Landing is nearest-day, not exact**: 31 January 2023, in the middle
 of a thirteen-day hole, lands on the 25th; 9 December 2012, nine years before
 anything was logged, lands on the oldest day rather than doing nothing.
 
+### Checked again on a fifth fixture, and what a *jump* costs
+
+The section above was re-measured from scratch by a later session, on a fixture
+and a harness of its own, because "the open path was measured and the jump path
+was not" is something the commit says about itself.
+
+**A fifth fixture**, generated the same way from this page's description of the
+shape: **30,008 entries, 16,224 logs, 1,723 days, 8,682,698 bytes**, ten
+trackers of which three are archived, 89 tombstones with 64 surviving
+compaction. Within 2.5% of the fourth on entries and 0.8% on days.
+
+**iPhone 17 Pro Max simulator**, iOS 26.3, Release, on a device created for the
+session so nothing else installing an app could overwrite the build. The probe
+is the same idea as above — a `CADisplayLink` and a launch argument that pushes
+History three seconds in — with two additions: it records **how long its own
+measuring window actually was**, and it survives task cancellation. Both matter.
+The first version used `try? await Task.sleep`, which throws instantly once the
+push cancels the view's `task`, so a "1.5 second" window was really about 0.5 of
+one and a twenty-minute sampling loop ran to completion in seconds. Nothing
+about that is visible from outside: the numbers it produced were plausible and
+in range. Every run below prints its window, and every one reads 1,600ms.
+
+Two batches, alternating installs, the fixture re-copied per run:
+
+| | without the control | with it | difference |
+|---|---|---|---|
+| seven runs each, blocked | 332–383 (med 357) | 387–406 (med **393**) | +36 ms |
+| seven runs each, worst frame | 311–344 (med 334) | 342–359 (med **347**) | +13 ms |
+| five runs each, blocked | 372–387 (med 378) | 347–395 (med **395**) | +17 ms |
+| five runs each, worst frame | 328–340 (med 332) | 234–348 (med **347**) | +15 ms |
+
+**The worst-frame number is the stable one: +13 and +15 ms on a 333ms open, so
+about 4%.** The blocked-sum disagrees with itself by twice that between batches,
+which is the same noise the three batches above found. This sits inside the
+2–8% already recorded, on an independent fixture, harness and device — so the
+open cost has not grown.
+
+**A jump costs 331–354ms of blocked main thread**, measured by leaving the frame
+probe running and sampling it every two seconds while the control was driven by
+hand. Idle is 0. Opening the picker is 331ms, because opening asserts the
+position and that is a jump. Tapping a day is 347–354ms.
+
+**Half of that is the screen rebuilding and half is `scrollTo`.** With the
+open-time assert compiled out, opening the popover still costs **178ms** — that
+is `HistoryView.body` re-evaluating, which regroups `store.historyItems` into
+1,723 days and re-diffs 17,948 rows, for a state change that cannot alter any of
+them. The remaining ~176ms is `scrollTo` finding an item deep in a 17,948-item
+list. Raised in review as one cost and it is two.
+
+**A month-wheel drag fires one jump, not one per row it passes.** Dragging the
+wheel across several months produced a single 345ms burst and a single move.
+The wheel reports its selection when it settles, so the worst case is one jump
+rather than the dozen the code comment implies.
+
+Left as it is, deliberately: 350ms is the same order as the 334ms the screen
+already costs to open, this control is reached about once a week
+(PHILOSOPHY.md), and the 178ms half is the per-body regrouping History has paid
+on every search keystroke since the section fix and documents as such. The
+number is here so the next person does not have to guess it — if a jump ever
+needs to be cheap, caching the grouping is the half to take.
+
+**Nothing leaves the list, counted rather than assumed.** Sixty samples of the
+same `UICollectionView`, across hand scrolls, opening and dismissing and
+reopening the picker, a year-wheel selection, a month-wheel drag and three day
+taps: **1 section and 17,948 items** every single time — 16,224 logs + 1,723 day
+headings + one hint, exactly. After a jump, both ends still answer: bottom
+offset 933,147 of 933,147 with the last visible item 17,946 of 17,947, and top
+offset 0 with item 0.
+
+**Landing is nearest-day, driven rather than reasoned.** Inside a fourteen-day
+hole (12–24 November 2024 in this fixture, whose edges are the 10th and the
+25th): 15 November lands on the 10th, 22 November on the 25th, 18 November on
+the 25th. The tie itself is pinned by the suite rather than by the screen, since
+a real history rarely offers an exact one.
+
+**The picker is not immune to Dynamic Type**, which is what item 25 claimed in
+order to justify its fixed 320-point frame. Photographed at five sizes with the
+popover open: the month/year title grows from **42 to 69 screenshot pixels** of
+glyph height between extra-small and AX5 and stops growing at XXXL, the weekday
+row relabels itself from `SUN MON TUE` to `S M T`, and the whole grid shifts
+down. What *is* true is the conclusion rather than the reason: the day grid
+stays **289–306 points wide at every size**, comfortably inside the 320-point
+frame, and nothing clips at AX5. The frame is safe because the grid's width is
+fixed, not because the picker ignores type size.
+
 ## Logging, saving, exporting, importing, merging
 
 | | Release | Debug |
