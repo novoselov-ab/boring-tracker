@@ -31,11 +31,23 @@ struct SettingsView: View {
 
     var body: some View {
         let carried = carriedByDrop
+        // Whether anything on this screen can be reordered at all, which is the
+        // same question item 25b answers on History: the jump control is absent
+        // when there is nowhere to jump to, and a handle on a list of one is a
+        // grip on the only row there is — nothing to drag it past, nowhere to
+        // drop it, and a footer explaining sections and groups to somebody who
+        // has neither. Absent rather than disabled, for 25b's reason: a control
+        // you can touch and cannot use is worse than one that is not there.
+        //
+        // The zero case was already right — the footer is gated on there being
+        // an active tracker — so this is that same gate with the threshold it
+        // should always have had.
+        let canReorder = store.activeTrackers.count > 1
         return List {
             ForEach(runs, id: \.first?.id) { run in
                 Section {
                     ForEach(run) { tracker in
-                        reorderableRow(tracker, carried: carried)
+                        reorderableRow(tracker, carried: carried, canReorder: canReorder)
                             .onGeometryChange(for: CGRect.self) {
                                 $0.frame(in: .global)
                             } action: { frame in
@@ -49,7 +61,7 @@ struct SettingsView: View {
                 }
             }
 
-            if !store.activeTrackers.isEmpty {
+            if canReorder {
                 Section {
                     EmptyView()
                 } footer: {
@@ -177,19 +189,29 @@ struct SettingsView: View {
             }
     }
 
-    private func reorderableRow(_ tracker: Tracker, carried: Set<UUID>) -> some View {
+    /// The handle is drawn only where a drag could do something — see
+    /// `canReorder` in `body`. The VoiceOver actions it carries go with it and
+    /// lose nothing: `reorderActions(for:)` offers a move only where there is a
+    /// neighbour to move past, so on the single-tracker list it was already
+    /// empty, and a handle labelled "Reorder Coffees" with no actions under it
+    /// is the same dead control by voice that it is by finger.
+    private func reorderableRow(
+        _ tracker: Tracker, carried: Set<UUID>, canReorder: Bool
+    ) -> some View {
         HStack(spacing: 12) {
             rowButton(tracker)
-            Image(systemName: "line.3.horizontal")
-                .foregroundStyle(.tertiary)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-                .highPriorityGesture(reorderGesture(for: tracker.id))
-                .accessibilityLabel("Reorder \(name(of: tracker))")
-                .accessibilityHint("Drag onto another tracker")
-                .accessibilityActions {
-                    reorderActions(for: tracker)
-                }
+            if canReorder {
+                Image(systemName: "line.3.horizontal")
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+                    .highPriorityGesture(reorderGesture(for: tracker.id))
+                    .accessibilityLabel("Reorder \(name(of: tracker))")
+                    .accessibilityHint("Drag onto another tracker")
+                    .accessibilityActions {
+                        reorderActions(for: tracker)
+                    }
+            }
         }
         // What a drop would do, while the finger is still down: the rows that
         // would move fade, and the row being dropped onto is tinted. Without
