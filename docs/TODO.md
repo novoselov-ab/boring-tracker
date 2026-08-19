@@ -1519,6 +1519,56 @@ the common path, and item 5's measurement was about the screen that is.
 - [ ] Decide whether editing is close enough to logging to want the same
       confirm placement.
 
+## 32. A press you can see on a fast tap
+
+Reported from use, and it is a real defect rather than a taste note: **every
+pressed state animates in, so a quick tap finishes before it renders and you
+see nothing at all.**
+
+- [ ] **The pressed state applies instantly — no animation in.** Only the
+      release animates out. That is the whole bug: a 100ms tap cannot show a
+      150ms fade.
+- [ ] **Scale the whole item**, not a highlight behind it. Pressing a tracker
+      currently draws a rectangular wash that reads like a text field rather
+      than a button.
+- [ ] **The same treatment everywhere it can be**: trackers on home, rows in
+      settings and History and Log again, the bar buttons, the card discs. One
+      press, one appearance.
+- [ ] **Quick.** The reference given was the History icon's press — that speed,
+      not slower.
+- [ ] Reduce Motion still takes the movement and keeps the colour; item 27's
+      gate already exists, reuse it.
+
+Item 26 measured a colour and the goal still failed. Item 27 added a scale and
+the goal still failed, because of timing. **Judge this by tapping fast**, which
+is how it is actually used — not by pressing and holding, which is what makes a
+slow animation look fine.
+
+## 33. Use pairing 1 for the bottom bar
+
+Chosen from the five photographed in `~/dev/boring-tracker-pairing/`.
+
+- [ ] Apply `pairing-1`.
+- [ ] Log again stays on the right, Log on the left.
+
+## 34. Does a settings row say it can be edited?
+
+The `>` on each tracker is iOS's disclosure indicator: it means tapping opens
+something, and it is the conventional affordance rather than a mistake. A
+pencil is what you use when editing is *one of several* actions on a row, which
+it is not here.
+
+But it is small, and it was not obvious in use — which is evidence, since
+convention only works if it reads.
+
+- [ ] Decide whether the chevron alone is enough now that the whole row is a
+      target and presses visibly (items 28 and 32).
+- [ ] If not, prefer a **footer hint** — "Tap a tracker to edit it" — over
+      swapping the chevron for an icon. History already does exactly this for
+      its two invisible gestures (item 22), so it is the pattern this app
+      already uses.
+- [ ] Do not add both a hint and a new icon. One explanation is enough.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
