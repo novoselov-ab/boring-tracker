@@ -1089,6 +1089,34 @@ prefer colour over motion was mine and it was wrong in practice.
 - [x] Whatever it is, it applies to **every** accent fill. One modifier,
       `accentFilled(_:)`, replaces four hand-written backgrounds; all five
       controls were photographed held down and all five move 2pt.
+
+      Re-photographed in review on an iPhone 17 in dark, six controls this
+      time, in points off 3x screenshots of a synthesized press held down:
+
+      | control | rest | held | each end |
+      |---|---|---|---|
+      | Log, home bar | 292.0x50.0 at 16.0,784.0 | 288.0x49.3 at 18.0,784.3 | 2.0pt |
+      | Log, log sheet | 52.7x34.0 at 333.3,525.0 | 48.7x31.3 at 335.3,526.3 | 2.0pt |
+      | Undo capsule | 65.3x32.0 at 320.7,750.0 | 61.3x30.0 at 322.7,751.0 | 2.0pt |
+      | a card's + | 30.0x30.0 at 337.0,167.3 | 26.0x26.0 at 339.0,169.3 | 2.0pt |
+      | Log again, home bar | 30.0x30.0 at 336.0,794.0 | 26.0x26.0 at 338.0,796.0 | 2.0pt |
+      | History's repeat disc | 30.0x30.0 at 337.0,370.0 | 26.0x26.0 at 339.0,372.0 | 2.0pt |
+
+      Every one of them `#00DAC3` at rest and `#07AA9A` held. The disabled
+      disc on History's measurement row is `#636366` and does not move or
+      recolour when held, so the state item `1947688` restored is intact.
+
+- [x] **Reduce Motion took none of it, and does now.** Found in review: the
+      scale shipped ungated, so a phone with the setting on rendered the held
+      Log pill at the identical 288.0x49.3pt as one without it. The gate is on
+      the scale only — the fill still crosses to `Color.accentFillPressed`
+      over 0.12s, recorded at 60fps as a seven-frame, 100ms ramp — so a press
+      under Reduce Motion is the app as item 26 left it rather than a control
+      with no pressed state at all.
+
+      The comment two lines from the gap said "the app has exactly one
+      animation, and this is it — so this is the only place that has to ask",
+      and this item is what made that false. Both places ask now.
 - [ ] **The haptic is in and unfelt.** `.impact(.light)` on the press edge, and
       the one thing that could be checked is that a scroll does not fire it: a
       flick that starts on a Log again row never enters the pressed state, nor
