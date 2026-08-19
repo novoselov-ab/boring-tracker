@@ -1094,10 +1094,15 @@ pill.
       a real device size. This is taste; it needs looking at, not arguing about.
       Put the images outside the repo (`.gitignore` refuses them) and give the
       paths.
-- [ ] The standing constraint holds: **Log is the most frequent action** and a
-      peer beside it competes with it. Two equal buttons were already tried and
-      read as a choice to make on arrival, which is a decision placed in front
-      of logging.
+- [ ] **Log again moves to the right, Log to the left.** Decided by the user.
+      It reverses the original placement, whose reasoning was that a right
+      thumb rests bottom-right so the primary action should sit there — but the
+      pill spans most of the bar either way, so it stays under the thumb
+      wherever the small control goes. That argument was weaker than it looked.
+- [ ] The standing constraint still holds: **a peer beside Log competes with
+      it.** Two equal buttons were tried early on and read as a choice to make
+      on arrival, which is a decision placed in front of logging. Swapping
+      sides does not license making them equals.
 - [ ] Alignment, height, corner radius and optical weight should agree with the
       pill, whatever shape it ends up.
 
