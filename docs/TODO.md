@@ -1586,7 +1586,51 @@ as a different kind of object beside a pill.
 
 - [ ] Clearly smaller than the pill; a peer beside Log competes with the most
       frequent action in the app.
-- [ ] Photograph it beside pairing 1 in `~/dev/boring-tracker-pairing/`.
+- [x] **Seven bars rendered and photographed**, dark, iPhone 17 Pro, by a
+      throwaway launch-argument probe in a worktree — the same technique item
+      27 used, with `-la-width`, `-la-height`, `-la-corner` and `-pill-corner`
+      standing in for the shapes. Outside the repo in
+      `~/dev/boring-tracker-pairing/`: `33b-a-today.png` through
+      `33b-g-62x50-r25-capsule.png`, `33b-strip.png` stacking all seven bars,
+      and `33b-corners-zoom.png`, which is the one that decides it — a, c and d
+      at the 8pt gap between the two controls, where the pill's corner and the
+      small one's can be compared side by side.
+
+      | # | Log again | pill | what it shows |
+      |---|---|---|---|
+      | a | 50x50 circle | capsule | today |
+      | b | 62x50, r22 | capsule | the largest radius that still leaves flat edges |
+      | c | 62x50, r18 | capsule | a real rounded square beside an unchanged pill |
+      | d | 62x50, r18 | **r18** | both controls at one literal radius |
+      | e | 56x44, r14 | capsule | smaller in both dimensions |
+      | f | 56x44, r10 | capsule | the same, squarer |
+      | g | 62x50, r25 | capsule | the literal ask, and it renders as a capsule |
+
+- [ ] **The three constraints cannot hold at once while the pill is a capsule,
+      and d is the way out.** The Log pill is a `Capsule` at 50pt, so its corner
+      radius *is* 25 — half its height — and a rounded rectangle is a capsule
+      whenever its radius reaches half its shorter side. So "the pill's radius,
+      not a capsule, wider than tall" needs a shape more than 50pt tall, which
+      is the one thing ruled out. g is that fact photographed.
+
+      What item 33 did not try is the other end: **give the pill a radius
+      instead of a height-derived one.** d draws both at r18 and is the only
+      bar here where the two controls share a literal corner radius, which is
+      what "one family at two sizes" asks for.
+
+- [ ] **The recommendation, and nothing has been landed.** c — the literal ask
+      with the pill left alone — is worse than today, and `33b-corners-zoom.png`
+      is why: it puts an r18 corner 8pt from an r25 one, so the pairing goes
+      from two sizes of the same fully-round corner to two different corners.
+      That is the complaint sharpened rather than answered. e and f give up the
+      top-and-bottom alignment with the pill that item 27 was raised to get, and
+      b and g are capsules by eye.
+
+      That leaves a and d, and **it is a coin toss** — d is the more coherent
+      drawing and a is the shipped one, and the difference is taste, not an
+      argument. d also re-decides the shape of the most-used control in the app
+      on the strength of a change to the second-most-used one, which is a bigger
+      question than this item, so it goes to the user rather than being merged.
 
 ## Noted, not scheduled
 
