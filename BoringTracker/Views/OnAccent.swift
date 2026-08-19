@@ -51,6 +51,65 @@ extension Color {
     /// preference, and it is what makes a light accent legal at all.
     static let accentFill = Color("AccentFill")
 
+    /// The accent fill while its control is held down.
+    ///
+    /// **A pressed accent fill recedes toward the surface it sits on.** Light
+    /// mode's surface is white, so pressed is lighter; dark mode's is
+    /// near-black, so pressed is darker. That is the whole rule, and it is why
+    /// the two values below move in opposite directions from `accentFill`
+    /// rather than both darkening (docs/TODO.md item 26).
+    ///
+    /// **Neither value is invented.** They are what iOS already rendered for a
+    /// `.plain` button on this accent — a press there composites the fill at
+    /// 75% over what is behind it, and `#009888` at 75% over white is exactly
+    /// `#40B2A6` while `#00DAC3` at 75% over the card's `#1C1C1E` is `#07AA9A`,
+    /// both confirmed to the byte off screenshots of a real press. So the three
+    /// controls that were already right keep their exact appearance; naming the
+    /// values makes them a decision instead of a side effect of whatever
+    /// happens to be behind the button.
+    ///
+    /// **The one that was wrong was the prominent Log button in dark mode.**
+    /// Pressed, iOS drew it `#33E1CF` — the fill at 80% under a white wash —
+    /// which is **1.08:1** against its own rest colour and *lighter*, while
+    /// every other accent fill on the same screen darkened. Measured pressed
+    /// against rest, across the whole screen:
+    ///
+    ///     appearance  control    style               rest      pressed   ratio
+    ///     light       Log pill   .borderedProminent  #009888   #3FB0A5   1.36
+    ///     light       card disc  .plain              #009888   #40B2A6   1.39
+    ///     light       Log again  .plain              #009888   #3FB1A5   1.38
+    ///     dark        Log pill   .borderedProminent  #00DAC3   #33E1CF   1.08
+    ///     dark        card disc  .plain              #00DAC3   #07AA9A   1.64
+    ///     dark        Log again  .plain              #00DAC3   #05A897   1.68
+    ///
+    /// A prominent button cannot be re-tinted on press — a `ButtonStyle`
+    /// replaces `.borderedProminent` rather than adding to it — so matching it
+    /// means drawing the fill, which is what `AccentPillButtonStyle` does.
+    static let accentFillPressed = Color("AccentFillPressed")
+
+    /// The accent fill's off state: no accent in it at all.
+    ///
+    /// `.quaternary` was here, and it drew **`#E8E8E8` on the History row's
+    /// `#FFFFFF` — 1.23:1**, and `#313132` on the dark row's `#1C1C1E` at
+    /// 1.31:1. That is the "nearly invisible" docs/TODO.md item 26 was
+    /// reported for. A disabled control should read as an affordance that is
+    /// off, not as nothing.
+    ///
+    /// `.systemGray2` **rendered and sampled, not trusted by name**: it draws
+    /// `#AEAEB2` on the light row and `#636366` on the dark one, which measure
+    /// **2.21:1 and 2.84:1** against the rows they sit on. Both clear the
+    /// 1.8:1 this was aimed at, and both stay well under the enabled fill's
+    /// 3.59:1 and 9.57:1, so off still reads quieter than on. A grey with no
+    /// hue in it, because the one thing a disabled control must not look like
+    /// is a mint one.
+    ///
+    /// Two neighbours were ruled out arithmetically, from Apple's own sRGB
+    /// values rather than from a render: `.systemGray3` is the nearer grey and
+    /// misses at 1.68:1 on white, and `.systemGray` clears both but is nearly
+    /// as loud as the accent itself in light — 3.26:1 against 3.59 — which is
+    /// the opposite mistake.
+    static let accentFillDisabled = Color(.systemGray2)
+
     /// What goes *on* the accent fill.
     ///
     /// The accent fill in dark mode is a light mint, `#00DAC3`, and iOS draws a
@@ -82,17 +141,35 @@ extension Color {
     /// measures **5.85:1** on the light fill and 11.82:1 on the dark one, and
     /// clears the floor on both.
     static let onAccent = Color.black
+
+    /// What goes on `accentFillDisabled`.
+    ///
+    /// The ordinary label colour, and it has to flip with the appearance: on
+    /// `#AEAEB2` only a dark glyph clears 2.5:1 and on `#636366` only a light
+    /// one does. Sampled off a disabled History disc it draws `#000000` and
+    /// `#FFFFFF`, which measure **9.50:1** and **5.99:1** against the grey
+    /// under them — where `.tertiary`, which `RepeatDisc` drew before this,
+    /// rendered `#CBCBCB` on `#E8E8E8` for **1.32:1** and was the second half
+    /// of a disc you could not see.
+    ///
+    /// `.secondary` was the obvious middle and does not reach: composited over
+    /// the same two greys it works out at 2.43:1 in light and 2.29:1 in dark,
+    /// which is why the label colour and not the quieter one.
+    static let onAccentDisabled = Color.primary
 }
 
-/// Draws a label in `Color.onAccent` while its control is enabled, and leaves a
-/// disabled one exactly as iOS drew it.
+/// Draws a label in `Color.onAccent`, or in `Color.onAccentDisabled` when its
+/// control is off.
 ///
-/// The second half is the whole reason this is a modifier rather than a
-/// `.foregroundStyle` at each call site. A **disabled** `.borderedProminent`
-/// button is drawn from a neutral fill and never touches the tint — measured in
-/// dark mode as a black pill with a grey label — so forcing the label black
-/// there paints black on black, and the log sheet opens in exactly that state
-/// with every field still empty.
+/// It used to stand aside for a disabled control instead of colouring it, and
+/// that was right while iOS drew the disabled state: a **disabled**
+/// `.borderedProminent` button is built from a neutral fill and never touches
+/// the tint, so forcing the label black there painted black on black, and the
+/// log sheet opens in exactly that state with every field still empty. Since
+/// item 26 the app draws all three states itself — `AccentPillButtonStyle` and
+/// `AccentFillBackground` — so there is no longer an iOS drawing to stand
+/// aside for, and a label left alone on the grey fill would be the only part
+/// of the control nothing had decided.
 ///
 /// Apply it to the button's *label*, inside the `Button`, never to the button
 /// from outside. `.disabled(_:)` sets `isEnabled` for its content, so a reader
@@ -101,14 +178,167 @@ extension Color {
 private struct OnAccentFill: ViewModifier {
     @Environment(\.isEnabled) private var isEnabled
 
-    @ViewBuilder
     func body(content: Content) -> some View {
-        if isEnabled {
-            content.foregroundStyle(Color.onAccent)
-        } else {
-            content
+        content.foregroundStyle(isEnabled ? Color.onAccent : Color.onAccentDisabled)
+    }
+}
+
+/// True while the button around this view is being held down.
+///
+/// **The pressed colour has to reach a fill drawn inside a button's label** —
+/// `RepeatDisc`, `UndoButton`, a home card's + — and a `ButtonStyle` cannot
+/// reach in there. It publishes the state here and the fill reads it back,
+/// which is exactly how the disabled state already travels: `\.isEnabled`,
+/// read from inside the label.
+private struct AccentFillPressedKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var accentFillPressed: Bool {
+        get { self[AccentFillPressedKey.self] }
+        set { self[AccentFillPressedKey.self] = newValue }
+    }
+}
+
+/// The accent fill, in whichever of its three states its control is in.
+///
+/// **A `View` and not a `Color`, because two of the three states are read from
+/// the environment** and a `ShapeStyle` has nowhere to read them from. Every
+/// accent-filled control in the app backs itself with this, so "pressed" and
+/// "off" are one decision in one place rather than six.
+struct AccentFillBackground<S: Shape>: View {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accentFillPressed) private var isPressed
+
+    private let shape: S
+
+    init(_ shape: S) {
+        self.shape = shape
+    }
+
+    var body: some View {
+        shape.fill(fill)
+    }
+
+    private var fill: Color {
+        guard isEnabled else { return .accentFillDisabled }
+        return isPressed ? .accentFillPressed : .accentFill
+    }
+}
+
+/// For a `.plain`-shaped button whose label draws its own accent fill.
+///
+/// It replaces `.buttonStyle(.plain)` at those call sites and does one thing:
+/// hand `configuration.isPressed` to the `AccentFillBackground` inside. What
+/// it deliberately does not do is `.plain`'s own press effect — the whole
+/// label at 75% opacity — because that is the surface-dependent composite
+/// item 26 replaced with a named colour, and applying both would fade the
+/// pressed value a second time.
+///
+/// **The Log again row in `RepeatView` gives up something for this**: the row
+/// is one big button, so `.plain` used to dim its text along with its disc, and
+/// now only the disc responds. That is the control the tap is about, and a row
+/// whose disc recedes while its words hold still is a smaller loss than a
+/// screen where one of the three repeat discs presses differently from the
+/// other two.
+struct AccentFillButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .environment(\.accentFillPressed, configuration.isPressed)
+    }
+}
+
+/// The app's prominent button: a filled capsule with a dark label.
+///
+/// **This is `.borderedProminent` redrawn rather than restyled, and item 26 is
+/// why.** A pressed prominent button is dimmed by iOS itself and a
+/// `ButtonStyle` cannot change that — applying one *replaces*
+/// `.borderedProminent` instead of adding to it, and the tint is read before
+/// the press effect is composited. In dark mode that effect lightens the fill
+/// to `#33E1CF`, **1.08:1** against its rest colour and moving the opposite way
+/// from every other accent fill on the screen. So the fill is drawn here, and
+/// all three states come from `AccentFillBackground` like everything else.
+///
+/// **The metrics are iOS's, measured off the build before this and matched
+/// deliberately**, because a Log pill two points shorter is a regression this
+/// item did not ask for. On an iPhone 17 Pro Max, `.borderedProminent` paints
+/// 330.00×50.33pt for home's bar at `.controlSize(.large)` and
+/// 52.67×34.33pt for the log sheet's *Log* at the default size. This paints
+/// 330.00×50.00 and 52.67×34.00 — the same width to the pixel in both, and a
+/// third of a point shorter, which is iOS laying its own capsule out on a
+/// fractional height. Outside the fills, home is byte-identical apart from a
+/// single row where the bar's top edge follows that third of a point.
+///
+/// The 12pt horizontal padding is that measurement and not a round number:
+/// 11 drew the sheet's *Log* exactly 2pt narrow, which is the size of drift
+/// this comment exists to have caught. The empty home screen's *Add Tracker*
+/// is the third size, `.small`, and it caught a second one — see `font` below.
+///
+/// `\.controlSize` is read rather than taking a parameter, so the call sites
+/// keep saying `.controlSize(.large)` in the platform's own vocabulary and a
+/// third size later has one place to land.
+struct AccentPillButtonStyle: ButtonStyle {
+    @Environment(\.controlSize) private var controlSize
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(font)
+            .padding(.horizontal, horizontalPadding)
+            .frame(minHeight: minHeight)
+            .background(AccentFillBackground(.capsule))
+            .contentShape(.capsule)
+            .environment(\.accentFillPressed, configuration.isPressed)
+    }
+
+    /// Three sizes because the app uses three, each number read off the build
+    /// before this one rather than guessed. `.mini` and `.extraLarge` follow
+    /// their neighbours and are unmeasured — nothing here asks for them, and a
+    /// made-up number would look exactly like a measured one.
+    private var minHeight: CGFloat {
+        switch controlSize {
+        case .mini, .small: 28
+        case .large, .extraLarge: 50
+        default: 34
         }
     }
+
+    /// Half of what iOS left either side of the label, which is the only part
+    /// of the width this style decides — home's pill is stretched by its own
+    /// `maxWidth: .infinity` and does not use these at all.
+    private var horizontalPadding: CGFloat {
+        switch controlSize {
+        case .mini, .small: 10
+        case .large, .extraLarge: 20
+        default: 12
+        }
+    }
+
+    /// `.subheadline` at the small size, because iOS shrinks the label there
+    /// too: *Add Tracker* on the empty home screen renders an 11.00pt cap
+    /// height against 12.33 at the default size, and 81.67pt wide against
+    /// 91.00. Padding alone cannot match a control whose text is a different
+    /// size, which is how that button first came back 13pt too wide. With the
+    /// font right, `.subheadline` sets it a point wider than iOS's own — hence
+    /// 10 rather than the 10.5 the pill measured either side of its label.
+    private var font: Font? {
+        switch controlSize {
+        case .mini, .small: .subheadline
+        default: nil
+        }
+    }
+}
+
+extension ButtonStyle where Self == AccentFillButtonStyle {
+
+    /// See `AccentFillButtonStyle`.
+    static var accentFill: AccentFillButtonStyle { AccentFillButtonStyle() }
+}
+
+extension ButtonStyle where Self == AccentPillButtonStyle {
+
+    /// See `AccentPillButtonStyle`.
+    static var accentPill: AccentPillButtonStyle { AccentPillButtonStyle() }
 }
 
 /// The app's recovery control, drawn one way wherever it appears.
@@ -132,16 +362,18 @@ struct UndoButton: View {
     var body: some View {
         Button(action: action) {
             Text("Undo")
-                .foregroundStyle(Color.onAccent)
+                .onAccentFill()
                 .padding(.horizontal, 12)
                 .frame(minHeight: 32)
-                .background(Color.accentFill, in: .capsule)
+                .background(AccentFillBackground(.capsule))
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(.rect)
         }
-        // `.plain`, so the fill above is the whole of the styling and a list row
-        // does not draw its own on top.
-        .buttonStyle(.plain)
+        // `.accentFill`, which is `.plain` plus the one thing `.plain` cannot
+        // do: hand the press down to the capsule inside the label
+        // (docs/TODO.md item 26). The fill above is still the whole of the
+        // styling and a list row does not draw its own on top.
+        .buttonStyle(.accentFill)
     }
 }
 
@@ -184,27 +416,29 @@ struct RepeatDisc: View {
     /// so the Log again sheet's empty state can draw the same one.
     static let symbol = "plus.arrow.trianglehead.clockwise"
 
-    @Environment(\.isEnabled) private var isEnabled
-
     var body: some View {
         Image(systemName: Self.symbol)
             // Fixed rather than a text style, for the reason home's + is: the
             // disc and the 44pt target do not scale, so a glyph that does
             // outgrows its own circle at the accessibility sizes.
             .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(isEnabled ? AnyShapeStyle(Color.onAccent) : AnyShapeStyle(.tertiary))
+            // `.onAccentFill()`, which is the same black on the fill and the
+            // ordinary label colour on the grey one. It was `.tertiary` when
+            // off, which measured 1.32:1 on a fill that was itself 1.24:1
+            // against the row — a disc that was not there rather than a disc
+            // that was off (docs/TODO.md item 26).
+            .onAccentFill()
             .frame(width: 30, height: 30)
-            // `Color.accentFill`, not `.tint`: the environment tint is the
+            // `AccentFillBackground`, not `.tint`: the environment tint is the
             // ordinary label colour now, and a disc is a fill (docs/TODO.md
             // item 13c). "The accent is only ever a fill" is what this said,
             // and item 18 made it not quite true — `navBarAccent()` and
             // `formRowAccent()` write with it, on standard controls that have
             // no other way to say they are tappable. Nothing else does, and
-            // this is not one of them.
-            .background(
-                isEnabled ? AnyShapeStyle(Color.accentFill) : AnyShapeStyle(.quaternary),
-                in: .circle
-            )
+            // this is not one of them. The background carries all three states
+            // now, so a disc presses and greys the same way in all three
+            // places it appears (docs/TODO.md item 26).
+            .background(AccentFillBackground(.circle))
             .frame(width: 44, height: 44)
             .contentShape(.rect)
     }

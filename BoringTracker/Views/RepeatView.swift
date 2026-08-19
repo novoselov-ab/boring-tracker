@@ -271,7 +271,10 @@ private struct RepeatRow: View {
             }
             .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        // `.accentFill`, so the disc inside recedes with the press like the
+        // other two (docs/TODO.md item 26). It costs the row's text its own
+        // dimming, which `.plain` gave it — see `AccentFillButtonStyle`.
+        .buttonStyle(.accentFill)
         .disabled(!canRepeat)
         .accessibilityHint("Logs this again")
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))

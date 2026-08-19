@@ -653,9 +653,16 @@ private struct HistoryRow: View {
     /// The row prints "Deleted tracker" where the record is gone — on the
     /// identity line for a lone entry, beside the number inside a batch — so
     /// that row says why the disc is off; an archived tracker is still a
-    /// record, so its row reads like any other and the disc is simply
-    /// absent-looking beside it (measured at 1.25:1 against the row in light
-    /// mode — it reads as no button rather than a dead one). Still deliberate
+    /// record, so its row reads like any other and the disc beside it is
+    /// plainly off rather than plainly missing. **That last clause used to say
+    /// the opposite** — the disc measured 1.25:1 against the light row and this
+    /// comment approved of it, "it reads as no button rather than a dead one".
+    /// It was reported from real use as a control nobody could see, and item 26
+    /// replaced the `.quaternary` fill under it: the disc now draws `#AEAEB2`
+    /// on the light row and `#636366` on the dark one, **2.21:1 and 2.84:1**,
+    /// with the glyph at 9.50 and 5.99 on top of that. A disabled control
+    /// should read as an affordance that is off, and a grey disc says that
+    /// where no disc at all said nothing. Still deliberate
     /// after item 14b: an archived tracker's row now leads with that tracker's
     /// name, which is more than it used to say, and "Archived" on the row is a
     /// label about the tracker rather than about the thing that was logged.
@@ -665,7 +672,7 @@ private struct HistoryRow: View {
         // different colour (docs/TODO.md item 21). The greying follows the
         // `.disabled` below, from inside the label.
         return Button { store.logAgain(item) } label: { RepeatDisc() }
-            .buttonStyle(.plain)
+            .buttonStyle(.accentFill)
             .disabled(!canRepeat)
             .accessibilityLabel("Log again")
     }

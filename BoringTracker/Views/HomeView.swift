@@ -184,7 +184,10 @@ struct HomeView: View {
                         .frame(width: 70)
                         .contentShape(.rect)
                 }
-                .buttonStyle(.plain)
+                // `.accentFill` rather than `.plain`, so the disc reads the
+                // press and recedes to `Color.accentFillPressed` like every
+                // other accent fill (docs/TODO.md item 26).
+                .buttonStyle(.accentFill)
                 // The glyph stays; only what VoiceOver reads changes. "Log
                 // again" is what the screen it opens is called and what
                 // History's disc already says (docs/TODO.md item 20).
@@ -201,11 +204,14 @@ struct HomeView: View {
                         // still reach it.
                         .onAccentFill()
                 }
-                .buttonStyle(.borderedProminent)
-                // The accent is named here rather than inherited: the
-                // environment tint is the ordinary label colour now, and the
-                // accent is a fill (docs/TODO.md item 13c, `Color.accentFill`).
-                .tint(Color.accentFill)
+                // `.accentPill`, not `.borderedProminent` with a tint. The
+                // fill is the same and so are the metrics, measured either
+                // side of the change; what a tint could not reach is the
+                // pressed state, which iOS drew 1.08:1 against rest in dark
+                // mode and in the opposite direction from every other accent
+                // fill on this screen (docs/TODO.md item 26,
+                // `AccentPillButtonStyle`).
+                .buttonStyle(.accentPill)
                 .controlSize(.large)
             }
             .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
@@ -245,8 +251,10 @@ struct HomeView: View {
             NavigationLink(value: Route.settings) {
                 Text("Add Tracker").onAccentFill()
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.accentFill)
+            // The same pill home's bar draws, for the same reason it is
+            // shared: a rare screen is exactly where a second design language
+            // survives unnoticed (docs/TODO.md item 26).
+            .buttonStyle(.accentPill)
         }
     }
 
@@ -641,11 +649,14 @@ private struct TrackerCard: View {
                 // `Color.accentColor` is still the system blue — item 18's
                 // catalog deliberately does not claim that magic name
                 // (docs/TODO.md items 13c and 18).
-                .background(Color.accentFill, in: .circle)
+                .background(AccentFillBackground(.circle))
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
-        .buttonStyle(.plain)
+        // `.accentFill` rather than `.plain`: the disc above draws its own
+        // pressed colour instead of taking iOS's 75% composite of whatever is
+        // behind it (docs/TODO.md item 26).
+        .buttonStyle(.accentFill)
         .accessibilityLabel("Log \(tracker.name)")
     }
 

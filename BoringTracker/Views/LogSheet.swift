@@ -138,10 +138,10 @@ struct LogSheet: View {
                         // inside `.disabled`, and stands aside for it.
                         Text("Log").onAccentFill()
                     }
-                    .buttonStyle(.borderedProminent)
-                    // Named, not inherited: the environment tint is the
-                    // ordinary label colour now (docs/TODO.md item 13c).
-                    .tint(Color.accentFill)
+                    // `.accentPill`: the same fill, the same metrics, and a
+                    // pressed and a disabled state the app decides rather than
+                    // iOS (docs/TODO.md item 26, `AccentPillButtonStyle`).
+                    .buttonStyle(.accentPill)
                     .disabled(amounts.isEmpty)
                 }
                 .padding(.horizontal)
