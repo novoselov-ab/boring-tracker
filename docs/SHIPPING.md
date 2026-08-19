@@ -123,8 +123,11 @@ Note that three different names are involved and only one must be unique:
 
 - **App Store listing name** — must be unique, claimed first-come, 30 chars.
 - **`CFBundleDisplayName`** — the label under the home screen icon. Does *not*
-  need to be unique; currently `Whatever`, which is fine even though an
-  unrelated app owns that App Store name.
+  need to be unique. It is `Boring`, set in `project.yml` as
+  `INFOPLIST_KEY_CFBundleDisplayName`, which is what the bullet at the top of
+  this section already says. This line used to read `Whatever` — the name the
+  project carried before the 2026-08-11 rename — and it contradicted its own
+  page.
 - **Bundle identifier** — permanent, and changing it makes it a different app.
 
 ### Who is already here
