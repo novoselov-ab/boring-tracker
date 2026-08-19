@@ -150,7 +150,25 @@ struct RepeatView: View {
         // The one thing History's list does not have, and the reason this is a
         // list at all rather than a row of chips: with a year of food behind
         // you the thing you want is four letters away.
-        .searchable(text: $query, prompt: "Search names")
+        //
+        // Not while the list is empty: a field over "Nothing to log again yet"
+        // matches nothing by construction (docs/TODO.md item 25b,
+        // `searchableNames(_:when:)`). The snapshot is exactly the right thing
+        // to ask — it is what this screen is about, it is already built, and a
+        // query merely matching nothing leaves it non-empty, which is the case
+        // the field must survive.
+        //
+        // **`!= true`, so the unbuilt snapshot counts as "something to
+        // search".** Written the other way first — `!(items?.isEmpty ?? true)`,
+        // no field until the snapshot arrives — and it took the whole sheet
+        // with it: `onAppear` fills `items` one pass after the first, the
+        // field's branch flipped from absent to present underneath a
+        // presentation that was already up, and the sheet came back **blank**,
+        // no title and no list, on every fixture and every text size.
+        // Photographed before and after. The empty direction is fine — the
+        // `empty` fixture draws its empty state with no field — so this asks
+        // the question in the direction that never has to appear.
+        .searchableNames($query, when: items?.isEmpty != true)
         // No `UndoBar` here any more. The bar is on home, where this sheet
         // leaves you — an undo drawn on a presentation that dismisses itself
         // would be a button you cannot reach.

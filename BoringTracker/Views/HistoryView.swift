@@ -75,15 +75,27 @@ struct HistoryView: View {
         let trackers = Dictionary(
             store.trackers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }
         )
+        // Nothing logged at all, which is a different question from "this
+        // query matched nothing" and is now asked first. It decides two things
+        // together — the empty state below and whether the search field is
+        // drawn — and they are the same decision: a field over a screen with
+        // nothing on it matches nothing by construction (docs/TODO.md item
+        // 25b, `searchableNames(_:when:)`).
+        //
+        // `entries`, not `historyItems`: the rows are built out of the entries
+        // and `HistoryItem(entries:)` refuses only an empty batch, so the two
+        // are empty together — and this one is a stored array's `isEmpty`
+        // rather than a walk that groups and sorts five years of them.
+        let logged = !store.entries.isEmpty
         Group {
-            if days.isEmpty, !query.isEmpty {
-                ContentUnavailableView.search(text: query)
-            } else if days.isEmpty {
+            if !logged {
                 ContentUnavailableView(
                     "Nothing logged yet",
                     systemImage: "clock",
                     description: Text("Your entries will appear here after you log them.")
                 )
+            } else if days.isEmpty {
+                ContentUnavailableView.search(text: query)
             } else {
                 // `ScrollViewReader` is the whole of the jump: the control
                 // picks a day and this scrolls to the heading carrying it.
@@ -272,10 +284,12 @@ struct HistoryView: View {
         }
         .navigationTitle("History")
         .navigationBarTitleDisplayMode(.inline)
-        // The same prompt as the Repeat screen, and it is doing work: it says
-        // what the field looks at, which is the one thing a searcher has to
-        // know here. See `days` for what that costs an unnamed row.
-        .searchable(text: $query, prompt: "Search names")
+        // The same field the Repeat screen draws, from the same modifier, and
+        // it is doing work: the prompt says what the field looks at, which is
+        // the one thing a searcher has to know here. See `days` for what that
+        // costs an unnamed row, and `searchableNames(_:when:)` for why a screen
+        // with nothing logged has no field at all.
+        .searchableNames($query, when: logged)
         // `UndoBar`, not a copy of it: the Repeat screen writes through the same
         // `logAgain` and takes it back through the same one slot, and two copies
         // of this is two chances to word one undo differently.
