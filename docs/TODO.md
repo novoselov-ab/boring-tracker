@@ -1034,8 +1034,9 @@ passes, so the case that would have forced the issue is not there.
 **One design question is left open, and it is not a bug.** When the day you pick
 has nothing logged the list goes to the nearest day that does — but the calendar
 keeps highlighting the day you tapped, and nothing on screen says the two
-differ. From the popover, landing on the 25th after tapping the 31st is
-indistinguishable from the control having failed. VoiceOver is told, by the
+differ. Tapping 15 November on the five-year fixture lands the list on the
+10th — correct, and from the popover indistinguishable from the control having
+failed, since the calendar goes on highlighting the 15th. VoiceOver is told, by the
 `PageScrolled` announcement; a sighted user is not. Moving the selection to the
 day it landed on is the obvious answer and has a cost of its own — it would
 fight the wheels, which *are* the selection.
