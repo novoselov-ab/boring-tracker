@@ -76,6 +76,26 @@ extension Color {
 /// because the next person to pixel-diff this screen will find it and should not
 /// have to work out where it came from. The alternative was a row press with no
 /// movement in it, which is half of what item 28 asked for.
+///
+/// **What it does not cost is the scroll**, and that was measured rather than
+/// argued, because this style is now on History and tracker detail where the
+/// row count is your whole history. A `CADisplayLink` in a temporary probe,
+/// eight scripted flings over a **3,200-row History** (8,000 entries) on an
+/// iPhone 17 Pro simulator, 960 frame intervals per run, against a build with
+/// only the `visualEffect` line deleted:
+///
+///     build              median  p95     >20ms          >33ms
+///     Debug, with        16.67   16.67   25, 27, 24     18, 18, 17
+///     Debug, without     16.67   16.67   20, 21, 24     12, 13, 14
+///     Release, with      16.67   16.67   20, 19         14, 12
+///     Release, without   16.67   16.67   20, 26         16, 16
+///
+/// The median and the p95 are a full 60fps frame in every run of both builds,
+/// which is the number that matters. The tails do not separate: Debug leans
+/// against the scale by about five frames in 960, Release leans the other way
+/// by about the same, so the honest reading is noise rather than a cost. The
+/// long frame both builds show — 250–280ms — is History's first build on that
+/// fixture and is the same with the line and without it.
 struct RowButtonStyle: ButtonStyle {
     /// Read here and handed to `AccentFillPress`, which owns the answer — see
     /// the type's doc. It is in this style rather than in the background below

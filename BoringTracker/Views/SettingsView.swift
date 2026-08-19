@@ -53,10 +53,12 @@ struct SettingsView: View {
                             } action: { frame in
                                 rowFrames[tracker.id] = frame
                             }
-                            // Outside `.swipeActions` on the archived rows
-                            // below, and outside `.onGeometryChange` here — see
-                            // `EdgeInsets.listRow` for why the placement is not
-                            // a style choice.
+                            // **Outside `.onGeometryChange`, and that is not a
+                            // style choice** — written inside
+                            // `reorderableRow`, under the reader, it is
+                            // silently dropped and the row keeps the platform's
+                            // 74pt. See `EdgeInsets.listRow`, which carries the
+                            // probe that isolated it.
                             .listRowInsets(.listRow)
                     }
                 } header: {

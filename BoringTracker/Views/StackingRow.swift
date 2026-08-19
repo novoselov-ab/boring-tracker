@@ -154,11 +154,28 @@ extension EdgeInsets {
     /// is a 44pt box around a 30pt disc: 12 plus the box's own 7 is 19pt of
     /// air, against 16 at the other end.
     ///
-    /// **`.listRowInsets` has to be applied outside `.swipeActions`, and that
-    /// is not a style choice.** Written inside — `row.listRowInsets(…)
-    /// .swipeActions(…)` — it is silently ignored: the build compiles, the row
-    /// draws, and it keeps the platform's default. Two settings builds looked
-    /// identical to each other before the accessibility tree said why, so it is
-    /// written down here where the constant is rather than at one call site.
+    /// **Two settings rows have no such box** — an archived one, and an active
+    /// one on a list of a single tracker, where the drag handle is absent by
+    /// design. There the trailing element is a bare `chevron.right`, which lands
+    /// about 15pt from the cell edge against the 21pt iOS gives the *About* row
+    /// two sections below it. Left alone: it is 6pt on a screen nobody's day
+    /// runs through, and the alternative is a second constant or a conditional
+    /// inset, either of which is how one number becomes two.
+    ///
+    /// **`.listRowInsets` has to be applied outside `.onGeometryChange`, and
+    /// that is not a style choice.** Settings reads every row's frame for its
+    /// drop target, and insets written *under* that reader — inside the row
+    /// view it wraps — are silently dropped: the build compiles, the row draws,
+    /// and it keeps the platform's 74pt. Two settings builds looked identical to
+    /// each other before the accessibility tree said why.
+    ///
+    /// **`.swipeActions` is not one of these, and that was checked rather than
+    /// assumed.** The first reading of this blamed the swipe, because the fix
+    /// moved the modifier past both at once. It does not: `HistoryRow` has
+    /// applied its insets inside the row with `.swipeActions` outside since item
+    /// 11 and measures **52pt**, and a probe build with settings' own archived
+    /// rows in that same order measures 52 as well while the active rows under
+    /// the geometry reader stay at 74. One binary, both answers, read off the
+    /// tree.
     static let listRow = EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)
 }

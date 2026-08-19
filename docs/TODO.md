@@ -1213,10 +1213,20 @@ One problem wearing three faces, all three answered.
       rows included — those carry the group as the caption, in the same
       `.caption2` home dates a reading in.
 
-      **`.listRowInsets` has to be applied outside `.swipeActions`.** Written
-      inside it is silently ignored — the build compiles, the row draws, and it
-      keeps the default 74. Two builds looked identical before the tree said
-      why.
+      **`.listRowInsets` has to be applied outside `.onGeometryChange`.** Under
+      the reader settings uses for its drop target, it is silently dropped — the
+      build compiles, the row draws, and it keeps the platform's 74pt. Two
+      builds looked identical before the tree said why.
+
+      **The first diagnosis blamed `.swipeActions` and was wrong**, because the
+      fix moved the modifier past both at once and nothing isolated them. The
+      third review round caught it by noticing that `HistoryRow` does the thing
+      the comment forbade: insets inside the row, swipe outside, and it measures
+      52pt. A probe build settled the rest — settings' archived rows in that same
+      order measure 52, while the active rows under the geometry reader stay at
+      74. One binary, both answers, read off the accessibility tree. Exactly the
+      failure WORKFLOW.md's "always check, not just read" describes: the number
+      was right and the mechanism beside it was invented.
 - [x] **The whole row is the target.** A `Button` hit-tests its label's drawn
       content unless it is given a shape, and settings' row was a name and a
       chevron with a `Spacer` between them, so the middle — most of the width —
@@ -1257,6 +1267,25 @@ so home at rest differs from the build before this in 14,485 of 3,162,132 pixels
 leading edge with its trailing edge unmoved. Deleting the `visualEffect` line
 makes home byte-identical to before, which is how the cause was pinned. Kept:
 the alternative is a row press with no movement in it.
+
+**It does not cost the scroll**, which is the question a per-row layer actually
+raises now that the style is on History. A `CADisplayLink` probe, eight scripted
+flings over a 3,200-row History (8,000 entries) on an iPhone 17 Pro simulator,
+960 frame intervals a run, against a build with only the `visualEffect` line
+deleted:
+
+| build | median | p95 | frames >20ms | frames >33ms |
+|---|---|---|---|---|
+| Debug, with | 16.67 | 16.67 | 25, 27, 24 | 18, 18, 17 |
+| Debug, without | 16.67 | 16.67 | 20, 21, 24 | 12, 13, 14 |
+| Release, with | 16.67 | 16.67 | 20, 19 | 14, 12 |
+| Release, without | 16.67 | 16.67 | 20, 26 | 16, 16 |
+
+Median and p95 are a full 60fps frame in every run of both builds. The tails do
+not separate — Debug leans against the scale by about five frames in 960 and
+Release leans the other way by about the same — so that is noise, not a cost.
+The 250–280ms frame both builds show is History's first build on that fixture,
+with the line and without it.
 
 **What a Log again row gives up.** It was `.buttonStyle(.accentFill)` so that
 the disc inside it recoloured on press; it is `.row` now, so the whole row goes
