@@ -1614,7 +1614,24 @@ the common path, and item 5's measurement was about the screen that is.
 - [ ] Decide whether editing is close enough to logging to want the same
       confirm placement.
 
-## 33b. A rounded-square Log again, in the pill's family
+## 33b. A rounded-square Log again — tried, keeping today's bar
+
+**Decided: keep `33b-a`, the bar as it is.** Seven variants were rendered and
+photographed; none was better enough to change.
+
+The variant asked for is geometrically impossible as stated, and that is worth
+keeping rather than rediscovering: the Log pill is a `Capsule` at 50pt, so its
+corner radius is half its height by construction, and **a rounded rectangle
+whose radius reaches half its shorter side is a capsule.** Carrying r25 without
+being one requires being taller than 50pt, which contradicts "clearly smaller
+than the pill". Three constraints, two can hold.
+
+The escape that does exist, if this is ever reopened: give the **pill** a fixed
+radius rather than a height-derived one — variant `d` drew both controls at
+r18, which reaches "one family at two sizes" by changing the large control
+instead of the small one.
+
+## 33b-old. The original note
 
 Same corner radius as the Log pill — not a circle, not a capsule — and slightly
 wider than tall, so it reads as a rounded square at a smaller size.
