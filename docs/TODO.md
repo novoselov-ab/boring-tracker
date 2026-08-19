@@ -1351,6 +1351,38 @@ picking one up doesn't start with rediscovering why it's awkward.
       adds it should measure a press on it rather than trusting a rule
       extrapolated from a pill twenty times its length.
 
+- [ ] **What the reorder footer should say when there is only one section.**
+      `canReorder` (`activeTrackers.count > 1`) gates both the drag handle and
+      the footer under it, and the handle's threshold is exactly right. The
+      footer's middle sentence is not: "Between sections, its whole group moves
+      with it" describes a drop that needs two *runs*, and two trackers sharing
+      one group are one run — so a two-tracker list is told about sections it
+      does not have, which is the smaller version of the complaint 22bc672 was
+      fixing.
+
+      Not fixed, deliberately, and the obvious fix is wrong: gating the whole
+      footer on `runs.count > 1` would draw a handle with nothing explaining it,
+      which is worse than one sentence too many. The honest fix splits the
+      string, and a conditional sentence is a concept this screen does not have
+      for a case no fixture reaches. Raised reviewing pass 2 and left; whoever
+      picks it up should decide whether the sentence is worth a branch at all
+      before writing one.
+
+- [ ] **What the gap between two halves of a stacked row should be.**
+      `StackingRow`'s stacked branch uses `spacing: 2`, which was measured for
+      home's card, whose stacked form is two lines. The three list rows put a
+      two-line `VStack` in the leading half, so at `.xxxLarge` and above a
+      History row is three lines at three equal 2pt gaps — the boundary between
+      *what it was* and *when it happened* reads exactly like the boundary
+      inside the identity block.
+
+      Not fixed: it is spacing, the rows read fine (photographed at all twelve
+      content sizes), and any number here is a taste call — and a second number
+      means either a parameter on `StackingRow` or the card and the lists
+      disagreeing again, which is the thing that file exists to stop. Worth
+      writing down because the *reason* it looks even is that one number is now
+      answering for two different row shapes.
+
 - [ ] **What the gap between two days should be, now that there is no card.**
       The section fix left the day heading's `listRowInsets(top: 18, …)` sitting
       *on top of* the spacing a headerless `Section` already reserves rather
