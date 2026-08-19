@@ -1012,12 +1012,16 @@ one give the same answer, so it would have passed against the bug it was written
 for. Moved so the short day is below, and checked by putting the seconds version
 back and watching it fail.
 
-**What is left as a design question**, not a bug: with a single day of history
-the picker opens with one selectable square and both month arrows dimmed. It is
-truthful and it matches how the app already greys a repeat disc rather than
-hiding it, but a control that can only go where you already are is arguably not
-worth a glyph. Drawing it whenever there is a list at all is the simpler rule,
-and the alternative needs a threshold nobody can defend.
+**The design question this left is answered by item 25b** (`5aed442`): with a
+single day of history the picker opened on one selectable square with both month
+arrows dimmed — truthful, and a control that can only go where you already are.
+The threshold that seemed impossible to defend turned out not to be a threshold:
+**two days is the condition under which the control can do anything at all**,
+because one day is one destination. Below it the glyph is absent rather than
+greyed, since a disabled control invites the tap it cannot answer, and the two
+empty states fall out of the same rule instead of needing their own. It reads
+the *filtered* days the screen draws, so a search that leaves one day standing
+takes the control with it — the control navigates the list as displayed.
 
 ## 26. A pressed button barely shows it
 
@@ -1049,20 +1053,10 @@ value is cheap and belongs beside the other two.
 Verification needs a touch driver, so if the screen is locked again, say so
 rather than reasoning about it. That is how this went unchecked three times.
 
-## 25b. The jump control needs somewhere to go — decided
+## 25b. The jump control needs somewhere to go — done
 
-Item 25 left this open: with a single day of history the picker offers one
-selectable square, which is truthful but useless, and the alternative seemed to
-need a threshold nobody could defend.
-
-**Show it only when there are at least two days with entries.** That is not an
-arbitrary number — it is the condition under which the control can do anything
-at all. One day means one destination, and a jump to where you already are is
-not a feature. Below that it is absent rather than disabled: a greyed glyph
-invites a tap that would do nothing.
-
-- [ ] Hide the control until a second day has entries.
-- [ ] Absent, not disabled.
+The calendar is drawn only when two days have entries, and is absent rather than
+greyed below that; the reasoning is with item 25. `5aed442`
 
 ## Noted, not scheduled
 
