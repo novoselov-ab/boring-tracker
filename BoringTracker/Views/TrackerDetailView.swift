@@ -72,6 +72,9 @@ struct TrackerDetailView: View {
                         ForEach(group.entries) { entry in
                             row(tracker, entry: entry)
                         }
+                        if group.day == days.first?.day {
+                            hint
+                        }
                     }
                 }
             }
@@ -160,6 +163,26 @@ struct TrackerDetailView: View {
             // the rule is that a swipe action states its own colour.
             .tint(.red)
         }
+    }
+
+    /// The two gestures on a row, said once, because neither is visible.
+    ///
+    /// The same sentence History carries and deliberately the same words:
+    /// item 22 wrote it for rows that edit on a tap and delete on a swipe, and
+    /// checked the Log again sheet as the other candidate — but not this screen,
+    /// whose rows have exactly the same two. Two screens teaching one pair of
+    /// gestures differently is the drift docs/TODO.md item 13 is named after, so
+    /// this is a copy of the wording on purpose and wants changing in both.
+    ///
+    /// **Under the first day only**, in the plain footer idiom, no icon and no
+    /// colour — `HistoryView` carries the argument for all three.
+    private var hint: some View {
+        Text("Tap a row to edit it, or swipe to delete.")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
     }
 
     /// The day heading, as a row rather than a section header — see
