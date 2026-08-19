@@ -5,11 +5,13 @@ import Testing
 @MainActor
 @Suite("History")
 struct HistoryTests {
-    private func historyStore(_ document: StoreDocument) -> Store {
+    private func historyStore(
+        _ document: StoreDocument, calendar zone: Calendar = calendar("UTC")
+    ) -> Store {
         Store(
             document: document,
             file: StoreFile(directory: URL.temporaryDirectory.appending(path: "history-\(UUID())")),
-            calendar: calendar("UTC"),
+            calendar: zone,
             saveWindow: .seconds(60)
         )
     }
@@ -894,11 +896,11 @@ struct HistoryTests {
             Entry(trackerID: tracker.id, value: 1,
                   date: $0.startOfDay(calendar: calendar).addingTimeInterval(12 * 3600))
         }
-        let store = Store(
-            document: StoreDocument(trackers: [tracker], entries: entries),
-            file: StoreFile(directory: URL.temporaryDirectory.appending(path: "jump-\(UUID())")),
-            calendar: calendar,
-            saveWindow: .seconds(60)
+        // The suite's own store, not a second one built here: a change to how
+        // these tests make a store — a `dayStartHour`, say — has to reach the
+        // jump tests too (raised in review as a drift risk).
+        let store = historyStore(
+            StoreDocument(trackers: [tracker], entries: entries), calendar: calendar
         )
         var seen: [DayKey] = []
         for item in store.historyItems where !seen.contains(store.dayKey(item.date)) {

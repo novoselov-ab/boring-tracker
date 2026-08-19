@@ -23,14 +23,26 @@ struct HistoryView: View {
     /// have looked away and back the answer to "which is new" is no longer a
     /// question anyone is asking.
     @State private var highlighted: HistoryItem.ID?
-    /// The day the list has been asked to scroll to, until it has.
+    /// The day the list has been asked to scroll to, and which asking it was.
     ///
-    /// A one-shot rather than a selection: the control *navigates*, so once the
-    /// list has gone there nothing about the screen remembers where you jumped
-    /// from or to (docs/TODO.md item 25). A stored "current day" would be a
-    /// second state to reason about, and the first step towards a screen that
-    /// shows one day at a time.
-    @State private var jumpTarget: DayKey?
+    /// A one-shot rather than a selection: the control *navigates*, so nothing
+    /// about the screen remembers where you jumped from or to (docs/TODO.md
+    /// item 25). A stored "current day" would be a second state to reason
+    /// about, and the first step towards a screen that shows one day at a time.
+    ///
+    /// **The counter is what makes the same day twice a second jump**, and it
+    /// replaced clearing this back to `nil` inside its own `onChange`. That
+    /// worked and cost a whole extra evaluation of this screen's `body` per
+    /// jump — which rebuilds `Store.historyItems`, groups 1,737 days and diffs
+    /// 17,788 rows — on a control whose month wheel fires one jump per row it
+    /// passes. Found in review; the open path had been measured and the jump
+    /// path had not.
+    private struct Jump: Equatable {
+        var day: DayKey
+        var count: Int
+    }
+
+    @State private var jumpTarget: Jump?
     /// Whether the date picker is up, and the date it holds.
     ///
     /// `picked` outlives the popover on purpose: jumping to March and then to
@@ -210,7 +222,7 @@ struct HistoryView: View {
                     // popover's own dismissal animation being inherited by it, and
                     // it is the same one the mark below presents with.
                     .onChange(of: jumpTarget) { _, target in
-                        guard let target else { return }
+                        guard let target = target?.day else { return }
                         var instant = Transaction()
                         instant.disablesAnimations = true
                         withTransaction(instant) { proxy.scrollTo(target, anchor: .top) }
@@ -230,7 +242,6 @@ struct HistoryView: View {
                         // checked is that the day it names is the day it landed
                         // on.
                         AccessibilityNotification.PageScrolled(title(for: target)).post()
-                        jumpTarget = nil
                     }
                 }
             }
@@ -350,9 +361,15 @@ struct HistoryView: View {
     /// A nav bar is also where docs/PHILOSOPHY.md puts something you reach for
     /// once a week, and this is not on the path to logging a number.
     ///
-    /// The picker is bounded by the days the list actually holds, so the
-    /// calendar greys out everything there is no history for and the control
-    /// cannot ask a question the screen has no answer to.
+    /// The picker is bounded by the *span* the list holds — oldest day to
+    /// newest — so the calendar greys out everything outside five years of
+    /// history and nothing inside it. Every missed day, and both thirteen-day
+    /// holidays, are days you can still tap, which is exactly why
+    /// `DayKey.nearest` exists below: the bound stops the control asking about
+    /// a decade nothing was logged in, and the landing rule answers everything
+    /// inside. (Said the other way round in review, where the sentence read as
+    /// if a day with nothing on it could not be picked at all — which would
+    /// make the landing rule dead code.)
     private func jumpButton(oldest: DayKey, newest: DayKey, days: [DayGroup]) -> some View {
         // `min`/`max` rather than the two ends as they come. `days` is sorted
         // newest first and these are its ends, so the range is in order by
@@ -450,9 +467,10 @@ struct HistoryView: View {
         let target = DayKey(
             year: parts.year ?? 0, month: parts.month ?? 0, day: parts.day ?? 0
         )
-        jumpTarget = DayKey.nearest(
+        guard let day = DayKey.nearest(
             to: target, in: days.map(\.day), calendar: store.calendar
-        )
+        ) else { return }
+        jumpTarget = Jump(day: day, count: (jumpTarget?.count ?? 0) + 1)
     }
 
     /// The day heading, as a row rather than a section header.
