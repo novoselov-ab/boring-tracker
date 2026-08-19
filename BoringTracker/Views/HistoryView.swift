@@ -162,8 +162,13 @@ struct HistoryView: View {
                                         // frames rather than fading. Attached to
                                         // the colour, it fades over ~785ms,
                                         // measured the same way.
-                                        .listRowBackground(
-                                            Color.accentFill
+                                        // Handed to `rowPress()` rather than
+                                        // set here: a row has one background
+                                        // and since item 32 the press fills it,
+                                        // so the two are one expression or the
+                                        // last one written wins.
+                                        .rowPress(
+                                            rest: Color.accentFill
                                                 .opacity(highlighted == item.id ? 0.2 : 0)
                                                 .animation(
                                                     .easeOut(duration: 0.9), value: highlighted

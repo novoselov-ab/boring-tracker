@@ -381,7 +381,11 @@ struct HomeView: View {
             // this one is a row that does something, so it wears the same
             // style as the cards above it.
             .buttonStyle(.row)
-            .listRowBackground(Color.clear)
+            // `rest: .clear` rather than a `listRowBackground` of its own:
+            // this row is deliberately not a card (see the doc above), and
+            // `rowPress()` owns the row's background so that a press can fill
+            // the whole cell.
+            .rowPress(rest: Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 16))
         }
     }
@@ -464,6 +468,10 @@ private struct TrackerCard: View {
             .accessibilityHint("Shows the history")
             logButton
         }
+        // The whole card goes down, not the half of it that is the button —
+        // see `rowPress()`, which is where the press is drawn and why it is
+        // here rather than inside the style (docs/TODO.md item 32).
+        .rowPress()
         // The row is as tall as the + and no taller. The default inset-grouped
         // row padding was adding 46pt of its own, which is most of a second row.
         .listRowInsets(.listRow)

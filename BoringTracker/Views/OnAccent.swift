@@ -286,20 +286,18 @@ private struct AccentFilled<S: Shape>: ViewModifier {
                         : 1
                 )
             }
-            // Kept on under Reduce Motion, and it is the colour it carries
-            // then: the scale above is already 1, so what animates is
-            // `AccentFillBackground`'s fill crossing to the pressed value.
-            // Turning this off as well would take away the half of the press
-            // that setting does not object to.
+            // **Nothing going down, 0.12s coming back**, which is item 32 and
+            // is argued in `AccentFillPress.animation(pressed:)`. The fill
+            // reaches `Color.accentFillPressed` on the frame the touch lands,
+            // and the ramp that used to be there — seven frames of it, recorded
+            // at 60fps for item 27 — is now only on the release.
             //
-            // **Recorded at 60fps with the setting on**, holding home's Log
-            // pill — the fill ramps across seven frames, 2.037s to 2.137s of
-            // the capture, one frame apart at 16.7ms: a **100ms** crossing and
-            // not a cut between two frames. The hexes there are the video's and
-            // are shifted, so the endpoints come off screenshots instead:
-            // `#00DAC3` to `#07AA9A`, the same two values as with the setting
-            // off, reached the same way.
-            .animation(AccentFillPress.animation, value: isPressed)
+            // Kept on under Reduce Motion, and it is the colour it carries
+            // then: the scale above is already 1, so what a release animates is
+            // `AccentFillBackground`'s fill crossing back from the pressed
+            // value. Turning this off as well would take away the half of the
+            // press that setting does not object to.
+            .animation(AccentFillPress.animation(pressed: isPressed), value: isPressed)
     }
 }
 
@@ -388,19 +386,79 @@ enum AccentFillPress {
         return 1 - 2 * travel / longest
     }
 
-    /// Quick in, quick out, and the same curve both ways.
+    /// The press is not animated. Only the release is.
     ///
-    /// 0.12s, and what that renders as was measured off a 60fps capture of the
-    /// Log pill: **66ms from the last resting frame to the settled pressed one
-    /// going down, and 82ms coming back** — the tail of an easeOut is
-    /// sub-pixel, so less of the curve shows than is asked for. It carries the
-    /// pressed colour with it, which was a hard cut between two frames before
-    /// this.
+    /// **This is item 32, and it is the whole of it.** Item 26 measured a
+    /// pressed colour and the press still could not be seen; item 27 added a
+    /// scale and it still could not be seen. The mechanism was not the problem
+    /// either time — the *timing* was, and both attempts were judged by
+    /// pressing and holding, which is the one way of touching a control that a
+    /// fade-in survives. Item 27 measured this curve at 66ms to settle going
+    /// down. A tap is shorter than that, so a tap reversed a press that had
+    /// never arrived, and the app looked deadest exactly when it was used
+    /// fastest.
     ///
-    /// `PHILOSOPHY.md` rules out animations you have to wait for; nothing waits
-    /// on this one, because the button's action fires on the lift and not on
-    /// the animation.
-    static let animation: Animation = .easeOut(duration: 0.12)
+    /// So the state applies on the frame the touch lands, and only the way out
+    /// is drawn. The release is also what carries a fast tap past the lift:
+    /// what is on screen is the pressed state for as long as the finger is
+    /// down, and then `release` on top of it.
+    ///
+    /// **A function of the value being moved *to*, not the one being left.**
+    /// `.animation(_:value:)` takes its animation from the same body evaluation
+    /// as the new value, so `pressed` here is the state arriving: `nil` going
+    /// down, `release` coming back up. Written as one function so a fill and a
+    /// row cannot answer this differently, which is the same reason
+    /// `scale(for:reduceMotion:)` is here rather than in the modifiers.
+    ///
+    /// `PHILOSOPHY.md` rules out animations you have to wait for, and neither
+    /// half is one: the action fires on the lift, and the release is drawn
+    /// after it.
+    static func animation(pressed: Bool) -> Animation? {
+        pressed ? nil : release
+    }
+
+    /// What a release takes, and the only animation left in a press.
+    ///
+    /// 0.12s, unchanged from item 27, which measured this curve at **82ms
+    /// coming back** off a 60fps capture of the Log pill — the tail of an
+    /// easeOut is sub-pixel, so less of it shows than is asked for. That number
+    /// was taken while the same curve ran in both directions; the release half
+    /// of it is the half that is left.
+    static let release: Animation = .easeOut(duration: 0.12)
+
+    /// How long a press stays on screen once it has arrived, however briefly
+    /// the finger was down.
+    ///
+    /// **A list withholds a touch, and hands a fast tap over as a single
+    /// instant.** `UIScrollView` delays a touch reaching the control under it
+    /// so that a flick scrolls rather than pressing — the same delay this
+    /// repo already measured from the other side, as the reason a scroll does
+    /// not fire the press haptic. What it does with a tap *shorter* than that
+    /// delay is deliver the down and the up together: the button's pressed
+    /// state goes true and false inside one update, so there is nothing for
+    /// any amount of instant drawing to render.
+    ///
+    /// Measured on an iPhone 17 Pro, synthesized taps on a settings row, the
+    /// row's own band read off a 60fps capture — a row at rest averages
+    /// `28,28,30` there and a pressed one `56,56,58`:
+    ///
+    ///     tap     what rendered
+    ///     60ms    nothing
+    ///     100ms   nothing
+    ///     200ms   56,56,58 on the first frame after the touch
+    ///     400ms   56,56,58 on the first frame after the touch
+    ///
+    /// Both edges were logged for the 60ms tap, in the same millisecond, which
+    /// is what says this is a coalesced press rather than no press. So the fix
+    /// is to hold what arrived: the state latches on, and the release waits out
+    /// whatever is left of this.
+    ///
+    /// **0.1s, and it is a floor rather than a duration** — a press longer than
+    /// this is unaffected, and what a fast tap gets is 0.1s of pressed row and
+    /// then `release` on top of it. It is only on rows: a fill outside a list
+    /// gets its touch immediately and stays down for as long as the finger is,
+    /// so there is nothing there to hold.
+    static let minimumHold: Duration = .milliseconds(100)
 }
 
 /// For a `.plain`-shaped button whose label draws its own accent fill.

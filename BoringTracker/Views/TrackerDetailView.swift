@@ -167,6 +167,7 @@ struct TrackerDetailView: View {
         // `.row`: this screen's rows edit an entry, and until item 28 their
         // whole press was `.plain` dimming the text 25% (`RowButtonStyle`).
         .buttonStyle(.row)
+        .rowPress()
         .swipeActions(edge: .trailing) {
             Button("Delete", systemImage: "trash", role: .destructive) {
                 store.delete(entry)

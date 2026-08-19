@@ -345,6 +345,7 @@ private struct RepeatRow: View {
         // with the row and once on its own. A row that goes down whole is the
         // louder signal of the two, which is the whole of item 28.
         .buttonStyle(.row)
+        .rowPress()
         .disabled(!canRepeat)
         .accessibilityHint("Logs this again")
         .listRowInsets(.listRow)

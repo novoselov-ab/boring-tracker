@@ -23,83 +23,31 @@ extension Color {
     static let rowPressed = Color(.systemGray4)
 }
 
-/// How a row's press is drawn.
+/// The button half of a row press: the target, the haptic, and nothing drawn.
 ///
-/// **The same press the accent fills got in item 27, in the one place they
-/// could not reach** (docs/TODO.md item 28). A row is a control on five screens
-/// in this app, and on all of them the press was whatever `.buttonStyle(.plain)`
-/// happens to do: the label composited at 75% over what is behind it, which
-/// this repo has measured elsewhere and which nobody noticed was there. No
-/// movement, and a change of *text* rather than of the row. That is item 26's
-/// shape exactly — a pressed state that exists and is not seen means the
-/// mechanism is wrong rather than the number — and item 27 answered it for the
-/// fills with a scale. This is the same answer in a row's own colour.
+/// **A row is a control on five screens** and until item 28 its whole press was
+/// whatever `.buttonStyle(.plain)` does — the label composited at 75% over what
+/// is behind it, which nobody noticed was there. Item 28 replaced that with a
+/// wash and a scale drawn *here*, inside the button, and item 32 moved the
+/// drawing out to the cell: see `rowPress(rest:)`, which is where the press now
+/// lives and where the argument for splitting them is. What is left in the
+/// style is the two things that really do belong to the button.
 ///
-/// **Both halves, and neither on its own.** The fill is `Color.rowPressed`,
-/// which is what iOS presses its own rows to; the movement is
-/// `AccentFillPress`, the app's existing 2pt travel, read from the same place
-/// the pill and the discs read it. So a row and a button go down by the same
-/// distance in the same 0.12s curve, which is what "as unmistakable as a
-/// button's, and the same everywhere" has to mean if it is to survive the next
-/// screen someone adds.
-///
-/// **Reduce Motion is asked once, by `AccentFillPress.scale(for:reduceMotion:)`
-/// and not again here.** That gate already returns 1 for the setting, so a row
-/// under it recolours and does not move — item 27's decision, reused rather
-/// than re-argued, and the reason this type has no accessibility environment of
-/// its own to get out of step. Checked as a counterfactual on one binary rather
-/// than by reading the key back: holding a home card with the setting off moves
-/// the total's right edge from 961 to 955 device pixels at 3x, and with it on
-/// the same press leaves it at 961 while still painting `#3A3A3C` behind the
-/// row.
-///
-/// **The haptic comes with it, and its open question comes with that.**
+/// **The haptic is one of them, and its open question comes with it.**
 /// `pressHaptic` was on three small, deliberate targets — a 30pt disc, a 44pt
-/// `+`, the Log pill — and is now on every row of five screens, which is most
-/// of the app's touch area. A flick does not fire it: the list delays the
-/// touch, and a drag started with no pause leaves a settings row at `#1C1C1E`
-/// through the whole gesture. A finger that *rests* does — measured here, a
-/// stationary finger has the row at `#3A3A3C` within 0.3s, and dragging away
-/// after that cancels the tap but not the impact it already gave. That is
-/// exactly the "press called off" case item 27 recorded and could not judge in
-/// a simulator, on a much larger surface; item 17's device pass keeps the
-/// haptic or deletes it, and this is the strongest reason it might be deleted.
+/// `+`, the Log pill — and is on every row of five screens, which is most of
+/// the app's touch area. A flick does not fire it: the list delays the touch,
+/// and a drag started with no pause leaves a settings row at `#1C1C1E` through
+/// the whole gesture. A finger that *rests* does — a stationary finger has the
+/// row at `#3A3A3C` within 0.3s, and dragging away after that cancels the tap
+/// but not the impact it already gave. That is exactly the "press called off"
+/// case item 27 recorded and could not judge in a simulator, on a much larger
+/// surface; item 17's device pass keeps the haptic or deletes it, and this is
+/// the strongest reason it might be deleted.
 ///
-/// **The `visualEffect` is not free at rest, and the price is 14,485 pixels.**
-/// A row wearing this draws into its own layer whether or not it is pressed, and
-/// text rasterised in that layer lands fractionally differently: home at rest is
-/// pixel-identical to the build before item 28 with the `visualEffect` line
-/// deleted and differs in **14,485 of 3,162,132 pixels** with it — 0.46%, spread
-/// over the four cards' text, the widest single move being a card's total one
-/// point narrower on its leading edge with its trailing edge unmoved. Nothing in
-/// the layout changes and it is not visible at arm's length; it is written down
-/// because the next person to pixel-diff this screen will find it and should not
-/// have to work out where it came from. The alternative was a row press with no
-/// movement in it, which is half of what item 28 asked for.
-///
-/// **What it does not cost is the scroll**, and that was measured rather than
-/// argued, because this style is now on History and tracker detail where the
-/// row count is your whole history. A `CADisplayLink` in a temporary probe,
-/// eight scripted flings over a **3,200-row History** (8,000 entries) on an
-/// iPhone 17 Pro simulator, 960 frame intervals per run, against a build with
-/// only the `visualEffect` line deleted:
-///
-///     build              median  p95     >20ms          >33ms
-///     Debug, with        16.67   16.67   25, 27, 24     18, 18, 17
-///     Debug, without     16.67   16.67   20, 21, 24     12, 13, 14
-///     Release, with      16.67   16.67   20, 19         14, 12
-///     Release, without   16.67   16.67   20, 26         16, 16
-///
-/// The median and the p95 are a full 60fps frame in every run of both builds,
-/// which is the number that matters. The tails do not separate: Debug leans
-/// against the scale by about five frames in 960, Release leans the other way
-/// by about the same, so the honest reading is noise rather than a cost. The
-/// long frame both builds show — 250–280ms — is History's first build on that
-/// fixture and is the same with the line and without it.
-///
-/// **It drops `.plain`'s dimming of a *disabled* label, and that is a trap
-/// with six call sites now.** `.plain` composites a disabled button's whole
-/// label at about 0.5; no custom `ButtonStyle` does, so a `.row` button under
+/// **It drops `.plain`'s dimming of a *disabled* label, and that is a trap with
+/// six call sites.** `.plain` composites a disabled button's whole label at
+/// about 0.5; no custom `ButtonStyle` does, so a `.row` button under
 /// `.disabled(…)` draws at full contrast and reads as live. `RepeatRow` is the
 /// one that needs it and puts the opacity on by hand — the number and the
 /// pixels are in its own comment — and it needs it because item 26 shipped
@@ -107,39 +55,176 @@ extension Color {
 /// `AccentFillButtonStyle`, which after item 28 has no disable-able call site
 /// left; this is where it matters now.
 struct RowButtonStyle: ButtonStyle {
-    /// Read here and handed to `AccentFillPress`, which owns the answer — see
-    /// the type's doc. It is in this style rather than in the background below
-    /// because the scale is applied here.
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Where the press goes. Put there by `rowPress()` on the cell, which is
+    /// the view that draws it — see that modifier for why the state lives a
+    /// level up from the button instead of here.
+    @Environment(\.rowPress) private var press
 
     func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            // **44pt, so the target is one iOS would accept**, and it buys two
+            // rows one they did not have: a tracker detail row's label was
+            // 40pt and home's *Add Tracker* about 22. What it costs is height
+            // on those two — measured against a build with this one line
+            // deleted, detail's entry rows go **68pt to 74** and *Add Tracker*
+            // **51 to 55**, while every row that already had a 44pt control in
+            // it — home's cards, History, the Log again sheet, settings —
+            // stays at 52 to the point.
+            //
+            // It was also what made the old wash the same height on every
+            // screen. That reason has gone with the wash: what is drawn now is
+            // drawn on the cell, which is the same height by construction.
+            .frame(minHeight: 44)
+            // The one thing this style does with the press, other than hand it
+            // upward: the same feedback the accent fills get, with the same
+            // open question on it — see the note on this type about what it
+            // puts on item 17's list.
+            .pressHaptic(configuration.isPressed)
+            // **`onChange`, because a `ButtonStyle` cannot write state while it
+            // is being asked what to draw.** Setting `press` inside `makeBody`
+            // is a mutation during a view update, which SwiftUI warns about and
+            // is entitled to drop. This runs after the update instead, and what
+            // it costs is measured in `rowPress()`.
+            .onChange(of: configuration.isPressed) { _, isPressed in
+                press?.wrappedValue = isPressed
+            }
+    }
+}
+
+extension EnvironmentValues {
+    /// How a row's button tells the cell it is in that it has been pressed.
+    ///
+    /// A `ButtonStyle` sees only its own label, and on three of the five
+    /// screens that is not the whole row: home's card keeps its `+` outside the
+    /// button, History its repeat disc, settings its drag handle. A press drawn
+    /// inside the button therefore stopped short of them — **282pt of a
+    /// settings card's 366**, measured, with a hard edge where the rest of the
+    /// row began. That is the wash item 32 was reported for, and no amount of
+    /// styling inside the button reaches past it.
+    ///
+    /// So the state is owned by `rowPress()`, which is applied to the cell, and
+    /// handed *down* to the style through the environment. Down is the only
+    /// direction SwiftUI offers here: a preference would go up but arrives a
+    /// render later, and a `@State` on every call site is six copies of one
+    /// boolean, two of which have nowhere to live because their rows are built
+    /// by a method rather than a view.
+    @Entry var rowPress: Binding<Bool>? = nil
+}
+
+extension View {
+
+    /// Draw this whole list row going down when the button in it is pressed.
+    ///
+    /// Applied to the cell — the `HStack`, or whatever the row's outermost view
+    /// is — and paired with `.buttonStyle(.row)` on the button inside it.
+    /// Without it a `.row` button still takes its 44pt target and its haptic
+    /// and draws no press at all, which is the one failure mode of splitting
+    /// these in two, and is why every call site names them together.
+    ///
+    /// - Parameter rest: what the row draws when it is *not* pressed. This
+    ///   modifier owns `listRowBackground`, because filling the cell is the
+    ///   whole point of it, and a row cannot have two — so the two rows in the
+    ///   app that already spent theirs hand it over here instead: home's *Add
+    ///   Tracker*, which is deliberately not a card, and a History row, which
+    ///   fades an accent wash behind itself after a jump (docs/TODO.md item
+    ///   25). The default is the colour an inset-grouped list draws a row in,
+    ///   named rather than inherited for the reason above.
+    func rowPress(rest: some View = Color(.secondarySystemGroupedBackground)) -> some View {
+        modifier(RowPress(rest: rest))
+    }
+}
+
+/// A row going down under a thumb.
+///
+/// **The whole cell, not a box behind the text** (docs/TODO.md item 32). Item
+/// 28 drew a `Color.rowPressed` wash behind the *button's label*, and that was
+/// reported back as reading like a text field — a lighter rounded rectangle
+/// appearing around a tracker's name is the shape of a thing you type into, and
+/// it stopped dead where the button did, 282pt into a 366pt settings card. What
+/// it is now is the row's own background, which the list fills edge to edge and
+/// clips to the card exactly as it does for a `NavigationLink` it presses
+/// itself. On top of that the cell takes `AccentFillPress`'s 2pt travel, so a
+/// card, a pill and a disc all go down by the same distance.
+///
+/// **It applies on the frame the touch lands** —
+/// `AccentFillPress.animation(pressed:)` carries that argument — and on a row
+/// that is not enough on its own, which is what `AccentFillPress.minimumHold`
+/// is for. Between them, a **40ms** synthesized tap on a settings row now draws
+/// the full pressed colour on the first frame after the touch, holds it, and
+/// fades out over seven frames; before this item the same tap, and a 150ms one,
+/// drew nothing at all. The band, the method and the rest of the numbers are on
+/// `minimumHold`.
+///
+/// **Reduce Motion takes the movement and leaves the colour.** The gate is
+/// `AccentFillPress.scale(for:reduceMotion:)`, the same one the fills ask.
+/// Checked both ways on one binary rather than by reading the key back, on a
+/// held settings row at 3x: with the setting off the row's name starts at
+/// x = 99px at rest and x = 105 held — 6 device pixels, which is the 2pt travel
+/// — and with it on the name is at x = 99 in both while the row still fills
+/// with `#3A3A3C`.
+///
+/// **What owning the row's background costs is two units of blue on one
+/// screen.** At rest this draws `rest`, whose default is
+/// `Color(.secondarySystemGroupedBackground)` rather than whatever the list
+/// would have drawn, and on four of the five screens that is the same byte:
+/// home's cards stay `#1C1C1E`. Inside the Log again sheet the list drew
+/// `#2C2C2C` and this draws `#2C2C2E`. It is a change and it is written down
+/// for that reason; it is not a visible one.
+///
+/// **The `visualEffect` does not cost the scroll**, which was measured for item
+/// 28 when the effect was on the button's label rather than on the cell, and is
+/// the reason it is on rows at all in a screen whose row count is your whole
+/// history. A `CADisplayLink` in a temporary probe, eight scripted flings over
+/// a **3,200-row History** (8,000 entries) on an iPhone 17 Pro simulator, 960
+/// frame intervals per run, against a build with only the `visualEffect` line
+/// deleted:
+///
+///     build              median  p95     >20ms          >33ms
+///     Debug, with        16.67   16.67   25, 27, 24     18, 18, 17
+///     Debug, without     16.67   16.67   20, 21, 24     12, 13, 14
+///     Release, with      16.67   16.67   20, 19         14, 12
+///     Release, without   16.67   16.67   20, 26         16, 16
+///
+/// The median and the p95 are a full 60fps frame in every run of both builds.
+/// The tails do not separate: Debug leans against the scale by about five
+/// frames in 960, Release leans the other way by about the same, so the honest
+/// reading is noise rather than a cost. That run is item 28's and has not been
+/// repeated for this placement.
+private struct RowPress<Rest: View>: ViewModifier {
+    @State private var isPressed = false
+    /// When the press arrived, so the release can wait out
+    /// `AccentFillPress.minimumHold`.
+    @State private var since: ContinuousClock.Instant?
+    /// Which press a pending release belongs to. A release that wakes up to
+    /// find the row pressed again is a release for the press before this one,
+    /// and letting it through would blink the row out under a finger that never
+    /// lifted.
+    @State private var generation = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// See `rowPress(rest:)`.
+    let rest: Rest
+
+    func body(content: Content) -> some View {
         // Out of the environment once, into the `@Sendable` closure below, for
         // the reason `AccentFilled` does the same: reaching into main-actor
         // state from inside it is a warning in a target built with strict
         // concurrency complete.
-        let isPressed = configuration.isPressed
+        let isPressed = isPressed
         let reduceMotion = reduceMotion
-        return configuration.label
-            // **44pt, so the wash is the same height everywhere and the
-            // target is one iOS would accept.** The background below is drawn
-            // behind the label, and a label is as tall as its content: without
-            // this the same press painted 26pt on a home card, 38 on a History
-            // row and 44 on a settings row, all inside 52pt rows — a pill
-            // around the words on one screen and a pressed row on another,
-            // which is the disagreement item 28 exists to remove. Measured
-            // mid-press on all three before it went in.
-            //
-            // **It also buys two rows a target they did not have**, which is
-            // the better half of the reason: a tracker detail row's label was
-            // 40pt and home's *Add Tracker* about 22, both under the 44 Apple
-            // asks for. What it costs is height on the two rows that were
-            // short — measured against a build with this one line deleted,
-            // detail's entry rows go **68pt to 74** and *Add Tracker* **51 to
-            // 55**, while every row that already had a 44pt control in it —
-            // home's cards, History, the Log again sheet, settings — stays at
-            // 52 to the point.
-            .frame(minHeight: 44)
-            .background(RowPressBackground(isPressed: isPressed))
+        return content
+            .listRowBackground(
+                ZStack {
+                    rest
+                    // An opacity rather than a choice between two backgrounds,
+                    // as `SettingsView`'s drop target does one file over: a
+                    // fill at zero draws exactly what `.clear` did, and there
+                    // is no branch for the release to interpolate across —
+                    // which matters here, because the release is the only half
+                    // of the press that animates.
+                    Color.rowPressed.opacity(isPressed ? 1 : 0)
+                }
+            )
             // `visualEffect`, not `.scaleEffect`, and for the reason the fills
             // use it: the scale is worked out from the size the row laid out
             // at, and hit testing keeps the unscaled geometry — a thumb resting
@@ -152,65 +237,51 @@ struct RowButtonStyle: ButtonStyle {
                         : 1
                 )
             }
-            .animation(AccentFillPress.animation, value: isPressed)
-            // Same feedback the accent fills get, and it takes the same open
-            // question with it — see the note on this type about what it puts
-            // on item 17's list.
-            .pressHaptic(isPressed)
+            .animation(AccentFillPress.animation(pressed: isPressed), value: isPressed)
+            // Not `$isPressed`: what the button writes goes through the hold
+            // below, which is what makes a fast tap visible at all.
+            //
+            // The setter is spelled as a closure rather than as `set: press`,
+            // which is the same thing and crashes the compiler: Swift 6.2.4
+            // takes the method reference into IRGen and aborts in
+            // `SyncCallEmission::setArgs`. Left written out with this note so
+            // that tidying it back is a decision rather than a surprise.
+            .environment(\.rowPress, Binding(get: { self.isPressed }, set: { self.press($0) }))
     }
-}
 
-/// The wash behind a pressed row.
-///
-/// **Drawn behind the row's content rather than as the row's background**, and
-/// that is a real difference: `listRowBackground` would fill the cell edge to
-/// edge the way iOS's own does, but it is applied *outside* the button, so the
-/// press state would have to be lifted into a `@State` on every row on five
-/// screens — including two that build their rows in methods on the enclosing
-/// view and have nowhere to put one. One `ButtonStyle` that every call site
-/// names is the thing that keeps these five rows agreeing, which is the whole
-/// point of the item; a highlight inset by the row's own margins is not worth
-/// five copies of a boolean.
-///
-/// **On three of the five screens it therefore stops short of the trailing
-/// edge, and that is the honest thing about it.** A History row, a home card
-/// and an *active* settings row are each an `HStack` whose second member is not
-/// part of the button — a repeat disc, a `+`, a drag handle — so the wash ends
-/// with a hard edge where that 44pt box and the 8pt gap begin. Measured on a
-/// pressed settings row: **282pt of the card's 366**, stopping 66pt short.
-/// iOS's own `NavigationLink`, which is where this colour was sampled from,
-/// fills the whole cell. What does span is the two rows that really are one
-/// button: an archived settings row, which has no handle, and a Log again row.
-///
-/// Left as it is, on the argument that a row with a second control in it is two
-/// controls and washing the half you hit says which one you got; the
-/// alternative is the `@State` above. Written down because the count was
-/// **wrong the first time — "two of five", missing settings' own handle** —
-/// and because a reader who has only seen the Log again sheet would take the
-/// gap for a bug.
-///
-/// The corner radius is the one settings already draws a full-row wash at —
-/// `SettingsView`'s drop target has tinted the row it would land on at
-/// `.rect(cornerRadius: 8)` since the reorder gesture shipped, so the app has
-/// an answer for "a rounded fill behind a row" and this is it rather than a
-/// second one.
-private struct RowPressBackground: View {
-    let isPressed: Bool
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(Color.rowPressed)
-            // An opacity rather than a choice between two fills, as the drop
-            // target does one file over: a fill at zero draws exactly what
-            // `.clear` did, and there is no branch for the animation to
-            // interpolate across.
-            .opacity(isPressed ? 1 : 0)
+    /// Take the button's press, and keep it on screen long enough to be seen.
+    ///
+    /// The press itself is immediate — this never delays one arriving. What it
+    /// delays is the *release*, and only when the touch was shorter than
+    /// `AccentFillPress.minimumHold`; the argument and the measurement are
+    /// there. A tap that outlasts the floor takes the `else` branch and
+    /// releases on the frame the finger lifts, which is every press a thumb
+    /// rests through.
+    private func press(_ isPressed: Bool) {
+        guard isPressed else {
+            let held = since.map { ContinuousClock.now - $0 } ?? .seconds(1)
+            guard held < AccentFillPress.minimumHold else {
+                self.isPressed = false
+                return
+            }
+            let generation = generation
+            Task { @MainActor in
+                try? await Task.sleep(for: AccentFillPress.minimumHold - held)
+                guard generation == self.generation else { return }
+                self.isPressed = false
+            }
+            return
+        }
+        generation += 1
+        since = .now
+        self.isPressed = true
     }
 }
 
 extension ButtonStyle where Self == RowButtonStyle {
 
     /// See `RowButtonStyle`. This is what a list row that does something wears,
-    /// in place of `.buttonStyle(.plain)`.
+    /// in place of `.buttonStyle(.plain)` — together with `rowPress()` on the
+    /// cell around it, which is what draws the press.
     static var row: RowButtonStyle { RowButtonStyle() }
 }

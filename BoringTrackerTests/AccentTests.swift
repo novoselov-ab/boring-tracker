@@ -142,6 +142,17 @@ struct AccentFillPressTests {
         }
     }
 
+    @Test("Going down is not animated and coming back up is")
+    func onlyTheReleaseAnimates() {
+        // docs/TODO.md item 32. Two earlier items changed *what* a press draws
+        // and neither changed when it draws it, which is what a tap could
+        // actually see: a curve that took 66ms to settle was still arriving
+        // when a fast tap had already ended. The asymmetry is the fix, and it
+        // is one function so a row and a fill cannot drift apart on it.
+        #expect(AccentFillPress.animation(pressed: true) == nil)
+        #expect(AccentFillPress.animation(pressed: false) == AccentFillPress.release)
+    }
+
     @Test("A fill too short to give up 4pt does not turn inside out")
     func fillShorterThanItsOwnTravel() {
         // `1 - 2 * travel / longest` is zero at 4pt and negative below it, and

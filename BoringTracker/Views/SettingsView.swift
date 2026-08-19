@@ -60,6 +60,14 @@ struct SettingsView: View {
                             // 74pt. See `EdgeInsets.listRow`, which carries the
                             // probe that isolated it.
                             .listRowInsets(.listRow)
+                            // Out here for exactly the same reason, and it cost
+                            // the same hour a second time: `rowPress()` sets
+                            // the row's background, and under the reader that
+                            // is dropped as silently as the insets were. The
+                            // press still scaled, so the row looked like it had
+                            // one — 3,642 pixels of text moving and no wash
+                            // (docs/TODO.md item 32).
+                            .rowPress()
                     }
                 } header: {
                     if let group = run.first?.group, !group.isEmpty {
@@ -191,6 +199,7 @@ struct SettingsView: View {
 
     private func row(_ tracker: Tracker) -> some View {
         rowButton(tracker)
+            .rowPress()
             .swipeActions(edge: .trailing) {
                 archiveButton(tracker)
             }
