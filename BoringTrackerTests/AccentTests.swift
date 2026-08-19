@@ -86,8 +86,8 @@ struct AccentTests {
 /// The other half of a press: how far the fill goes down (docs/TODO.md item 27).
 ///
 /// **The rule is worth pinning because it is a rule and not a ratio.** One
-/// scale cannot serve a 292pt pill and a 30pt disc — 0.97 moves the pill's ends
-/// 4.4pt and the disc's 0.45, and the disc is half of what item 27 was reported
+/// scale cannot serve a 312pt pill and a 30pt disc — 0.97 moves the pill's ends
+/// 4.7pt and the disc's 0.45, and the disc is half of what item 27 was reported
 /// for. So the constant is the travel and the scale is derived, and a later
 /// edit that "simplifies" it back to a fixed ratio breaks a control nobody is
 /// looking at while looking at another one.
@@ -143,7 +143,7 @@ struct AccentFillPressTests {
         // hold is that the gate exists at all: it shipped without one, and the
         // held Log pill measured the same 288x49.3pt with the setting on as
         // with it off.
-        for size in [CGSize(width: 292, height: 50), CGSize(width: 30, height: 30)] {
+        for size in [CGSize(width: 312, height: 50), CGSize(width: 30, height: 30)] {
             #expect(AccentFillPress.scale(for: size, reduceMotion: true) == 1)
             #expect(AccentFillPress.scale(for: size, reduceMotion: false) < 1)
         }

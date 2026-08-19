@@ -318,21 +318,27 @@ private struct AccentFilled<S: Shape>: ViewModifier {
 /// colour alone was tried and missed, not that Apple does it.
 ///
 /// **The travel is in points, not in a ratio, because the fills are not the
-/// same size.** One ratio cannot serve both: 0.97 takes 4.4pt off each end of
-/// the 292pt Log pill and 0.45pt off a 30pt disc, which is nothing — and the
+/// same size.** One ratio cannot serve both: 0.97 takes 4.7pt off each end of
+/// the 312pt Log pill and 0.45pt off a 30pt disc, which is nothing — and the
 /// disc is half of what item 27 was reported for. So the constant is how far
 /// the ends of the fill's longest edge move, and the scale is worked out from
 /// the size the fill actually laid out at:
 ///
 ///     control                  size (pt)   scale    each end moves
-///     Log / home bar           292 x 50    0.9863   2.00pt
+///     Log / home bar           312 x 50    0.9872   2.00pt
 ///     Log / log sheet          52.7 x 34   0.9241   2.00pt
 ///     Add Tracker (small)      81.7 x 28   0.9510   2.00pt
 ///     Undo                     ~60 x 32    0.9333   2.00pt
-///     a disc                   30 x 30     0.8667   2.00pt
+///     Log again / home bar     50 x 50     0.9200   2.00pt
+///     a disc on a row          30 x 30     0.8667   2.00pt
+///
+/// The pill and the bar's disc are the sizes item 33 gave them; the pill was
+/// 292 x 50 at 0.9863 and the disc was not in this table at all, and the table
+/// stayed as it was for a commit after the app had moved, which is what a
+/// derived scale hides.
 ///
 /// The short edge moves less, which is the one thing a uniform scale cannot
-/// help — a 292x50 pill that took 2pt off its height as well would be doing
+/// help — a 312x50 pill that took 2pt off its height as well would be doing
 /// something the eye reads as a squash rather than a press.
 enum AccentFillPress {
 
@@ -512,7 +518,9 @@ struct AccentFillButtonStyle: ButtonStyle {
 /// 52.67×34.33pt for the log sheet's *Log* at the default size. This paints
 /// 330.00×50.00 and 52.67×34.00 — the same width to the pixel in both, and a
 /// third of a point shorter, which is iOS laying its own capsule out on a
-/// fractional height. Outside the fills, home is byte-identical apart from a
+/// fractional height. **Those two widths are that device and that bar layout**,
+/// taken at item 26; the bar's own arithmetic changed at item 33 and the height
+/// and the padding are what this style decides in any case. Outside the fills, home is byte-identical apart from a
 /// single row where the bar's top edge follows that third of a point.
 ///
 /// The 12pt horizontal padding is that measurement and not a round number:
@@ -544,11 +552,12 @@ struct AccentPillButtonStyle: ButtonStyle {
             //
             // Checked rather than argued, because that is the failure this
             // comment exists to prevent. A synthesized press at **x = 17pt** —
-            // inside the pill's resting 16.0–307.9pt and outside the
-            // 18.0–306.0pt it shrinks to — engages, holds pressed through the
-            // shrink (288.0x49.3pt at 18.0, `#07AA9A`), and fires the action on
-            // release. A thumb on the edge does not fall out of a target that
-            // moved under it.
+            // inside the pill's resting 16.0–328.0pt and outside the
+            // 18.0–326.0pt it shrinks to — engages, holds pressed through the
+            // shrink (308.0x49.3pt at 18.0, `#07AA9A`), and fires the action on
+            // release: the log sheet opens. A thumb on the edge does not fall
+            // out of a target that moved under it. Re-taken at the 312pt pill
+            // item 33 left; it was first taken at 292 and read 307.9 and 306.0.
             .contentShape(.capsule)
             .environment(\.accentFillPressed, configuration.isPressed)
             .pressHaptic(configuration.isPressed)

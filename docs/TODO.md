@@ -444,8 +444,24 @@ settled from the accessibility tree.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
-**Pressed states are done and are not waiting on a device.** They sat here
-across four sessions as uncapturable — pressing a control in the simulator
+**Two questions about a press that only a thumb can answer.** Neither is about
+whether a press draws — item 32 settled that at 60fps, on taps down to 40ms —
+and both are about how one *feels*.
+
+- [ ] **Does the haptic help?** `.impact(.light)` on the press edge is on every
+      row of five screens now, which is most of the app's touch area. A
+      simulator logs "Haptics: unsupported" and nothing reaches CoreHaptics, so
+      this pass keeps it or deletes it.
+- [ ] **What does a press called off look like?** SwiftUI reports a
+      cancellation and a release identically, so a finger that rests until the
+      list hands the touch over and then flicks within item 32's 0.1s floor
+      leaves the row washed while the list is already scrolling. Narrow,
+      cosmetic, and the fix is a second gesture watching for movement, which
+      `RowPress.swift` has twice decided not to add. Look at it on a phone
+      before deciding it is worth machinery.
+
+**Pressed states are otherwise done and are not waiting on a device.** They sat
+here across four sessions as uncapturable — pressing a control in the simulator
 needs synthesized clicks, which need the accessibility tree, which a locked
 macOS console takes away. Item 26 found the console unlocked, held every
 accent fill down and photographed it, and the answer this item recorded as
@@ -1483,7 +1499,8 @@ exercise, done for the other appearance.
 
 Every pressed state applied on the frame the touch lands, and only the release
 drawn. A row presses as a whole cell rather than a box behind its text, and
-holds long enough that a list's delayed touch still shows one. `b9c0695`
+holds long enough that a list's delayed touch still shows one. `b9c0695`,
+`5b4cfab`
 
 ## 33. Use pairing 1 for the bottom bar — done
 
