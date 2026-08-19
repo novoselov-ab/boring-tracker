@@ -16,6 +16,16 @@ struct TrackerChart: View {
     @State private var average: [ChartPoint] = []
     @State private var scrubbed: Date?
 
+    /// The biggest the axis labels are allowed to get. See the chart's frame
+    /// below.
+    ///
+    /// `.large` is the system's default size — the one the 180pt frame was
+    /// chosen against and the one the screenshots in every other item on this
+    /// screen were taken at — so a reader past it sees the chart exactly as the
+    /// default reader does, and everything around it, including the readout
+    /// above and the picker over it, goes on scaling.
+    private static let labelCeiling = DynamicTypeSize.large
+
     private struct Key: Equatable {
         var range: ChartRange
         var revision: UInt64
@@ -40,6 +50,35 @@ struct TrackerChart: View {
 
             chart
                 .frame(height: 180)
+                // **The labels stop growing where the box they are in stops
+                // growing.** The plot is a fixed 180pt frame and its axis
+                // labels were the one thing inside it that scaled, so Dynamic
+                // Type pushed them into each other and into the plot: at AX1
+                // the last x label was already `A…`, and at AX5 all four read
+                // `A…`, `A…`, `A…`, `…` — four identical stubs where the dates
+                // were — while `1,000 750 500 250 0` touched each other and
+                // overlapped the bars. Measured on the `many` fixture,
+                // Calories, Week; the same at every accessibility size on both
+                // kinds of tracker.
+                //
+                // This is the answer the app has already given twice, both
+                // times for something drawn inside a frame that does not
+                // scale: the log sheet's field chevrons are `.system(size:
+                // 17)` and `RepeatDisc`'s glyph is `size: 14`. A ceiling
+                // rather than a fixed size, because the small end of the
+                // slider has nothing wrong with it — below `.large` the labels
+                // are free to shrink with everything else, and this only stops
+                // them growing past the size the frame was drawn for.
+                //
+                // **Scaling the frame was built and photographed instead, and
+                // it does not fix this**: 180pt to 320 at AX5 gives the plot
+                // more height and the x axis no more *width*, so the four
+                // dates are still `A…` — the axis is short of room across, and
+                // that is not something a taller box gives back. It also
+                // spends a third of the screen on a chart on the one screen
+                // whose rows are what you came for. The commit carries both
+                // sets of shots.
+                .dynamicTypeSize(...Self.labelCeiling)
                 .chartXSelection(value: $scrubbed)
         }
         .onChange(of: Key(range: range, revision: store.revision, today: store.today,
