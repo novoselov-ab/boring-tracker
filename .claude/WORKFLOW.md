@@ -33,6 +33,26 @@ A subject line with no body is not a finished commit here, however tidy the
 diff. And never claim a measurement, a tool or a test run that did not happen:
 see "Always check, not just read" below.
 
+### Every measured claim is a liability
+
+Commit bodies here carry the reasoning, and that has been worth it. But a
+sentence asserting a measurement is a promise someone has to check, and the
+evidence is now clear about the cost: across this project, **seven claims did
+not survive being checked** — an invented test target, a screenshot of the
+wrong app, a bisection whose minimal case never reproduced, a 14ms figure that
+measured 4–6, four numbers in one document, a chevron credited to the wrong
+modifier, and a computed answer that was wrong in the case it called
+impossible. One item needed five review rounds, and the loop kept converging on
+claims rather than on code.
+
+So: **write fewer measured claims, and only ones you actually measured.** State
+the number you took, say how, and leave the rest as ordinary prose. "This is
+faster" needs no defence; "this is 41ms" does. Where a claim matters but you
+could not verify it, say *unverified* — that is honest and costs nobody a
+round.
+
+The lever on this cost is writing fewer of them, not reviewing harder.
+
 ### A commit that decides is not a commit that does
 
 Say which one it is in the subject line. "Make teal a fill colour everywhere"
