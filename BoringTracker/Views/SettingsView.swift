@@ -263,9 +263,9 @@ struct SettingsView: View {
     /// which is most of its width, was dead. A row tappable in two narrow
     /// places is worse than one that is plainly not tappable: a miss teaches
     /// you the tap failed rather than that you aimed wrong. `contentShape` is
-    /// what fixes it, and the `minHeight` is what stops the target being only
-    /// as tall as one line of `.subheadline` on the rows with no drag handle
-    /// beside them.
+    /// what fixes it. The height is `RowButtonStyle`'s: every row wearing
+    /// `.row` is at least 44pt, which is what stops the target being one line
+    /// of `.subheadline` tall on the rows with no drag handle beside them.
     ///
     /// `TrackerRowName` rather than this row's own fonts, and `spacing: 0` on
     /// the `HStack` rather than the default — an `HStack` puts its spacing on
@@ -282,7 +282,7 @@ struct SettingsView: View {
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(.rect)
         }
         .buttonStyle(.row)

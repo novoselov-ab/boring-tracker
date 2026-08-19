@@ -647,8 +647,11 @@ private struct HistoryRow: View {
         // that decides what a tap writes, and asking it twice per row on a list
         // as long as your history is a linear scan of the trackers per ask.
         let canRepeat = !store.repeatableEntries(of: item).isEmpty
-        // Two plain buttons with disjoint frames, the same shape a home card
-        // uses: tapping the row edits it, tapping the disc logs it again.
+        // Two buttons with disjoint frames, the same shape a home card uses:
+        // tapping the row edits it, tapping the disc logs it again. ("Two
+        // *plain* buttons" until item 28 — the left half is `.row` and the disc
+        // is `.accentFill`; what matters here was never the style but that they
+        // are two buttons and not one.)
         return HStack(spacing: 8) {
             Button(action: edit) {
                 // The time is on the identity line rather than beside the

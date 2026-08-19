@@ -1294,15 +1294,30 @@ state down as well would scale the disc twice. On History and home the disc is
 its own button inside a row that does something else, so those two keep
 `.accentFill` and are unchanged.
 
-**The wash covers half a row on two of the five screens**, and that is a design
-call rather than an oversight. A History row and a home card are two buttons in
-an `HStack`, so the highlight stops about 50pt short of the trailing edge where
-the disc's own 44pt box begins — where iOS's own `NavigationLink`, the row this
-colour was sampled from, fills the whole cell. Kept, on the argument that those
-rows really are two controls and washing the half you hit says which one you
-got. Filling the row instead means lifting the press state into a `@State` on
-every row of five screens, two of which build their rows in methods on the
-enclosing view.
+**The wash stops short of the trailing edge on three of the five screens**,
+and that is a design call rather than an oversight. A History row, a home card
+and an *active* settings row each pair the button with something that is not
+part of it — a repeat disc, a `+`, a drag handle — so the highlight ends where
+that 44pt box begins: measured on a pressed settings row, 282pt of the card's
+366, stopping 66pt short. iOS's own `NavigationLink`, the row this colour was
+sampled from, fills the whole cell. What does span is an archived settings row,
+which has no handle, and a Log again row. Kept, on the argument that a row with
+a second control in it is two controls and washing the half you hit says which
+one you got. Filling the row instead means lifting the press state into a
+`@State` on every row of five screens, two of which build their rows in methods
+on the enclosing view. (Written as "two of five" first, which missed settings'
+own handle — the fourth review round counted it.)
+
+**Every `.row` button is at least 44pt tall**, which is one line in the style
+and does two things. It makes the wash the same height on every screen — before
+it, the same press painted 26pt on a home card, 38 on a History row and 44 on a
+settings row, all inside 52pt rows, so one screen showed a pill around the words
+and another a pressed row. And it gives two rows a target they never had: a
+tracker detail row's label was 40pt and home's *Add Tracker* about 22, both under
+Apple's 44. Measured against a build with that one line deleted, it costs height
+only where the row was short — detail's entries **68pt to 74**, *Add Tracker*
+**51 to 55** — and every row that already held a 44pt control stays at 52 to the
+point.
 
 **The haptic now covers most of the app's touch area, and item 17 should weigh
 that.** `pressHaptic` was on three small deliberate targets and is now on every

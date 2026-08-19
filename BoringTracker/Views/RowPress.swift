@@ -96,6 +96,15 @@ extension Color {
 /// by about the same, so the honest reading is noise rather than a cost. The
 /// long frame both builds show — 250–280ms — is History's first build on that
 /// fixture and is the same with the line and without it.
+/// **It drops `.plain`'s dimming of a *disabled* label, and that is a trap
+/// with six call sites now.** `.plain` composites a disabled button's whole
+/// label at about 0.5; no custom `ButtonStyle` does, so a `.row` button under
+/// `.disabled(…)` draws at full contrast and reads as live. `RepeatRow` is the
+/// one that needs it and puts the opacity on by hand — the number and the
+/// pixels are in its own comment — and it needs it because item 26 shipped
+/// exactly this bug on exactly that row. The same caveat is on
+/// `AccentFillButtonStyle`, which after item 28 has no disable-able call site
+/// left; this is where it matters now.
 struct RowButtonStyle: ButtonStyle {
     /// Read here and handed to `AccentFillPress`, which owns the answer — see
     /// the type's doc. It is in this style rather than in the background below
@@ -110,6 +119,25 @@ struct RowButtonStyle: ButtonStyle {
         let isPressed = configuration.isPressed
         let reduceMotion = reduceMotion
         return configuration.label
+            // **44pt, so the wash is the same height everywhere and the
+            // target is one iOS would accept.** The background below is drawn
+            // behind the label, and a label is as tall as its content: without
+            // this the same press painted 26pt on a home card, 38 on a History
+            // row and 44 on a settings row, all inside 52pt rows — a pill
+            // around the words on one screen and a pressed row on another,
+            // which is the disagreement item 28 exists to remove. Measured
+            // mid-press on all three before it went in.
+            //
+            // **It also buys two rows a target they did not have**, which is
+            // the better half of the reason: a tracker detail row's label was
+            // 40pt and home's *Add Tracker* about 22, both under the 44 Apple
+            // asks for. What it costs is height on the two rows that were
+            // short — measured against a build with this one line deleted,
+            // detail's entry rows go **68pt to 74** and *Add Tracker* **51 to
+            // 55**, while every row that already had a 44pt control in it —
+            // home's cards, History, the Log again sheet, settings — stays at
+            // 52 to the point.
+            .frame(minHeight: 44)
             .background(RowPressBackground(isPressed: isPressed))
             // `visualEffect`, not `.scaleEffect`, and for the reason the fills
             // use it: the scale is worked out from the size the row laid out
@@ -143,17 +171,22 @@ struct RowButtonStyle: ButtonStyle {
 /// point of the item; a highlight inset by the row's own margins is not worth
 /// five copies of a boolean.
 ///
-/// **On two of the five screens it therefore covers half the row, and that is
-/// the honest thing about it.** A History row and a home card are an `HStack`
-/// of *two* buttons — the part that opens something, and a disc or a `+` that
-/// writes — so the wash stops with a hard edge about 50pt before the row's
-/// trailing edge, where the second button's 44pt box and the 8pt gap begin.
+/// **On three of the five screens it therefore stops short of the trailing
+/// edge, and that is the honest thing about it.** A History row, a home card
+/// and an *active* settings row are each an `HStack` whose second member is not
+/// part of the button — a repeat disc, a `+`, a drag handle — so the wash ends
+/// with a hard edge where that 44pt box and the 8pt gap begin. Measured on a
+/// pressed settings row: **282pt of the card's 366**, stopping 66pt short.
 /// iOS's own `NavigationLink`, which is where this colour was sampled from,
-/// fills the whole cell. Left as it is on the argument that those rows really
-/// are two controls and washing the half you hit is what says which one you
-/// got; the alternative is the `@State` above. It is written down because a
-/// reader who has only seen settings or the Log again sheet — where the row is
-/// one button and the wash does span it — would take it for a bug.
+/// fills the whole cell. What does span is the two rows that really are one
+/// button: an archived settings row, which has no handle, and a Log again row.
+///
+/// Left as it is, on the argument that a row with a second control in it is two
+/// controls and washing the half you hit says which one you got; the
+/// alternative is the `@State` above. Written down because the count was
+/// **wrong the first time — "two of five", missing settings' own handle** —
+/// and because a reader who has only seen the Log again sheet would take the
+/// gap for a bug.
 ///
 /// The corner radius is the one settings already draws a full-row wash at —
 /// `SettingsView`'s drop target has tinted the row it would land on at

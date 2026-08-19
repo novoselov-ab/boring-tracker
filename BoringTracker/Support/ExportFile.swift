@@ -62,10 +62,14 @@ struct ExportFile: Transferable {
     /// runs short, which is not a schedule, and these are whole documents.
     ///
     /// **Anything thrown from here is reported by the share sheet, not by the
-    /// app.** The Files route puts the same failure through `show(_:action:)`
-    /// and names it; `ShareLink` has no error hook, so a full disk shows
-    /// whatever iOS shows. Worth knowing before treating a silent share as this
-    /// code doing nothing.
+    /// app.** `ShareLink` has no error hook, so a full disk shows whatever iOS
+    /// shows and this code says nothing — worth knowing before treating a
+    /// silent share as it doing nothing at all. The comment used to contrast
+    /// this with "the Files route", which put the same failure through
+    /// `show(_:action:)` and named it; `35a5fd0` deleted that route, and the
+    /// surviving `show(_:action:)` calls are open, import, delete and restore.
+    /// So there is no longer a door out of this app that reports an export
+    /// failure in the app's own words.
     func written() throws -> URL {
         let directory = URL.temporaryDirectory.appending(path: "share", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
