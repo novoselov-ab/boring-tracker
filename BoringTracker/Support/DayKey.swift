@@ -119,4 +119,48 @@ struct DayKey: Codable, Hashable, Comparable, Sendable {
     static func < (lhs: DayKey, rhs: DayKey) -> Bool {
         (lhs.year, lhs.month, lhs.day) < (rhs.year, rhs.month, rhs.day)
     }
+
+    /// The day in `days` closest to `target` — the same day if it is there.
+    ///
+    /// History's jump control asks this so that picking a date nothing was
+    /// logged on lands on the nearest day that has something, rather than on an
+    /// empty screen or on nothing at all (docs/TODO.md item 25). A five-year
+    /// history has holidays, missed days and a first day, so "there is no such
+    /// day" is the ordinary case rather than the awkward one: two thirteen-day
+    /// gaps and 3.5% of ordinary days missing, in the fixture docs/scale.md is
+    /// measured on.
+    ///
+    /// **Order-independent, and it does not convert 1,700 days to dates.** The
+    /// obvious version sorts or scans with a distance per candidate, which is a
+    /// `DateComponents` round trip apiece. Comparing the keys themselves finds
+    /// the closest day on each side of the target in one pass, and only those
+    /// two are converted — everything else is three integers against three
+    /// integers.
+    ///
+    /// **The newer day wins a tie**, and only a tie: a target exactly between
+    /// two days lands on the one above it. The list reads newest first, so
+    /// landing above puts the other candidate below the fold in reading order
+    /// rather than off the top of the screen.
+    ///
+    /// The distance is whole calendar days from the calendar, not seconds:
+    /// subtracting dates gets a DST day wrong by an hour, which is only ever
+    /// visible on a tie, but a tie is precisely what this has to decide.
+    static func nearest(to target: DayKey, in days: [DayKey], calendar: Calendar) -> DayKey? {
+        var above: DayKey?
+        var below: DayKey?
+        for day in days {
+            if day >= target { above = above.map { min($0, day) } ?? day }
+            if day <= target { below = below.map { max($0, day) } ?? day }
+        }
+        guard let above else { return below }
+        guard let below else { return above }
+        let base = target.startOfDay(calendar: calendar)
+        let up = calendar.dateComponents(
+            [.day], from: base, to: above.startOfDay(calendar: calendar)
+        ).day ?? .max
+        let down = calendar.dateComponents(
+            [.day], from: below.startOfDay(calendar: calendar), to: base
+        ).day ?? .max
+        return up <= down ? above : below
+    }
 }

@@ -882,4 +882,125 @@ struct HistoryTests {
         #expect(items.filter { $0.matches("food") }.isEmpty)
         #expect(items.filter { $0.matches("rice") }.map(\.displayName) == ["chicken rice"])
     }
+
+    // MARK: - Jumping to a date (docs/TODO.md item 25)
+
+    /// The days History would draw, newest first, for a store built from
+    /// `days` — so these tests jump around the same list the screen does rather
+    /// than around an array written out by hand.
+    private func historyDays(_ days: [DayKey], calendar: Calendar = calendar("UTC")) -> [DayKey] {
+        let tracker = Tracker(name: "Calories")
+        let entries = days.map {
+            Entry(trackerID: tracker.id, value: 1,
+                  date: $0.startOfDay(calendar: calendar).addingTimeInterval(12 * 3600))
+        }
+        let store = Store(
+            document: StoreDocument(trackers: [tracker], entries: entries),
+            file: StoreFile(directory: URL.temporaryDirectory.appending(path: "jump-\(UUID())")),
+            calendar: calendar,
+            saveWindow: .seconds(60)
+        )
+        var seen: [DayKey] = []
+        for item in store.historyItems where !seen.contains(store.dayKey(item.date)) {
+            seen.append(store.dayKey(item.date))
+        }
+        return seen
+    }
+
+    @Test("A day that has something is jumped to exactly")
+    func jumpLandsOnTheDayItself() {
+        let days = historyDays([DayKey(year: 2026, month: 3, day: 14),
+                                DayKey(year: 2026, month: 3, day: 15),
+                                DayKey(year: 2026, month: 3, day: 20)])
+        let target = DayKey(year: 2026, month: 3, day: 15)
+
+        #expect(DayKey.nearest(to: target, in: days, calendar: calendar("UTC")) == target)
+    }
+
+    @Test("A day with nothing logged lands on the nearest day that has something")
+    func jumpLandsOnTheNearestDay() {
+        // A thirteen-day hole, the shape a holiday leaves in a real history.
+        let days = historyDays([DayKey(year: 2026, month: 3, day: 1),
+                                DayKey(year: 2026, month: 3, day: 14)])
+        let utc = calendar("UTC")
+
+        // Closer to the older side, and to the newer side, and past both ends —
+        // a date before the first day and after the last one must still land
+        // somewhere rather than nowhere.
+        #expect(DayKey.nearest(to: DayKey(year: 2026, month: 3, day: 4), in: days, calendar: utc)
+                == DayKey(year: 2026, month: 3, day: 1))
+        #expect(DayKey.nearest(to: DayKey(year: 2026, month: 3, day: 12), in: days, calendar: utc)
+                == DayKey(year: 2026, month: 3, day: 14))
+        #expect(DayKey.nearest(to: DayKey(year: 2020, month: 1, day: 1), in: days, calendar: utc)
+                == DayKey(year: 2026, month: 3, day: 1))
+        #expect(DayKey.nearest(to: DayKey(year: 2030, month: 1, day: 1), in: days, calendar: utc)
+                == DayKey(year: 2026, month: 3, day: 14))
+    }
+
+    @Test("A target exactly between two days lands on the newer one")
+    func jumpTieGoesToTheNewerDay() {
+        let days = historyDays([DayKey(year: 2026, month: 2, day: 28),
+                                DayKey(year: 2026, month: 3, day: 2)])
+
+        // Also a month boundary: the distance is calendar days, so 1 March is
+        // one day from each of these and not "two months apart".
+        #expect(DayKey.nearest(to: DayKey(year: 2026, month: 3, day: 1), in: days,
+                               calendar: calendar("UTC"))
+                == DayKey(year: 2026, month: 3, day: 2))
+    }
+
+    @Test("A tie across a DST change still goes to the newer day")
+    func jumpTieAcrossDST() {
+        // 8 March 2026 is spring forward in New York, so that day is 23 hours
+        // long. **The short day has to be on the older side or the test proves
+        // nothing** — with it above the target both a seconds distance and a
+        // calendar-days one pick the same day, which is what the first version
+        // of this test did (found in review). Here the day below the target is
+        // an hour shorter than the day above it, so measuring in seconds makes
+        // the 8th look nearer and returns it, while whole calendar days make
+        // this the tie it is and the newer day wins.
+        let zone = calendar("America/New_York")
+        let days = historyDays([DayKey(year: 2026, month: 3, day: 8),
+                                DayKey(year: 2026, month: 3, day: 10)], calendar: zone)
+
+        #expect(DayKey.nearest(to: DayKey(year: 2026, month: 3, day: 9), in: days, calendar: zone)
+                == DayKey(year: 2026, month: 3, day: 10))
+    }
+
+    @Test("A store with one day, and one with none, both answer honestly")
+    func jumpAtTheEdges() {
+        let utc = calendar("UTC")
+        let one = historyDays([DayKey(year: 2026, month: 3, day: 14)])
+
+        // One day swallows every question, which is what makes the control
+        // useless rather than broken on a store that small — the screen only
+        // offers it when there is a list, and here there is one row.
+        #expect(DayKey.nearest(to: DayKey(year: 2001, month: 1, day: 1), in: one, calendar: utc)
+                == DayKey(year: 2026, month: 3, day: 14))
+        // Nothing logged at all: no day to go to, and the toolbar draws no
+        // control over the empty state.
+        #expect(DayKey.nearest(to: DayKey(year: 2026, month: 3, day: 14), in: historyDays([]),
+                               calendar: utc) == nil)
+    }
+
+    @Test("The answer does not depend on the order the days arrive in")
+    func jumpIsOrderIndependent() {
+        let utc = calendar("UTC")
+        let days = historyDays([DayKey(year: 2025, month: 12, day: 31),
+                                DayKey(year: 2026, month: 1, day: 4),
+                                DayKey(year: 2026, month: 3, day: 20)])
+        // One day after the older, three before the newer, and across the year
+        // boundary — so a wrong answer here shows up as a different day rather
+        // than as a tie that could have gone either way.
+        let target = DayKey(year: 2026, month: 1, day: 1)
+
+        // The screen hands them newest first. Nothing in here relies on that,
+        // and a caller that sorts the other way must not get a different day.
+        #expect(DayKey.nearest(to: target, in: days, calendar: utc)
+                == DayKey(year: 2025, month: 12, day: 31))
+        #expect(DayKey.nearest(to: target, in: days.reversed(), calendar: utc)
+                == DayKey(year: 2025, month: 12, day: 31))
+        #expect(DayKey.nearest(to: target, in: days.shuffled(), calendar: utc)
+                == DayKey(year: 2025, month: 12, day: 31))
+    }
 }

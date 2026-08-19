@@ -319,6 +319,73 @@ tap-to-edit as *gestures* — the Mac's screen was locked, so there was no way t
 touch the screen. The controls themselves were read off the accessibility tree
 on the first and last rows of the list, where they are still a button apiece.
 
+## What the jump control costs to open
+
+Item 25 put a date picker in History's nav bar, and the one thing this page is
+here to answer about it is whether it re-adds work to the open path the section
+fix cleared. **It does not: the difference is 2% to 8%, and close enough to the
+noise that three batches of it disagree about the size.**
+
+**A fourth fixture**, generated the way the ones above were — a throwaway tool
+compiled against the app's own `Model/` and `StoreCoding`, from this page's
+description of the shape, so it is independent of the three before it: **29,264
+entries, 16,050 logs, 1,737 days with something in them, 8,403,497 bytes**, ten
+trackers of which three are archived, 89 tombstones with 64 surviving
+compaction. Two thirteen-day holidays, 3.5% of ordinary days missed, a smoking
+habit that stops and a cat weighed monthly until she dies, exactly as above.
+
+**iPhone 17 Pro Max simulator**, iOS 26.3, Release, a device of this session's
+own so nothing else installing an app could overwrite the build mid-run. The
+probe is a `CADisplayLink` in the app and a launch argument that pushes History
+three seconds after launch — no clicker, no XCUITest, and no XCUITest overhead
+in the numbers.
+
+**The number below is blocked main thread in the 1.5s after the push**, summed
+over the frames longer than 40ms. That is the same thing as this page's "worst
+frame" except in the two runs out of 36 where one burst of work came out as two
+frames — 268ms with a 119ms frame behind it is 387ms of work drawn in two goes,
+not a fast run, and taking the maximum alone would have recorded it as the
+fastest run of its batch.
+
+**The harness agrees with this page.** The unchanged build's worst frame is
+**313–345ms** here for opening History, against the **321–327ms** recorded above
+on an iPhone 17 Pro — so it is measuring the same thing, on a fixture 1.6%
+smaller.
+
+Three batches, each alternating the two installs on one device, the fixture
+re-copied for every run:
+
+| | before | after | difference at the median |
+|---|---|---|---|
+| seven runs each | 313–379 (med 345) | 347–387 (med **374**) | +29 ms |
+| five runs each | 354–373 (med 359) | 378–396 (med **382**) | +23 ms |
+| four runs each | 353–370 (med 367) | 371–383 (med **373**) | +6 ms |
+
+Read the batches against each other rather than each on its own: the second sits
+some 15ms above the first for the *same builds* and the third higher again,
+because a long session of Xcode builds moves this machine by more than the
+change does. The effect is **6 to 29ms on a 360ms open — 2% to 8%**, and the
+batches disagree by more than half of it. That is the honest answer: it is real,
+it is small, and this environment cannot measure it to better than its own size.
+
+**It is not the day identities.** The obvious suspect was `.id(group.day)` on
+1,737 heading rows, since 1,733 `Section`s were what cost 1.4 seconds. A third
+build in the last batch — the reader, the toolbar and the control, with the
+`.id()` taken back off, so the jump does not work — comes in at **366–379 (med
+373)**, the same median as the finished build in the same batch. So what the
+screen pays for is the `ScrollViewReader` and the toolbar item, and per-day
+identity is free. That is the opposite of the section finding, and worth knowing
+before anyone optimises the wrong half.
+
+**Nothing is hidden by a jump, counted rather than assumed.** The same
+`UICollectionView` read as above, driven from inside the app: **1 section and
+17,788 items** — 16,050 rows + 1,737 day headings + one hint, exactly — before
+the jump, after jumping into a holiday gap, after jumping past the first day,
+and after coming back to today. It scrolls to item 0 and to the last item after
+all of it. **Landing is nearest-day, not exact**: 31 January 2023, in the middle
+of a thirteen-day hole, lands on the 25th; 9 December 2012, nine years before
+anything was logged, lands on the oldest day rather than doing nothing.
+
 ## Logging, saving, exporting, importing, merging
 
 | | Release | Debug |

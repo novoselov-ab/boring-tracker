@@ -904,7 +904,7 @@ that would be optimising the smaller half of a cost we chose on purpose.
 The honest argument the other way is readability, since the file is meant to be
 opened and read. But you read names and values; ids are noise at any length.
 
-## 25. Jump to a date in History
+## 25. Jump to a date in History — done
 
 At five years History is 1,733 days of rows in one section, and reaching last
 March means scrolling past everything since. Measured: 30 fast flings go 41 days
@@ -912,11 +912,11 @@ back, so the far end of five years is about 1,300 flings away and last spring is
 a few hundred (docs/scale.md). Photos solves this with a scrubber, and the
 pattern is right: a way to *go* somewhere, not a filter that hides the rest.
 
-- [ ] A control that jumps the list to a chosen date — a scrubber, a compact
+- [x] A control that jumps the list to a chosen date — a scrubber, a compact
       date picker, or a month index, whichever reads best at that length.
-- [ ] It **navigates, it does not filter.** Nothing leaves the list, and
+- [x] It **navigates, it does not filter.** Nothing leaves the list, and
       scrolling away from wherever you land keeps working in both directions.
-- [ ] Landing on a day with nothing logged goes to the nearest day that has
+- [x] Landing on a day with nothing logged goes to the nearest day that has
       something, rather than an empty screen or a dead control.
 
 **This was never the answer to History's 1.5s freeze**, and it must not be used
@@ -926,6 +926,98 @@ since been fixed as a freeze — it was one `Section` per day, not the number of
 rows (docs/scale.md) — so this item is now free to be judged on the only thing
 it was ever about: whether it helps you find something in a list that is
 genuinely long.
+
+**A calendar glyph in the nav bar, opening a graphical `DatePicker` in a
+popover.** One tap opens it, one tap on a day goes there, and the list is
+exactly the list it was — one section, every row, newest first. What makes it a
+jump rather than a filter is that it is a `ScrollViewReader` and nothing else:
+`scrollTo` the day's heading, no state kept afterwards.
+
+**The picker does not close itself, and that is the one thing the real control
+taught that no amount of reading would have.** Dismissing on the first change
+was the obvious design and it was written that way first. Then the month and
+year wheels behind the picker's title turned out to *be* the selection rather
+than a way to look around — so touching either jumped and closed the popover,
+and crossing five years, which is the whole point here, needs both wheels. That
+version made "March 2022" three visits to a control that shuts on contact.
+Leaving it open scrubs the list underneath instead: pick a year, it is there;
+spin the month, it is there too; close it the way every popover closes.
+
+**And opening it is a jump too, which is the review's finding and one rule
+rather than a patch: while the picker is up, the list is where the picker
+points.** The tap the control could not answer was the obvious one — a
+`DatePicker` reports *nothing* when you tap the day already selected, neither
+through `onChange` nor through a `Binding` written by hand, which was built and
+tapped to check rather than assumed. So scrolling by hand into 2022, opening the
+calendar and tapping today — the way back — did nothing at all. Asserting the
+position on the way in answers that before it is asked, and makes re-tapping the
+selected day correctly nothing to do: the list is already there.
+
+**Three were built at five years and compared on screen**, which is the half of
+this item that was a taste decision rather than a code one.
+
+- **A compact `DatePicker` in the nav bar** — the smallest amount of code, and
+  wrong: it draws "Aug 18, 2026" permanently beside the title, so the screen
+  reads as *showing* a date. That is precisely the thing this item says the
+  control must not become, arrived at by accident rather than by design.
+- **A month index** — a sheet listing the months that have something in them.
+  Honest, scales with type size, and the closest thing to "last March" as a
+  named place. It loses on the length it was meant to fix: 60 months at 15 to a
+  screen, and 8.5 at AX5, so it answers a scrolling list with four screenfuls
+  of scrolling, and seven at accessibility sizes.
+- **The calendar popover** — the same number of taps at any type size, because
+  the month/year wheel behind its title crosses five years without scrolling,
+  and the only one of the three that can name a *day*. Its grid does not scale
+  with Dynamic Type at all: identical at extra-small and at AX5, checked at five
+  sizes, which is what makes its one fixed 320-point frame safe — photographed
+  whole on a 360-point iPhone 13 mini, the narrowest phone iOS 18 runs on.
+
+**A scrubber was not built**, on arithmetic rather than on taste: 1,737 days
+down a screen 956 points tall is at best 1.8 days a point, so a fingertip
+covers 80 days and cannot land on a date without a magnifier and a date bubble
+drawn by hand — and the edge it would live on is the one History already gives
+to swipe-to-delete.
+
+**Landing is `DayKey.nearest`, and the gaps are the ordinary case.** A five-year
+history has two holidays, 3.5% of days missed and a first day, so "nothing was
+logged then" is what a date picker mostly asks about. Driven at 29,264 entries:
+31 January 2023, inside a thirteen-day hole, lands on the 25th; 9 December 2012,
+nine years before the first entry, lands on the first day rather than doing
+nothing; today comes back to the top. After each of those the list still holds
+**1 section and 17,788 items — 16,050 rows, 1,737 day headings and one hint** —
+and scrolls to both ends.
+
+**It costs 6 to 29ms to open, on a 360ms open — 2% to 8%.** Three batches of
+alternating installs at 29,264 entries, medians +29, +23 and +6ms: real, small,
+and not measurable to better than its own size on a machine where a long session
+of builds moves the same two builds further than the change does
+(docs/scale.md). It is *not* the `.id()` on 1,737 heading rows, which was the
+obvious suspect after the section finding: a build with the identities removed
+costs the same as the one with them. What the screen pays for is the
+`ScrollViewReader` and the toolbar item.
+
+**The search field and this one do not compete.** On iOS 26 `.searchable` draws
+its field as a pill at the bottom of the screen and this sits in the nav bar, so
+neither moves the other. They are modal to each other, though, and that is
+iOS's doing rather than a choice here: focusing the field hides the whole nav
+bar — title, back button and the calendar — until the keyboard goes away.
+
+**Two more from the review, both about what a jump does not say.** `scrollTo`
+posts nothing, so with VoiceOver on a tapped date was silent — focus stayed in
+the picker and dismissing it landed you back on the calendar button with no cue
+that five years had passed underneath; the landing now posts a `PageScrolled`
+naming the day. And the DST test written for the tie-break did not discriminate:
+with the short day *above* the target, a seconds distance and a calendar-days
+one give the same answer, so it would have passed against the bug it was written
+for. Moved so the short day is below, and checked by putting the seconds version
+back and watching it fail.
+
+**What is left as a design question**, not a bug: with a single day of history
+the picker opens with one selectable square and both month arrows dimmed. It is
+truthful and it matches how the app already greys a repeat disc rather than
+hiding it, but a control that can only go where you already are is arguably not
+worth a glyph. Drawing it whenever there is a list at all is the simpler rule,
+and the alternative needs a threshold nobody can defend.
 
 ## Noted, not scheduled
 

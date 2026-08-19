@@ -23,6 +23,22 @@ struct HistoryView: View {
     /// have looked away and back the answer to "which is new" is no longer a
     /// question anyone is asking.
     @State private var highlighted: HistoryItem.ID?
+    /// The day the list has been asked to scroll to, until it has.
+    ///
+    /// A one-shot rather than a selection: the control *navigates*, so once the
+    /// list has gone there nothing about the screen remembers where you jumped
+    /// from or to (docs/TODO.md item 25). A stored "current day" would be a
+    /// second state to reason about, and the first step towards a screen that
+    /// shows one day at a time.
+    @State private var jumpTarget: DayKey?
+    /// Whether the date picker is up, and the date it holds.
+    ///
+    /// `picked` outlives the popover on purpose: jumping to March and then to
+    /// April is two opens, and the second one should not start back at today.
+    /// It is per visit — pushing History again starts at the newest day the
+    /// list holds.
+    @State private var jumping = false
+    @State private var picked = Date()
 
     var body: some View {
         let days = days
@@ -47,131 +63,187 @@ struct HistoryView: View {
                     description: Text("Your entries will appear here after you log them.")
                 )
             } else {
-                List {
-                    // **One section for the whole log, not one per day.** This
-                    // is the entire fix for the 1.5s freeze this screen used
-                    // to open with, and it is not about how much is drawn: a
-                    // `Section` costs about 0.8ms to put into a `List`
-                    // regardless of what is in it, so 1,733 days cost 1.4
-                    // seconds of blocked main thread before a row is drawn.
-                    // 1,517–1,543ms before, 321–327ms after, three runs each.
-                    //
-                    // Measured four ways at 29,729 entries, because the obvious
-                    // suspects were all wrong (docs/scale.md): every row in one
-                    // section is 185ms, every section with one trivial row each
-                    // is 1,375ms, and taking the header away or moving to
-                    // `.plain` changes neither. The rows are cheap and the
-                    // sections are not.
-                    //
-                    // What it costs is the card per day — one section is one
-                    // card — so the day heading is a row that looks like the
-                    // header it replaces, and the gap between days is the
-                    // heading's clear background rather than the space between
-                    // two cards. Nothing else about the screen changes: every
-                    // row is still here, newest first, grouped by day.
-                    Section {
-                        ForEach(days, id: \.day) { group in
-                            dayHeading(title(for: group.day))
-                            ForEach(group.items) { item in
-                                HistoryRow(item: item, trackers: trackers) { editing = item }
-                                    // The accent, at a fifth, over the fill a
-                                    // grouped row already has: #16423F against
-                                    // the row's #1C1C1E in dark mode, sampled
-                                    // off a screenshot. Loud enough to find in
-                                    // a list of near-identical rows, quiet
-                                    // enough that it is still the same row —
-                                    // white on it measures 11.1:1, so nothing
-                                    // on the row gets harder to read while it
-                                    // is up.
-                                    //
-                                    // On every row, not only the marked one, so
-                                    // the unmarked rows are drawn by the same
-                                    // expression instead of one row having to
-                                    // match iOS's default by hand. It does
-                                    // match — the named colour renders the same
-                                    // #1C1C1E the list drew before this — and
-                                    // painting them all is what keeps that
-                                    // true if it ever stops being.
-                                    //
-                                    // **The fade has to live here.**
-                                    // `withAnimation` around the state change
-                                    // does not reach a row's background: it was
-                                    // written that way first and a recording
-                                    // showed the mark cut off between two
-                                    // frames rather than fading. Attached to
-                                    // the colour, it fades over ~785ms,
-                                    // measured the same way.
-                                    .listRowBackground(
-                                        Color.accentFill
-                                            .opacity(highlighted == item.id ? 0.2 : 0)
-                                            .animation(
-                                                .easeOut(duration: 0.9), value: highlighted
-                                            )
-                                            .background(Color(.secondarySystemGroupedBackground))
-                                    )
-                                    .swipeActions(edge: .trailing) {
-                                        Button(role: .destructive) {
-                                            if let entry = item.entries.first {
-                                                store.deleteBatch(containing: entry)
-                                            }
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
-                                        }
-                                        // The `Toggle` case from the root
-                                        // tint's own comment, arriving for
-                                        // real: `.tint(.primary)` reaches a
-                                        // swipe action, so this drew as a blank
-                                        // white capsule in dark mode — white
-                                        // fill, white label, no glyph and no
-                                        // word — on the one control in the app
-                                        // that destroys a record. `role:
-                                        // .destructive` does not survive an
-                                        // inherited tint, so the red is named
-                                        // here, exactly as a bar button names
-                                        // `navBarAccent()` (docs/TODO.md item
-                                        // 20).
-                                        .tint(.red)
-                                    }
-                            }
-                            // Both gestures this screen offers are invisible:
-                            // swipe-to-delete is invisible by iOS's design, and
-                            // a row that opens an editor when tapped looks
-                            // exactly like a row that does nothing (docs/TODO.md
-                            // item 22). One sentence in the ordinary footer
-                            // idiom, which the log sheet already uses, costs no
-                            // tap and no chrome — a hint that never moves is
-                            // cheaper than a gesture nobody finds.
-                            //
-                            // **Under the first day only.** A hint under the
-                            // last day is at the bottom of a list that is five
-                            // years long, which is nowhere; this one is the
-                            // first thing under the rows you arrive looking at,
-                            // and repeating it under all 1,733 days would be the
-                            // app nagging.
-                            //
-                            // A row rather than a `Section` footer since the
-                            // sections went: same words, same place, same
-                            // secondary footnote the footer style drew it in.
-                            //
-                            // No icon and no colour: the plain footer style is
-                            // already secondary, and anything louder competes
-                            // with the rows for the same glance.
-                            if group.day == days.first?.day {
-                                Text("Tap a row to edit it, or swipe to delete.")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                                    .listRowBackground(Color.clear)
-                                    .listRowSeparator(.hidden)
-                                    .listRowInsets(
-                                        EdgeInsets(
-                                            top: 6, leading: 16, bottom: 6, trailing: 16
+                // `ScrollViewReader` is the whole of the jump: the control
+                // picks a day and this scrolls to the heading carrying it.
+                // Nothing is filtered and nothing is unloaded — the list below
+                // is the list that was here before, which is the constraint
+                // item 25 is mostly about (docs/TODO.md).
+                ScrollViewReader { proxy in
+                    List {
+                        // **One section for the whole log, not one per day.** This
+                        // is the entire fix for the 1.5s freeze this screen used
+                        // to open with, and it is not about how much is drawn: a
+                        // `Section` costs about 0.8ms to put into a `List`
+                        // regardless of what is in it, so 1,733 days cost 1.4
+                        // seconds of blocked main thread before a row is drawn.
+                        // 1,517–1,543ms before, 321–327ms after, three runs each.
+                        //
+                        // Measured four ways at 29,729 entries, because the obvious
+                        // suspects were all wrong (docs/scale.md): every row in one
+                        // section is 185ms, every section with one trivial row each
+                        // is 1,375ms, and taking the header away or moving to
+                        // `.plain` changes neither. The rows are cheap and the
+                        // sections are not.
+                        //
+                        // What it costs is the card per day — one section is one
+                        // card — so the day heading is a row that looks like the
+                        // header it replaces, and the gap between days is the
+                        // heading's clear background rather than the space between
+                        // two cards. Nothing else about the screen changes: every
+                        // row is still here, newest first, grouped by day.
+                        Section {
+                            ForEach(days, id: \.day) { group in
+                                // What a jump lands on. The heading rather than the
+                                // first row, so the day you asked for arrives with
+                                // its name above it instead of a row you have to
+                                // scroll up from to identify.
+                                dayHeading(title(for: group.day))
+                                    .id(group.day)
+                                ForEach(group.items) { item in
+                                    HistoryRow(item: item, trackers: trackers) { editing = item }
+                                        // The accent, at a fifth, over the fill a
+                                        // grouped row already has: #16423F against
+                                        // the row's #1C1C1E in dark mode, sampled
+                                        // off a screenshot. Loud enough to find in
+                                        // a list of near-identical rows, quiet
+                                        // enough that it is still the same row —
+                                        // white on it measures 11.1:1, so nothing
+                                        // on the row gets harder to read while it
+                                        // is up.
+                                        //
+                                        // On every row, not only the marked one, so
+                                        // the unmarked rows are drawn by the same
+                                        // expression instead of one row having to
+                                        // match iOS's default by hand. It does
+                                        // match — the named colour renders the same
+                                        // #1C1C1E the list drew before this — and
+                                        // painting them all is what keeps that
+                                        // true if it ever stops being.
+                                        //
+                                        // **The fade has to live here.**
+                                        // `withAnimation` around the state change
+                                        // does not reach a row's background: it was
+                                        // written that way first and a recording
+                                        // showed the mark cut off between two
+                                        // frames rather than fading. Attached to
+                                        // the colour, it fades over ~785ms,
+                                        // measured the same way.
+                                        .listRowBackground(
+                                            Color.accentFill
+                                                .opacity(highlighted == item.id ? 0.2 : 0)
+                                                .animation(
+                                                    .easeOut(duration: 0.9), value: highlighted
+                                                )
+                                                .background(
+                                                    Color(.secondarySystemGroupedBackground)
+                                                )
                                         )
-                                    )
+                                        .swipeActions(edge: .trailing) {
+                                            Button(role: .destructive) {
+                                                if let entry = item.entries.first {
+                                                    store.deleteBatch(containing: entry)
+                                                }
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
+                                            // The `Toggle` case from the root
+                                            // tint's own comment, arriving for
+                                            // real: `.tint(.primary)` reaches a
+                                            // swipe action, so this drew as a blank
+                                            // white capsule in dark mode — white
+                                            // fill, white label, no glyph and no
+                                            // word — on the one control in the app
+                                            // that destroys a record. `role:
+                                            // .destructive` does not survive an
+                                            // inherited tint, so the red is named
+                                            // here, exactly as a bar button names
+                                            // `navBarAccent()` (docs/TODO.md item
+                                            // 20).
+                                            .tint(.red)
+                                        }
+                                }
+                                // Both gestures this screen offers are invisible:
+                                // swipe-to-delete is invisible by iOS's design, and
+                                // a row that opens an editor when tapped looks
+                                // exactly like a row that does nothing (docs/TODO.md
+                                // item 22). One sentence in the ordinary footer
+                                // idiom, which the log sheet already uses, costs no
+                                // tap and no chrome — a hint that never moves is
+                                // cheaper than a gesture nobody finds.
+                                //
+                                // **Under the first day only.** A hint under the
+                                // last day is at the bottom of a list that is five
+                                // years long, which is nowhere; this one is the
+                                // first thing under the rows you arrive looking at,
+                                // and repeating it under all 1,733 days would be the
+                                // app nagging.
+                                //
+                                // A row rather than a `Section` footer since the
+                                // sections went: same words, same place, same
+                                // secondary footnote the footer style drew it in.
+                                //
+                                // No icon and no colour: the plain footer style is
+                                // already secondary, and anything louder competes
+                                // with the rows for the same glance.
+                                if group.day == days.first?.day {
+                                    Text("Tap a row to edit it, or swipe to delete.")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                        .listRowBackground(Color.clear)
+                                        .listRowSeparator(.hidden)
+                                        .listRowInsets(
+                                            EdgeInsets(
+                                                top: 6, leading: 16, bottom: 6, trailing: 16
+                                            )
+                                        )
+                                }
                             }
                         }
                     }
+                    .listStyle(.insetGrouped)
+                    // **Without an animation**, which is not laziness: an animated
+                    // scrollTo over five years of rows is a screen full of blur you
+                    // have to sit through, and nothing here has to be explained by
+                    // motion — you asked for a date, the date is what should be on
+                    // screen (docs/PHILOSOPHY.md). `scrollTo` outside `withAnimation`
+                    // is already instant; the transaction is what stops the
+                    // popover's own dismissal animation being inherited by it, and
+                    // it is the same one the mark below presents with.
+                    .onChange(of: jumpTarget) { _, target in
+                        guard let target else { return }
+                        var instant = Transaction()
+                        instant.disablesAnimations = true
+                        withTransaction(instant) { proxy.scrollTo(target, anchor: .top) }
+                        // Say where it went. `scrollTo` moves the list and
+                        // posts nothing, so with VoiceOver on, tapping a date
+                        // was silent: focus stayed in the picker, and dismissing
+                        // it landed you back on the calendar button with no cue
+                        // that five years had gone by underneath (found in
+                        // review). `PageScrolled` is the notification for
+                        // exactly this — the list went somewhere — and it says
+                        // the day without stealing focus, which is the right
+                        // trade here: moving focus onto the heading would mean
+                        // an `AccessibilityFocusState` on every one of 1,733 of
+                        // them, on a screen that has just been measured for what
+                        // per-day work costs. Posted rather than heard: nothing
+                        // on this machine can drive VoiceOver, so what is
+                        // checked is that the day it names is the day it landed
+                        // on.
+                        AccessibilityNotification.PageScrolled(title(for: target)).post()
+                        jumpTarget = nil
+                    }
                 }
-                .listStyle(.insetGrouped)
+            }
+        }
+        .toolbar {
+            // Only when there is a list to jump around in. The two empty states
+            // above are a screen with nothing on it and a search with no
+            // matches, and a date picker over either is a control that cannot
+            // do anything.
+            if let newest = days.first?.day, let oldest = days.last?.day {
+                ToolbarItem(placement: .topBarTrailing) {
+                    jumpButton(oldest: oldest, newest: newest, days: days)
+                }
             }
         }
         .navigationTitle("History")
@@ -240,6 +312,147 @@ struct HistoryView: View {
             guard !Task.isCancelled else { return }
             highlighted = nil
         }
+    }
+
+    /// Go to a date, in one glyph in the nav bar and one tap on a calendar.
+    ///
+    /// It navigates and it never filters: the list under it is the whole
+    /// history, at every moment, and this only moves where it is looked at.
+    ///
+    /// **Three controls were built at 29,264 entries and compared on screen**
+    /// (docs/TODO.md item 25). A compact `DatePicker` sitting in the nav bar
+    /// puts a date on screen permanently — "Aug 18, 2026" beside the title,
+    /// which reads as the screen showing a date rather than as a way to go to
+    /// one, and that is the one thing this control must not look like. A month
+    /// index — a sheet listing the months with something in them — is honest
+    /// and scales with type size, but it answers a scrolling list with another
+    /// scrolling list: 60 months, 15 to a screen and 8.5 at AX5, so reaching
+    /// 2022 is four screenfuls of scrolling and seven at accessibility sizes.
+    /// The calendar below is the same number of taps at every type size,
+    /// because the month/year wheel behind its title crosses five years without
+    /// scrolling anything, and it is the only one of the three that can name a
+    /// *day*.
+    ///
+    /// A Photos-style scrubber was not built, on arithmetic: 1,737 days down
+    /// the side of a screen 956 points tall is at best 1.8 days a point, so a
+    /// 44-point fingertip covers 80 days and cannot land on a date at all
+    /// without a magnifier and a date bubble, both drawn by hand. Photos gets
+    /// away with it because a screenful of its thumbnails is weeks rather than
+    /// hours, and because a photo grid has no swipe actions along the edge a
+    /// scrubber would have to live on.
+    ///
+    /// **It costs the search field no room**, which was the thing to check: on
+    /// iOS 26 `.searchable` draws its field as a pill at the *bottom* of the
+    /// screen, so the two sit at opposite ends and neither moves the other. The
+    /// one interaction is that focusing the field hides the whole nav bar —
+    /// title, back button and this — until the keyboard goes away, which is
+    /// iOS's own behaviour for that field and not something the screen chose.
+    /// A nav bar is also where docs/PHILOSOPHY.md puts something you reach for
+    /// once a week, and this is not on the path to logging a number.
+    ///
+    /// The picker is bounded by the days the list actually holds, so the
+    /// calendar greys out everything there is no history for and the control
+    /// cannot ask a question the screen has no answer to.
+    private func jumpButton(oldest: DayKey, newest: DayKey, days: [DayGroup]) -> some View {
+        // `min`/`max` rather than the two ends as they come. `days` is sorted
+        // newest first and these are its ends, so the range is in order by
+        // construction — but an out-of-order `ClosedRange` traps, and this file
+        // already refuses that class of crash where a document could be shaped
+        // wrong (see the tracker dictionary above).
+        let first = oldest.startOfDay(calendar: store.calendar)
+        let last = newest.startOfDay(calendar: store.calendar)
+        let range = min(first, last)...max(first, last)
+        return Button {
+            // Clamped before the popover opens, never after: the picker would
+            // otherwise move a selection outside its range itself, and that
+            // move arrives looking exactly like a tap on a day. Today is
+            // outside the range whenever the newest thing logged is older than
+            // today, which is most days of a real history.
+            picked = min(max(picked, range.lowerBound), range.upperBound)
+            jumping = true
+            // **Opening it is a jump too, and that is one rule rather than a
+            // special case: while the picker is up, the list is where the
+            // picker points.**
+            //
+            // Without this, the one tap the control cannot answer is the
+            // obvious one. A `DatePicker` reports nothing at all when you tap
+            // the day that is already selected — not through `onChange`, and
+            // not through a `Binding` written by hand either, which was built
+            // and tapped to check rather than assumed. So scrolling by hand
+            // into 2022, opening the calendar and tapping today — the way back
+            // — did nothing, on a control whose whole job is going somewhere.
+            // Asserting the position on the way in answers it before it is
+            // asked, and it is why re-tapping the selected day is now correctly
+            // nothing to do: the list is already there.
+            jump(to: picked, days: days)
+        } label: {
+            Label("Jump to a date", systemImage: "calendar")
+        }
+        .labelStyle(.iconOnly)
+        .navBarAccent()
+        .popover(isPresented: $jumping) {
+            DatePicker(
+                "Jump to a date", selection: $picked, in: range, displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            // A popover sizes itself to its content, and the graphical picker
+            // proposed no width of its own: without this it came out 140 points
+            // wide, anchored to a button in the top right, and half the
+            // calendar hung off the edge of the screen — photographed before it
+            // was fixed. 320 is the width the control is drawn at, and it is
+            // the one number here that is not free: it is a fixed frame, which
+            // is where four defects on this project have come from.
+            //
+            // Two things make it safe, and both were photographed rather than
+            // argued. The picker inside it does not scale — the grid comes out
+            // the same size at every text size, checked at five of them from
+            // extra-small to AX5 — so there is no text growing inside a frame
+            // that cannot. And it fits the narrowest phone iOS 18 runs on,
+            // which this comment first got wrong: it said 375 points, the SE,
+            // and a review pointed out the iPhone 12 and 13 mini are **360**.
+            // The whole calendar draws on one, with a margin each side, on the
+            // same five-year fixture.
+            .frame(width: 320)
+            .padding(8)
+            // A popover, not the sheet iPhone would otherwise adapt it into. A
+            // sheet is a place you go; this is a control you point at, and the
+            // list stays visible behind it while you pick.
+            .presentationCompactAdaptation(.popover)
+            // **Every change navigates, and the picker does not close itself.**
+            // Closing it on the first change was written first and is worse,
+            // for a reason only the real control shows: the month and year
+            // wheels behind the title *are* the selection, not a way to look
+            // around, so touching either one jumped and dismissed — and
+            // crossing five years, which is what this screen is for, needs
+            // both. That version made "March 2022" three visits to a control
+            // that shuts on contact.
+            //
+            // Left open, the list scrubs underneath: pick a year, the list is
+            // there, spin the month, it is there too, and it closes the way
+            // every popover closes. Photographed at both, three years back on
+            // five years of data.
+            .onChange(of: picked) { _, date in jump(to: date, days: days) }
+        }
+    }
+
+    /// Scroll to the day that was picked, or to the nearest one with something
+    /// on it.
+    ///
+    /// **The calendar day, not the moment.** A `DatePicker` hands back a date
+    /// carrying the current time of day, and `Store.dayKey` would then read it
+    /// through `dayStartHour` — so at 2am, with a 4am day start, picking the
+    /// 15th would go to the 14th. The user tapped a square on a calendar; the
+    /// square is the answer. Where the day is cut is about what a *log* belongs
+    /// to and has nothing to say about which square was tapped.
+    private func jump(to date: Date, days: [DayGroup]) {
+        let parts = store.calendar.dateComponents([.year, .month, .day], from: date)
+        let target = DayKey(
+            year: parts.year ?? 0, month: parts.month ?? 0, day: parts.day ?? 0
+        )
+        jumpTarget = DayKey.nearest(
+            to: target, in: days.map(\.day), calendar: store.calendar
+        )
     }
 
     /// The day heading, as a row rather than a section header.
