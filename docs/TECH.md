@@ -31,11 +31,26 @@ release build, median of repeated runs. macOS on Apple Silicon, so treat these
 as optimistic in absolute terms — an old iPhone is several times slower — but
 the ratio is what matters. Process-launch baseline ~5ms is included.
 
+**Taken 2026-08-09 (`2275932`), and not reproducible from this repository.** The
+harness was a throwaway that compared a JSON decode against a SwiftData stack,
+and neither it nor the SwiftData model is in this history — the app has never
+depended on SwiftData, so there is nothing left here to re-run. These are the
+numbers the decision was made on; anyone who wants to disbelieve them has to
+rebuild the comparison. What *is* reproducible, and what the design is actually
+held to now, is [scale.md](scale.md), which measures the shipping app.
+
 | entries | JSON: load all + totals | SwiftData: fetch all + totals | SwiftData: today only |
 |---|---|---|---|
-| 15,000 (~5 years) | **41 ms** | 372 ms | **12 ms** |
+| 15,000 | **41 ms** | 372 ms | **12 ms** |
 | 50,000 | **115 ms** | 1,226 ms | — |
 | 100,000 | **216 ms** | 2,531 ms | — |
+
+The 15,000 row used to be annotated "(~5 years)" and that annotation was wrong
+by half: five years of real use was later measured at **29,756 entries**
+(docs/scale.md), because the estimate behind it counted meals and not the water,
+steps and weigh-ins that go with them. Nothing about the decision moves — the
+50,000 row is the one that brackets five years, and JSON wins it by 10x — but
+the number is corrected here so it is not read back out as a size.
 
 SwiftData genuinely wins the launch case, because it is lazy and only fetches
 today's few entries. That advantage is real and it does not matter: both are
@@ -57,9 +72,12 @@ avoids.
 
 Realistic worst case is a few thousand entries a year, so a heavy user reaches
 maybe 15,000 entries in five years — a couple of megabytes of JSON, tens of
-milliseconds to decode, trivially small in memory. Once it's in an array,
-"today's total" is a filter. There is no query problem here, so a query engine
-is pure cost: a Core Data stack spun up during launch, a schema migration
+milliseconds to decode, trivially small in memory. (**That estimate was low by
+half**, and the measurement is in docs/scale.md: five years is 29,756 entries,
+8.6MB and 122ms to decode. Still tens of milliseconds, still small in memory,
+and the argument below is unaffected — but the figure to quote is the measured
+one.) Once it's in an array, "today's total" is a filter. There is no query
+problem here, so a query engine is pure cost: a Core Data stack spun up during launch, a schema migration
 system to learn, and concurrency friction under Swift 6, all to manage data
 that fits in RAM with room to spare.
 
@@ -502,7 +520,15 @@ tested hard.
 
 ## Performance budget
 
-Numbers to hold the design to, measured on the oldest supported device:
+Numbers to hold the design to. **They are defined against the oldest supported
+device and have never been measured on one** — this line used to say "measured
+on the oldest supported device", which read as a claim about the figures under
+it, and every figure under it comes from an iPhone 17 Pro simulator on an M4
+Pro. That environment is faster than any phone in absolute terms and still
+misses the 400ms launch budget at *both* two months and five years of data,
+which is why scale.md records the launch delta rather than a verdict and leaves
+"is the budget wrong, or is the launch genuinely slow?" open. Settling it needs
+a real device, and that is TODO item 17.
 
 - **Cold launch to interactive: under 400ms.** No splash, no async gate before
   the UI draws. Loading the store is a synchronous decode of a small file
@@ -593,6 +619,15 @@ Four rules, each learned by measuring a control that turned out to be
 unreadable, and coupled tightly enough that breaking one takes the others under
 the floor with it. The measurements live beside the code in
 `BoringTracker/Views/OnAccent.swift`; what is here is the shape of the decision.
+
+**The contrast ratios are reproducible on paper, and were reproduced on
+2026-08-19.** Every ratio quoted in this section, in TODO items 13e and 18, and
+in all four tables of [accent-options.md](accent-options.md) was recomputed from
+the hex values with the WCAG 2.x formula — some fifty numbers — and every one
+matches to the second decimal. The *hex values* are the part that had to be
+sampled off a screen and cannot be re-derived; the two that ship are pinned by
+`AccentTests` instead, which asserts `AccentFill` resolves to `#009888` light
+and `#00DAC3` dark and that nothing claims the magic `AccentColor` name.
 
 **One constant names the hue.** `Color.accentFill` is the `AccentFill` colour
 set and nothing else in the app names a colour. **Two deliberate values, one per

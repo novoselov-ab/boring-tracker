@@ -26,6 +26,19 @@ that floor is `.searchable` and the keyboard, not five years of data. And
 the data behind it is 2.4ms. That one is its own problem and is written up at
 the bottom.
 
+**When, and what has been re-checked since.** Every number on this page was
+taken between 2026-08-17 and 2026-08-18 (`1d2040f` through `b0f7fd8`) on the
+devices and builds each section names. **None of it was re-run in the 2026-08-19
+documentation pass**, and it could not be cheaply: the fixtures and the probe
+builds are all throwaways in `git worktree`s that were deleted with the sessions
+that made them, so reproducing any of it starts by regenerating a 30,000-entry
+fixture. What that pass did check is the page's *internal* arithmetic — the item
+counts, the byte shares, the per-section costs and the ratios between the before
+and after columns all add up, and the four independent fixtures agree with each
+other to within a few percent. Treat the absolute milliseconds as dated
+measurements of a simulator on one M4 Pro, which is what the page says of itself
+throughout, and the deltas as the finding.
+
 ## The fixture
 
 Deterministic, generated from a seed by a throwaway tool compiled against the
