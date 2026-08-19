@@ -37,14 +37,20 @@ struct UndoBar: View {
     @State private var lapsed: Date?
     /// Whether a pending *deletion* is offered here as well as a repeat.
     ///
-    /// True on History, which is where deleting happens. False on Repeat, which
-    /// cannot delete anything: a deletion's offer is deliberately never expired
-    /// — undoing one only puts records back, so it can go stale harmlessly —
-    /// and without this, swiping a row away on History and then opening Repeat
-    /// pinned "Deleted batch" over a screen that had done nothing, offering to
-    /// restore a row it would not then show. This bar is the undo of the screen
-    /// that wrote the thing; History keeps the deletion undo either way,
-    /// because the slot survives the trip.
+    /// True on the two screens a swipe deletes from — History, and a tracker's
+    /// own detail. False on home, which has deleted nothing: a deletion's offer
+    /// is deliberately never expired — undoing one only puts records back, so it
+    /// can go stale harmlessly — and without this, swiping a row away on History
+    /// and going back pinned "Deleted batch" over a screen that had done
+    /// nothing, offering to restore a row it would not then show. This bar is
+    /// the undo of the screen that wrote the thing; History keeps the deletion
+    /// undo either way, because the slot survives the trip.
+    ///
+    /// It is deliberately not a *scope*, only a switch. The slot is global, so a
+    /// screen that must offer some deletions and not others gates the bar
+    /// itself: `TrackerDetailView.offersUndo` draws it only for a deletion that
+    /// took one of that tracker's entries. Teaching this view to filter would
+    /// put the same question in two places.
     var offersDeletion = true
 
     /// How long an offer to undo a **repeat** stands, on every screen that draws
@@ -113,8 +119,7 @@ struct UndoBar: View {
                 // It used to be the accent as *text* on the bar, which is the
                 // pairing item 13c removes: 1.89:1 in light mode, on the one
                 // control in the app that exists to be found in a hurry.
-                // `UndoButton` carries the shape and the reasons, and the
-                // tracker detail screen's own undo row draws the same one.
+                // `UndoButton` carries the shape and the reasons.
                 UndoButton(action: undo)
             }
             .padding(.horizontal)

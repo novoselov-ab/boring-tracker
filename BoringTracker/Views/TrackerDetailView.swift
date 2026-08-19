@@ -39,9 +39,6 @@ struct TrackerDetailView: View {
         // timings were both re-measured; docs/scale.md carries the correction.)
         let days = days
         List {
-            if let deleted = store.lastDeletion(for: trackerID) {
-                undoRow(tracker, deleted: deleted)
-            }
             if !days.isEmpty {
                 Section {
                     TrackerChart(tracker: tracker)
@@ -63,8 +60,8 @@ struct TrackerDetailView: View {
             // four measurements that rule out the rows, the header and the
             // list style.
             //
-            // The chart and the undo row stay sections of their own: there are
-            // at most two of them, and they are genuinely separate things.
+            // The chart stays a section of its own: there is one of it at
+            // most, and it is genuinely a separate thing.
             //
             // Guarded, where `ForEach` over nothing needed no guard: an empty
             // `Section` still draws its own gap under the empty state.
@@ -92,6 +89,41 @@ struct TrackerDetailView: View {
                 .navBarAccent()
             }
         }
+        // The bar, at the bottom, where the swipe that needs undoing happened —
+        // `UndoBar` carries the argument and it was written about this shape.
+        // This screen kept a `Section` above the first row until now, which is
+        // an undo you can only see while already looking at the top of a list
+        // you have just scrolled down (docs/TODO.md items 20, 20b, 22 each
+        // fixed History and left this screen a tap away untouched).
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if offersUndo {
+                UndoBar()
+            }
+        }
+    }
+
+    /// Whether the bar is drawn: the pending deletion took something from *this*
+    /// tracker.
+    ///
+    /// Undo is offered at all — rather than a confirmation on the swipe —
+    /// because a swipe you meant should be instant and a swipe you didn't should
+    /// be cheap to fix.
+    ///
+    /// It is a gate for the reason home has one (`HomeView.offersUndo`): the
+    /// store keeps one *global* slot, so a screen drawing `UndoBar` unguarded
+    /// offers to take back a write made somewhere else. Home asks whose write it
+    /// is; this asks whose tracker it is, which is the scoping the undo row it
+    /// replaces already had — swipe a row away on History and this screen stays
+    /// quiet unless that row was one of these. `lastDeletion(for:)` and not
+    /// `lastDeletion`, so a batch that took an entry from two trackers offers
+    /// the undo on both of their screens and on nobody else's.
+    ///
+    /// The bar's repeat half never fires here and needs no flag to stop it:
+    /// nothing on this screen repeats — the Log button writes an ordinary entry
+    /// — and a repeat made elsewhere leaves this `nil` anyway, because one slot
+    /// holding a repeat is a slot holding no deletion.
+    private var offersUndo: Bool {
+        store.lastDeletion(for: trackerID) != nil
     }
 
     private func row(_ tracker: Tracker, entry: Entry) -> some View {
@@ -175,29 +207,6 @@ struct TrackerDetailView: View {
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 18, leading: 16, bottom: 6, trailing: 16))
-    }
-
-    /// Undo lives here rather than behind a confirmation, because a swipe you
-    /// meant should be instant and a swipe you didn't should be cheap to fix.
-    private func undoRow(_ tracker: Tracker, deleted: Entry) -> some View {
-        Section {
-            HStack {
-                // Named honestly: undo puts the whole deletion back, so a batch
-                // must not be announced as the one value that happens to be this
-                // tracker's.
-                Text(store.lastDeletionCount == 1
-                     ? "Deleted \(tracker.format(deleted.value))"
-                     : "Deleted batch")
-                    .foregroundStyle(.secondary)
-                Spacer()
-                // The same capsule History's undo bar draws. It was a bare
-                // `Button("Undo")` until the item 13d review found it: with the
-                // tint set to the label colour (item 13c), the one control that
-                // takes back a deletion was drawn exactly like the sentence
-                // beside it, which is a recovery you have to hunt for.
-                UndoButton { store.undoLastDeletion() }
-            }
-        }
     }
 
     // MARK: - Grouping
