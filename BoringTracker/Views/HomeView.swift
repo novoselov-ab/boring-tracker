@@ -371,7 +371,7 @@ struct HomeView: View {
                 // is a claim about the new tracker that nobody has made yet.
                 addingTracker = Tracker(name: "")
             } label: {
-                Label("Add tracker", systemImage: "plus")
+                Label("Add Tracker", systemImage: "plus")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
