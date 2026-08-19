@@ -1284,6 +1284,49 @@ candidates but **in dark only**, at the user's direction. There is no
 equivalent evidence for light, so this is not a lookup — it is the same
 exercise, done for the other appearance.
 
+## 32. Two rows, two reading orders
+
+A History row leads with **what you called it** and puts the numbers under it
+— item 14b decided that, and the Log again sheet follows it. A tracker detail
+row does the opposite: `520 kcal` large and white on top, `chicken salad` grey
+underneath. The two screens are one tap apart and show the same two facts in
+opposite orders.
+
+**Both orders have a real argument and this pass is not going to pick.**
+Item 14b's reason was that "reading order is what makes a list scannable, and
+the numbers are not the part that tells two rows apart" — which is true on
+History, where every row is a different food against a different tracker. On a
+tracker's own screen the tracker is fixed, so the *number* is the thing that
+tells two rows apart, and leading with the name would put the same weight on
+the least distinguishing part of the row.
+
+So it is either a genuine inconsistency to fix, or a case where the same rule
+correctly produces two answers. The screens to compare are `HistoryView.row`
+and `TrackerDetailView.row`.
+
+- [ ] Decide, with both screens open, whether detail should lead with the name.
+- [ ] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
+      next pass does not find this again and file it a third time.
+
+## 33. The entry editor confirms where the log sheet used to
+
+Item 5 moved the log sheet's confirm **out of the navigation bar** and put it
+directly above the keypad, because the keypad is up and the top-right corner of
+a modern iPhone is not in the thumb's arc. The entry and batch editors have the
+same shape — a number field, the keypad up — and still carry **Save** in the
+navigation bar.
+
+The counter-argument is the app's own: `PHILOSOPHY.md` says rare actions may
+live high and "the nav bar is a fine home for things you touch once a week",
+and fixing a mistyped entry is rarer than logging. It is also `Save` rather
+than `Log`, deliberately, so it is not literally the same button.
+
+Not changed here, because moving it is a taste call on a screen that is not on
+the common path, and item 5's measurement was about the screen that is.
+
+- [ ] Decide whether editing is close enough to logging to want the same
+      confirm placement.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
