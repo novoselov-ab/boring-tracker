@@ -1072,15 +1072,23 @@ Item 26 gave every accent fill one pressed colour and measured it — and it is
 still hard to notice on Log and Log again. **The measurement was satisfied and
 the goal was not**, which means the target was wrong, not the work.
 
-So widen the brief: a bigger colour delta, a **scale on press**, or both.
+So change the mechanism, not the number. **A scale on press is the primary
+fix** — the button should physically respond under the thumb, the way iOS's own
+prominent buttons do. Colour is secondary and already measured; it was not
+enough on its own and more of it will not become enough.
 
 `PHILOSOPHY.md` rules out bounce, confetti and celebration, and animations you
 have to wait for. **A press-down scale is none of those** — it is instantaneous
 feedback under a thumb, and it is what iOS itself does. Earlier guidance to
 prefer colour over motion was mine and it was wrong in practice.
 
-- [ ] Make a press unmistakable on Log and Log again. Judge it by looking, not
-      by a ratio — the ratio already passed.
+- [ ] **Make it feel like a button.** A scale under the press, quick in and
+      quick out. Judge it with a thumb, not with a ratio — the ratio already
+      passed and the goal did not.
+- [ ] **Try a light haptic on press too, and say whether it helps.**
+      PHILOSOPHY.md bans haptic *celebrations* — a `.impact(.light)` when a
+      control goes down is feedback, not congratulation, and it is most of what
+      "feels nice" means on a phone. If it reads as noise, drop it and say so.
 - [ ] Whatever it is, it applies to **every** accent fill, so the app does not
       disagree with itself about what a press looks like.
 
