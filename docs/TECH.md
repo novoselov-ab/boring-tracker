@@ -406,8 +406,8 @@ Plain `Codable` value types. No classes, no framework base types, no
 `@Model`.
 
 ```swift
-struct Tracker: Codable, Identifiable, Hashable {
-    let id: UUID
+struct Tracker: Codable, Identifiable, Hashable, Sendable {
+    var id: UUID
     var name: String
     var unit: String
     var kind: Kind          // .dailyTotal | .measurement
@@ -419,15 +419,22 @@ struct Tracker: Codable, Identifiable, Hashable {
     var orderModified: Date // sortIndex only — see "Mergeable by design"
 }
 
-struct Entry: Codable, Identifiable, Hashable {
-    let id: UUID
+struct Entry: Codable, Identifiable, Hashable, Sendable {
+    var id: UUID
     var trackerID: UUID
     var value: Double
-    var date: Date
+    var date: Date          // when it happened — editable, often backdated
     var name: String?       // the food, not the tracker
     var batchID: UUID?      // the other entries saved with it
+    var modified: Date      // when the *record* changed, not when it happened
 }
 ```
+
+`Entry.modified` is not decoration and this listing used to omit it: "`modified`
+on every record" under "Mergeable by design" is a requirement of the merge, and
+an `Entry` without one cannot take part in last-write-wins. It is distinct from
+`date` — editing last Tuesday's dinner today moves `modified` and leaves `date`
+alone. `Tombstone` is the third stored type, and it is `id` plus `deleted`.
 
 Entries reference trackers by id rather than nesting, so deleting a tracker
 and keeping its history is a decision rather than a cascade.
@@ -702,9 +709,14 @@ re-sample instead.
 
 ## A `ShareLink` will not present beside a `.confirmationDialog`
 
-The export leaves by two doors — the share sheet and the Files exporter — and
-the first one is drawn by a platform bug, so it is written down here rather than
-only in the code.
+The export leaves by **one** door, the share sheet, and getting it there was
+drawn by a platform bug, so that is written down here rather than only in the
+code. (For a while there were two — a *Save to Files* row apiece beside the
+share rows. Both rows and the whole `.fileExporter` path were removed in
+`35a5fd0` once the share sheet worked; Files is one tap inside the sheet, and
+two doors to the same bytes were two things to keep in step. The bug below is
+what the second door existed to work around, so it is still the reason the
+sections must not be merged.)
 
 **A `ShareLink` in a `Form`/`List` section whose container also carries
 `.confirmationDialog` silently does nothing when tapped.** No sheet, no error,
@@ -720,10 +732,12 @@ both formats.
 Verified on an iPhone 17 / iOS 26.3, both directions of the claim: with the
 rows in one section the tap does nothing while *Import JSON* beside it opens
 the file importer on the same synthesized tap, and with the sections split the
-same tap presents the sheet and *Save to Files* lands
-`boring-tracker-2026-08-17.json` in On My iPhone, byte-identical to the store
-file. See also the eight-way bisect in `3028257`, which is what identified the
-modifier.
+same tap presents the sheet. The dated name was checked through the *Save to
+Files* row that still existed at the time —
+`boring-tracker-2026-08-17.json`, landing in On My iPhone byte-identical to the
+store file — and that row has since gone with `35a5fd0`; the name comes from the
+same `ExportName.dated` either way. See also the eight-way bisect in `3028257`,
+which is what identified the modifier.
 
 **So do not merge those two sections back together.** Nothing about the result
 looks broken — the rows draw, the labels are right, the button is simply dead.
@@ -792,14 +806,25 @@ BoringTracker/
   App/            entry point, root view
   Model/          Tracker, Entry, StoreDocument
   Store/          Store, persistence, the version guard
-  Views/          Home, LogSheet, TrackerDetail, Graph, Settings, editors
+  Views/          Home, LogSheet, History, TrackerDetail, TrackerChart,
+                  RepeatView, Settings, editors
   Support/        date math, formatting
 BoringTrackerTests/
 docs/
 ```
 
-An App Group is configured from the start, even though widgets come later —
-retrofitting one means moving the store file after people have data in it.
+**The App Group is *named* from the start, not entitled.** Retrofitting one
+means moving the store file after people have data in it, so
+`StoreFile.appGroupIdentifier` is fixed now — `group.com.novoselov.boringtracker`
+— and `StoreFile.standard` prefers that container whenever the entitlement
+resolves. It does not resolve today: signing an App Group needs the paid
+developer account this project deliberately builds without (docs/SHIPPING.md),
+there is no entitlements file and no `DEVELOPMENT_TEAM` in `project.yml`, so the
+code falls back to the plain app container. The store is therefore at
+`Application Support/boring-tracker/store.json` inside the app's own container,
+which is what the README's `simctl get_app_container` line finds. Adding the
+entitlement later moves the file once, before anybody's data is in it — which is
+the retrofit this naming exists to keep cheap, not one it has already avoided.
 
 ## CI
 
