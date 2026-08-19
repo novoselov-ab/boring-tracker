@@ -1,14 +1,31 @@
 # Accent options, measured
 
+> **This page is evidence, and its recommendation was not taken. Read it as
+> history.** It was written while the accent was `Color.teal`, and every
+> "today" and "ships" below means *then*. What shipped instead: item 13f moved
+> the accent to the system mint, and item 18 made it a colour set — `AccentFill`,
+> `#009888` light and `#00DAC3` dark — which is what the app draws now. So the
+> line under Method saying nothing in `BoringTracker/` changed is still true of
+> *this* work and no longer true of the app, `Color.accentFill` is a colour set
+> rather than a system colour, and the Recommendation's "Blue was right" is a
+> road not taken rather than a plan. The measurements themselves stand — all
+> fifty-odd contrast ratios on this page were recomputed from the hex values in
+> August 2026 and every one reproduces to the second decimal — and they are why
+> item 18 exists: this table is what proved one hue could not serve both
+> appearances. Item 31 is the open half, and it needs this exercise done again
+> for light mode, which was never rendered.
+
 > The screenshots behind these numbers are **kept outside the repository**,
 > in `~/dev/boring-tracker-accent/`. They are 1.2 MB of PNGs that would sit in
 > history forever to illustrate a decision this document already states in
 > words. The measurements are here; the pictures are on the machine that took
 > them.
 
-Evidence for a choice, not the choice. **Nothing in `BoringTracker/` changed** —
-the app still ships `Color.accentFill = Color.teal`. Every screen below was
-rendered by a throwaway probe build and thrown away with it.
+Evidence for a choice, not the choice. **Nothing in `BoringTracker/` changed by
+this work** — at the time it was written the app shipped
+`Color.accentFill = Color.teal`; it is now the `AccentFill` colour set, changed
+by items 13f and 18 rather than here. Every screen below was rendered by a
+throwaway probe build and thrown away with it.
 
 The teal was picked from a trend article, and it has not survived contact: white
 on it measures 1.86:1, as a nav-bar tint in light mode 2.13:1, and the user does
@@ -375,6 +392,11 @@ and for the two neighbouring candidates that were rendered and rejected.
 ---
 
 ## Recommendation
+
+*(Not taken. The accent went to the system mint in item 13f, on the user's
+call, and then to item 18's two-value colour set. Kept because the reasoning is
+the evidence item 18 was built on, and because these three colours are still
+where a future accent question starts.)*
 
 **Blue was right.** It was the control for a reason and it wins on the merits,
 not by default: it is the only family that clears 3:1 with a white label *and*
