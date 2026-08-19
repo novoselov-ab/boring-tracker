@@ -1537,6 +1537,20 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       56.3. A mint that actually reads as lighter, `#00B3A0`, measures 2.56
       and fails. Numbers and surfaces in the last section of
       [accent-options.md](accent-options.md).
+- [x] **Rendered a third time, across the hue wheel**, because a ceiling on
+      one hue line says nothing about the others. Ten candidates as
+      `31c-*.png`, every one of them the most chromatic colour of its hue that
+      still sits under the ceiling, so the set differs in hue and in nothing
+      else: bar glyph 3.01–3.04, `Form` row 3.10–3.13, black label 6.70–6.77,
+      `L*` 60.3–60.6. **Black on the fill is a function of the luminance
+      alone**, so the label opens by the same 0.9 over today at every hue and
+      hue buys none of it. What does change is apparent lightness — the blues
+      read lightest and the mint and cyan-teal heaviest — but the gain is
+      outside the family, the hue 15° from the mint reads no lighter than the
+      mint, and on the nav glyph the lightest-reading candidates read the
+      weakest. Numbers, the H-K model behind the ordering, and the same-app
+      comparison against dark's `#00DAC3` are the last section of
+      [accent-options.md](accent-options.md).
 - [ ] Dark mode is settled and measured. **Not touched.**
 - [ ] **The user picks, and nothing was merged.** Deeper, the recommendation
       is `#00796B` with a white label, or `#00857A` if the black label has to
@@ -1545,7 +1559,12 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       `#009888`: the ceiling is four `L*` points away and nothing inside that
       gap is visible in the photographs, so a lighter mint costs contrast
       margin for a colour change the strips do not show. There is no third
-      direction on this hue line; what is left is a different hue.
+      direction on this hue line; what is left is a different hue — and across
+      the hue wheel the recommendation is `#009888` again, because at this
+      luminance no hue that still belongs beside dark's mint reads lighter than
+      the mint. If hue is to answer the murk anyway it is `#00A3A3`, which reads
+      cleaner rather than lighter; `#009DD2` is lighter and crisp and makes the
+      app blue in light and mint in dark, which reopens item 18.
 
 ## 32. A press you can see on a fast tap — done
 

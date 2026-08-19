@@ -13,9 +13,10 @@
 > August 2026 and every one reproduces to the second decimal — and they are why
 > item 18 exists: this table is what proved one hue could not serve both
 > appearances. Item 31 was the open half — the same exercise for light mode,
-> never rendered here — and it is now the last two sections on this page, one
-> rendering light deeper and one rendering it lighter, both written from their
-> own renders rather than from this one's.
+> never rendered here — and it is now the last three sections on this page, one
+> rendering light deeper, one rendering it lighter, and one holding light at the
+> ceiling those two found and moving hue instead, each written from its own
+> renders rather than from this one's.
 
 > The screenshots behind these numbers are **kept outside the repository**,
 > in `~/dev/boring-tracker-accent/`. They are 1.2 MB of PNGs that would sit in
@@ -632,3 +633,157 @@ If the murk item 31 reports is still there under `#009888`, the strips say it
 is not brightness that fixes it, because brightness is what has run out. What
 is left is hue, and that is a different question from the one this page has
 now measured twice.
+
+---
+
+## Light mode, the third pass: the same luminance, right around the hue wheel
+
+The section above ends by saying the only thing left is hue. This is that
+question. **Every candidate here sits at the same luminance — the top of the
+window the section above measured — and differs from the others only in hue**,
+so nothing below is a brightness comparison. The point is the one thing the
+arithmetic cannot settle: whether two colours of equal luminance look equally
+light.
+
+Photographs in `~/dev/boring-tracker-pairing/` as `31c-*.png` — ten candidates
+on home and on settings, with the bottom bar and the nav bar cropped out of
+each, four strips, and a fifth strip that puts every light candidate under
+dark's own `#00DAC3`. **Today's `#009888` is number 1 in every strip, as the
+control.** Nothing in `BoringTracker/` changed.
+
+### The ceiling is a luminance, and it is 0.289
+
+Clearing 3:1 against the circle a nav-bar glyph sits in — `#FBFBFF`, relative
+luminance 0.96724 — needs the accent's own luminance at or under
+**(0.96724 + 0.05) / 3 − 0.05 = 0.28908**. Today's `#009888` is 0.24234 and the
+ceiling colour the last pass found, `#00A493`, is 0.28658. (The brief that
+asked for this work put the threshold near 0.175; that is the number this
+paragraph replaces.)
+
+Which is why the black label does not vary below: **black on the fill is a
+function of that luminance alone**, so at the ceiling it is 6.7 whatever the
+hue, against today's 5.85. The other half of the window opens by the same 0.9
+for every candidate, and hue buys none of it.
+
+### The candidates
+
+Each is the most chromatic sRGB colour of its hue whose luminance still lands
+under the ceiling — saturation walked down from full, and for each saturation
+the value binary-searched to hit the target. For the warm and green hues that
+is full saturation; **blue cannot reach this luminance saturated at all**
+(`#0000FF` is 0.0722), so 9 and 10 arrive already desaturated, which is itself
+part of the answer.
+
+| # | hex | hue | bar glyph on `#FBFBFF` | `Form` row on `#FFFFFF` | black label on the fill | `L*` | `C*` |
+|---|---|---|---|---|---|---|---|
+| 1 | `#009888` | today, the control | 3.48 | 3.59 | 5.85 | 56.3 | 37.6 |
+| 2 | `#E57200` | orange | 3.02 | 3.12 | 6.74 | 60.5 | 78.9 |
+| 3 | `#53A500` | yellow-green | 3.01 | 3.11 | 6.75 | 60.6 | 78.6 |
+| 4 | `#00AA00` | green | 3.01 | 3.11 | 6.75 | 60.6 | 88.4 |
+| 5 | `#00A854` | green-teal | 3.02 | 3.12 | 6.73 | 60.5 | 64.9 |
+| 6 | `#00A493` | mint, at the ceiling | 3.02 | 3.12 | 6.73 | 60.5 | 39.7 |
+| 7 | `#00A3A3` | cyan-teal | 3.01 | 3.10 | 6.77 | 60.6 | 35.9 |
+| 8 | `#009DD2` | azure | 3.01 | 3.11 | 6.75 | 60.6 | 39.7 |
+| 9 | `#2693FF` | blue | 3.04 | 3.13 | 6.70 | 60.3 | 62.5 |
+| 10 | `#8484FF` | periwinkle | 3.02 | 3.12 | 6.73 | 60.5 | 69.1 |
+
+Every ratio is arithmetic on colours read back out of the screenshots rather
+than on the hex the probe was asked for: the gear glyph and the `Log` pill on
+home, the *Add Tracker* row's label on settings, each taken as the most common
+exact colour in its rect. The glyph's circle and the black label came back `#FBFBFF` and
+`#000000` on all ten home shots and the `Form` row `#FFFFFF` on all ten
+settings shots, and the fill came back exactly the hex the launch argument
+named — which is the discriminator: a
+shot was kept only when the pixel on screen was the candidate asked for, on top
+of the `probe-args.txt` check. All twenty are distinct files by `md5`.
+
+Row 1 reproduces item 18's published 3.48 and 3.59, which is the check that
+this table measures what that one measured.
+
+**So the whole table is flat.** Bar glyph 3.01–3.04, `Form` row 3.10–3.13,
+black label 6.70–6.77, `L*` 60.3–60.6. That is the design: they are the same
+colour to every number this project has been using, and what is left is the
+part no number here captures.
+
+### What the eye does with it
+
+`L*` is a function of luminance, so it cannot separate these — and the
+photographs plainly do. On `31c-strip-bar.png`, **10 (`#8484FF`) and 9
+(`#2693FF`) read as the lightest pills of the ten, and 6 and 7 — the mint and
+the cyan-teal — as the heaviest, with 2 (`#E57200`) reading heavy and dark
+rather than warm.** That is the Helmholtz–Kohlrausch effect: saturated colour
+looks lighter than its luminance, most strongly toward blue.
+
+Put a number on it only as a prediction, not a measurement: Fairchild and
+Pirrotta's 1991 H-K lightness, `L** = L* + (2.5 − 0.025 L*)·g·C*` with
+`g = 0.116|sin((h−90)/2)| + 0.085`, computed from the hex values, orders them
+
+    10 74.0   9 72.8   4 71.9   3 70.1   5 69.6   2 69.5   8 68.4   6 67.1   7 66.9
+
+against today's control at 63.2. The photographs agree at both ends. In the
+middle they do not separate by eye, so the ordering there is the model's and
+not this page's.
+
+Two things fall straight out of that, and both are answers to the question that
+was asked:
+
+- **A hue that stays in the mint's family reads no lighter than the mint.**
+  7 (`#00A3A3`) is 15° away and predicts 66.9 against the mint's 67.1 — the
+  cyan-teal is the one candidate the model puts *below* it, and on the strip
+  the two are hard to tell apart. Inside the family, the 4.4 `L*` the last pass
+  found really is all there is.
+- **"Yellow-green reads bright and fresh" did not survive the render.** At this
+  luminance a fully saturated yellow-green is `#53A500`, and on the strip it
+  reads as a strong grass green, not as a light one.
+
+### The glyph goes the other way, and that is the surface that set the ceiling
+
+`31c-strip-nav-glyph.png` is worth more than the pill strip, because the nav
+glyph is the thing that runs out first. **On the gear, the two candidates that
+read lightest as a pill read weakest as a glyph**: the periwinkle gear is hazy
+against its `#FBFBFF` circle where the green and the azure are crisp, with
+today's colour and the mint-ceiling in between. Every one of them measures
+3.01–3.04.
+
+That is a judgement from the photographs and not a measurement, and nothing
+here predicts it: the WCAG ratio is constant by construction, and CIEDE2000
+against the circle is nearly as flat — 35.5 to 41.4 across the ten, with its
+*minimum* at 8 (`#009DD2`), which is one of the crisper ones. So the lightness
+a blue buys on the fill is paid for on the surface the ceiling came from.
+
+### Does it still look like the same app in dark?
+
+Dark is `#00DAC3` and is not changing. `31c-strip-vs-dark.png` puts it above
+all ten. In CIELAB hue, measured from the shipped colour:
+
+| candidate | 6 | 7 | 5 | 4 | 3 | 8 | 9 | 10 | 2 |
+|---|---|---|---|---|---|---|---|---|---|
+| ° from dark's mint | 0 | 15 | 32 | 45 | 54 | 66 | 97 | 116 | 122 |
+
+Read against the strip: 6 and 7 are the same app, plainly. 5 (`#00A854`) is
+greener but still reads as a relative. **8 (`#009DD2`) is where it turns** — it
+is legible, it is fresher than the mint, and next to `#00DAC3` it reads as a
+blue app whose dark mode is a mint app. 9 and 10 are not the same product in
+the two appearances, and neither is 2. The candidate that reads lightest,
+`#8484FF`, is 116° away: it is shown because it is the answer to "which hue
+looks lightest", and that is what it costs.
+
+### Recommendation
+
+**Keep `#009888`, for the third time and for a new reason.** The first pass
+found the window's floor, the second its ceiling, and this one says the ceiling
+is the same height at every hue: at the luminance the tint needs, no hue that
+still belongs beside dark's mint reads lighter than the mint does.
+
+If the murk is to be answered by hue rather than by light, the only candidate
+worth the trade is **7, `#00A3A3`** — 15° cooler, indistinguishable in every
+measurement here, and it reads cleaner rather than lighter. It buys a
+character change, not a brightness one, and it does not touch the dark
+pairing.
+
+**8, `#009DD2`, is the one to look at if the answer is allowed to cost
+something.** It is the lightest-reading candidate that still keeps a crisp
+glyph, and the price is on the strip: the app is a blue app in light and a mint
+app in dark. That is item 18's decision reopened, not a tweak to it.
+
+The user picks. Dark is untouched either way.
