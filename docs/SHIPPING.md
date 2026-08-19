@@ -171,6 +171,133 @@ features.
 name. A USPTO search is cheap insurance before printing it anywhere, though a
 phrase this generic is unlikely to be contested.
 
+## The icon
+
+Not chosen yet — six candidates were rendered so there is something to choose
+between. The images are not in the repo (`.gitignore` refuses `*.png`, and for
+good reason); they were written to `~/dev/boring-tracker-icon/` by a standalone
+Core Graphics script kept alongside them, which re-renders everything in about
+a second with no project and no simulator.
+
+### What it has to be
+
+The name is the brief. *Boring Tracker* promises no streaks, no badges and no
+opinion about your body, so the icon cannot promise energy or transformation —
+an icon that oversells is the first broken promise a user sees. It should read
+as a utility that shipped inside iOS, which rules out the whole fitness
+vocabulary: flames, bolts, hearts, rings, gauges, arrows trending up.
+
+The size that decides it is **40pt** — Spotlight, Settings, notifications —
+so everything was designed there and scaled up, and every candidate was also
+rendered at 20pt, which is where a mark actually dies.
+
+### The candidates
+
+`bars` (four bars, no trend), `grid` (one day marked on a grid of days),
+`ledger` (rows of label and number), `tally` (four and a crossbar), `point`
+(one value written down), `keypad` (the number pad is the interface).
+
+Judged from renders at device pixel sizes, not on a device — no simulator was
+involved. At 20pt, `grid` collapses into grey texture and `tally` into a
+scribble; `keypad` survives but reads as Calculator, which is a bad neighbour
+to be mistaken for. `bars`, `ledger` and `point` all hold.
+
+**The recommendation is `ledger`**: three rows, a label rule on the left and a
+shorter block right-aligned like a column of numbers. It says *things get
+written down here in rows*, which is what the app is, and unlike `bars` it
+promises no trend. `bars` is the safe runner-up and the most immediately
+readable as "tracker", at the cost of looking like every competitor.
+
+### Background colour, and why it is not the accent
+
+Three treatments were rendered: teal fill with a white mark, near-black with a
+teal mark, and near-white with a teal mark. An icon's background has to keep
+its silhouette against **both** home screens, and only the mid-luminance fill
+does. WCAG contrast of the icon background against the home screen behind it,
+computed in sRGB by the render script:
+
+| treatment | vs light `#EFEFF4` | vs dark `#0B0B0C` |
+|---|---|---|
+| teal `#00786C` | 4.69:1 | 3.66:1 |
+| ink `#1F2426` | 13.69:1 | 1.25:1 |
+| paper `#F2F2F7` | 1.03:1 | 17.63:1 |
+
+The near-white icon is invisible on a light home screen and the near-black one
+is invisible on a dark one, which the renders show plainly.
+
+The teal is `#00786C`, **darker than the shipped accent** `AccentFill`
+(`#009888`). White on the accent measures 3.59:1; darkening it to `#00786C`
+gets the mark to 5.38:1 while keeping the silhouette numbers above. The icon
+does not have to be the accent colour, and here it should not be.
+
+### The prompt
+
+For trying another tool's take on it — also saved at
+`~/dev/boring-tracker-icon/prompt.md`. It is deliberately full of negatives:
+a prompt that would produce any fitness app's icon is a failed prompt.
+
+```
+Design an iOS app icon for Boring Tracker.
+
+What the app is. You open it, type a number, and it is gone. Calories, weight,
+water, cigarettes, pushups, hours of sleep — any number that repeats. It is
+free, has no account, no server, no ads and collects nothing. It is one
+person's utility, not a product with a brand.
+
+What the name promises. "Boring" is a commitment the app can be held to: no
+streaks, no badges, no confetti, no rings, no grades, no notification asking
+where you have been. The app has no opinion about your body. The icon must not
+promise energy, transformation or progress, because the app deliberately
+refuses to deliver any of it. It should look like a utility that shipped inside
+iOS — closer to Calculator, Clock or Files than to any fitness app.
+
+Design it at 40pt and scale up, not the reverse. 40pt is Spotlight, Settings
+and notifications, and that is where most people will ever see it. If a detail
+does not survive at 120x120 pixels, it does not exist.
+
+The composition. One flat, solid, mid-luminance background colour filling the
+whole square, and exactly one white mark on it. The mark is a plain geometric
+shape or a small group of them — bars, rules, dots — not an illustration.
+Generous margins: the mark occupies roughly the middle 65% of the square,
+because iOS crops the square to a rounded superellipse.
+
+The background colour must survive both home screens. Near-white disappears
+against a light home screen and near-black disappears against a dark one; a
+mid-luminance saturated colour is the only kind that keeps its silhouette on
+both. Use a deep teal around #00786C, which measures 4.7:1 against a light home
+screen and 3.7:1 against a dark one, with the white mark at 5.4:1 against the
+teal. Any substitute must clear roughly the same three numbers.
+
+Hard constraints.
+- No text, no letters, no digits. The app's name is already printed under the
+  icon, and a word at 40pt is a smudge.
+- No gradients, no glow, no drop shadows, no bevel, no 3D, no glass, no
+  texture, no outer border. Flat fills only.
+- One idea. Not a mark plus a badge plus a background pattern.
+- Nothing from the fitness-app vocabulary: no flame, no lightning bolt, no
+  heart, no dumbbell, no apple, no leaf, no droplet, no ring, no gauge, no
+  progress arc, no arrow trending up, no checkmark, no star, no trophy.
+- No mascot, no face, no hand, no character of any kind.
+- No tally marks. They read as a counter app, and that is the wrong shelf.
+- Nothing that resembles an existing Apple icon: not a keypad grid
+  (Calculator), not a bulleted list with round bullets (Reminders), not a
+  folder, not a lined yellow page (Notes).
+
+What good looks like. Somebody glancing at it at 40pt should read "something is
+written down here, in rows, with numbers" — a record, a ledger, a plotted
+value. Not "this app will improve you". Boring on purpose, and confident about
+it.
+
+Deliver a flat vector-style 1024x1024 square with no transparency and no
+pre-applied rounded corners — iOS applies the mask itself.
+```
+
+### Two things to remember when one is installed
+
+The App Store rejects an icon with an alpha channel, so the 1024 must be a flat
+opaque square — and it must not have rounded corners baked in, because iOS
+applies the mask itself and a pre-rounded icon gets rounded twice.
+
 ## Before submitting
 
 Things that are easier handled early than discovered at submission:
