@@ -199,6 +199,14 @@ landed, and an empty input with the session still working means it did not.
 Grep the session text for a distinctive word from the message before trusting
 that a redirect arrived.
 
+**Pass `--select`, or the text lands in a session you cannot submit to.** Every
+call above needs it. Without it the payload reaches the input buffer of a
+session whose surface is not the active one and simply sits there — the grep
+for your distinctive word *succeeds*, because the text is on screen, so the
+confirmation above passes while nothing has been sent. A following newline does
+nothing either, by `session type` or by `--stdin`. Four calls went into
+convincing one session to read a brief before `--select` was the answer.
+
 `.claude/settings.local.json` carries the allowlist for what these sessions
 routinely run — xcodegen, xcodebuild, the git subcommands, agtermctl, read-only
 inspection. It is machine-local and gitignored. Destructive git (`reset --hard`,
