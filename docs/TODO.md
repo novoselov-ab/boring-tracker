@@ -1180,6 +1180,110 @@ pill.
 The user picks from the photographs. Do not merge a favourite and call it
 settled.
 
+## 28. Rows should behave like controls
+
+From real use, and it is one problem wearing three faces.
+
+- [ ] **Settings draws trackers at a different size from home.** They are the
+      same things; they should read the same. Home's sizing was measured and
+      settled in item 11 — match it rather than inventing a third.
+- [ ] **A tracker row in settings only responds on the text or on a small `>`.**
+      The whole row should be the target. A row that is tappable in two narrow
+      places and dead in between is worse than one that is obviously not
+      tappable at all.
+- [ ] **Rows do not feel pressed** — here and in many other places. Item 27 gave
+      the accent *fills* a scale on press; rows never got the equivalent.
+      Whatever a row's press is, it should be as unmistakable as a button's and
+      the same everywhere: settings, History, Log again, tracker detail.
+
+The lesson from item 26 applies: this is a perceptual goal, so **judge it with
+a thumb, not with a number**. A ratio passed there while the goal failed.
+
+## 29. Sort Log again chronologically
+
+Currently 60-day frequency, then lifetime count, then recency — and the user's
+expectation, reasonably, is simply "most recent first".
+
+**Switch to chronological.** The case for frequency was that the portion you
+usually eat floats up, but if you eat something often you also ate it recently,
+so chronological approximates it for staples — a point already conceded when
+recency was first replaced ("for someone eating the same five things the two
+converge"). What chronological adds is **predictability**: the list is in an
+order you can reason about, rather than shifting on counts you cannot see.
+
+- [ ] Most recently logged first.
+- [ ] Rows that cannot be repeated still sort below everything that can — that
+      rule is about what a tap can do, not about order.
+- [ ] Deduplication stays: one row per distinct name-and-values, dated by the
+      last time it was logged.
+
+Frequency is recorded rather than deleted — it was measured and it works, and
+if the list feels wrong once it is chronological, that is the thing to try
+again.
+
+## 30. Confirm a log where the eye actually is
+
+Logging from Log again does not feel like anything happened.
+
+**The diagnosis is placement, not strength.** The number counts up on the home
+card and the undo bar appears on home — both *behind* the sheet you are looking
+at. Item 15's animation is real and correct and you cannot see it from here. A
+session already noticed the same thing about repeating from History: "a repeat
+from History animates a card nobody is looking at", and left it.
+
+So the acknowledgement has to happen **on the row you tapped**, or on the way
+out, or both.
+
+Things to try, and judge by thumb rather than by argument:
+
+- [ ] **The row itself confirms** — a brief marked state on the row that was
+      tapped, before or as the sheet leaves. This is the strongest candidate:
+      it is exactly where the eye is.
+- [ ] **A success haptic**, distinct from item 27's press haptic. This is the
+      one signal that reaches you regardless of where you are looking, and
+      `PHILOSOPHY.md` bans haptic *celebration*, not haptic *feedback*.
+- [ ] **The dismissal carries the information** — the sheet leaving toward the
+      card it changed, rather than simply going away.
+- [ ] Whatever it is, **it delays nothing.** Item 15's rule stands: the sheet
+      closes immediately and any acknowledgement happens alongside, never in
+      front.
+
+Same question for the History repeat disc, which has the same problem for the
+same reason and should get the same answer.
+
+**Do not solve this by keeping the sheet open** so the user can see the card.
+That trades a clear confirmation for a sheet that has to be dismissed by hand,
+which costs a tap on the most repeated action in the app.
+
+## 31. Light mode's accent is murky
+
+The mint reads badly in light — too dark, not aesthetic.
+
+**That is a consequence of how it was made.** Mint failed light-mode contrast
+as a tint and as a form-button foreground (2.05:1 and 2.12:1), so item 18 built
+a colour set by *darkening the same hue* until it passed. A dimmed pastel is
+not a colour anyone would choose on purpose; it is a bright colour with its
+brightness taken away.
+
+**A colour set's two values do not have to be one hue at two brightnesses.**
+They are two deliberate choices, one per appearance — that was the argument for
+having a set at all, and it got applied as arithmetic instead of as a decision.
+
+- [ ] Choose light mode's accent **for light mode**, not by darkening dark
+      mode's. Something naturally deeper — a teal, a deep green, whatever
+      looks right — rather than mint with the light turned down.
+- [ ] It still has to clear 3:1 as a tint and as a form-button foreground.
+      That constraint is what created the problem; it does not go away.
+- [ ] Dark mode is settled and measured. **Do not touch it.**
+- [ ] **Render options and photograph them**, the way item 27 did the pairings,
+      outside the repo. This is taste, so it needs looking at rather than
+      arguing about, and the user picks.
+
+Worth noting for whoever does it: `docs/accent-options.md` measured twelve
+candidates but **in dark only**, at the user's direction. There is no
+equivalent evidence for light, so this is not a lookup — it is the same
+exercise, done for the other appearance.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
