@@ -15,10 +15,20 @@ extension DynamicTypeSize {
     ///
     /// `.xxxLarge`, not `isAccessibilitySize`, because that is where the card
     /// put it and one threshold read from four places is the point of this
-    /// being here at all. It costs the list rows nothing to stack a step early:
-    /// checked on the `many` fixture at `.xxxLarge`, a History row is three
-    /// lines either way — stacked it spends one on the time and gets the
-    /// identity onto one line, side by side it wraps the identity onto two.
+    /// being here at all. The card's own argument, which lived on a
+    /// `TrackerCard.isStacked` that item 28 deleted once `TrackerRowName` took
+    /// the last branch on it: the fallback was pitched at the accessibility
+    /// sizes because that is where the name was first seen to collapse, but the
+    /// top of the *normal* slider is already past it — on an SE, "Calories
+    /// burned exercising" beside "1,234,567 kcal" leaves "Calo…" at
+    /// `.xxxLarge`, which does not tell that row from the "Calories" one under
+    /// it. `.xxLarge` still leaves "Calorie…" and is left alone: that reads, and
+    /// it is where the density is still worth having.
+    ///
+    /// It costs the list rows nothing to stack a step early: checked on the
+    /// `many` fixture at `.xxxLarge`, a History row is three lines either way —
+    /// stacked it spends one on the time and gets the identity onto one line,
+    /// side by side it wraps the identity onto two.
     var stacksRows: Bool { self >= .xxxLarge }
 }
 

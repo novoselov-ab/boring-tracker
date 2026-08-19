@@ -398,10 +398,12 @@ struct SettingsView: View {
             // picks it with the finger still inside. Releasing at 150 moved the
             // dragged block onto the first row, from inside the list.
             //
-            // Re-measured for item 28, which cut a row from 74pt to 52 — the
-            // reading before it was 166…210 on an iPhone 17, against 50pt of
-            // clearance. Same conclusion with more room, and the list's own
-            // frame did not move.
+            // Re-measured for item 28, which cut a row from 74pt to 52. The
+            // reading before it was 166…210 on an iPhone 17, 50pt clear; the
+            // row is now 6pt *closer* to the band's top, at 44.3pt of
+            // clearance, because a shorter row starts higher inside the same
+            // list. Less room, not more — the conclusion survives it, and the
+            // list's own frame did not move.
             //
             // What it would cost is a drag released a few points past an edge
             // the finger cannot see — likeliest at the ends of the list, which

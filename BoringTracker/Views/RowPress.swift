@@ -51,6 +51,18 @@ extension Color {
 /// the same press leaves it at 961 while still painting `#3A3A3C` behind the
 /// row.
 ///
+/// **The haptic comes with it, and its open question comes with that.**
+/// `pressHaptic` was on three small, deliberate targets — a 30pt disc, a 44pt
+/// `+`, the Log pill — and is now on every row of five screens, which is most
+/// of the app's touch area. A flick does not fire it: the list delays the
+/// touch, and a drag started with no pause leaves a settings row at `#1C1C1E`
+/// through the whole gesture. A finger that *rests* does — measured here, a
+/// stationary finger has the row at `#3A3A3C` within 0.3s, and dragging away
+/// after that cancels the tap but not the impact it already gave. That is
+/// exactly the "press called off" case item 27 recorded and could not judge in
+/// a simulator, on a much larger surface; item 17's device pass keeps the
+/// haptic or deletes it, and this is the strongest reason it might be deleted.
+///
 /// **The `visualEffect` is not free at rest, and the price is 14,485 pixels.**
 /// A row wearing this draws into its own layer whether or not it is pressed, and
 /// text rasterised in that layer lands fractionally differently: home at rest is
@@ -90,6 +102,9 @@ struct RowButtonStyle: ButtonStyle {
                 )
             }
             .animation(AccentFillPress.animation, value: isPressed)
+            // Same feedback the accent fills get, and it takes the same open
+            // question with it — see the note on this type about what it puts
+            // on item 17's list.
             .pressHaptic(isPressed)
     }
 }
@@ -103,8 +118,20 @@ struct RowButtonStyle: ButtonStyle {
 /// screens — including two that build their rows in methods on the enclosing
 /// view and have nowhere to put one. One `ButtonStyle` that every call site
 /// names is the thing that keeps these five rows agreeing, which is the whole
-/// point of the item; a highlight two points wider is not worth five copies of
-/// a boolean.
+/// point of the item; a highlight inset by the row's own margins is not worth
+/// five copies of a boolean.
+///
+/// **On two of the five screens it therefore covers half the row, and that is
+/// the honest thing about it.** A History row and a home card are an `HStack`
+/// of *two* buttons — the part that opens something, and a disc or a `+` that
+/// writes — so the wash stops with a hard edge about 50pt before the row's
+/// trailing edge, where the second button's 44pt box and the 8pt gap begin.
+/// iOS's own `NavigationLink`, which is where this colour was sampled from,
+/// fills the whole cell. Left as it is on the argument that those rows really
+/// are two controls and washing the half you hit is what says which one you
+/// got; the alternative is the `@State` above. It is written down because a
+/// reader who has only seen settings or the Log again sheet — where the row is
+/// one button and the wash does span it — would take it for a bug.
 ///
 /// The corner radius is the one settings already draws a full-row wash at —
 /// `SettingsView`'s drop target has tinted the row it would land on at

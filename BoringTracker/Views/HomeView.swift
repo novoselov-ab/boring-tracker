@@ -397,11 +397,11 @@ struct HomeView: View {
 /// in the height of a standard list row, and the number is still the loudest
 /// thing on it.
 ///
-/// At `.xxxLarge` and above it goes back to stacking — see `isStacked`. The
-/// row is only worth compressing while it still reads.
+/// At `.xxxLarge` and above it goes back to stacking — see
+/// `DynamicTypeSize.stacksRows`. The row is only worth compressing while it
+/// still reads.
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
-    @Environment(\.dynamicTypeSize) private var typeSize
     /// This was "the app has exactly one animation, and this is it" until item
     /// 27, which gave every accent fill a scale on press — a second animation,
     /// on five controls, reached far more often than a count. It asks in
@@ -468,33 +468,10 @@ private struct TrackerCard: View {
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12))
     }
 
-    /// Whether the row has given up on fitting on one line.
-    ///
-    /// One threshold, read in both places that branch on it — the layout and
-    /// the name's line cap — because a row that stacks with its name still
-    /// capped to one line is the clipped-name bug wearing the other layout.
-    ///
-    /// `.xxxLarge`, not `isAccessibilitySize`. The fallback was pitched at the
-    /// accessibility sizes because that is where the name was first seen to
-    /// collapse, but the top of the *normal* slider is already past it: on an
-    /// SE, "Calories burned exercising" beside "1,234,567 kcal" leaves "Calo…"
-    /// at `.xxxLarge`, which does not tell that row from the "Calories" one
-    /// under it. `.xxLarge` still leaves "Calorie…" and is left alone — that
-    /// reads, and it is where the density is still worth having.
-    ///
-    /// The number itself now lives on `DynamicTypeSize`, because three list
-    /// screens have the same row and were breaking at the same size with no
-    /// fallback at all. This is the same question asked from the same place —
-    /// see `StackingRow`, which is this card's own layout with the argument
-    /// above still attached to it.
-    private var isStacked: Bool {
-        typeSize.stacksRows
-    }
-
     /// One line normally, stacked once the text outgrows it.
     ///
     /// The whole point of item 11 is that a name and a number fit on one row,
-    /// and at ordinary sizes they do. Past `isStacked` they cannot: the number
+    /// and at ordinary sizes they do. Past `stacksRows` they cannot: the number
     /// is sized first, the name absorbs the entire shortfall, and the screen
     /// becomes a column of numbers with no legible labels — at AX3 and up
     /// "Calories" rendered as a single clipped glyph. Density is worth having
@@ -524,7 +501,7 @@ private struct TrackerCard: View {
                 // gives way, because the number is the one thing on this
                 // row that has to be readable across a kitchen and a
                 // truncated name still says which tracker it is. How far
-                // that goes is bounded by `isStacked` rather than by
+                // that goes is bounded by `stacksRows` rather than by
                 // anything here: the worst case left side by side is
                 // "Calorie…" beside "1,234,567 kcal", on an SE at
                 // `.xxLarge`. A floor on the name was tried instead and
@@ -546,7 +523,8 @@ private struct TrackerCard: View {
     /// trackers at a different size** (docs/TODO.md item 28) — the type carries
     /// the fonts, the line cap and the argument for all of it, and settings
     /// now draws the same one. Nothing this card renders changed with the move:
-    /// the cap asks `stacksRows`, which is what `isStacked` above reads too.
+    /// the type asks `DynamicTypeSize.stacksRows` for the cap, which is the
+    /// same threshold this card's layout branches on.
     ///
     /// "8 hours ago" is the caption here, and it stays grey because it
     /// genuinely is secondary to the reading it dates.

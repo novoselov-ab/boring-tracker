@@ -1264,6 +1264,24 @@ state down as well would scale the disc twice. On History and home the disc is
 its own button inside a row that does something else, so those two keep
 `.accentFill` and are unchanged.
 
+**The wash covers half a row on two of the five screens**, and that is a design
+call rather than an oversight. A History row and a home card are two buttons in
+an `HStack`, so the highlight stops about 50pt short of the trailing edge where
+the disc's own 44pt box begins — where iOS's own `NavigationLink`, the row this
+colour was sampled from, fills the whole cell. Kept, on the argument that those
+rows really are two controls and washing the half you hit says which one you
+got. Filling the row instead means lifting the press state into a `@State` on
+every row of five screens, two of which build their rows in methods on the
+enclosing view.
+
+**The haptic now covers most of the app's touch area, and item 17 should weigh
+that.** `pressHaptic` was on three small deliberate targets and is now on every
+row as well. A flick does not fire it — with no pause a drag leaves a settings
+row at `#1C1C1E` for the whole gesture — but a finger that rests does, and the
+row is at `#3A3A3C` within 0.3s, so dragging away after that cancels the tap and
+not the impact. That is item 27's "press called off" on a much bigger surface,
+and it is the strongest argument yet for deleting the haptic outright.
+
 ## 29. Sort Log again chronologically — done
 
 Most recently logged first.

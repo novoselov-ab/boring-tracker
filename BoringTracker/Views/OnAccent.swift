@@ -412,12 +412,14 @@ enum AccentFillPress {
 /// item 26 replaced with a named colour, and applying both would fade the
 /// pressed value a second time.
 ///
-/// **Two call sites now, not three.** The Log again row took this until item
-/// 28 gave list rows a press of their own — see `RowButtonStyle` — because
+/// **Four call sites, and it was five until item 28.** The Log again row took
+/// this until rows got a press of their own — see `RowButtonStyle` — because
 /// there the whole row is the button and the press belongs to the whole row.
-/// What is left here is the two controls whose label *is* an accent fill: a
-/// home card's `+` and History's repeat disc, each a button inside a row that
-/// does something else.
+/// What is left is every control whose label *is* an accent fill: `UndoButton`,
+/// home's bottom-bar Log again disc, a home card's `+`, and History's repeat
+/// disc. Counted rather than remembered, because the sentence here said "three"
+/// after an edit meant to say "three discs", and a comment that undercounts its
+/// own call sites is how two of the four get audited and the others do not.
 ///
 /// **`.plain` dimmed a *disabled* label as well, and that half was not a
 /// trade — it was missed.** A disabled Log again row greying its whole self is

@@ -432,10 +432,15 @@ that has one — settings, History, the Log again sheet, tracker detail, home's
 cards. The whole row is the target, not the words drawn in it: a row you can hit
 on its text and on its chevron and nowhere in between is worse than one that is
 plainly not tappable, because a miss teaches you the tap failed rather than that
-you aimed wrong. And it responds to the press — the row fills with the same grey
-iOS presses its own rows to and goes down by the same 2pt the app's buttons have
+you aimed wrong. And it responds to the press — it fills with the same grey iOS
+presses its own rows to and goes down by the same 2pt the app's buttons have
 gone down by since item 27. Under Reduce Motion it takes the colour and not the
 movement, which is the rule every press in this app follows.
+
+Two of those rows are really *two* controls side by side — a History row and a
+home card each pair something that opens with a disc or a `+` that writes — and
+there the wash covers the half you actually pressed rather than the whole row.
+That is the row saying which of its two buttons you got.
 
 Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 
