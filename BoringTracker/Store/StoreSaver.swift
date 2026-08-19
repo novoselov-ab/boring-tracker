@@ -58,6 +58,24 @@ actor StoreSaver {
         }
     }
 
+    /// Waits for the write that is already on its way, without hurrying it.
+    ///
+    /// **This is how an ordinary save finds out whether it worked.**
+    /// `save(_:revision:)` returns the moment the document is queued, so the
+    /// write it will do has not happened yet and the error it might produce
+    /// does not exist to be read — which is why `lastError`, kept here
+    /// precisely so the app can say so out loud, went unread on every path
+    /// except `flush`. A user logging all evening onto a full disk was told
+    /// nothing until the app was next backgrounded.
+    ///
+    /// Deliberately not `flush`: it cancels nothing and forces nothing early,
+    /// so the coalescing window still does its job and a burst of edits is
+    /// still one write. Everything scheduled during one window waits on the
+    /// same task and comes back together.
+    func settled() async {
+        await writer?.value
+    }
+
     /// Writes anything outstanding and waits for it to land. Called when the
     /// app leaves the foreground, so backgrounding or force-quitting can lose
     /// at most the last moment of typing.

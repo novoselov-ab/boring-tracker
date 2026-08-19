@@ -1651,6 +1651,48 @@ struct StoreTests {
         }
     }
 
+    @Test("A save that fails on its own says so, without waiting to be backgrounded")
+    func failedOrdinarySaveIsReported() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        // A file where the directory should be, so every write fails — the
+        // same lever `SaverTests.failedWritesAreRetried` pulls.
+        try Data("in the way".utf8).write(to: file.directory)
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [tracker]), file: file)
+
+        store.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
+
+        // `StoreSaver.lastError` exists "so the app can say so out loud rather
+        // than quietly losing data", and the ordinary debounced write is where
+        // that matters: somebody logging all evening on a full disk should not
+        // find out only when the app is next backgrounded.
+        try await confirmEventually("the failure reaches the screen") {
+            await store.saveError != nil
+        }
+    }
+
+    @Test("A save that recovers stops saying it failed")
+    func recoveredSaveClearsTheError() async throws {
+        let file = temporaryStoreFile()
+        defer { file.removeDirectory() }
+        try Data("in the way".utf8).write(to: file.directory)
+        let tracker = Tracker(name: "Calories", modified: time(1))
+        let store = makeStore(StoreDocument(trackers: [tracker]), file: file)
+
+        store.add(Entry(trackerID: tracker.id, value: 600, date: date(2026, 3, 14, 8)))
+        try await confirmEventually("the failure is reported") { await store.saveError != nil }
+
+        try FileManager.default.removeItem(at: file.directory)
+        store.add(Entry(trackerID: tracker.id, value: 200, date: date(2026, 3, 14, 9)))
+
+        // A notice that outlives the problem is its own kind of lie, and the
+        // retry is what clears it — both entries land, the first having been
+        // held in `pending` the whole time.
+        try await confirmEventually("the notice goes away") { await store.saveError == nil }
+        #expect(try file.read(file.url).entries.count == 2)
+    }
+
     @Test("Flushing writes immediately, so backgrounding cannot lose the last edit")
     func flushWritesAtOnce() async throws {
         let file = temporaryStoreFile()

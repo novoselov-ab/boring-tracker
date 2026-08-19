@@ -266,7 +266,25 @@ final class Store {
     private func scheduleSave() {
         revision += 1
         let (document, revision) = (self.document, self.revision)
-        Task { await saver.save(document, revision: revision) }
+        Task { [weak self] in
+            guard let self else { return }
+            await saver.save(document, revision: revision)
+            // Then wait for it, and read back whether it worked. `save`
+            // returns as soon as the document is queued, so without
+            // `settled()` this task ended before the write it asked for and
+            // `saveError` only ever moved on `flush` — which is the scene
+            // going inactive. A disk that has stopped accepting writes was
+            // therefore silent for as long as the app stayed open, while the
+            // notice row that exists to say so sat empty.
+            await saver.settled()
+            let message = await saver.lastError.map(Self.describe)
+            // Only on a change. `@Observable` publishes every set whether or
+            // not the value moved, and there is one of these tasks per
+            // mutation — fifty in a burst, all waiting on the same write and
+            // all reading the same nil. Assigning unconditionally would
+            // invalidate home's notice row fifty times for nothing.
+            if message != saveError { saveError = message }
+        }
     }
 
     private static func describe(_ error: any Error) -> String {
