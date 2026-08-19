@@ -252,6 +252,44 @@ struct StoreTests {
         #expect(store.trackers.allSatisfy { $0.modified == time(1) })
     }
 
+    @Test("Saving a tracker nobody edited does not restamp it")
+    func noOpTrackerSaveKeepsItsStamp() {
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
+                             sortIndex: 0, modified: time(1), orderModified: time(1))
+        let store = makeStore(StoreDocument(trackers: [weight]))
+
+        // `TrackerEditor` hands back exactly what it was given when Save is
+        // tapped with nothing typed — the button is enabled on a non-empty
+        // name, not on a change.
+        store.update(store.trackers[0])
+
+        #expect(store.trackers[0].modified == time(1))
+    }
+
+    @Test("Opening a tracker and saving it cannot discard a rename made elsewhere")
+    func noOpTrackerSaveDoesNotOutrankARename() {
+        let weight = Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1,
+                             sortIndex: 0, modified: time(1), orderModified: time(1))
+        let phone = makeStore(StoreDocument(trackers: [weight]))
+
+        // The iPad renamed it at 10:02 and the phone opened the editor at
+        // 10:05 and tapped Save without typing anything.
+        var renamed = weight
+        renamed.name = "Bodyweight"
+        renamed.unit = "lb"
+        renamed.modified = time(2)
+        let tablet = StoreDocument(trackers: [renamed])
+
+        phone.update(phone.trackers[0])
+
+        let merged = phone.document.merged(with: tablet)
+        // Exactly the rule `update(_ updatedEntries:)` already follows for a
+        // batch's members: a rewrite that changed nothing is not a newer write,
+        // so it must not beat a real edit made earlier on another device.
+        #expect(merged.trackers.first?.name == "Bodyweight")
+        #expect(merged.trackers.first?.unit == "lb")
+    }
+
     @Test("A drag on one device and a rename on another both survive the merge")
     func reorderAndRenameDoNotCompete() {
         let calories = Tracker(name: "Calories", sortIndex: 0, group: "Food",

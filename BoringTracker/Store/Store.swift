@@ -1094,16 +1094,30 @@ final class Store {
 
     func update(_ tracker: Tracker) {
         guard let index = trackers.firstIndex(where: { $0.id == tracker.id }) else { return }
+        let old = trackers[index]
         var updated = tracker
-        updated.modified = .stamp()
         // Position stays whatever the store currently says, never what the
         // caller is holding. The editor snapshots a tracker when it opens and a
         // swipe action captures one when the row is built, so saving a rename
         // would otherwise quietly undo a drag — or an import — that happened in
         // between, and put the stale position back under a fresh timestamp.
-        updated.sortIndex = trackers[index].sortIndex
-        updated.orderModified = trackers[index].orderModified
-        let kindChanged = trackers[index].kind != updated.kind
+        updated.sortIndex = old.sortIndex
+        updated.orderModified = old.orderModified
+        // A save that changed nothing is not a write, and must not be stamped
+        // like one. `TrackerEditor`'s Save is enabled on a non-empty name
+        // rather than on a change, so opening a tracker to read its unit and
+        // tapping Save used to make this device's copy newer — and a merge
+        // then discarded a rename made on the iPad an hour earlier, silently.
+        //
+        // The same rule and the same reason as `update(_ updatedEntries:)`
+        // above, which has followed it for the members of a batch since the
+        // batch editor started submitting all of them. This is the other
+        // record type, and it was the half that never got it.
+        var withoutStamp = updated
+        withoutStamp.modified = old.modified
+        guard withoutStamp != old else { return }
+        updated.modified = .stamp()
+        let kindChanged = old.kind != updated.kind
         trackers[index] = updated
         if kindChanged { rebuildTotals() }
         scheduleSave()
