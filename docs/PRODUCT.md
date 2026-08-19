@@ -447,18 +447,25 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
 ## Data, export, import
 
 - Storage is local, on-device. That's the source of truth.
-- **Export** writes one file containing everything: trackers, entries,
-  presets, goals. Human-readable JSON, with the format documented in the repo
-  so anyone can write a converter.
+- **Export** writes one file containing everything: the schema version, the
+  trackers, the entries and the tombstones. Human-readable JSON, with the
+  format documented in the repo so anyone can write a converter. There is no
+  preset record and no goal field to export — presets became "a past entry you
+  liked" and goals were decided against, both below.
 - **CSV export** as well: one whole-history file with one row per entry,
   including batch and tracker IDs plus the tracker's current name, unit and
   kind. Keeping a batch's rows together makes the file useful in a spreadsheet
   without throwing away the relationship between values logged at once.
 - **Either file leaves through the share sheet** — AirDrop, Messages, Mail,
-  anything that takes a file — or straight into Files, which is its own row
-  because it is the export people repeat to the same folder and the share sheet
-  costs a tap to get there. Both doors write the same bytes under the same dated
-  name, `boring-tracker-2026-08-17.json`.
+  anything that takes a file, with Files among them. It carries a dated name,
+  `boring-tracker-2026-08-17.json`.
+
+  There was a second door for a while: a *Save to Files* row apiece, going
+  straight to the document picker, on the reasoning that repeating an export to
+  the same folder should not cost the tap the share sheet charges to get there.
+  Both rows and the whole `.fileExporter` path were **removed** once the share
+  sheet worked (TODO item 18c) — two doors to the same bytes is two things to
+  keep in step, and Files is one tap inside the sheet.
 - **Import** restores from an export file. Merge or replace, stated clearly
   before it happens, because this is the one destructive action in the app.
   Either way the document it replaces is kept as a one-step recoverable backup:
@@ -470,14 +477,20 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
 
 ## Scope
 
-**v1 ships:** trackers (both kinds), logging by typing a number, recents,
-backdating, editing and deleting, history list, graphs, JSON + CSV export,
-JSON import, dark mode.
+**v1 ships:** trackers (both kinds), logging by typing a number, backdating,
+editing and deleting, history list, graphs, the Log again sheet, JSON + CSV
+export, JSON import, dark mode.
 
-**Right after v1:** presets, once we've used the basics enough to know what
-shape they should take. Then home screen widget, App Shortcuts / Siri, Lock
-Screen widget — these matter a lot for the "minimum taps" promise, but the app
-has to exist first.
+This line used to say *recents* and to put *presets* in the paragraph below,
+"once we've used the basics enough to know what shape they should take". Both
+have since been answered and neither arrived in the shape the words expected.
+The log sheet's row of recent **values** was built and then removed (TODO item
+11): people do not log the same number twice, they log the same food. And
+presets are not a v1.1 feature to design — they are the **Log again** sheet,
+which shipped inside v1 and delivered them by *removing* a model type rather
+than adding one. What is left for "right after v1" is the home screen widget,
+App Shortcuts / Siri and the Lock Screen widget — these matter a lot for the
+"minimum taps" promise, but the app has to exist first.
 
 ### Decided against
 
@@ -502,8 +515,15 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
 
 ## Technical direction
 
-- Swift + SwiftUI, current iOS minus one major version.
-- SwiftData (or plain Core Data / SQLite if it fights us) for local storage.
+- Swift + SwiftUI, current iOS minus one major version — iOS 18, built with
+  Xcode 26.
+- **One JSON file, decoded into plain structs at launch**, as both the store
+  and the export format. This line used to read "SwiftData (or plain Core Data
+  / SQLite if it fights us)"; that was written before the storage question was
+  benchmarked, and the benchmark went the other way. There is no SwiftData, no
+  Core Data and no SQLite in this app — see "Storage: a JSON file" in
+  [TECH.md](TECH.md) for the numbers and for why the export format being the
+  storage format is what decided it.
 - Zero third-party packages. No package manager entries at all, ideally.
 - Tests on the parts that would silently ruin data: day-boundary math,
   aggregation, export/import round-trip.
