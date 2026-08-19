@@ -146,16 +146,25 @@ struct HomeView: View {
     ///
     /// **The small one is the risk in item 16.** The bottom of home holds the
     /// most frequent action in the app, and a peer beside it competes with it
-    /// for the same thumb — so Repeat is not a peer. It is a bordered square
-    /// against a filled pill: no accent, no words, a third of the width, and
-    /// the same height so the bar does not grow. Two prominent buttons were
-    /// tried first and read as a choice to make on arrival, which is a decision
-    /// in front of logging and wrong by default (docs/PHILOSOPHY.md).
+    /// for the same thumb — so Repeat is not a peer. It is a wordless disc in a
+    /// slot a fifth of the bar wide, against a pill that takes the rest, and it
+    /// does not set the bar's height. Two prominent buttons were tried first
+    /// and read as a choice to make on arrival, which is a decision in front of
+    /// logging and wrong by default (docs/PHILOSOPHY.md). It said "a bordered
+    /// square" here until item 27, which item 21 had already stopped being
+    /// true; what makes it secondary is the size and the missing word, not the
+    /// border it no longer has.
     ///
-    /// **On the leading side**, which costs Log nothing it was using: a
-    /// right-handed thumb rests at the bottom right, and the pill still runs
-    /// under it. Trailing was tried and puts the rarer control in the easiest
-    /// place on the screen.
+    /// **On the trailing side, and it was on the leading one until item 27.**
+    /// The original argument was that a right-handed thumb rests at the bottom
+    /// right, so the primary action belongs there and the rarer one is kept out
+    /// of the easiest place on the screen. That argument was weaker than it
+    /// looked: the pill spans most of the bar either way, so it stays under the
+    /// thumb wherever the small control sits, and the leading side is no less
+    /// reachable for a 44pt target than the trailing one. Decided by the user.
+    ///
+    /// The constraint that does hold is the paragraph above, and swapping sides
+    /// is not a licence to make these two equals.
     ///
     /// The control is History's repeat disc, deliberately — `RepeatDisc`, the
     /// same view rather than the same idea drawn again. It already means "log
@@ -179,19 +188,6 @@ struct HomeView: View {
     private var logBar: some View {
         if !store.activeTrackers.isEmpty {
             HStack(spacing: 8) {
-                Button { loggingAgain = true } label: {
-                    RepeatDisc()
-                        .frame(width: 70)
-                        .contentShape(.rect)
-                }
-                // `.accentFill` rather than `.plain`, so the disc reads the
-                // press and recedes to `Color.accentFillPressed` like every
-                // other accent fill (docs/TODO.md item 26).
-                .buttonStyle(.accentFill)
-                // The glyph stays; only what VoiceOver reads changes. "Log
-                // again" is what the screen it opens is called and what
-                // History's disc already says (docs/TODO.md item 20).
-                .accessibilityLabel("Log again")
                 // Unlike a card's small +, this is the primary action: it
                 // opens the last-used group instead of this row's. It stays
                 // centred enough to sit inside either hand's thumb arc.
@@ -213,6 +209,19 @@ struct HomeView: View {
                 // `AccentPillButtonStyle`).
                 .buttonStyle(.accentPill)
                 .controlSize(.large)
+                Button { loggingAgain = true } label: {
+                    RepeatDisc()
+                        .frame(width: 70)
+                        .contentShape(.rect)
+                }
+                // `.accentFill` rather than `.plain`, so the disc reads the
+                // press and recedes to `Color.accentFillPressed` like every
+                // other accent fill (docs/TODO.md item 26).
+                .buttonStyle(.accentFill)
+                // The glyph stays; only what VoiceOver reads changes. "Log
+                // again" is what the screen it opens is called and what
+                // History's disc already says (docs/TODO.md item 20).
+                .accessibilityLabel("Log again")
             }
             .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
             .padding(.horizontal)
