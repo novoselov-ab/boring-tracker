@@ -13,8 +13,9 @@
 > August 2026 and every one reproduces to the second decimal — and they are why
 > item 18 exists: this table is what proved one hue could not serve both
 > appearances. Item 31 was the open half — the same exercise for light mode,
-> never rendered here — and it is now the last section on this page, written
-> from its own renders rather than from this one's.
+> never rendered here — and it is now the last two sections on this page, one
+> rendering light deeper and one rendering it lighter, both written from their
+> own renders rather than from this one's.
 
 > The screenshots behind these numbers are **kept outside the repository**,
 > in `~/dev/boring-tracker-accent/`. They are 1.2 MB of PNGs that would sit in
@@ -526,3 +527,108 @@ same hue with less light in it, which is the thing item 31 asked not to do
 again, so it is the compromise rather than the answer.
 
 The user picks. Dark is untouched either way.
+
+---
+
+## Light mode, the other direction — where the ceiling is
+
+The section above rendered six candidates and every one was *deeper* than
+`#009888`, because the brief asked for "something naturally deeper". Its own
+finding is why that was the wrong direction: the stated 3:1 constraint does not
+choose, so what chose was the black label on the fill, and the deep candidates
+sit at the bottom of the window rather than at the top. This is the same
+exercise run upward.
+
+Photographs in `~/dev/boring-tracker-pairing/` as `31b-*.png` — six candidates
+on home, on settings and on the bar, plus strips for the bar, the nav-bar
+glyph, the cards and the `Form` row. **Today's `#009888` is number 1 in every
+strip, as the control.** Nothing in `BoringTracker/` changed.
+
+### The candidates
+
+All six sit on today's own hue line — red held at 0 and blue at `g × 136/152` —
+so each is `#009888` with more light in it and nothing else altered.
+
+| # | hex | bar glyph on `#FBFBFF` | `Form` row on `#FFFFFF` | black label on the fill |
+|---|---|---|---|---|
+| 1 | `#009888` | 3.48 | 3.59 | 5.85 |
+| 2 | `#009C8C` | 3.32 | 3.42 | 6.13 |
+| 3 | `#00A08F` | 3.17 | 3.27 | 6.42 |
+| 4 | `#00A493` | 3.02 | 3.12 | 6.73 |
+| 5 | `#00A896` | **2.89** | **2.98** | 7.04 |
+| 6 | `#00B3A0` | **2.56** | **2.64** | 7.96 |
+
+Every ratio there is computed from colours read back out of the screenshots
+rather than from the hex the probe was asked for: the gear glyph, the *Add
+Tracker* row's label, the `Log` pill's fill and the word sitting on it, each
+taken as the most common exact colour in its rect. Four readings came out
+identical on all twelve shots — the glyph's own circle `#FBFBFF`, the `Form`
+row `#FFFFFF`, the label `#000000`, and the fill exactly the hex the probe was
+launched with. That last one is also the discriminator: a shot was only kept
+when the pixel on screen was the candidate the launch argument named, on top of
+the `probe-args.txt` check the section above describes.
+
+Row 1 reproduces item 18's two published numbers for `#009888`, 3.48 and 3.59,
+which is the check that this table measures what that one measured.
+
+### The ceiling is `#00A493`, and it is twelve units of green above today
+
+The bar glyph is the binding number — `#FBFBFF` is a shade under white, so the
+glyph always measures a little worse than the `Form` row, and it is the glyph
+that runs out first. Walking the hue line one unit of green at a time, the last
+value that still clears 3:1 as a bar glyph is **`#00A493`, at 3.02**, twelve
+units above today's 152. `#00A594` is the first that does not, at 2.99.
+
+That is not a guess about where the accent stops working: it is the whole
+usable interval, and it is very short. In CIE `L*`, the perceptual lightness
+scale, the ceiling sits at **60.7** and today's `#009888` at **56.3**.
+Everything a lighter light accent could ever buy is those **4.4 points**, and
+the strips are what that looks like: candidates 1 through 4 read as the same
+colour.
+
+### It goes the other way for the label, and today already clears it
+
+Black on the fill improves as the fill lightens, 5.85 → 7.96 across the table,
+so the label is not what stops this direction. Its threshold is behind us:
+black on the fill crosses **4.5** — what that size of text wants, over the 3:1
+a UI element needs — going *down* from today, at **`#008375`** on this hue
+line, which measures 4.50. So the window is `#008375` at the bottom and
+`#00A493` at the top, `L*` 48.9 to 60.7, and today's colour sits inside it with
+7.4 points of room below and 4.4 above.
+
+The first pass's deep candidates are below that floor, not inside it —
+`#00796B` carries a black label at 3.95 — which is exactly why they needed the
+label turned white.
+
+### Said plainly: a visibly lighter mint fails
+
+`#00B3A0` is the first candidate in the strips that reads as a lighter, fresher
+mint rather than as today's colour again. It measures **2.56** as a nav-bar
+glyph and **2.64** as a `Form` row foreground, both under 3:1. `#00A896`, which
+is only just distinguishable from today, already measures 2.89 and 2.98.
+
+So the honest answer to "make light lighter" is that light cannot go much
+lighter while the accent is also used as a tint. The 4.4 `L*` of headroom is
+real arithmetic and it is not a colour change anyone would notice. This is not
+fixed by dropping the tint from the two `Form` rows — item 13c tried that and
+item 13e paid for it — and it would not buy anything either: the bar glyph is
+already the stricter of the two surfaces, so it sets the ceiling whether the
+`Form` rows carry the accent or not.
+
+### Recommendation
+
+**Keep `#009888`.** The direction has a ceiling four `L*` points away, and
+nothing inside that gap looks different enough to be worth spending contrast
+margin on.
+
+If a step is wanted anyway, **3, `#00A08F`** is the one to take: it keeps 0.17
+over the 3:1 line as a bar glyph, where 4 (`#00A493`) keeps 0.02 and would be
+one rounding change in the bar circle away from failing. Both are chosen against
+item 18's reason for `#009888` in the first place — it was tuned to sit where
+the system blue sits on these surfaces, 3.41 and 3.52 — and `#00A08F` gives
+that up for a change the photographs do not show.
+
+If the murk item 31 reports is still there under `#009888`, the strips say it
+is not brightness that fixes it, because brightness is what has run out. What
+is left is hue, and that is a different question from the one this page has
+now measured twice.

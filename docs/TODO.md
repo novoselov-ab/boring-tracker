@@ -1527,11 +1527,25 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       set and give the app one control whose word changes colour with the
       appearance — which that property's own doc argues against, from a time
       when the light fill was `#009888` and black worked.
+- [x] **Rendered again, upward**, because that finding says the deep
+      direction was chosen by the label rather than by the constraint the item
+      names. Six more candidates on today's own hue line, lighter than
+      `#009888` and past the point where the accent stops working, as
+      `31b-*.png` beside the first set with today's colour as the control in
+      every strip. **The window's ceiling is `#00A493`, at 3.02 as a nav-bar
+      glyph** — twelve units of green above today, `L*` 60.7 against today's
+      56.3. A mint that actually reads as lighter, `#00B3A0`, measures 2.56
+      and fails. Numbers and surfaces in the last section of
+      [accent-options.md](accent-options.md).
 - [ ] Dark mode is settled and measured. **Not touched.**
-- [ ] **The user picks, and nothing was merged.** The recommendation is
-      `#00796B` with a white label, or `#00857A` if the black label has to
+- [ ] **The user picks, and nothing was merged.** Deeper, the recommendation
+      is `#00796B` with a white label, or `#00857A` if the black label has to
       stay — and the second one is the compromise, because it is the same hue
-      with less light in it again.
+      with less light in it again. Lighter, the recommendation is to keep
+      `#009888`: the ceiling is four `L*` points away and nothing inside that
+      gap is visible in the photographs, so a lighter mint costs contrast
+      margin for a colour change the strips do not show. There is no third
+      direction on this hue line; what is left is a different hue.
 
 ## 32. A press you can see on a fast tap — done
 
