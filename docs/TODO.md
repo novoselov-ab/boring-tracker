@@ -1576,6 +1576,18 @@ the common path, and item 5's measurement was about the screen that is.
 - [ ] Decide whether editing is close enough to logging to want the same
       confirm placement.
 
+## 33b. A rounded-square Log again, in the pill's family
+
+Same corner radius as the Log pill — not a circle, not a capsule — and slightly
+wider than tall, so it reads as a rounded square at a smaller size.
+
+The two controls should look like one family at two sizes. Today the disc reads
+as a different kind of object beside a pill.
+
+- [ ] Clearly smaller than the pill; a peer beside Log competes with the most
+      frequent action in the app.
+- [ ] Photograph it beside pairing 1 in `~/dev/boring-tracker-pairing/`.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
