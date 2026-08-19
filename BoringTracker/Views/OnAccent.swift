@@ -288,10 +288,17 @@ private struct AccentFilled<S: Shape>: ViewModifier {
             }
             // Kept on under Reduce Motion, and it is the colour it carries
             // then: the scale above is already 1, so what animates is
-            // `AccentFillBackground`'s fill crossing to the pressed value over
-            // the same 0.12s instead of cutting between two frames. Turning
-            // this off as well would take away the half of the press that
-            // setting does not object to.
+            // `AccentFillBackground`'s fill crossing to the pressed value.
+            // Turning this off as well would take away the half of the press
+            // that setting does not object to.
+            //
+            // **Recorded at 60fps with the setting on**, holding home's Log
+            // pill — the fill ramps across seven frames, 2.037s to 2.137s of
+            // the capture, one frame apart at 16.7ms: a **100ms** crossing and
+            // not a cut between two frames. The hexes there are the video's and
+            // are shifted, so the endpoints come off screenshots instead:
+            // `#00DAC3` to `#07AA9A`, the same two values as with the setting
+            // off, reached the same way.
             .animation(AccentFillPress.animation, value: isPressed)
     }
 }
