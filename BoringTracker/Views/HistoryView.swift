@@ -247,11 +247,14 @@ struct HistoryView: View {
             }
         }
         .toolbar {
-            // Only when there is a list to jump around in. The two empty states
-            // above are a screen with nothing on it and a search with no
-            // matches, and a date picker over either is a control that cannot
-            // do anything.
-            if let newest = days.first?.day, let oldest = days.last?.day {
+            // Only when there is somewhere to go: two days on screen, which is
+            // the condition `canJump` explains. That covers the two empty
+            // states above — a screen with nothing on it, and a search with no
+            // matches — and the single day that was item 25's open question.
+            // The two ends exist whenever it says yes; they are unwrapped
+            // rather than forced because nothing here needs to trap.
+            if Self.canJump(days: days),
+               let newest = days.first?.day, let oldest = days.last?.day {
                 ToolbarItem(placement: .topBarTrailing) {
                     jumpButton(oldest: oldest, newest: newest, days: days)
                 }
@@ -511,10 +514,30 @@ struct HistoryView: View {
             .listRowInsets(EdgeInsets(top: 18, leading: 16, bottom: 6, trailing: 16))
     }
 
-    private struct DayGroup {
+    /// Internal rather than private, and only because the two functions below
+    /// are: the jump threshold is a rule worth testing and this suite has no UI
+    /// target, so `HistoryTests` builds this list through the same grouping the
+    /// screen draws instead of asserting against an array written by hand.
+    struct DayGroup {
         var day: DayKey
         var items: [HistoryItem]
     }
+
+    /// Whether the jump control has anywhere to go, and so whether the toolbar
+    /// draws it at all (docs/TODO.md item 25b).
+    ///
+    /// Two days is not a threshold picked to look reasonable: it is the
+    /// condition under which the control can do anything. One day is one
+    /// destination, and a jump to where you already are is not a feature — the
+    /// picker opens on a single selectable square with both month arrows
+    /// dimmed. Absent rather than disabled, because a greyed glyph invites a
+    /// tap that does nothing.
+    ///
+    /// Keyed off the *filtered* days, which is the list the screen draws and
+    /// the list the control navigates. So a search that leaves one day standing
+    /// takes the control away with it, and that is right rather than a leak of
+    /// the search into the toolbar: there is one destination on screen.
+    static func canJump(days: [DayGroup]) -> Bool { days.count >= 2 }
 
     /// The rows the query keeps, grouped by day. A day with nothing left in it
     /// is not drawn, so a search does not leave empty headings behind.
@@ -534,13 +557,15 @@ struct HistoryView: View {
     /// silently: the field says "Search names", the day headings for filtered
     /// days go with their rows, and an unmatched query gets the search empty
     /// state rather than a blank list.
-    private var days: [DayGroup] {
+    static func days(in store: Store, matching query: String) -> [DayGroup] {
         var groups: [DayKey: [HistoryItem]] = [:]
         for item in store.historyItems where item.matches(query) {
             groups[store.dayKey(item.date), default: []].append(item)
         }
         return groups.sorted { $0.key > $1.key }.map { DayGroup(day: $0.key, items: $0.value) }
     }
+
+    private var days: [DayGroup] { Self.days(in: store, matching: query) }
 
     private func title(for day: DayKey) -> String {
         day.label(today: store.today, calendar: store.calendar)

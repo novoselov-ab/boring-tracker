@@ -1005,4 +1005,76 @@ struct HistoryTests {
         #expect(DayKey.nearest(to: target, in: days.shuffled(), calendar: utc)
                 == DayKey(year: 2025, month: 12, day: 31))
     }
+
+    // MARK: - Whether the jump control is drawn at all (docs/TODO.md item 25b)
+
+    /// A store with one entry on each of `days`, each named after the day it
+    /// sits on so a query can leave a known number of days standing. Built
+    /// through the suite's own `historyStore`, like `historyDays` above, so
+    /// there is one place these tests make a store.
+    private func namedDaysStore(_ days: [DayKey]) -> Store {
+        let tracker = Tracker(name: "Calories")
+        let utc = calendar("UTC")
+        let entries = days.map {
+            Entry(trackerID: tracker.id, value: 1,
+                  date: $0.startOfDay(calendar: utc).addingTimeInterval(12 * 3600),
+                  name: "day-\($0.year)-\($0.month)-\($0.day)")
+        }
+        return historyStore(StoreDocument(trackers: [tracker], entries: entries), calendar: utc)
+    }
+
+    @Test("Nothing logged at all offers no jump")
+    func jumpControlIsAbsentOnAnEmptyStore() {
+        let days = HistoryView.days(in: namedDaysStore([]), matching: "")
+
+        #expect(days.isEmpty)
+        #expect(HistoryView.canJump(days: days) == false)
+    }
+
+    @Test("One day is one destination, so there is no control")
+    func jumpControlIsAbsentWithOneDay() {
+        let tracker = Tracker(name: "Calories")
+        // Two rows, one day: the rule counts days rather than entries, and a
+        // busy single day is still a jump to where you already are.
+        let store = historyStore(StoreDocument(trackers: [tracker], entries: [
+            Entry(trackerID: tracker.id, value: 620, date: date(2026, 3, 14, 9)),
+            Entry(trackerID: tracker.id, value: 320, date: date(2026, 3, 14, 19)),
+        ]))
+        let days = HistoryView.days(in: store, matching: "")
+
+        #expect(days.count == 1)
+        #expect(HistoryView.canJump(days: days) == false)
+    }
+
+    @Test("Two days is the first list with somewhere to go")
+    func jumpControlAppearsAtTwoDays() {
+        let days = HistoryView.days(in: namedDaysStore([DayKey(year: 2026, month: 3, day: 14),
+                                                        DayKey(year: 2026, month: 3, day: 15)]),
+                                    matching: "")
+
+        #expect(days.count == 2)
+        #expect(HistoryView.canJump(days: days))
+    }
+
+    @Test("A search that leaves one day takes the control with it")
+    func jumpControlFollowsTheFilteredList() {
+        // Five days in the store, so the control is there under no query — and
+        // the rule reads the *filtered* days deliberately: the control
+        // navigates the list as drawn, and a query that leaves one day on
+        // screen leaves one destination (docs/TODO.md item 25b).
+        let store = namedDaysStore((10...14).map { DayKey(year: 2026, month: 3, day: $0) })
+
+        #expect(HistoryView.canJump(days: HistoryView.days(in: store, matching: "")))
+        #expect(HistoryView.days(in: store, matching: "day-2026-3-14").count == 1)
+        #expect(HistoryView.canJump(days: HistoryView.days(in: store, matching: "day-2026-3-14"))
+                == false)
+        // A query that keeps all five leaves the control alone — nothing
+        // about searching removes it, only how many days it leaves standing.
+        #expect(HistoryView.days(in: store, matching: "day-2026-3-1").count == 5)
+        #expect(HistoryView.canJump(days: HistoryView.days(in: store, matching: "day-2026-3-1")))
+        // And a query matching nothing is the search empty state, which has
+        // nothing to jump around either.
+        #expect(HistoryView.canJump(days: HistoryView.days(in: store, matching: "porridge"))
+                == false)
+    }
 }
