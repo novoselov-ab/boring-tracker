@@ -1082,15 +1082,30 @@ have to wait for. **A press-down scale is none of those** — it is instantaneou
 feedback under a thumb, and it is what iOS itself does. Earlier guidance to
 prefer colour over motion was mine and it was wrong in practice.
 
-- [ ] **Make it feel like a button.** A scale under the press, quick in and
-      quick out. Judge it with a thumb, not with a ratio — the ratio already
-      passed and the goal did not.
-- [ ] **Try a light haptic on press too, and say whether it helps.**
-      PHILOSOPHY.md bans haptic *celebrations* — a `.impact(.light)` when a
-      control goes down is feedback, not congratulation, and it is most of what
-      "feels nice" means on a phone. If it reads as noise, drop it and say so.
-- [ ] Whatever it is, it applies to **every** accent fill, so the app does not
-      disagree with itself about what a press looks like.
+- [x] **Make it feel like a button.** Done in `71a1925`: the fill goes down 2pt
+      at each end of its longest edge, whatever size it is, in 66ms and back in
+      82ms. A ratio was rejected — 0.97 moves the pill 4.4pt and a disc 0.45,
+      and the disc is half of what this was reported for.
+- [x] Whatever it is, it applies to **every** accent fill. One modifier,
+      `accentFilled(_:)`, replaces four hand-written backgrounds; all five
+      controls were photographed held down and all five move 2pt.
+- [ ] **The haptic is in and unfelt.** `.impact(.light)` on the press edge, and
+      the one thing that could be checked is that a scroll does not fire it: a
+      flick that starts on a Log again row never enters the pressed state, nor
+      does one that rests 0.2s first. Whether it *helps* cannot be answered in
+      a simulator — UIKit logs "Haptics: unsupported" there and nothing reaches
+      CoreHaptics. **Item 17's device pass keeps it or deletes it.**
+- [ ] **The scale was judged by a synthesized press, not a thumb**, which is
+      the same gap. Screenshots of a held control and a 60fps capture of the
+      motion say it renders; they cannot say it feels like a press. Also item
+      17.
+
+**What was checked and was not true:** iOS's own prominent button does *not*
+scale on press. Rebuilt with `.borderedProminent` and held down on an iPhone 17
+Pro in dark, it renders 876×151 device pixels at the same origin as at rest —
+identical to the pixel — and changes only its fill, `#00DAC3` to `#33E1CF`. The
+paragraph above said the opposite. The decision stands on its own legs: colour
+alone was tried and missed.
 
 ### The pairing looks wrong
 
@@ -1098,19 +1113,39 @@ The Log again control beside Log does not align and reads as poor taste — wron
 size, wrong relationship. It is currently a 70×51 glyph square against a 292×50
 pill.
 
-- [ ] **Render at least three alternatives and photograph them**, dark mode, on
-      a real device size. This is taste; it needs looking at, not arguing about.
-      Put the images outside the repo (`.gitignore` refuses them) and give the
-      paths.
-- [ ] **Log again moves to the right, Log to the left.** Decided by the user.
+- [x] **Five alternatives rendered and photographed**, dark mode, iPhone 17 Pro,
+      by a throwaway `-pairing <n>` probe in a worktree — the argv discriminator
+      from [accent-options.md](accent-options.md), all five confirmed. The
+      images are outside the repo in **`~/dev/boring-tracker-pairing/`**:
+      `pairing-0.png` … `pairing-4.png` are whole screens and
+      `pairing-strip.png` stacks the five bars for comparison.
+
+      | # | what it is | what it is trying to do | pill |
+      |---|---|---|---|
+      | 0 | today: 30pt disc in a 70pt slot | the thing being complained about | 292 |
+      | 1 | 50×50 accent circle | agree with the pill's height and its fully-round corner, and stop the control floating | 312 |
+      | 2 | 50×50 rounded square, 16pt radius | the same, but echoing the *cards* rather than the pill | 312 |
+      | 3 | 40×50 capsule | height and corner radius of the pill, at clearly less optical weight | 322 |
+      | 4 | 30pt disc, gaps evened | keep today's weight and fix only the spacing: 16pt to the pill, 16pt to the margin | 324 |
+
+      **Recommendation: 3.** It is the only one that agrees with the pill on all
+      four of alignment, height, corner radius and weight — a shorter member of
+      the same shape family, unmistakably the smaller of the two. 1 aligns just
+      as well but is the heaviest, which is the peer problem arriving by size
+      instead of by colour; 2 disagrees with the pill's radius and reads as an
+      app icon parked in the bar; 4 is the tidy minimum and leaves the height
+      mismatch that started this. Every alternative also gives the Log pill
+      20–32pt back, because a 70pt slot around a 30pt disc is mostly air.
+- [x] **Log again moves to the right, Log to the left.** Done in `4c93cc7`.
       It reverses the original placement, whose reasoning was that a right
       thumb rests bottom-right so the primary action should sit there — but the
       pill spans most of the bar either way, so it stays under the thumb
       wherever the small control goes. That argument was weaker than it looked.
-- [ ] The standing constraint still holds: **a peer beside Log competes with
-      it.** Two equal buttons were tried early on and read as a choice to make
-      on arrival, which is a decision placed in front of logging. Swapping
-      sides does not license making them equals.
+- [ ] **The user picks one.** The standing constraint still holds — a peer
+      beside Log competes with it; two equal buttons were tried early on and
+      read as a choice to make on arrival, which is a decision placed in front
+      of logging. Swapping sides did not license making them equals, and
+      neither does resizing.
 - [ ] Alignment, height, corner radius and optical weight should agree with the
       pill, whatever shape it ends up.
 
