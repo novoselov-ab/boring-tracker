@@ -428,20 +428,15 @@ settled from the accessibility tree.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
-**Pressed states, moved here after three sessions of deferring them.** Item 13
-asked for the pressed fill to be checked alongside the disabled one, and every
-session since has recorded it as uncaptured for the same reason: pressing a
-control in the simulator needs synthesized clicks, which need the accessibility
-tree, which a locked macOS console takes away — and the console has been locked
-for three reviews running. A thumb has none of that problem.
-
-- [ ] Press and hold each accent-filled control — the two Log buttons, a card's
-      +, the repeat disc, Undo — and screenshot the held state.
-- [ ] Check the pressed fill against `Color.onAccent` in both appearances. The
-      computed answer is that it cannot fail (pressing *lightens* the teal, so
-      black on it can only improve), and the recorded `#36E0EB` is from the
-      same batch of hexes item 13b has since corrected, so it is a number to
-      re-take rather than to trust.
+**Pressed states are done and are not waiting on a device.** They sat here
+across four sessions as uncapturable — pressing a control in the simulator
+needs synthesized clicks, which need the accessibility tree, which a locked
+macOS console takes away. Item 26 found the console unlocked, held every
+accent fill down and photographed it, and the answer this item recorded as
+computed was wrong in exactly the place it mattered: pressing does *not* only
+lighten. The one control that lightened was the prominent Log button in dark
+mode, at 1.08:1 against its own rest colour, which is the complaint. The
+numbers are in `bb14a4f` and in `Color.accentFillPressed`.
 
 ## 18. The app icon — the colour set half is done
 
@@ -1056,35 +1051,10 @@ empty states fall out of the same rule instead of needing their own. It reads
 the *filtered* days the screen draws, so a search that leaves one day standing
 takes the control with it — the control navigates the list as displayed.
 
-## 26. A pressed button barely shows it
+## 26. A pressed button barely shows it — done
 
-Reported from real use: the pressed state on the mint buttons — Log especially
-— is barely noticeable.
-
-**Three sessions have failed to verify pressed states**, each time because the
-Mac's screen was locked, which takes the touch driver and the accessibility
-tree with it. It has been sitting in item 17 as unverifiable ever since. This
-report is the verification, and it is the kind only a person using the app can
-produce.
-
-Likely cause: iOS dims a filled button slightly on press, and **mint is a light
-fill**. A small dim on a bright colour under a dark label is close to invisible,
-where the same treatment on system blue reads clearly. The accent is now an
-asset-catalog colour set (`AccentFill`, `24aff43`), so a deliberate pressed
-value is cheap and belongs beside the other two.
-
-- [ ] Make the pressed state visible on every accent fill — Log, Log again,
-      the card discs, and anything else wearing the accent.
-- [ ] Prefer a **pressed colour** over motion. `PHILOSOPHY.md` rules out bounce
-      and celebration; a button that darkens honestly is not that. If a small
-      scale is genuinely better, argue for it rather than assuming.
-- [ ] **Measure it**: state the unpressed and pressed values and the difference,
-      in light and dark. "Looks better" is what produced the current one.
-- [ ] Check the disabled state at the same time — it shares the problem and has
-      been noted before as nearly invisible.
-
-Verification needs a touch driver, so if the screen is locked again, say so
-rather than reasoning about it. That is how this went unchecked three times.
+One pressed colour on every accent fill, and a disabled one you can see.
+`bb14a4f`
 
 ## 25b. The jump control needs somewhere to go — done
 
