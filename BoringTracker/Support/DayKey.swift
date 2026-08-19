@@ -49,8 +49,6 @@ struct DayKey: Codable, Hashable, Comparable, Sendable {
         }
     }
 
-    static var today: DayKey { DayKey(Date()) }
-
     /// The moment this day begins, in the given calendar.
     ///
     /// Midnight by default. On a DST spring-forward day some regions have no
