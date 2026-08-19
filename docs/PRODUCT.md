@@ -439,10 +439,12 @@ presses its own rows to and goes down by the same 2pt the app's buttons have
 gone down by since item 27. Under Reduce Motion it takes the colour and not the
 movement, which is the rule every press in this app follows.
 
-Two of those rows are really *two* controls side by side — a History row and a
-home card each pair something that opens with a disc or a `+` that writes — and
-there the wash covers the half you actually pressed rather than the whole row.
-That is the row saying which of its two buttons you got.
+Three of those rows are really *two* controls side by side — a History row, a
+home card and an active settings row each pair something that opens with a disc,
+a `+` or a drag handle — and there the wash covers the part you actually pressed
+rather than the whole row. That is the row saying which of its two buttons you
+got. The ones that fill are a settings row with nothing beside it and a Log
+again row, where the whole row really is one button.
 
 Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 

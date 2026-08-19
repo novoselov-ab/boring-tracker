@@ -276,7 +276,14 @@ struct SettingsView: View {
             editing = tracker
         } label: {
             HStack(spacing: 0) {
-                TrackerRowName(name: name(of: tracker), caption: archivedGroup(of: tracker))
+                // `capped: false`: this row is nothing but the name, so a
+                // truncated one is the whole of what identifies it. It wrapped
+                // before item 28 and it wraps now.
+                TrackerRowName(
+                    name: name(of: tracker),
+                    caption: archivedGroup(of: tracker),
+                    capped: false
+                )
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))

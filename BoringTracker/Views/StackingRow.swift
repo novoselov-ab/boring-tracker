@@ -107,16 +107,26 @@ struct StackingRow<Leading: View, Trailing: View>: View {
 /// `.secondary` when it is there — the name is what identifies the row and the
 /// caption annotates it.
 ///
-/// **One line until the text outgrows it**, at `stacksRows` — the same
-/// threshold `StackingRow` above uses, asked in the same way. A name is
-/// unbounded free text (the editor sets no limit), so "Calories burned
-/// exercising" wrapping to three lines would put back exactly the row height
-/// item 11 cut; past the threshold the row has given up on one line anyway and
-/// the cap would only clip it.
+/// **One line until the text outgrows it, and the caller decides whether even
+/// that.** A name is unbounded free text — the editor sets no limit — so on
+/// home "Calories burned exercising" wrapping to three lines would put back
+/// exactly the row height item 11 cut, and the number beside it still says
+/// which tracker you are reading when the name truncates. **Settings has no
+/// number**, so a truncated name there is the whole of what identifies the row,
+/// and two trackers sharing a long prefix would be indistinguishable on the one
+/// screen where you pick which to edit, archive or delete. So settings passes
+/// `capped: false` and wraps, which is what it did before item 28 extracted
+/// this; home keeps the cap.
+///
+/// The cap lifts by itself past `stacksRows` — the same threshold `StackingRow`
+/// above uses, asked in the same way — because past it the row has given up on
+/// one line anyway and a cap would only clip.
 struct TrackerRowName: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let name: String
     var caption: String?
+    /// See the note above: home caps to one line, settings does not.
+    var capped = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -133,7 +143,7 @@ struct TrackerRowName: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .lineLimit(typeSize.stacksRows ? nil : 1)
+        .lineLimit(capped && !typeSize.stacksRows ? 1 : nil)
     }
 }
 

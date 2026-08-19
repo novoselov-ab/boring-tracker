@@ -96,6 +96,7 @@ extension Color {
 /// by about the same, so the honest reading is noise rather than a cost. The
 /// long frame both builds show — 250–280ms — is History's first build on that
 /// fixture and is the same with the line and without it.
+///
 /// **It drops `.plain`'s dimming of a *disabled* label, and that is a trap
 /// with six call sites now.** `.plain` composites a disabled button's whole
 /// label at about 0.5; no custom `ButtonStyle` does, so a `.row` button under
