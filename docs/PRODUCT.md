@@ -368,25 +368,21 @@ Small enough to list completely.
   and rounding to paper over it would be the app deciding what counts as the
   same meal.
 
-  **Ordered by how often you have logged it in the last 60 days**, then by how
-  often you have logged it ever, then by recency. Frequency rather than recency
-  because the row you tap each morning should be in the same place twice — the
-  top of a recency list moves on every single log, and a one-off floats to it
-  merely because it was yesterday. A window rather than a lifetime count
-  because a lifetime count never falls: a staple you gave up a year ago would
-  outrank the thing you have eaten every morning this month, reachable only by
-  search, on a screen whose job is one tap.
+  **Most recently logged first**, and nothing else — a row is dated by the last
+  time you logged it, and that is the order. It is what the screen looks like it
+  should do, and the point is that you can reason about where a row will be next
+  time from what you can see on it.
 
-  The lifetime count sits underneath the window rather than replacing it,
-  because inside 60 days most counts are small and ties are the ordinary case.
-  Two things each eaten twice this month tie at once, and recency then picks
-  between them on which you happened to eat last, which says nothing about
-  which you want; a thing eaten 200 times over two years and twice this month
-  is a staple having a quiet spell, and a thing eaten twice ever is not. It
-  never speaks first, so the window still decides which staples are quiet.
+  It replaced an order that counted: how often in the last 60 days, then how
+  often ever, then recency. That order was measured and it worked — the portion
+  you usually eat floated to the top — but the counts are invisible, so the list
+  moved on a rule the screen never states. Chronological approximates frequency
+  for the staples anyway, because something you eat often you also ate recently.
+  The counting rule is written up in TODO.md item 29, and it is the first thing
+  to try if this ever feels wrong.
 
-  **Nothing ever leaves this list.** A row with nothing inside the window
-  counts zero and sinks; it does not disappear. Neither does one that can no
+  **Nothing ever leaves this list.** A food you gave up months ago sinks to the
+  bottom on its date; it does not disappear. Neither does one that can no
   longer be written at all because every tracker it named has been archived —
   it sorts below every row that can, with the whole row greyed and disabled,
   and **the row says why** rather than leaving a grey control to be

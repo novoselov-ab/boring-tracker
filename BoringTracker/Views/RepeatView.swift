@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The things you have logged to a daily total, the ones you log most often
-/// first, one tap each to log again.
+/// The things you have logged to a daily total, most recently logged first,
+/// one tap each to log again.
 ///
 /// A second door on home for a different job. The Log button opens an empty
 /// sheet with the keypad up, which is right when the number is new; this is for
@@ -12,7 +12,9 @@ import SwiftUI
 /// one row per distinct thing you ate, with the day sections flattened away and
 /// a search field over the top. Not a new list built from the entries: the
 /// grouping of a batch into one row and the ordering are the same question both
-/// screens ask, and answering it twice is how they come to disagree.
+/// screens ask, and answering it twice is how they come to disagree. Since item
+/// 29 the two are in the same order as well — a collapsed row is dated by the
+/// last time you logged it, and that is what sorts the list.
 ///
 /// **The tracker's kind decides what is here, not the name** — see
 /// `Store.repeatItems` (docs/TODO.md item 21). So an unnamed row is here,

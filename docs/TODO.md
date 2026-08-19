@@ -386,20 +386,25 @@ A searchable screen of the things you have logged and named, deduplicated by
 name *and* values, one tap each to log again. `fd09535`, `ce5de86`, `d71580f`,
 `9b1ba61`
 
-## 16c. A 60-day counting window on the Repeat list — done
+## 16c. A 60-day counting window on the Repeat list — done, then removed
 
 The frequency count reaches back 60 days instead of over all history, so a
 staple you gave up stops outranking this month's breakfast — without dropping a
 row from the list. `90dda62`
 
-## 16d. Lifetime count as a second tie-break on the Repeat list — done
+**Superseded by item 29**, which took the whole frequency order out for a
+chronological one. The reasoning is kept there rather than only here.
+
+## 16d. Lifetime count as a second tie-break on the Repeat list — done, then removed
 
 `6d33fe8`
 
 Between the 60-day count and recency, so a staple having a quiet spell beats
 something new on the same small window count, and the window still decides
-first. The rule is in PRODUCT.md; what it moved on a real diary, and what it
-cost, are in the commit message.
+first. What it moved on a real diary, and what it cost, are in the commit
+message.
+
+**Superseded by item 29** along with the window it sat under.
 
 ## 16b. Search in History too — done
 
@@ -1213,27 +1218,88 @@ From real use, and it is one problem wearing three faces.
 The lesson from item 26 applies: this is a perceptual goal, so **judge it with
 a thumb, not with a number**. A ratio passed there while the goal failed.
 
-## 29. Sort Log again chronologically
+## 29. Sort Log again chronologically — done
 
-Currently 60-day frequency, then lifetime count, then recency — and the user's
-expectation, reasonably, is simply "most recent first".
+Most recently logged first.
 
-**Switch to chronological.** The case for frequency was that the portion you
-usually eat floats up, but if you eat something often you also ate it recently,
-so chronological approximates it for staples — a point already conceded when
-recency was first replaced ("for someone eating the same five things the two
-converge"). What chronological adds is **predictability**: the list is in an
-order you can reason about, rather than shifting on counts you cannot see.
+- [x] Most recently logged first. The list is `canRepeat`, then the row's date
+      descending, then `sortID` — three comparisons where there were five.
+- [x] Rows that cannot be repeated still sort below everything that can. It was
+      already the first comparison and it stays the first comparison: the rule
+      is about what a tap can do, not about order.
+- [x] Deduplication is untouched. One row per distinct name-and-values, dated
+      by the last time it was logged, projected onto what a tap writes before
+      it is collapsed.
+- [x] **It did not get slower.** Ten runs each, the frequency order rebuilt in a
+      temporary test and **alternating with this one in a single binary**, Debug
+      on the iPhone 17 simulator, over fixtures of four named meal batches, two
+      unnamed totals, a water and a weight a day, ending on the store's today.
+      Medians with ranges, in ms:
 
-- [ ] Most recently logged first.
-- [ ] Rows that cannot be repeated still sort below everything that can — that
-      rule is about what a tap can do, not about order.
-- [ ] Deduplication stays: one row per distinct name-and-values, dated by the
-      last time it was logged.
+      | shape | entries | rows | chronological | frequency |
+      |---|---|---|---|---|
+      | collapsing | 7,644 | 7 | 21.3 (20.3–22.7) | 21.6 (20.8–22.9) |
+      | collapsing | 15,288 | 7 | 41.6 (41.0–42.2) | 41.9 (41.3–42.5) |
+      | nothing collapses | 7,644 | 4,459 | 25.9 (25.1–26.4) | 26.4 (26.2–27.0) |
+      | nothing collapses | 15,288 | 8,918 | 52.3 (51.7–54.3) | 53.3 (52.5–55.3) |
 
-Frequency is recorded rather than deleted — it was measured and it works, and
-if the list feels wrong once it is chronological, that is the thing to try
-again.
+      Chronological is the faster column in all four, by 0.3–1.0ms of median,
+      and every range overlaps — so the honest reading is that the difference
+      does not register, not that dropping the counts bought anything. A second
+      run reproduced every figure within 0.5ms. Still built once when the sheet
+      opens, and a search keystroke still filters the snapshot.
+
+### The frequency order, kept because it worked
+
+**Not deleted, recorded.** It was measured, it did what it was chosen for, and
+it is the first thing to try if chronological feels wrong in use. The code is
+`fd09535` and after it `90dda62` (the 60-day window) and `6d33fe8` (the lifetime
+tie-break); this is the argument, so that nobody has to reconstruct it from a
+diff.
+
+The order was: **60-day count, then lifetime count, then date, then `sortID`**,
+under the same `canRepeat` partition that is still there.
+
+- **Why count at all.** Recency was right for the undeduplicated list and stops
+  being right the moment duplicates collapse. Both orderings were built and
+  screenshotted on a 56-day fixture: recency spent two of its first fourteen
+  rows on one food at two portions while four rows in a row read "Today" — a
+  one-off floats to the top merely because it was yesterday, and the date column
+  says nothing where it is densest. Frequency's first screen was thirteen
+  different foods at the portions actually eaten, with the variants below them.
+  It was also **steadier**: the top of a recency list moves on every single log,
+  so the row you tap each morning is never twice in the same place.
+- **Why a window and not a lifetime count.** A lifetime count never falls. Eat
+  porridge every morning for a year, switch to overnight oats for a month, and
+  last year's staple still outranks this morning's — reachable only by search,
+  on a screen whose job is one tap. Sixty days is long enough that a weekly
+  thing is still counted about eight times and a seasonal one does not fall off
+  when the weather turns, and short enough that a habit dropped two months ago
+  stops holding the top of the screen. Whole local days, in the store's
+  calendar, not 60×86,400 seconds — a seconds-based window slides under the list
+  while you read it, and asking the calendar is what survives a DST change.
+- **Why a lifetime count underneath it.** Inside 60 days most counts are small,
+  so ties were the common case rather than the edge one: two things each eaten
+  twice this month tie immediately, and the date then decides on which you
+  happened to eat last, which says nothing about which you want. A thing eaten
+  200 times over two years and twice this month is a staple having a quiet
+  spell; a thing eaten twice ever is not. It never spoke first, so the window
+  still decided which staples were quiet.
+- **It degraded into recency rather than falling apart.** Someone who weighs
+  food to the gram repeats no number exactly, every count is 1, and the
+  tie-break was the whole ordering — which is exactly the case chronological is
+  now right for by construction.
+- **A count is not a filter.** Nothing ever left the list: a row with nothing
+  inside the window counted zero and sank, and it is still listed today, sunk on
+  its date instead.
+
+**What it cost, and why chronological wins anyway.** The counts are invisible.
+The list reordered itself on a number the screen never shows, so where a row
+would be next time was not something you could work out by looking at it. And
+the strongest argument for frequency was already conceded when recency was first
+replaced — "for someone eating the same five things the two converge" — so for
+staples chronological approximates it. What chronological adds is
+predictability.
 
 ## 30. Confirm a log where the eye actually is
 

@@ -158,11 +158,13 @@ final class Store {
     /// The clock, pinned by tests. `nil` in the app, where the device's clock is
     /// the only honest answer.
     ///
-    /// Here for the same reason `calendar` is injectable: since `repeatItems`
-    /// counts only the last `countingWindowDays`, a fixture's dates and "now"
-    /// are no longer independent, and a test whose fixture drifts out of the
-    /// window as the wall clock advances is a test that passes today and fails
-    /// in March.
+    /// Here for the same reason `calendar` is injectable: a store's idea of
+    /// today decides which day a `DayKey` falls in and what a row's date is
+    /// labelled, so a fixture's dates and "now" are not independent, and a test
+    /// reading against the wall clock is one that passes today and fails in
+    /// March. It arrived for `repeatItems`' 60-day counting window
+    /// (docs/TODO.md item 16c) and outlived it — the window is gone with item
+    /// 29, the day boundary and DST tests are what pin the clock now.
     ///
     /// **It pins which day the store thinks it is, not what a write stamps.**
     /// `today`, `refreshToday()` and `travel(to:)` read it; `add`, `addBatch`,
@@ -456,7 +458,7 @@ final class Store {
     }
 
     /// The Repeat screen's list: one row per distinct thing you have logged to
-    /// a daily total, the ones logged most often lately first.
+    /// a daily total, most recently logged first.
     ///
     /// **Membership is the projection, not a filter.** Every row is cut down to
     /// the members this screen is about — present, a daily total, archived or
@@ -529,103 +531,50 @@ final class Store {
     /// worth keeping. It is a real row rather than a summary, so repeating it
     /// goes through the same `logAgain` as everything else.
     ///
-    /// **Ordered by how often you have logged it lately, then by how often you
-    /// have logged it ever, then by which is newest.** Recency was right for
-    /// the undeduplicated list and stops being
-    /// right the moment duplicates collapse: both orderings were built and
-    /// screenshotted on a 56-day fixture, and recency spent two of its first
-    /// fourteen rows on one food at two portions while four rows in a row read
-    /// "Today" — a one-off floats to the top merely because it was yesterday,
-    /// and the date column says nothing where it is densest. Frequency's first
-    /// screen is thirteen different foods at the portions actually eaten, with
-    /// the variants below them. It is also **steadier**: the top of a recency
-    /// list moves on every single log, so the row you tap each morning is never
-    /// twice in the same place.
+    /// **Ordered most recently logged first** (docs/TODO.md item 29). Every row
+    /// already carries the date of the last time you logged it — see "the row
+    /// kept is the newest" above — so the list is that date, descending, and
+    /// nothing else.
     ///
-    /// Frequency degrades into recency rather than falling apart, which is what
-    /// makes it safe for the case this screen is worst at: someone who weighs
-    /// food to the gram repeats no number exactly, every count is 1, and the
-    /// tie-break is the whole ordering (docs/TODO.md item 16).
+    /// **It replaced a 60-day frequency count with a lifetime count under it,
+    /// and that order was measured and it worked.** The case for frequency was
+    /// that the portion you usually eat floats to the top. The case against is
+    /// that you cannot see a count: the list reordered itself on a number the
+    /// screen never shows, so where a row would be next time was not something
+    /// you could work out from looking at it. Chronological approximates
+    /// frequency for staples anyway — if you eat something often you also ate
+    /// it recently — and that was already conceded when recency was first
+    /// replaced ("for someone eating the same five things the two converge").
+    /// What chronological adds is predictability.
     ///
-    /// **A row that cannot be written sorts below every row that can**, whatever
-    /// its count. Archiving a tracker is a supported thing to do, and under a
-    /// pure frequency order a year of porridge logged against a tracker you have
-    /// since archived would own the top of the screen for good — a screenful of
-    /// greyed rows in front of every row that still works. Recency used to sink
-    /// them on its own, and the count below does so only once the window has
-    /// passed over them, which is months of it. They stay on the list
-    /// rather than disappearing, which is item 16's decision and unchanged: the
-    /// row is still a true statement about what you ate, and a screen that drops
-    /// food when you archive a tracker is editing your history. **An archived
-    /// tracker is still a tracker**, so item 21's kind rule reads its kind and
-    /// keeps these rows exactly where they were; what item 21 does drop is a row
-    /// whose trackers were *deleted*, which has no kind left to qualify it and
-    /// can never be written again either.
+    /// **The frequency reasoning is kept rather than deleted**, because it is
+    /// the first thing to try if this feels wrong in use: docs/TODO.md item 29
+    /// carries it in full, and the code is `90dda62` (the 60-day window) and
+    /// `6d33fe8` (the lifetime tie-break under it).
     ///
-    /// **The count is over the last `countingWindowDays` days, not over
-    /// everything ever logged.** A lifetime count never falls, so eat porridge
-    /// every morning for a year, switch to overnight oats for a month, and last
-    /// year's staple still outranks this morning's — reachable only by search,
-    /// on a screen whose job is one tap. The window drops that and keeps what
-    /// frequency was chosen for: the portion you usually eat first, and a
-    /// one-off that cannot reach the top merely because it was yesterday.
+    /// **A row that cannot be written sorts below every row that can**, however
+    /// recently it was logged. That rule is about what a tap can do rather than
+    /// about order, so the change above leaves it exactly as it was: archiving
+    /// a tracker is a supported thing to do, and a screenful of greyed rows in
+    /// front of every row that still works is not a list you can log from. They
+    /// stay on the list rather than disappearing, which is item 16's decision
+    /// and unchanged: the row is still a true statement about what you ate, and
+    /// a screen that drops food when you archive a tracker is editing your
+    /// history. **An archived tracker is still a tracker**, so item 21's kind
+    /// rule reads its kind and keeps these rows exactly where they were; what
+    /// item 21 does drop is a row whose trackers were *deleted*, which has no
+    /// kind left to qualify it and can never be written again either.
     ///
-    /// **The lifetime count breaks the ties the window leaves**, between the
-    /// windowed count and the date. Inside 60 days most counts are small, so
-    /// ties are the common case rather than the edge one — two things each eaten
-    /// twice this month tie immediately, and the date then decides on which one
-    /// you happened to eat last, which says nothing about which you are likelier
-    /// to want. A thing eaten 200 times over two years and twice this month is a
-    /// staple having a quiet spell; a thing eaten twice ever is not. It also
-    /// settles the saturation the window came with: log porridge and a flat
-    /// white once a day each and both count 60, where the windowed count alone
-    /// let the date swap them as you logged them — at 400 lifetime against 380
-    /// they now hold their order (docs/TODO.md item 16d).
-    ///
-    /// **It does not undo the window**, because it never speaks first. The
-    /// window still decides the opening comparison, so a staple you gave up a
-    /// year ago counts zero and stays where 60 days put it however many times
-    /// you ate it — the lifetime count only reaches rows the window has already
-    /// declared a draw. What it changes underneath that draw is real, though: a
-    /// history entirely outside the window is no longer a plain recency list,
-    /// it is a lifetime-count list with recency under it.
-    ///
-    /// **Both counts come off the same walk** — one `+= 1` beside the windowed
-    /// one, no second pass over history, and one more `Int` compared per sort
-    /// comparison on a list already collapsed to rows. Ten runs each against a
-    /// counterfactual build with the tie-break removed and nothing else changed,
-    /// on fixtures of four named meals and a weight reading a day ending today:
-    /// **20.3–22.3ms against 20.4–22.9ms over 7,641 entries (4,245 history
-    /// rows), and 40.5–41.5ms against 39.9–42.1ms over 15,291 (8,495)**. Those
-    /// collapse to 10 rows, so they barely exercise the sort; the shape that
-    /// does is the one where nothing collapses — every value distinct, so 3,396
-    /// and 6,796 repeat rows — and it reads **24.2–26.9ms against 24.6–27.4ms**
-    /// and **49.5–54.2ms against 48.7–52.7ms**. Every pair overlaps, and in
-    /// three of the four the counterfactual owns the slowest run, so the honest
-    /// reading is that the cost does not register.
-    ///
-    /// **Measured from a temporary test in this target, not from items 16 and
-    /// 16c's probe root**, so these numbers are comparable to each other and not
-    /// to the ones further down this comment — the same Debug build on the same
-    /// iPhone 17 simulator, but a different harness. The pair to read is the two
-    /// columns here.
-    ///
-    /// **Rows tied on `canRepeat`, both counts and the date are still ordered**,
-    /// by `sortID`, which is unique per row. The list does not shuffle between
+    /// **Rows tied on `canRepeat` and the date are still ordered**, by
+    /// `sortID`, which is unique per row, so the list does not shuffle between
     /// openings.
-    ///
-    /// **It changes the order, never the membership.** A row whose logs are all
-    /// older than the window counts zero and sinks to the bottom of the rows
-    /// that can still be written, ordered among them by the lifetime count and
-    /// then recency — it does not disappear. Item 16 settled that a screen which
-    /// drops food is editing your history, and a count is not a filter.
     ///
     /// A filter over `historyItems` rather than its own walk of `entries`: the
     /// grouping of a batch into one row is the same question both screens ask,
     /// and it is already pinned by tests here. A second walk would be a second
     /// chance to answer it differently.
     ///
-    /// One pass and a dictionary of positions, so the counting costs a hash per
+    /// One pass and a dictionary of positions, so collapsing costs a hash per
     /// row and the sort runs over the collapsed list rather than the raw one.
     /// Measured in a Debug build on the iPhone 17 simulator, five runs each,
     /// against fixtures of four named meals and a weight reading a day:
@@ -640,24 +589,30 @@ final class Store {
     /// far fewer rows left to filter — 0.08–0.16ms against the 5.3ms and 9.9ms
     /// recorded for the plain list.
     ///
-    /// **The window is free.** One `Date` comparison per listed row, no second
-    /// pass and nothing extra to sort. Re-measured the same way at the same two
-    /// entry counts, five runs each, against a build with the window widened
-    /// past the fixture's own history so the counterfactual is the same binary
-    /// in every other respect: **19.4–20.6ms against 19.7–23.1ms at 7,644
-    /// entries, and 39.1–41.8ms against 39.4–41.7ms at 15,294** (docs/TODO.md
-    /// item 16c). The windowed runs are the faster pair on both files, which is
-    /// noise rather than a saving — the honest reading is that the difference
-    /// does not register.
+    /// **Dropping the two counts did not make it faster, and was not meant
+    /// to.** Ten runs each, **alternating in one binary** so a warm-up or a
+    /// thermal drift lands on both columns — the frequency order rebuilt in a
+    /// temporary test in this target, a Debug build on the iPhone 17 simulator,
+    /// over fixtures of four named meal batches, two unnamed totals, a water and
+    /// a weight a day ending on the store's today. Medians, ranges beside them,
+    /// in ms:
     ///
-    /// **Those are not the fixtures the paragraph above was measured on**, and
-    /// the two sets must not be read as a before and after: a window measured
-    /// back from today reads nothing unless the file ends today, so these were
-    /// generated afresh and collapse to 37 rows rather than 61. The pair to
-    /// compare is the two columns here, taken minutes apart on one machine.
+    ///     shape              entries   rows   chronological     frequency
+    ///     collapsing           7,644      7   21.3 (20.3–22.7)  21.6 (20.8–22.9)
+    ///     collapsing          15,288      7   41.6 (41.0–42.2)  41.9 (41.3–42.5)
+    ///     nothing collapses    7,644  4,459   25.9 (25.1–26.4)  26.4 (26.2–27.0)
+    ///     nothing collapses   15,288  8,918   52.3 (51.7–54.3)  53.3 (52.5–55.3)
+    ///
+    /// Chronological is the faster column in all four, by 0.3–1.0ms of median,
+    /// and every range overlaps — so the honest reading is that the difference
+    /// does not register, which is what item 16d found from the other direction
+    /// when it added the counts. What they cost was one `+= 1` per entry and two
+    /// `Int` comparisons per sort comparison. The number that matters is that
+    /// the list did not get slower; a second run of the same harness reproduced
+    /// every figure within 0.5ms.
     var repeatItems: [HistoryItem] {
         var index: [HistoryItem.RepeatKey: Int] = [:]
-        var rows: [(item: HistoryItem, count: Int, lifetime: Int, canRepeat: Bool)] = []
+        var rows: [(item: HistoryItem, canRepeat: Bool)] = []
         let targets = repeatTargets
         // The two sets are not the same question, and keeping them apart is
         // what makes this work.
@@ -669,7 +624,6 @@ final class Store {
         // your food disappear, so those rows stay listed, sink to the bottom
         // and grey — while it very much is part of what a tap writes.
         let listable = repeatListTargets
-        let windowStart = countingWindowStart
         for row in historyItems {
             // **Projected before anything else reads it.** The row is built
             // from the members that belong on this screen rather than from
@@ -694,12 +648,7 @@ final class Store {
             // "Archived" — a record rather than a promise.
             let item = listed.keeping({ targets.contains($0.trackerID) }) ?? listed
             let key = item.repeatKey
-            // The only thing the window touches. Every row is still built and
-            // still listed; one outside it simply adds nothing to its count.
-            let counted = item.date >= windowStart ? 1 : 0
             if let at = index[key] {
-                rows[at].count += counted
-                rows[at].lifetime += 1
                 // **The newest row wins the slot, by its projected date.**
                 // `historyItems` is newest first, so the first row met is
                 // normally already the newest — but it is sorted by the date
@@ -709,17 +658,15 @@ final class Store {
                 // one at 01:40, arrives ahead of a plain log of the same thing
                 // at 00:50 and then projects down to 00:10. Keeping it would
                 // date the row before the last time you logged it, which the
-                // day label states outright, the tie-break below sorts on, and
-                // the counting window can drop a row on the strength of.
+                // day label states outright and the sort below now orders
+                // the whole list on.
                 if item.date > rows[at].item.date { rows[at].item = item }
             } else {
                 index[key] = rows.count
                 // Once per collapsed row, not once per comparison, and it is the
                 // same answer for every row the key collapsed: the key carries
                 // the tracker ids, so they all name the same trackers.
-                rows.append(
-                    (item, counted, 1, !repeatableEntries(of: item, targets: targets).isEmpty)
-                )
+                rows.append((item, !repeatableEntries(of: item, targets: targets).isEmpty))
             }
         }
         // The tie-break is explicit rather than left to the sort's stability,
@@ -730,35 +677,10 @@ final class Store {
         return rows
             .sorted { lhs, rhs in
                 if lhs.canRepeat != rhs.canRepeat { return lhs.canRepeat }
-                if lhs.count != rhs.count { return lhs.count > rhs.count }
-                if lhs.lifetime != rhs.lifetime { return lhs.lifetime > rhs.lifetime }
                 if lhs.item.date != rhs.item.date { return lhs.item.date > rhs.item.date }
                 return lhs.item.sortID > rhs.item.sortID
             }
             .map(\.item)
-    }
-
-    /// How far back `repeatItems` counts.
-    ///
-    /// A displayed decision, free to change again: nothing is stored, derived or
-    /// migrated from it, and moving it only reorders a list. Sixty days is long
-    /// enough that a weekly thing is still counted about eight times and a
-    /// seasonal one does not fall off the moment the weather turns, and short
-    /// enough that a habit you dropped two months ago stops holding the top of
-    /// the screen (docs/TODO.md item 16c).
-    static let countingWindowDays = 60
-
-    /// The first moment `repeatItems` counts: the start of today's day, less the
-    /// days before it that the window reaches back over.
-    ///
-    /// Whole days, in the store's calendar, rather than 60×86,400 seconds before
-    /// this instant. Every other boundary in this app is a local day (`DayKey`),
-    /// a seconds-based window would slide under the list while you read it, and
-    /// asking the calendar is what makes the arithmetic survive a DST change.
-    var countingWindowStart: Date {
-        today
-            .adding(days: -(Self.countingWindowDays - 1), calendar: calendar)
-            .startOfDay(calendar: calendar, dayStartHour: dayStartHour)
     }
 
     // MARK: - Entries

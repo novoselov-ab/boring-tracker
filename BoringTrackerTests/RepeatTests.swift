@@ -12,10 +12,11 @@ import Testing
 struct RepeatTests {
     /// The clock every store here runs on, a day after `time(_:)`'s epoch.
     ///
-    /// Pinned because the count reaches back `Store.countingWindowDays` days
-    /// from *today*: against the real clock these fixtures would drift out of
-    /// the window as the months pass, and every ordering test would quietly
-    /// become a test of the recency tie-break.
+    /// Pinned so `daysAgo(_:)` below means a fixed distance from the store's
+    /// own today rather than from the wall clock. It was load-bearing while the
+    /// list was ordered by a 60-day count — a fixture drifting out of the window
+    /// silently changed what every ordering test measured — and with item 29 it
+    /// is simply what makes the day labels and the fixtures reproducible.
     private static let now = date(2026, 1, 2, 12)
 
     /// A moment `days` before the pinned now, at the same time of day. Whole
@@ -581,11 +582,11 @@ struct RepeatTests {
                         ]
                     }
                     + [
-                        // Named, and eaten twice: fewer logs than the unnamed
-                        // dinner, so it sorts under it. Unnamed rows join the
-                        // ordering rather than getting a bucket of their own.
-                        Entry(trackerID: calories.id, value: 320, date: daysAgo(1), name: "porridge"),
+                        // Named, and last eaten the day before the dinner was,
+                        // so it sorts under it. Unnamed rows join the ordering
+                        // rather than getting a bucket of their own.
                         Entry(trackerID: calories.id, value: 320, date: daysAgo(2), name: "porridge"),
+                        Entry(trackerID: calories.id, value: 320, date: daysAgo(3), name: "porridge"),
                     ]
             )
         )
@@ -621,8 +622,8 @@ struct RepeatTests {
         #expect(items.filter { $0.matches("450") }.isEmpty)
     }
 
-    @Test("What you log most is first, and a one-off does not outrank it")
-    func frequencyOrdering() {
+    @Test("The last thing you logged is first, however often you log the rest")
+    func chronologicalOrdering() {
         let tracker = Tracker(name: "Calories", unit: "kcal")
         let store = repeatStore(
             StoreDocument(
@@ -631,31 +632,34 @@ struct RepeatTests {
                     Entry(trackerID: tracker.id, value: 320, date: time(10), name: "porridge"),
                     Entry(trackerID: tracker.id, value: 320, date: time(20), name: "porridge"),
                     Entry(trackerID: tracker.id, value: 320, date: time(30), name: "porridge"),
-                    // Eaten once, and eaten last. On a recency list this would
-                    // be the top row every time; here it sits under the thing
-                    // actually eaten every day.
+                    // Eaten once, and eaten last. Under the frequency order this
+                    // sat below the thing eaten three times; the whole of item
+                    // 29 is that it now sits where you last put it.
                     Entry(trackerID: tracker.id, value: 890, date: time(40), name: "pizza"),
                 ]
             )
         )
 
-        #expect(store.repeatItems.map(\.displayName) == ["porridge", "pizza"])
-        // The frequent row still carries its own latest date, so the screen can
-        // say when it was last eaten.
-        #expect(store.repeatItems.first?.date == time(30))
+        #expect(store.repeatItems.map(\.displayName) == ["pizza", "porridge"])
+        // A collapsed row is dated by the last time it was logged, not by the
+        // first — which is what the ordering above sorts on and what the screen
+        // shows.
+        #expect(store.repeatItems.last?.date == time(30))
     }
 
-    @Test("With nothing to count, frequency is recency")
-    func frequencyTiesBreakOnRecency() {
+    @Test("Nothing collapses for someone who weighs to the gram, and it still reads")
+    func nothingCollapsesAndTheListIsStillChronological() {
         let tracker = Tracker(name: "Calories", unit: "kcal", decimals: 1)
         let store = repeatStore(
             StoreDocument(
                 trackers: [tracker],
                 entries: [
-                    // Someone who weighs food to the gram: the same meal, never
-                    // the same number, so nothing collapses and every count is
-                    // 1. The ordering has to degrade into the recency list
-                    // rather than into an arbitrary one.
+                    // Someone who weighs food to the gram: the same meal,
+                    // never the same number, so nothing collapses and the
+                    // screen is the plain list of what they logged. It was the
+                    // case the frequency order was worst at — every count 1, so
+                    // the tie-break was the whole ordering — and it is the case
+                    // chronological is exactly right for.
                     Entry(trackerID: tracker.id, value: 618.4, date: time(10), name: "rice"),
                     Entry(trackerID: tracker.id, value: 621.1, date: time(20), name: "rice"),
                     Entry(trackerID: tracker.id, value: 619.7, date: time(30), name: "rice"),
@@ -667,7 +671,7 @@ struct RepeatTests {
     }
 
     @Test("A row that cannot be written sorts below every row that can")
-    func unrepeatableRowsSinkHoweverOftenTheyWereLogged() throws {
+    func unrepeatableRowsSinkHoweverRecentlyTheyWereLogged() throws {
         // A daily total, because item 21 keeps measurements off this list
         // entirely — the row that has to sink is one that could be written if
         // the tracker were still active.
@@ -677,10 +681,10 @@ struct RepeatTests {
             StoreDocument(
                 trackers: [archived, calories],
                 entries: [
-                    Entry(trackerID: archived.id, value: 750, date: time(10), name: "morning"),
-                    Entry(trackerID: archived.id, value: 750, date: time(20), name: "morning"),
-                    Entry(trackerID: archived.id, value: 750, date: time(30), name: "morning"),
-                    Entry(trackerID: calories.id, value: 320, date: time(40), name: "porridge"),
+                    Entry(trackerID: calories.id, value: 320, date: time(10), name: "porridge"),
+                    // Logged last, so on date alone it owns the top of the
+                    // screen — and it is the one row a tap cannot write.
+                    Entry(trackerID: archived.id, value: 750, date: time(40), name: "morning"),
                 ]
             )
         )
@@ -688,25 +692,23 @@ struct RepeatTests {
         bottle.isArchived = true
         store.update(bottle)
 
-        // Three logs against one log: on count alone the archived row wins, and
-        // it would hold the top of the screen greyed out for as long as the
-        // counting window still reaches its logs, which is months. Recency used
-        // to sink such rows on its own.
+        // The newest row in the file, and it is still last: the rule is about
+        // what a tap can do rather than about order, so it outranks the date the
+        // way it outranked the counts before item 29. Otherwise the first thing
+        // your thumb reaches on this screen is a greyed row that does nothing.
         let items = store.repeatItems
         #expect(items.map(\.displayName) == ["porridge", "morning"])
         #expect(store.repeatableEntries(of: try #require(items.last)).isEmpty)
     }
 
-    @Test("Last year's staple stops outranking this month's, and still lists")
-    func countingWindowDropsTheMuseumEffect() {
+    @Test("A food you gave up months ago is still listed, at the bottom")
+    func nothingEverLeavesTheList() {
         let tracker = Tracker(name: "Calories", unit: "kcal")
         let store = repeatStore(
             StoreDocument(
                 trackers: [tracker],
                 entries:
-                    // Eaten every morning, and given up three months ago. Six
-                    // logs against three: on a lifetime count this owns the top
-                    // of the screen for good.
+                    // Eaten every morning, and given up three months ago.
                     (90...95).map {
                         Entry(trackerID: tracker.id, value: 320, date: daysAgo($0), name: "porridge")
                     }
@@ -717,116 +719,21 @@ struct RepeatTests {
         )
 
         let items = store.repeatItems
-        // What you actually eat now is first...
+        // What you eat now is first because you ate it last...
         #expect(items.map(\.displayName) == ["oats", "porridge"])
-        // ...and what you used to eat is still here, one tap away, with the
-        // date that says when you last ate it. A count is not a filter.
+        // ...and what you used to eat is still here, one tap away, with the date
+        // that says when you last ate it. Item 16 settled that a screen which
+        // drops food is editing your history, and neither the counting window
+        // that used to sink this row nor the date that sinks it now is a filter.
         #expect(items.last?.date == daysAgo(90))
     }
 
-    @Test("The window is 60 days counting today, and the edge is a whole day")
-    func countingWindowEdge() {
-        let tracker = Tracker(name: "Calories", unit: "kcal")
-        let store = repeatStore(
-            StoreDocument(
-                trackers: [tracker],
-                entries: [
-                    // Three logs, every one of them a day too old to count.
-                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(60), name: "porridge"),
-                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(61), name: "porridge"),
-                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(62), name: "porridge"),
-                    // One log, on the oldest day the window still reaches.
-                    Entry(trackerID: tracker.id, value: 890, date: daysAgo(59), name: "pizza"),
-                ]
-            )
-        )
-
-        // 1 beats 0, so the single log inside the window leads three outside it.
-        #expect(store.repeatItems.map(\.displayName) == ["pizza", "porridge"])
-    }
-
-    @Test("With nothing inside the window, the list is lifetime count then recency")
-    func countingWindowEmpty() {
-        let tracker = Tracker(name: "Calories", unit: "kcal")
-        let store = repeatStore(
-            StoreDocument(
-                trackers: [tracker],
-                entries: [
-                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(300), name: "porridge"),
-                    Entry(trackerID: tracker.id, value: 320, date: daysAgo(299), name: "porridge"),
-                    Entry(trackerID: tracker.id, value: 890, date: daysAgo(200), name: "pizza"),
-                    Entry(trackerID: tracker.id, value: 450, date: daysAgo(100), name: "soup"),
-                ]
-            )
-        )
-
-        // Come back after three months away and the screen is not empty: every
-        // windowed count is 0, so the ordering falls through to the tie-breaks
-        // under it rather than to nothing. Porridge leads on two logs against
-        // one apiece even though it is the oldest row here — before item 16d
-        // this read soup, pizza, porridge, purely by date. Recency still sorts
-        // the two rows the lifetime count leaves tied.
-        #expect(store.repeatItems.map(\.displayName) == ["porridge", "soup", "pizza"])
-    }
-
-    @Test("Tied inside the window, the thing eaten more over its life leads")
-    func lifetimeCountBreaksWindowTies() {
-        let tracker = Tracker(name: "Calories", unit: "kcal")
-        let store = repeatStore(
-            StoreDocument(
-                trackers: [tracker],
-                entries:
-                    // A staple in a quiet spell: eaten all through last year,
-                    // twice in the past fortnight.
-                    (100...199).map {
-                        Entry(trackerID: tracker.id, value: 320, date: daysAgo($0), name: "porridge")
-                    }
-                    + [
-                        Entry(trackerID: tracker.id, value: 320, date: daysAgo(14), name: "porridge"),
-                        Entry(trackerID: tracker.id, value: 320, date: daysAgo(9), name: "porridge"),
-                        // Tried twice this month and never before. Tied with the
-                        // staple on the window's count, and eaten more recently,
-                        // so the date alone used to put it first.
-                        Entry(trackerID: tracker.id, value: 640, date: daysAgo(6), name: "pizza"),
-                        Entry(trackerID: tracker.id, value: 640, date: daysAgo(2), name: "pizza"),
-                    ]
-            )
-        )
-
-        #expect(store.repeatItems.map(\.displayName) == ["porridge", "pizza"])
-    }
-
-    @Test("The window still decides first, however long the lifetime count is")
-    func lifetimeCountNeverOutranksTheWindow() {
-        let tracker = Tracker(name: "Calories", unit: "kcal")
-        let store = repeatStore(
-            StoreDocument(
-                trackers: [tracker],
-                entries:
-                    // Two hundred logs, every one of them outside the window:
-                    // given up, and the window is the whole reason it stopped
-                    // owning the top of the screen. A second tie-break must not
-                    // hand that back.
-                    (61...260).map {
-                        Entry(trackerID: tracker.id, value: 320, date: daysAgo($0), name: "porridge")
-                    }
-                    + [
-                        Entry(trackerID: tracker.id, value: 290, date: daysAgo(3), name: "oats")
-                    ]
-            )
-        )
-
-        // 1 beats 0 on the first comparison, so the lifetime count is never
-        // asked. Both rows are still listed.
-        #expect(store.repeatItems.map(\.displayName) == ["oats", "porridge"])
-    }
-
-    @Test("Rows tied on both counts and the date fall back to the row id")
+    @Test("Rows tied on the date fall back to the row id")
     func orderIsStableWhenEverythingTies() {
         let tracker = Tracker(name: "Calories", unit: "kcal")
-        // Six rows at one shared instant, each logged once, distinguishable only
-        // by their values. Both counts tie, the date ties, and the row id is all
-        // that is left — so the list must not shuffle between openings.
+        // Six rows at one shared instant, distinguishable only by their
+        // values. The date ties and the row id is all that is left — so the list
+        // must not shuffle between openings.
         let entries = (1...6).map {
             Entry(
                 trackerID: tracker.id, value: Double($0) * 100, date: daysAgo(5), name: "leftovers"
