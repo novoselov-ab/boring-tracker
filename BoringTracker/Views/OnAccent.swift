@@ -228,7 +228,11 @@ extension EnvironmentValues {
 /// the environment** and a `ShapeStyle` has nowhere to read them from. Every
 /// accent-filled control in the app backs itself with this, so "pressed" and
 /// "off" are one decision in one place rather than six.
-struct AccentFillBackground<S: Shape>: View {
+///
+/// Private, and reached only through `View.accentFilled(_:)`: item 27 added a
+/// second half to a press and a call site that draws this directly is a
+/// control that changes colour without going down.
+private struct AccentFillBackground<S: Shape>: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accentFillPressed) private var isPressed
 
@@ -246,6 +250,106 @@ struct AccentFillBackground<S: Shape>: View {
         guard isEnabled else { return .accentFillDisabled }
         return isPressed ? .accentFillPressed : .accentFill
     }
+}
+
+/// The accent fill and its press, applied together.
+///
+/// See `View.accentFilled(_:)`, which is how this is reached, and
+/// `AccentFillPress` for the numbers.
+private struct AccentFilled<S: Shape>: ViewModifier {
+    @Environment(\.accentFillPressed) private var isPressed
+
+    let shape: S
+
+    func body(content: Content) -> some View {
+        // Read out of the environment once, into the closure below: it is a
+        // `@Sendable` one, and reaching into main-actor state from inside it is
+        // a strict-concurrency warning in a project built with it complete.
+        let isPressed = isPressed
+        return content
+            .background(AccentFillBackground(shape))
+            // `visualEffect` rather than a plain `.scaleEffect`, for the size:
+            // the scale is worked out from what the fill laid out at, and this
+            // is the way to read that without a `GeometryReader` around every
+            // control. It is also *only* visual — hit testing keeps the
+            // unscaled geometry, which is the half a `.scaleEffect` would get
+            // wrong on a thumb resting at the edge of the pill.
+            .visualEffect { effect, proxy in
+                effect.scaleEffect(isPressed ? AccentFillPress.scale(for: proxy.size) : 1)
+            }
+            .animation(AccentFillPress.animation, value: isPressed)
+    }
+}
+
+/// How a press is drawn: the fill moves.
+///
+/// **Item 26 gave every accent fill a measured pressed colour and it was still
+/// hard to notice**, on the Log pill and the Log again disc most of all. The
+/// measurement passed and the goal did not, so the mechanism is what changes
+/// here rather than the number — the control physically goes down under the
+/// thumb, and the colour stays as the second signal (docs/TODO.md item 27).
+///
+/// **iOS does not do this, and the item said it did.** `.borderedProminent`
+/// was rebuilt in this simulator to check: on an iPhone 17 Pro in dark, held
+/// down, iOS's own prominent button renders **876x151 px at the same origin as
+/// at rest, to the pixel**, and changes only its fill — `#00DAC3` to
+/// `#33E1CF`. So a scale on press is this app's decision, not the platform's
+/// convention, and it is worth the paragraph: the argument for it is that a
+/// colour alone was tried and missed, not that Apple does it.
+///
+/// **The travel is in points, not in a ratio, because the fills are not the
+/// same size.** One ratio cannot serve both: 0.97 takes 4.4pt off each end of
+/// the 292pt Log pill and 0.45pt off a 30pt disc, which is nothing — and the
+/// disc is half of what item 27 was reported for. So the constant is how far
+/// the ends of the fill's longest edge move, and the scale is worked out from
+/// the size the fill actually laid out at:
+///
+///     control                  size (pt)   scale    each end moves
+///     Log / home bar           292 x 50    0.9863   2.00pt
+///     Log / log sheet          52.7 x 34   0.9241   2.00pt
+///     Add Tracker (small)      81.7 x 28   0.9510   2.00pt
+///     Undo                     ~60 x 32    0.9333   2.00pt
+///     a disc                   30 x 30     0.8667   2.00pt
+///
+/// The short edge moves less, which is the one thing a uniform scale cannot
+/// help — a 292x50 pill that took 2pt off its height as well would be doing
+/// something the eye reads as a squash rather than a press.
+enum AccentFillPress {
+
+    /// Points each end of the fill's longest edge travels on a press.
+    ///
+    /// **2 rather than 3 or 4, and all three were rendered held down** by a
+    /// synthesized press on an iPhone 17 Pro, screenshotted mid-press. At 4pt a
+    /// disc goes 30pt to 22 and loses a quarter of its width, which reads as a
+    /// different-sized control rather than the same one pressed; the pill at
+    /// 4pt pulls visibly away from its 16pt margins. At 2pt each end moves 6
+    /// device pixels at 3x. Still, that is small — what carries it is the
+    /// movement, and a 60fps capture of a press shows the ends travelling
+    /// across four to five frames rather than jumping.
+    static let travel: CGFloat = 2
+
+    /// The scale for a fill that laid out at this size. `1` for a size that has
+    /// not been measured yet, so the first frame of a control is never drawn
+    /// mid-press.
+    static func scale(for size: CGSize) -> CGFloat {
+        let longest = max(size.width, size.height)
+        guard longest > 0 else { return 1 }
+        return 1 - 2 * travel / longest
+    }
+
+    /// Quick in, quick out, and the same curve both ways.
+    ///
+    /// 0.12s, and what that renders as was measured off a 60fps capture of the
+    /// Log pill: **66ms from the last resting frame to the settled pressed one
+    /// going down, and 82ms coming back** — the tail of an easeOut is
+    /// sub-pixel, so less of the curve shows than is asked for. It carries the
+    /// pressed colour with it, which was a hard cut between two frames before
+    /// this.
+    ///
+    /// `PHILOSOPHY.md` rules out animations you have to wait for; nothing waits
+    /// on this one, because the button's action fires on the lift and not on
+    /// the animation.
+    static let animation: Animation = .easeOut(duration: 0.12)
 }
 
 /// For a `.plain`-shaped button whose label draws its own accent fill.
@@ -275,6 +379,7 @@ struct AccentFillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .environment(\.accentFillPressed, configuration.isPressed)
+            .accentFillHaptic(configuration.isPressed)
     }
 }
 
@@ -315,9 +420,14 @@ struct AccentPillButtonStyle: ButtonStyle {
             .font(font)
             .padding(.horizontal, horizontalPadding)
             .frame(minHeight: minHeight)
-            .background(AccentFillBackground(.capsule))
+            .accentFilled(.capsule)
+            // After the scale, so the target is the capsule the pill lays out
+            // at and not the smaller one it is drawn at while held. A hit area
+            // that shrinks under a thumb resting on the edge lets go of its own
+            // press.
             .contentShape(.capsule)
             .environment(\.accentFillPressed, configuration.isPressed)
+            .accentFillHaptic(configuration.isPressed)
     }
 
     /// Three sizes because the app uses three, each number read off the build
@@ -394,7 +504,7 @@ struct UndoButton: View {
                 .onAccentFill()
                 .padding(.horizontal, 12)
                 .frame(minHeight: 32)
-                .background(AccentFillBackground(.capsule))
+                .accentFilled(.capsule)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(.rect)
         }
@@ -458,16 +568,16 @@ struct RepeatDisc: View {
             // that was off (docs/TODO.md item 26).
             .onAccentFill()
             .frame(width: 30, height: 30)
-            // `AccentFillBackground`, not `.tint`: the environment tint is the
+            // `accentFilled`, not `.tint`: the environment tint is the
             // ordinary label colour now, and a disc is a fill (docs/TODO.md
             // item 13c). "The accent is only ever a fill" is what this said,
             // and item 18 made it not quite true — `navBarAccent()` and
             // `formRowAccent()` write with it, on standard controls that have
             // no other way to say they are tappable. Nothing else does, and
-            // this is not one of them. The background carries all three states
-            // now, so a disc presses and greys the same way in all three
-            // places it appears (docs/TODO.md item 26).
-            .background(AccentFillBackground(.circle))
+            // this is not one of them. The modifier carries all three states
+            // and the press's scale, so a disc presses and greys the same way
+            // in all three places it appears (docs/TODO.md items 26 and 27).
+            .accentFilled(.circle)
             .frame(width: 44, height: 44)
             .contentShape(.rect)
     }
@@ -479,6 +589,54 @@ extension View {
     /// or the small discs that are the same idiom in miniature.
     func onAccentFill() -> some View {
         modifier(OnAccentFill())
+    }
+
+    /// Fill this label with the accent, in whichever of its three states its
+    /// control is in, and let it go down when the control does.
+    ///
+    /// **One modifier rather than a background and a scale written out at each
+    /// site**, because the four accent fills in the app — the pill, the undo
+    /// capsule, the Log again disc, a card's `+` — have already drifted apart
+    /// once each (items 21, 26, 27), and every one of those was two call sites
+    /// agreeing by hand until one of them stopped. A fifth fill added later
+    /// gets the press by writing this instead of by remembering it.
+    ///
+    /// Apply it to whatever the fill is drawn behind, and put the control's
+    /// `contentShape` and its 44pt target *outside* it: the scale is drawn on
+    /// the fill and the target does not move with it.
+    func accentFilled<S: Shape>(_ shape: S) -> some View {
+        modifier(AccentFilled(shape: shape))
+    }
+
+    /// A light impact as an accent-filled control goes down.
+    ///
+    /// **Feedback, not celebration.** `PHILOSOPHY.md` bans haptic
+    /// celebrations — a buzz for a streak, a saved entry, a job well done —
+    /// and this is the other thing: the physical half of a button going down
+    /// under a thumb, at the moment of the press rather than at the moment of
+    /// the result. Logging a number stays silent; touching the control is what
+    /// speaks.
+    ///
+    /// On the press and not on the release, so it arrives with the scale and
+    /// the colour rather than after the action. `trigger` is the press state,
+    /// and the closure fires only on the edge into it, so a lift is silent.
+    ///
+    /// **A scroll does not fire it**, which was the objection worth testing: a
+    /// whole `RepeatRow` is a button, so a finger that starts a scroll starts
+    /// it on a control. Recorded at 60fps on the Log again sheet, a flick that
+    /// starts on a row never enters the pressed state at all — nor does one
+    /// that rests 0.2s first — because a list delays the touch. It takes
+    /// somewhere between 0.2s and 0.45s of a stationary finger before the disc
+    /// goes down, by which point the gesture is a press and not a scroll.
+    ///
+    /// **Whether it helps is not answered here.** The simulator has no haptics
+    /// — UIKit logs "Haptics: unsupported" and nothing reaches CoreHaptics — so
+    /// this shipped unfelt, for the device pass in item 17 to keep or delete.
+    /// It is three lines and one call site if the answer is that it is noise.
+    func accentFillHaptic(_ isPressed: Bool) -> some View {
+        sensoryFeedback(.impact(weight: .light, intensity: 0.6), trigger: isPressed) { _, pressed in
+            pressed
+        }
     }
 
     /// The accent back on a **nav bar button**, and nowhere else

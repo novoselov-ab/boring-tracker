@@ -82,3 +82,49 @@ struct AccentTests {
         #expect(UIColor(named: "AccentColor") == nil)
     }
 }
+
+/// The other half of a press: how far the fill goes down (docs/TODO.md item 27).
+///
+/// **The rule is worth pinning because it is a rule and not a ratio.** One
+/// scale cannot serve a 292pt pill and a 30pt disc — 0.97 moves the pill's ends
+/// 4.4pt and the disc's 0.45, and the disc is half of what item 27 was reported
+/// for. So the constant is the travel and the scale is derived, and a later
+/// edit that "simplifies" it back to a fixed ratio breaks a control nobody is
+/// looking at while looking at another one.
+///
+/// The sizes here are the ones measured off an iPhone 17 Pro, in points.
+@Suite("Accent fill press")
+struct AccentFillPressTests {
+
+    private func travel(_ w: CGFloat, _ h: CGFloat) -> CGFloat {
+        let scale = AccentFillPress.scale(for: CGSize(width: w, height: h))
+        return (max(w, h) - max(w, h) * scale) / 2
+    }
+
+    @Test("Every fill's longest edge moves the same two points")
+    func constantTravel() {
+        // Home's Log pill, the log sheet's Log, the empty screen's Add Tracker,
+        // the undo capsule, and any of the four discs.
+        for size in [(292.0, 50.0), (52.67, 34.0), (81.67, 28.0), (60.0, 32.0), (30.0, 30.0)] {
+            #expect(abs(travel(size.0, size.1) - AccentFillPress.travel) < 0.0001)
+        }
+    }
+
+    @Test("The pill and the disc need different scales to do that")
+    func scalesDiffer() {
+        // 0.9863 and 0.8667. Rendered and sampled: the pill goes 876x150 to
+        // 864x148 device pixels at 3x, the disc 90x90 to 78x78 — 6px, which is
+        // 2pt, off each end of both.
+        let pill = AccentFillPress.scale(for: CGSize(width: 292, height: 50))
+        let disc = AccentFillPress.scale(for: CGSize(width: 30, height: 30))
+        #expect(abs(pill - 0.9863) < 0.0001)
+        #expect(abs(disc - 0.8667) < 0.0001)
+    }
+
+    @Test("A fill that has not been measured yet is not drawn mid-press")
+    func unmeasuredSize() {
+        // `visualEffect` runs before the first layout reports a size, and a
+        // scale worked out from zero is a control that flashes on appearing.
+        #expect(AccentFillPress.scale(for: .zero) == 1)
+    }
+}

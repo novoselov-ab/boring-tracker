@@ -667,12 +667,14 @@ private struct TrackerCard: View {
                 // measures there, and nothing would have said so.
                 .onAccentFill()
                 .frame(width: 30, height: 30)
-                // `Color.accentFill`, not `.tint` and not `Color.accentColor`:
-                // the environment tint is the ordinary label colour now, and
+                // `accentFilled`, not `.tint` and not `Color.accentColor`: the
+                // environment tint is the ordinary label colour now, and
                 // `Color.accentColor` is still the system blue — item 18's
                 // catalog deliberately does not claim that magic name
-                // (docs/TODO.md items 13c and 18).
-                .background(AccentFillBackground(.circle))
+                // (docs/TODO.md items 13c and 18). The modifier is what puts
+                // the pressed colour and the press's scale on every accent
+                // fill at once (docs/TODO.md item 27).
+                .accentFilled(.circle)
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
