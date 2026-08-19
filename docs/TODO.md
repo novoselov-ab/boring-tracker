@@ -1475,6 +1475,15 @@ photographed here doing exactly that. So History gets the haptic and nothing
 else; a second mark on the tapped disc would be two marks for one write. Home
 is the screen that had no answer at all, and now has the same one History has.
 
+- [ ] **Except when the tapped row is a long way down**, which is the one gap
+      left and it is not new (found reviewing this item). The mark goes on the
+      row the repeat *wrote*, dated now, so it lands at the top of today and
+      nothing scrolls to it — repeat a row from last month with the list
+      scrolled there and the only signal that arrives is the haptic. Not
+      answered here: scrolling the list under the thumb that just tapped it
+      moves what you were reading, and marking the tapped row as well is two
+      marks for one write. Worth a decision, not a patch in a review round.
+
 **Do not solve this by keeping the sheet open** so the user can see the card.
 That trades a clear confirmation for a sheet that has to be dismissed by hand,
 which costs a tap on the most repeated action in the app.

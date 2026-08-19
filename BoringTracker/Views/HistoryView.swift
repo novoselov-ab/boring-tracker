@@ -349,6 +349,16 @@ struct HistoryView: View {
         // 30's diagnosis applied here before the item existed — so what is
         // added is the signal that does not need to be looked at.
         //
+        // **And it is the only signal when the tapped row is a long way down**
+        // (raised in review). The mark goes on the row the write *produced*,
+        // which is dated now and therefore at the top of today; nothing scrolls
+        // to it. Repeat something from last month with the list scrolled there
+        // and the mark is applied hundreds of rows above the viewport. Left
+        // rather than answered here: scrolling the list under the thumb that
+        // just tapped it would move the row you were reading, and marking the
+        // tapped row *as well* is two marks for one write. Item 30 in
+        // docs/TODO.md carries it.
+        //
         // The same `lastLoggedAgainRow` the mark above watches, and not a flag
         // or a timestamp: every write gets a fresh batch id, so a second repeat
         // of the same row is a different value and buzzes. `lastLoggedAgainAt`

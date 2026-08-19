@@ -165,11 +165,18 @@ struct HomeView: View {
         }
         // The mark clears itself, and `task(id:)` rather than a bare `Task` for
         // the reason History's own mark uses one: a second repeat while the
-        // first is up restarts the clock instead of racing it. A second — long
-        // enough to be seen by an eye that was on the bar, short enough that
-        // the control is a Log again button again before a thumb could want it
-        // twice. Chosen rather than measured; there is nothing here to measure
+        // first is up restarts the clock instead of racing it. A second —
+        // chosen rather than measured; there is nothing here to measure
         // against.
+        //
+        // **The clock starts at the write, not at the uncovering**, so not all
+        // of it is on screen: the sheet is still sliding away when this begins.
+        // Off a 30fps recording of a synthesized tap, the disc is drawn as a
+        // checkmark in the first frame the bar is fully uncovered and holds for
+        // about 0.8s of the one. Left as it is — the alternative is starting
+        // from the sheet's `onDismiss`, which buys 0.2s and gives up the thing
+        // the recording shows, which is that the mark is already there as the
+        // sheet uncovers it rather than appearing afterwards.
         //
         // **Outside the `NavigationStack`, not on its root content** (found in
         // review). A `task` on the root is cancelled by a push, so tapping
@@ -182,6 +189,30 @@ struct HomeView: View {
             guard !Task.isCancelled else { return }
             loggedAgain = nil
         }
+    }
+
+    /// Whether the Log again disc is saying "written".
+    ///
+    /// Three conditions, and each of them is a way the mark went stale in
+    /// review. It has to be **this screen's** write — `loggedAgain`, set by the
+    /// sheet on its way out. It has to be one the store is **still holding**,
+    /// the same comparison `offersUndo` makes: Undo sits 44pt above this disc
+    /// and is reachable well inside the second, and a checkmark standing over
+    /// an emptied slot is the app acknowledging a write it has just taken back.
+    /// And it has to be **recent**, because `Task.sleep` does not run while the
+    /// app is suspended — background inside the second, come back ten minutes
+    /// later, and home draws before the sleep resumes.
+    ///
+    /// Two seconds, against a mark that lives for one: `lastLoggedAgainAt` is
+    /// canonicalised to whole seconds, so it can sit up to half a second either
+    /// side of the moment it describes and the window has to clear that. It is
+    /// a guard, not the clock — `task(id:)` below is still what takes the mark
+    /// down on time.
+    private var isConfirming: Bool {
+        guard let loggedAgain, store.lastLoggedAgainRow == loggedAgain,
+              let at = store.lastLoggedAgainAt
+        else { return false }
+        return Date().timeIntervalSince(at) < 2
     }
 
     /// Whether the bar is drawn: this screen wrote the pending repeat.
@@ -277,16 +308,7 @@ struct HomeView: View {
                 Button { loggingAgain = true } label: {
                     // The disc is its own target here, at 50pt, so there is no
                     // frame around it to pad it out to 44 or to reserve a slot.
-                    // Still the store's write, not merely a flag this screen
-                    // set — the same comparison `offersUndo` makes, and for the
-                    // same reason (found in review). Undo is 44pt above this
-                    // disc and reachable well inside the second the mark is up,
-                    // and a checkmark left standing over an emptied slot is the
-                    // app acknowledging a write it has just taken back.
-                    RepeatDisc(
-                        diameter: 50, glyph: 20,
-                        confirmed: loggedAgain != nil && store.lastLoggedAgainRow == loggedAgain
-                    )
+                    RepeatDisc(diameter: 50, glyph: 20, confirmed: isConfirming)
                 }
                 // `.accentFill` rather than `.plain`, so the disc reads the
                 // press and recedes to `Color.accentFillPressed` like every
@@ -302,6 +324,16 @@ struct HomeView: View {
                 // stops updating the moment it is dismissed, and the one signal
                 // that has to arrive is not the one to hang off a view being
                 // torn down.
+                //
+                // **The same buzz for a partial repeat**, which is deliberate
+                // (raised in review). `Store.logAgain` writes what it can and
+                // records what it skipped — a weigh-in batch repeats its
+                // calories and drops its weight, by item 23 — and the honest
+                // wording for that is already on screen at the same instant, in
+                // the undo bar directly above this: "Logged 1 of 2 again". A
+                // second haptic meaning "partly" would be a vocabulary of two
+                // buzzes nobody is going to learn, for a distinction the
+                // sentence beside it already draws.
                 .logHaptic(loggedAgain)
             }
             .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
