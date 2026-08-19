@@ -349,11 +349,15 @@ struct HistoryView: View {
         // 30's diagnosis applied here before the item existed — so what is
         // added is the signal that does not need to be looked at.
         //
-        // `lastLoggedAgainAt` rather than the row or a flag: repeat the same
-        // row twice and the row is the same value, so a trigger on it would go
-        // quiet on the second tap. It is silent on the way in, too — a push
-        // onto a screen whose value is already set is not a change.
-        .logHaptic(store.lastLoggedAgainAt)
+        // The same `lastLoggedAgainRow` the mark above watches, and not a flag
+        // or a timestamp: every write gets a fresh batch id, so a second repeat
+        // of the same row is a different value and buzzes. `lastLoggedAgainAt`
+        // was here first and is too coarse — `Date.stamp()` rounds to whole
+        // seconds so the store file is lossless, so two taps inside one second
+        // carry the same date and the second one arrives in silence (found in
+        // review). It is silent on the way in either way: a push onto a screen
+        // whose value is already set is not a change.
+        .logHaptic(store.lastLoggedAgainRow)
         // It fades on its own, which is the half that is a decision: a mark
         // that stays is a second state to reason about. `task(id:)` restarts
         // the clock when a second repeat marks a second row, and cancels when

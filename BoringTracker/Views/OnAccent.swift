@@ -843,13 +843,21 @@ extension View {
     /// carries `.impact(.light)`, and a confirmation that felt like the press
     /// again would say "touched" twice instead of "touched, then written".
     ///
-    /// **Takes what was written rather than a flag**, because the two callers
-    /// need two triggers and a `Bool` serves only one of them. History passes
-    /// `store.lastLoggedAgainAt`, which is a different value for every write —
-    /// a flag there would already be `true` from an earlier repeat and the
-    /// second one would arrive in silence. Nothing fires on the way back to
-    /// `nil`, and nothing fires on arrival: `sensoryFeedback` triggers on a
-    /// change, so pushing a screen whose value is already set is silent.
+    /// **Takes what was written rather than a flag**, because a `Bool` serves
+    /// only the caller that clears it: History never does, so an earlier repeat
+    /// would leave it `true` and the next tap would arrive in silence. Both
+    /// call sites pass `Store.lastLoggedAgainRow`, which carries a fresh batch
+    /// id per write and so differs between two repeats of the same row.
+    ///
+    /// **Not `lastLoggedAgainAt`, which both call sites used first** (found in
+    /// review). It looks like the same thing and has one-second resolution:
+    /// `Date.stamp()` canonicalises to whole seconds so the store file is
+    /// lossless, so two repeats inside one second are the same `Date` and the
+    /// second one is silent — the exact failure the paragraph above is about.
+    ///
+    /// Nothing fires on the way back to `nil`, and nothing fires on arrival:
+    /// `sensoryFeedback` triggers on a change, so pushing a screen whose value
+    /// is already set is silent.
     ///
     /// **Unfelt here, like the press.** The simulator has no haptics — UIKit
     /// logs "Haptics: unsupported" and nothing reaches CoreHaptics — so whether

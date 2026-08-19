@@ -20,8 +20,8 @@ struct HomeView: View {
     /// what makes it self-clearing: an undo empties the slot and a repeat made
     /// on History replaces it, and either way this stops matching.
     @State private var wroteRow: HistoryItem.ID?
-    /// When the Log again sheet last wrote something, while the bar is still
-    /// saying so (docs/TODO.md item 30).
+    /// The row the Log again sheet last wrote, while the bar is still saying so
+    /// (docs/TODO.md item 30).
     ///
     /// **The acknowledgement the sheet could not draw itself.** Item 30's first
     /// candidate was the *row* marking as the sheet leaves. It was built and
@@ -38,10 +38,17 @@ struct HomeView: View {
     /// tapped, nothing is in front of it by the time it is drawn, and it is the
     /// same `RepeatDisc` in the same two states History's rows already use.
     ///
-    /// **A date rather than a flag**, so two repeats a moment apart are two
-    /// different values: it is what re-arms `logHaptic(_:)` and what restarts
-    /// the clock below.
-    @State private var loggedAgainAt: Date?
+    /// **The written row rather than a flag**, so two repeats a moment apart are
+    /// two different values — every write gets a fresh batch id
+    /// (`Store.lastLoggedAgainRow`). That is what re-arms `logHaptic(_:)` and
+    /// what restarts the clock below.
+    ///
+    /// **Not `lastLoggedAgainAt`, which was here first and is too coarse**
+    /// (found in review). `Date.stamp()` canonicalises to whole seconds so the
+    /// file is lossless, so two repeats inside one second carry the *same*
+    /// date: the second tap would change nothing, buzz nothing, and leave the
+    /// first tap's clock to clear the mark early.
+    @State private var loggedAgain: HistoryItem.ID?
     /// The tracker being made from the row at the end of the list. Home's only
     /// editor, and the only reason this screen owns a third sheet.
     @State private var addingTracker: Tracker?
@@ -142,28 +149,33 @@ struct HomeView: View {
                 // it fired.
                 RepeatView {
                     wroteRow = store.lastLoggedAgainRow
-                    loggedAgainAt = store.lastLoggedAgainAt
+                    loggedAgain = store.lastLoggedAgainRow
                 }
-            }
-            // It clears itself, and `task(id:)` rather than a bare `Task` for
-            // the reason History's own mark uses one: a second repeat while the
-            // first mark is up restarts the clock instead of racing it, and
-            // leaving the screen cancels it. A second — long enough to be seen
-            // by an eye that was on the bar, short enough that the control is a
-            // Log again button again before a thumb could want it twice.
-            // Chosen rather than measured; there is nothing here to measure
-            // against.
-            .task(id: loggedAgainAt) {
-                guard loggedAgainAt != nil else { return }
-                try? await Task.sleep(for: .seconds(1))
-                guard !Task.isCancelled else { return }
-                loggedAgainAt = nil
             }
             // No clock here any more. The expiry is `UndoBar`'s, on every screen
             // that draws the bar (docs/TODO.md item 20b): the bar empties itself
             // ten seconds after the write, so this screen only has to answer the
             // other question — whose write is it. Home kept its own copy of the
             // ten and History kept none, which is exactly the drift 20b names.
+        }
+        // The mark clears itself, and `task(id:)` rather than a bare `Task` for
+        // the reason History's own mark uses one: a second repeat while the
+        // first is up restarts the clock instead of racing it. A second — long
+        // enough to be seen by an eye that was on the bar, short enough that
+        // the control is a Log again button again before a thumb could want it
+        // twice. Chosen rather than measured; there is nothing here to measure
+        // against.
+        //
+        // **Outside the `NavigationStack`, not on its root content** (found in
+        // review). A `task` on the root is cancelled by a push, so tapping
+        // History inside that second left the flag set with nothing running to
+        // unset it, and coming back drew a checkmark for a write that was by
+        // then old. Out here it survives the push and clears on time.
+        .task(id: loggedAgain) {
+            guard loggedAgain != nil else { return }
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            loggedAgain = nil
         }
     }
 
@@ -260,7 +272,7 @@ struct HomeView: View {
                 Button { loggingAgain = true } label: {
                     // The disc is its own target here, at 50pt, so there is no
                     // frame around it to pad it out to 44 or to reserve a slot.
-                    RepeatDisc(diameter: 50, glyph: 20, confirmed: loggedAgainAt != nil)
+                    RepeatDisc(diameter: 50, glyph: 20, confirmed: loggedAgain != nil)
                 }
                 // `.accentFill` rather than `.plain`, so the disc reads the
                 // press and recedes to `Color.accentFillPressed` like every
@@ -276,7 +288,7 @@ struct HomeView: View {
                 // stops updating the moment it is dismissed, and the one signal
                 // that has to arrive is not the one to hang off a view being
                 // torn down.
-                .logHaptic(loggedAgainAt)
+                .logHaptic(loggedAgain)
             }
             .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
             .padding(.horizontal)
