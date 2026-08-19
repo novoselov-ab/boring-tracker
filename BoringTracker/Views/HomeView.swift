@@ -474,8 +474,14 @@ private struct TrackerCard: View {
     /// at `.xxxLarge`, which does not tell that row from the "Calories" one
     /// under it. `.xxLarge` still leaves "Calorie…" and is left alone — that
     /// reads, and it is where the density is still worth having.
+    ///
+    /// The number itself now lives on `DynamicTypeSize`, because three list
+    /// screens have the same row and were breaking at the same size with no
+    /// fallback at all. This is the same question asked from the same place —
+    /// see `StackingRow`, which is this card's own layout with the argument
+    /// above still attached to it.
     private var isStacked: Bool {
-        typeSize >= .xxxLarge
+        typeSize.stacksRows
     }
 
     /// One line normally, stacked once the text outgrows it.
@@ -488,38 +494,32 @@ private struct TrackerCard: View {
     /// only while the row is still readable, so above the threshold this falls
     /// back to the stacked shape the card had before, which has room for both.
     /// Somebody reading at AX5 is not the person counting how many cards fit.
-    @ViewBuilder
     private func summary(_ headline: Headline, _ caption: String?) -> some View {
-        if isStacked {
-            VStack(alignment: .leading, spacing: 2) {
-                nameBlock(caption)
-                headlineText(headline)
-            }
-        } else {
-            // `spacing: 0`, with the gap coming from the `Spacer` alone. An
-            // HStack inserts its spacing on *both* sides of a spacer, so
-            // `spacing: 8` around `Spacer(minLength: 8)` reserved 24pt rather
-            // than 8 — and since the number outranks the name, all 16pt of the
-            // surplus was spent out of the name's truncation budget, which is
-            // the width this row has least of.
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                nameBlock(caption)
-                Spacer(minLength: 8)
-                headlineText(headline)
-                    // The number gets the width it needs and the name is what
-                    // gives way, because the number is the one thing on this
-                    // row that has to be readable across a kitchen and a
-                    // truncated name still says which tracker it is. How far
-                    // that goes is bounded by `isStacked` rather than by
-                    // anything here: the worst case left inside this branch is
-                    // "Calorie…" beside "1,234,567 kcal", on an SE at
-                    // `.xxLarge`. A floor on the name was tried instead and
-                    // reverted — `minWidth` reserves its width whether the name
-                    // needs it or not, so "Weight" kept an 83pt blank gap and
-                    // charged it to the number, which halved. That is this
-                    // row's priority backwards, and for the common short name.
-                    .layoutPriority(1)
-            }
+        // The arrangement, the threshold and the measured `spacing: 0` all
+        // moved into `StackingRow` when the three list screens turned out to
+        // want the same row and the same fallback. Nothing about this card's
+        // layout changed with them.
+        StackingRow {
+            nameBlock(caption)
+        } trailing: {
+            headlineText(headline)
+                // The number gets the width it needs and the name is what
+                // gives way, because the number is the one thing on this
+                // row that has to be readable across a kitchen and a
+                // truncated name still says which tracker it is. How far
+                // that goes is bounded by `isStacked` rather than by
+                // anything here: the worst case left inside this branch is
+                // "Calorie…" beside "1,234,567 kcal", on an SE at
+                // `.xxLarge`. A floor on the name was tried instead and
+                // reverted — `minWidth` reserves its width whether the name
+                // needs it or not, so "Weight" kept an 83pt blank gap and
+                // charged it to the number, which halved. That is this
+                // row's priority backwards, and for the common short name.
+                //
+                // Priority is the caller's, deliberately: a History row lets
+                // its *time* take the width instead, and one container cannot
+                // hold both answers.
+                .layoutPriority(1)
         }
     }
 

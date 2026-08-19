@@ -654,18 +654,33 @@ private struct HistoryRow: View {
                 // The time is on the identity line rather than beside the
                 // numbers: it is the same footnote grey, and the two quiet
                 // things belong together above the one loud one.
-                HStack(alignment: .firstTextBaseline) {
+                //
+                // Beside them while it fits and under them once it does not —
+                // home's card has fallen back that way since item 11 and this
+                // row never did, so at AX5 it read `Body fat ·` / `Mea-` /
+                // `sure-` / `ment` down the left against `12:20` / `AM` down
+                // the right. One row, most of a screen, and the word
+                // *Measurement* hyphenated across three lines. `StackingRow`
+                // is that fallback, shared.
+                StackingRow {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(identityLine(line, canRepeat: canRepeat))
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         Text(line.values)
                     }
-                    Spacer(minLength: 8)
+                } trailing: {
                     Text(item.date.formatted(date: .omitted, time: .shortened))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
+                        // The time takes the width it needs, where home's card
+                        // gives that to its number: `12:04 AM` broken across
+                        // two lines after the `A` is not a time any more, and
+                        // an identity line that wraps is still readable. This
+                        // is the priority the card's own comment says belongs
+                        // to the caller.
+                        .layoutPriority(1)
                 }
                 .contentShape(.rect)
             }

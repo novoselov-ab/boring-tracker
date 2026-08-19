@@ -258,7 +258,11 @@ private struct RepeatRow: View {
             // rows, and one of them shouting is how an app grows a second
             // design language.
             HStack(spacing: 8) {
-                HStack(alignment: .firstTextBaseline) {
+                // The row's two halves, stacking past `.xxxLarge` the way
+                // home's card and both other lists do: at AX5 this read `640` /
+                // `kcal, 31` / `g` beside `Tue,` / `Aug 4`, two columns of
+                // fragments where the row has one sentence to say.
+                StackingRow {
                     VStack(alignment: .leading, spacing: 2) {
                         // The same word History puts here, from the same
                         // call, for the same reason: a dimmed row says
@@ -272,7 +276,7 @@ private struct RepeatRow: View {
                             .foregroundStyle(.secondary)
                         Text(line.values)
                     }
-                    Spacer(minLength: 8)
+                } trailing: {
                     // The day, where History's row shows the time. History has
                     // already said which day in its section heading and this
                     // list has no sections, so the two show the half the other
@@ -280,6 +284,10 @@ private struct RepeatRow: View {
                     Text(day.label(today: store.today, calendar: store.calendar))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        // As on History, and for the same reason: `Tue, Aug 4`
+                        // broken across two lines is a date you have to
+                        // reassemble.
+                        .layoutPriority(1)
                 }
                 // **Dimmed while the row is off**, which is what `.plain` used
                 // to do for free and a custom `ButtonStyle` does not. A

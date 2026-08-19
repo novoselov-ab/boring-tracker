@@ -133,7 +133,11 @@ struct TrackerDetailView: View {
         Button {
             editing = entry
         } label: {
-            HStack(alignment: .firstTextBaseline) {
+            // The same row shape home's card and History draw, and the same
+            // fallback: side by side while it fits, stacked once it does not.
+            // Without it this screen split the timestamp mid-token at AX5 —
+            // `12:04 A` on one line and `M` on the next.
+            StackingRow {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tracker.format(entry.value))
                         .font(.body.monospacedDigit())
@@ -143,11 +147,15 @@ struct TrackerDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Spacer(minLength: 8)
+            } trailing: {
                 Text(entry.date.formatted(date: .omitted, time: .shortened))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+                    // As on History: a time that breaks after the `A` has
+                    // stopped being a time, and the value beside it wraps
+                    // perfectly well.
+                    .layoutPriority(1)
             }
         }
         .buttonStyle(.plain)
