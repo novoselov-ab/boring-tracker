@@ -104,20 +104,27 @@ struct AccentFillPressTests {
     @Test("Every fill's longest edge moves the same two points")
     func constantTravel() {
         // Home's Log pill, the log sheet's Log, the empty screen's Add Tracker,
-        // the undo capsule, and any of the four discs.
-        for size in [(292.0, 50.0), (52.67, 34.0), (81.67, 28.0), (60.0, 32.0), (30.0, 30.0)] {
+        // the undo capsule, home's bar disc, and any of the three row discs.
+        // The pill is 312 and the bar disc 50 since item 33 moved them; the
+        // pill was still 292 here and the bar disc was not here at all, which
+        // the derived scale let pass. Both were rendered held down on an
+        // iPhone 17 Pro and sampled: the disc goes 150x150 to 138x138 device
+        // pixels at 3x, which is 2pt off each end.
+        for size in [
+            (312.0, 50.0), (52.67, 34.0), (81.67, 28.0), (60.0, 32.0), (50.0, 50.0), (30.0, 30.0),
+        ] {
             #expect(abs(travel(size.0, size.1) - AccentFillPress.travel) < 0.0001)
         }
     }
 
     @Test("The pill and the disc need different scales to do that")
     func scalesDiffer() {
-        // 0.9863 and 0.8667. Rendered and sampled: the pill goes 876x150 to
-        // 864x148 device pixels at 3x, the disc 90x90 to 78x78 — 6px, which is
-        // 2pt, off each end of both.
-        let pill = AccentFillPress.scale(for: CGSize(width: 292, height: 50), reduceMotion: false)
+        // 0.9872 and 0.8667. Rendered and sampled: the pill goes 936x150 to
+        // 924x148 device pixels at 3x, a row's disc 90x90 to 78x78 — 6px, which
+        // is 2pt, off each end of both.
+        let pill = AccentFillPress.scale(for: CGSize(width: 312, height: 50), reduceMotion: false)
         let disc = AccentFillPress.scale(for: CGSize(width: 30, height: 30), reduceMotion: false)
-        #expect(abs(pill - 0.9863) < 0.0001)
+        #expect(abs(pill - 0.9872) < 0.0001)
         #expect(abs(disc - 0.8667) < 0.0001)
     }
 

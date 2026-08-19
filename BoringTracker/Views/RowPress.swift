@@ -86,7 +86,7 @@ struct RowButtonStyle: ButtonStyle {
             // is entitled to drop. This runs after the update instead, and what
             // it costs is measured in `rowPress()`.
             .onChange(of: configuration.isPressed) { _, isPressed in
-                press?.wrappedValue = isPressed
+                press?.set(isPressed)
             }
     }
 }
@@ -108,7 +108,18 @@ extension EnvironmentValues {
     /// render later, and a `@State` on every call site is six copies of one
     /// boolean, two of which have nowhere to live because their rows are built
     /// by a method rather than a view.
-    @Entry var rowPress: Binding<Bool>? = nil
+    ///
+    /// **An object rather than a `Binding`, and that is a performance fix
+    /// rather than a style** (found in review). SwiftUI compares environment
+    /// values to decide what a change invalidates, and `Binding` is not
+    /// `Equatable` — so a binding built fresh in `RowPress.body` read as a new
+    /// value on every pass and invalidated every row's button subtree with it.
+    /// The screen where that bites is settings: a reorder drag updates
+    /// `@GestureState` on every touch move, so each row would re-render its
+    /// label per frame of a drag that changes nothing below the button.
+    /// `RowPressState` is one instance per row, `Equatable` by identity, and
+    /// the same value every pass.
+    @Entry var rowPress: RowPressState? = nil
 }
 
 extension View {
@@ -191,15 +202,8 @@ extension View {
 /// reading is noise rather than a cost. That run is item 28's and has not been
 /// repeated for this placement.
 private struct RowPress<Rest: View>: ViewModifier {
-    @State private var isPressed = false
-    /// When the press arrived, so the release can wait out
-    /// `AccentFillPress.minimumHold`.
-    @State private var since: ContinuousClock.Instant?
-    /// Which press a pending release belongs to. A release that wakes up to
-    /// find the row pressed again is a release for the press before this one,
-    /// and letting it through would blink the row out under a finger that never
-    /// lifted.
-    @State private var generation = 0
+    /// One per row, for as long as the row exists. See `RowPressState`.
+    @State private var press = RowPressState()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// See `rowPress(rest:)`.
@@ -210,7 +214,7 @@ private struct RowPress<Rest: View>: ViewModifier {
         // the reason `AccentFilled` does the same: reaching into main-actor
         // state from inside it is a warning in a target built with strict
         // concurrency complete.
-        let isPressed = isPressed
+        let isPressed = press.isPressed
         let reduceMotion = reduceMotion
         return content
             .listRowBackground(
@@ -238,26 +242,53 @@ private struct RowPress<Rest: View>: ViewModifier {
                 )
             }
             .animation(AccentFillPress.animation(pressed: isPressed), value: isPressed)
-            // Not `$isPressed`: what the button writes goes through the hold
-            // below, which is what makes a fast tap visible at all.
-            //
-            // The setter is spelled as a closure rather than as `set: press`,
-            // which is the same thing and crashes the compiler: Swift 6.2.4
-            // takes the method reference into IRGen and aborts in
-            // `SyncCallEmission::setArgs`. Left written out with this note so
-            // that tidying it back is a decision rather than a surprise.
-            .environment(\.rowPress, Binding(get: { self.isPressed }, set: { self.press($0) }))
+            .environment(\.rowPress, press)
     }
+}
+
+/// One row's press, and the floor under it.
+///
+/// **A class so that the environment value is one stable, comparable thing** —
+/// see `EnvironmentValues.rowPress` for what a fresh `Binding` there was
+/// costing. It also gives the hold below somewhere to keep its two pieces of
+/// bookkeeping without either of them being a `@State` that a view has to
+/// thread anywhere.
+@Observable
+@MainActor
+final class RowPressState: Equatable {
+
+    /// What the row draws. Written only by `set(_:)`.
+    private(set) var isPressed = false
+
+    /// When the press arrived, so a release can wait out
+    /// `AccentFillPress.minimumHold`.
+    @ObservationIgnored private var since: ContinuousClock.Instant?
+
+    /// Which press a pending release belongs to. A release that wakes up to
+    /// find the row pressed again is a release for the press before this one,
+    /// and letting it through would blink the row out under a finger that never
+    /// lifted.
+    @ObservationIgnored private var generation = 0
 
     /// Take the button's press, and keep it on screen long enough to be seen.
     ///
     /// The press itself is immediate — this never delays one arriving. What it
     /// delays is the *release*, and only when the touch was shorter than
     /// `AccentFillPress.minimumHold`; the argument and the measurement are
-    /// there. A tap that outlasts the floor takes the `else` branch and
-    /// releases on the frame the finger lifts, which is every press a thumb
-    /// rests through.
-    private func press(_ isPressed: Bool) {
+    /// there. A tap that outlasts the floor releases on the frame the finger
+    /// lifts, which is every press a thumb rests through.
+    ///
+    /// **It cannot tell a release from a cancellation, and that is a known
+    /// edge** (found in review). SwiftUI reports both as the pressed state
+    /// going false, so a finger that rests long enough for the list to hand the
+    /// touch over — 0.2s to 0.45s, measured for the haptic — and *then* flicks
+    /// within the floor leaves the row washed for the rest of it while the list
+    /// is already scrolling. It is a narrow window and it is cosmetic, and the
+    /// fix would be a second gesture watching for movement, which is the thing
+    /// this file has twice decided not to add. **It goes on item 17's list next
+    /// to the haptic**, because both are questions about a thumb that a
+    /// simulator cannot answer.
+    func set(_ isPressed: Bool) {
         guard isPressed else {
             let held = since.map { ContinuousClock.now - $0 } ?? .seconds(1)
             guard held < AccentFillPress.minimumHold else {
@@ -275,6 +306,13 @@ private struct RowPress<Rest: View>: ViewModifier {
         generation += 1
         since = .now
         self.isPressed = true
+    }
+
+    /// By identity: two rows are never the same press, and one row's state is
+    /// the same object for as long as the row is on screen. This is what the
+    /// environment compares.
+    nonisolated static func == (lhs: RowPressState, rhs: RowPressState) -> Bool {
+        lhs === rhs
     }
 }
 
