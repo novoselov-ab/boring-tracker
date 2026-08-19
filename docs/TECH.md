@@ -708,8 +708,9 @@ accent discs with a black one (TODO item 21). Same glyph, same VoiceOver label,
 two answers about what kind of control it is. It is `RepeatDisc` now, one view
 in three places, next to `UndoButton`, which exists because the same thing
 happened to Undo one item earlier. **Prominence is carried by size and shape,
-not by hue**: home's copy stays secondary because it is a 30pt disc with no word
-against a full-width pill.
+not by hue**: home's copy stays secondary because it is a circle with no word on
+it against a pill six times its width. It is 50pt there and 30 on a row, which
+`RepeatDisc` takes as a parameter rather than forking the view (TODO item 33).
 
 **The light-mode foreground failure was real, and the colour set is the fix.**
 One system hue could not be both a legible fill and a legible foreground on

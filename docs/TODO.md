@@ -30,8 +30,11 @@ reason done items keep their SHAs — the device, the build config and the metho
 are stated where the number is, and `git log` says when. The 2026-08-19
 documentation pass re-ran none of the timing or screenshot measurements here;
 what it did re-run is every WCAG contrast ratio in items 13e and 18, all of
-which reproduce exactly from their hex values, and the test suite, which is 281
-tests and green.
+which reproduce exactly from their hex values, and the test suite. **That pass
+recorded 281 tests and the suite is 277**, re-run on 2026-08-19 at `cb2e60e`
+before item 32 touched it; 278 after. The count is corrected here rather than
+argued about, and it is the kind of number this file now asks people to stop
+writing down.
 
 ## 1. Settings screen and tracker editing — done
 
@@ -1188,13 +1191,14 @@ pill.
       thumb rests bottom-right so the primary action should sit there — but the
       pill spans most of the bar either way, so it stays under the thumb
       wherever the small control goes. That argument was weaker than it looked.
-- [ ] **The user picks one.** The standing constraint still holds — a peer
-      beside Log competes with it; two equal buttons were tried early on and
-      read as a choice to make on arrival, which is a decision placed in front
-      of logging. Swapping sides did not license making them equals, and
-      neither does resizing.
-- [ ] Alignment, height, corner radius and optical weight should agree with the
-      pill, whatever shape it ends up.
+- [x] **The user picks one.** Pairing 1, applied in item 33. The standing
+      constraint still holds — a peer beside Log competes with it; two equal
+      buttons were tried early on and read as a choice to make on arrival,
+      which is a decision placed in front of logging. Swapping sides did not
+      license making them equals, and neither does resizing.
+- [x] Alignment, height, corner radius and optical weight should agree with the
+      pill, whatever shape it ends up. All four do: 50pt against the pill's 50,
+      a fully round corner against its capsule, and a sixth of its width.
 
 The user picks from the photographs. Do not merge a favourite and call it
 settled.
@@ -1475,7 +1479,43 @@ candidates but **in dark only**, at the user's direction. There is no
 equivalent evidence for light, so this is not a lookup — it is the same
 exercise, done for the other appearance.
 
-## 32. Two rows, two reading orders
+## 32. A press you can see on a fast tap — done
+
+Every pressed state applied on the frame the touch lands, and only the release
+drawn. A row presses as a whole cell rather than a box behind its text, and
+holds long enough that a list's delayed touch still shows one. `b9c0695`
+
+## 33. Use pairing 1 for the bottom bar — done
+
+A 50pt accent circle, the pill's height and corner, and the 70pt slot handed
+back — pixel-identical to `pairing-1.png`. Log again stays right, Log left.
+`d579aff`
+
+- [ ] **A sixth shape is rendered and waiting on the user.** Asked for after
+      the session started: Log again as the Log button but smaller — a rounded
+      rectangle, wider than tall. The three constraints given cannot all hold
+      at once, because the pill is a capsule and its corner radius *is* half
+      its height, so a 50pt-tall shape carrying that radius is a capsule by
+      construction. Rendered at three radii to show the trade and photographed
+      beside pairing 1 in `~/dev/boring-tracker-pairing/`:
+      `pairing-5a-rounded-square.png` (62x50, r18),
+      `pairing-5b-pill-radius.png` (62x50, r25 — the pill's own, and therefore
+      a capsule), `pairing-5c-wide-rounded-square.png` (70x50, r14), and
+      `pairing-1-vs-5-strip.png` stacking all four bars.
+
+      The session's answer was to keep pairing 1, on the grounds that a 50pt
+      circle already *is* the pill's corner radius at width = height, so it is
+      the same shape family rather than a different kind of object — and that
+      widening it only moves it toward the peer the standing constraint rules
+      out. The user has the photographs.
+
+## 34. Does a settings row say it can be edited? — done
+
+The chevron stays and the footer says the tap out loud, in the idiom item 22
+already uses on two screens. Items 28 and 32 were checked as the alternative
+answer first and are not one: both happen after a finger has landed. `18416ce`
+
+## 35. Two rows, two reading orders
 
 A History row leads with **what you called it** and puts the numbers under it
 — item 14b decided that, and the Log again sheet follows it. A tracker detail
@@ -1500,7 +1540,7 @@ private view in `HistoryView.swift`, not a method on `HistoryView` — and
 - [ ] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
       next pass does not find this again and file it a third time.
 
-## 33. The entry editor confirms where the log sheet used to
+## 36. The entry editor confirms where the log sheet used to
 
 Item 5 moved the log sheet's confirm **out of the navigation bar** and put it
 directly above the keypad, because the keypad is up and the top-right corner of
@@ -1518,56 +1558,6 @@ the common path, and item 5's measurement was about the screen that is.
 
 - [ ] Decide whether editing is close enough to logging to want the same
       confirm placement.
-
-## 32. A press you can see on a fast tap
-
-Reported from use, and it is a real defect rather than a taste note: **every
-pressed state animates in, so a quick tap finishes before it renders and you
-see nothing at all.**
-
-- [ ] **The pressed state applies instantly — no animation in.** Only the
-      release animates out. That is the whole bug: a 100ms tap cannot show a
-      150ms fade.
-- [ ] **Scale the whole item**, not a highlight behind it. Pressing a tracker
-      currently draws a rectangular wash that reads like a text field rather
-      than a button.
-- [ ] **The same treatment everywhere it can be**: trackers on home, rows in
-      settings and History and Log again, the bar buttons, the card discs. One
-      press, one appearance.
-- [ ] **Quick.** The reference given was the History icon's press — that speed,
-      not slower.
-- [ ] Reduce Motion still takes the movement and keeps the colour; item 27's
-      gate already exists, reuse it.
-
-Item 26 measured a colour and the goal still failed. Item 27 added a scale and
-the goal still failed, because of timing. **Judge this by tapping fast**, which
-is how it is actually used — not by pressing and holding, which is what makes a
-slow animation look fine.
-
-## 33. Use pairing 1 for the bottom bar
-
-Chosen from the five photographed in `~/dev/boring-tracker-pairing/`.
-
-- [ ] Apply `pairing-1`.
-- [ ] Log again stays on the right, Log on the left.
-
-## 34. Does a settings row say it can be edited?
-
-The `>` on each tracker is iOS's disclosure indicator: it means tapping opens
-something, and it is the conventional affordance rather than a mistake. A
-pencil is what you use when editing is *one of several* actions on a row, which
-it is not here.
-
-But it is small, and it was not obvious in use — which is evidence, since
-convention only works if it reads.
-
-- [ ] Decide whether the chevron alone is enough now that the whole row is a
-      target and presses visibly (items 28 and 32).
-- [ ] If not, prefer a **footer hint** — "Tap a tracker to edit it" — over
-      swapping the chevron for an icon. History already does exactly this for
-      its two invisible gestures (item 22), so it is the pattern this app
-      already uses.
-- [ ] Do not add both a hint and a new icon. One explanation is enough.
 
 ## Noted, not scheduled
 

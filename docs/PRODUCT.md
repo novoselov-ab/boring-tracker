@@ -339,7 +339,8 @@ Small enough to list completely.
   to make on arrival, which is a decision in front of logging. What makes it
   quieter is its size and the absence of a word, not its colour — it is the
   same disc, in the same accent, that a History row and a Log again row carry,
-  because it is the same action. Searchable by name, like History. The whole
+  because it is the same action, drawn at 50pt here against their 30 so that it
+  agrees with the pill on height and corner (TODO item 33). Searchable by name, like History. The whole
   row is the button — there is nothing else a tap here could mean, so the
   target is the full width rather than a disc on the end of it.
 
@@ -434,10 +435,16 @@ that has one — settings, History, the Log again sheet, tracker detail, home's
 cards. The whole row is the target, not the words drawn in it: a row you can hit
 on its text and on its chevron and nowhere in between is worse than one that is
 plainly not tappable, because a miss teaches you the tap failed rather than that
-you aimed wrong. And it responds to the press — it fills with the same grey iOS
-presses its own rows to and goes down by the same 2pt the app's buttons have
+you aimed wrong. And it responds to the press — the whole row fills with the
+same grey iOS presses its own rows to, edge to edge and clipped to the card the
+way the platform does it, and goes down by the same 2pt the app's buttons have
 gone down by since item 27. Under Reduce Motion it takes the colour and not the
 movement, which is the rule every press in this app follows.
+
+**A press applies on the frame the touch lands.** Nothing about a pressed state
+fades in, anywhere: only the release is drawn. Two earlier attempts at "a press
+you can see" changed what was drawn and not when, and a tap is shorter than a
+fade (TODO item 32).
 
 Three of those rows are really *two* controls side by side — a History row, a
 home card and an active settings row each pair something that opens with a disc,
