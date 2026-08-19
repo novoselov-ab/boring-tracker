@@ -141,4 +141,19 @@ struct AccentFillPressTests {
             #expect(AccentFillPress.scale(for: size, reduceMotion: false) < 1)
         }
     }
+
+    @Test("A fill too short to give up 4pt does not turn inside out")
+    func fillShorterThanItsOwnTravel() {
+        // `1 - 2 * travel / longest` is zero at 4pt and negative below it, and
+        // a negative scale mirrors the fill. Nothing in the app is near this —
+        // the smallest is a 30pt disc — but the modifier is documented as what
+        // a later fill gets without having to remember it.
+        for longest in [0.5, 1, 2, 3, 4] as [CGFloat] {
+            let size = CGSize(width: longest, height: longest)
+            #expect(AccentFillPress.scale(for: size, reduceMotion: false) == 1)
+        }
+        // And it starts working again immediately above the boundary rather
+        // than being clamped over a range somebody chose.
+        #expect(AccentFillPress.scale(for: CGSize(width: 8, height: 8), reduceMotion: false) == 0.5)
+    }
 }

@@ -343,7 +343,7 @@ enum AccentFillPress {
     /// across four to five frames rather than jumping.
     static let travel: CGFloat = 2
 
-    /// The scale for a fill that laid out at this size, or `1` for the two
+    /// The scale for a fill that laid out at this size, or `1` for the three
     /// cases where the fill does not move at all.
     ///
     /// **Reduce Motion is one of them, and the app already had this argument
@@ -362,12 +362,19 @@ enum AccentFillPress {
     /// a later edit that moves the gate up into the `visualEffect` closure, or
     /// drops it, breaks something no screenshot of a default simulator shows.
     ///
-    /// The other is a fill that has not been measured yet: `.zero`, where
-    /// scaling from nothing would draw a control's first frame mid-press.
+    /// The other two are sizes the rule cannot describe. A fill that has not
+    /// been measured yet is `.zero`, and scaling from that would draw a
+    /// control's first frame mid-press. And a fill shorter than the 4pt this
+    /// wants to take out of it solves to zero or a *negative* scale, which
+    /// mirrors the control rather than pressing it — `2 * travel` is where the
+    /// rule stops being defined, not a taste threshold, and nothing in the app
+    /// is within 26pt of it. It is guarded because the doc above sells this
+    /// modifier as what a fifth fill gets by writing it rather than by
+    /// remembering, and a fifth fill is exactly who would find it.
     static func scale(for size: CGSize, reduceMotion: Bool) -> CGFloat {
         guard !reduceMotion else { return 1 }
         let longest = max(size.width, size.height)
-        guard longest > 0 else { return 1 }
+        guard longest > 2 * travel else { return 1 }
         return 1 - 2 * travel / longest
     }
 
