@@ -1062,6 +1062,48 @@ One pressed colour on every accent fill, and a disabled one you can see.
 The calendar is drawn only when two days have entries, and is absent rather than
 greyed below that; the reasoning is with item 25. `5aed442`
 
+## 27. The bottom bar: presses you cannot see, and a pairing that looks wrong
+
+Both from real use, both on the pair of controls at the bottom of home.
+
+### The pressed state still is not visible
+
+Item 26 gave every accent fill one pressed colour and measured it — and it is
+still hard to notice on Log and Log again. **The measurement was satisfied and
+the goal was not**, which means the target was wrong, not the work.
+
+So widen the brief: a bigger colour delta, a **scale on press**, or both.
+
+`PHILOSOPHY.md` rules out bounce, confetti and celebration, and animations you
+have to wait for. **A press-down scale is none of those** — it is instantaneous
+feedback under a thumb, and it is what iOS itself does. Earlier guidance to
+prefer colour over motion was mine and it was wrong in practice.
+
+- [ ] Make a press unmistakable on Log and Log again. Judge it by looking, not
+      by a ratio — the ratio already passed.
+- [ ] Whatever it is, it applies to **every** accent fill, so the app does not
+      disagree with itself about what a press looks like.
+
+### The pairing looks wrong
+
+The Log again control beside Log does not align and reads as poor taste — wrong
+size, wrong relationship. It is currently a 70×51 glyph square against a 292×50
+pill.
+
+- [ ] **Render at least three alternatives and photograph them**, dark mode, on
+      a real device size. This is taste; it needs looking at, not arguing about.
+      Put the images outside the repo (`.gitignore` refuses them) and give the
+      paths.
+- [ ] The standing constraint holds: **Log is the most frequent action** and a
+      peer beside it competes with it. Two equal buttons were already tried and
+      read as a choice to make on arrival, which is a decision placed in front
+      of logging.
+- [ ] Alignment, height, corner radius and optical weight should agree with the
+      pill, whatever shape it ends up.
+
+The user picks from the photographs. Do not merge a favourite and call it
+settled.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
