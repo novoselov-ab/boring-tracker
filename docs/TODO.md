@@ -25,6 +25,14 @@ exist somewhere else.
 Item 12 is deliberately not collapsed: it records a thing that was built,
 measured and reverted, and its length is what stops someone trying it again.
 
+**A measurement inside an item is dated by its commits**, which is the other
+reason done items keep their SHAs — the device, the build config and the method
+are stated where the number is, and `git log` says when. The 2026-08-19
+documentation pass re-ran none of the timing or screenshot measurements here;
+what it did re-run is every WCAG contrast ratio in items 13e and 18, all of
+which reproduce exactly from their hex values, and the test suite, which is 281
+tests and green.
+
 ## 1. Settings screen and tracker editing — done
 
 Settings, the tracker editor, and both deletions labelled apart. `d6520b2`
@@ -891,10 +899,16 @@ ids independently, with no coordination, and must never collide. That is what a
 UUID buys. A shorter id means writing a generator and owning a collision
 argument forever, in the one part of this app where being wrong is silent.
 
-Size is not the problem it appears to be. Five years of heavy use is about 2 MB
-and decodes in 41 ms, and the file is deliberately pretty-printed with sorted
-keys — which costs more than the id length does. Shrinking ids while keeping
-that would be optimising the smaller half of a cost we chose on purpose.
+Size is not the problem it appears to be. **The two numbers first written here
+were the pre-measurement estimate and they were both low** — five years of heavy
+use is 8.6 MB and decodes in 122 ms, not 2 MB and 41 ms (docs/scale.md). The
+conclusion survives the correction and is now measured rather than reasoned:
+the ids really are 35.6% of the file, and a build against a `batchID`-free
+document loads in 137–142 ms against 149–162 ms. That is about 11 ms, against
+the 1.5 s that opening History used to cost — so the file's size is not where
+this app's problem was. The file is also deliberately pretty-printed with sorted
+keys, which costs more than the id length does; shrinking ids while keeping that
+would be optimising the smaller half of a cost we chose on purpose.
 
 The honest argument the other way is readability, since the file is meant to be
 opened and read. But you read names and values; ids are noise at any length.
@@ -1301,8 +1315,9 @@ tells two rows apart, and leading with the name would put the same weight on
 the least distinguishing part of the row.
 
 So it is either a genuine inconsistency to fix, or a case where the same rule
-correctly produces two answers. The screens to compare are `HistoryView.row`
-and `TrackerDetailView.row`.
+correctly produces two answers. The screens to compare are `HistoryRow` — a
+private view in `HistoryView.swift`, not a method on `HistoryView` — and
+`TrackerDetailView.row`.
 
 - [ ] Decide, with both screens open, whether detail should lead with the name.
 - [ ] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
