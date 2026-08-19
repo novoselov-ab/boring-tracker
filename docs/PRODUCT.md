@@ -330,8 +330,10 @@ Small enough to list completely.
   makes a list scannable, and the numbers are not the part that tells two rows
   apart. An entry with no name disappears under a non-empty query, because this
   searches names and the field says so.
-- **Log again** — the things you have logged and named, the ones you log most
-  often first, one tap each to log again. Reached by a small disc beside home's
+- **Log again** — the things you have logged to a daily total, most recently
+  logged first, one tap each to log again. (Named or not: a name has decided
+  nothing here since item 21, and the order stopped being a frequency count in
+  item 29.) Reached by a small disc beside home's
   Log button, deliberately quieter than it: the bottom of home holds the most
   frequent action in the app, and a second equal button there reads as a choice
   to make on arrival, which is a decision in front of logging. What makes it

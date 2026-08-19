@@ -17,20 +17,28 @@ import Testing
 @Suite("Drop target")
 struct DropTargetTests {
 
-    /// Measured on an iPhone 17, logged out of the running app rather than read
-    /// off a screenshot: the `List`'s proxy reports this frame with
-    /// `safeAreaInsets` of 116 top and 34 bottom, so the frame is already the
-    /// safe area and 116...840 is the whole of the visible list.
+    /// Logged out of the running app rather than read off a screenshot: the
+    /// `List`'s proxy reports this frame with `safeAreaInsets` of 116 top and 34
+    /// bottom, so the frame is already the safe area and 116...840 is the whole
+    /// of the visible list. Re-read on an iPhone 17 Pro for item 28 and
+    /// unchanged — the rows inside it got shorter, the list did not move.
     let visible = CGRect(x: 0, y: 116, width: 402, height: 724)
 
     /// The row frames the app actually records — the reordering `HStack`, which
-    /// is 44pt tall because the drag handle is, *not* the taller `List` cell
-    /// around it. Middles logged from a real drag: 188, 320, 394, 503, 634.7.
-    /// The spacing is uneven on purpose: 74 between two members of one group,
-    /// 109 to a loose tracker, ~132 across a section header.
+    /// is 44pt tall because the drag handle is, *not* the `List` cell around it.
+    ///
+    /// **Re-measured for item 28**, which cut a settings row from 74pt to 52 and
+    /// left this fixture describing a layout the app can no longer produce.
+    /// Printed straight out of `onGeometryChange` by a temporary `NSLog`, on an
+    /// iPhone 17 Pro, from two grouped trackers followed by three loose ones:
+    /// tops at **160.33, 212.33, 299.33, 386.33, 473.33**, every one 44 tall, so
+    /// the middles are 182.33, 234.33, 321.33, 408.33, 495.33. The spacing is
+    /// uneven on purpose — **52 between two members of one group, 87 across a
+    /// section boundary** — where it used to read 74 and 109/132 on the taller
+    /// row.
     func deviceRows() -> [(id: UUID, frame: CGRect)] {
-        [188.0, 320.0, 394.0, 503.0, 634.7].map { middle in
-            (UUID(), CGRect(x: 32, y: middle - 22, width: 338, height: 44))
+        [160.33, 212.33, 299.33, 386.33, 473.33].map { top in
+            (UUID(), CGRect(x: 32, y: top, width: 338, height: 44))
         }
     }
 
@@ -38,10 +46,10 @@ struct DropTargetTests {
     func theFirstRowIsDroppable() {
         let rows = deviceRows()
 
-        // 193.7 is the position logged from a finger resting on the first row's
-        // handle, 6pt below its middle.
-        #expect(dropTarget(at: 193.7, rows: rows, visible: visible) == rows[0].id)
-        #expect(dropTarget(at: 188, rows: rows, visible: visible) == rows[0].id)
+        // The first row spans 160.33...204.33; 188.3 is 6pt below its middle,
+        // about where a finger on the handle sits.
+        #expect(dropTarget(at: 188.3, rows: rows, visible: visible) == rows[0].id)
+        #expect(dropTarget(at: 182.33, rows: rows, visible: visible) == rows[0].id)
     }
 
     @Test("The band is the list's frame, not that frame minus insets it already had")
@@ -49,12 +57,14 @@ struct DropTargetTests {
         let rows = deviceRows()
 
         // Adding `insets.top` back to a frame that had already had it taken off
-        // turned 116...840 into 232...806. The first row is 166...210, entirely
-        // above that, so it stopped being a candidate and a finger squarely on
-        // it resolved to the second row instead.
+        // turned 116...840 into 232...806. The first row is 160.33...204.33,
+        // entirely above that, so it stopped being a candidate and a finger
+        // squarely on it resolved to the second row instead. (It was 166...210
+        // when the bug was found; item 28's shorter row puts it further above
+        // the wrong band, not less.)
         let doubleCounted = CGRect(x: 0, y: 232, width: 402, height: 574)
-        #expect(dropTarget(at: 193.7, rows: rows, visible: doubleCounted) == rows[1].id)
-        #expect(dropTarget(at: 193.7, rows: rows, visible: visible) == rows[0].id)
+        #expect(dropTarget(at: 188.3, rows: rows, visible: doubleCounted) == rows[1].id)
+        #expect(dropTarget(at: 188.3, rows: rows, visible: visible) == rows[0].id)
     }
 
     @Test("Dragging past the top edge still means the first row")
@@ -67,22 +77,24 @@ struct DropTargetTests {
     @Test("A finger on the last row drops on it, and so does one past the end")
     func theLastRowIsDroppable() {
         let rows = deviceRows()
-        #expect(dropTarget(at: 634.7, rows: rows, visible: visible) == rows[4].id)
+        #expect(dropTarget(at: 495.33, rows: rows, visible: visible) == rows[4].id)
         #expect(dropTarget(at: 800, rows: rows, visible: visible) == rows[4].id)
     }
 
     @Test("The nearest middle wins, and the boundary sits between two rows")
     func nearestMiddleWins() {
         let rows = deviceRows()
-        let second = rows[1].frame.midY  // 320, first member of a group
-        let third = rows[2].frame.midY   // 394, the member below it
-        let boundary = (second + third) / 2
+        // The two members of one group, 52 apart — the tightest pair on the
+        // screen, and so the one the rule has least room to get right.
+        let first = rows[0].frame.midY   // 182.33
+        let second = rows[1].frame.midY  // 234.33, the member below it
+        let boundary = (first + second) / 2
 
-        #expect(dropTarget(at: boundary - 1, rows: rows, visible: visible) == rows[1].id)
-        #expect(dropTarget(at: boundary + 1, rows: rows, visible: visible) == rows[2].id)
+        #expect(dropTarget(at: boundary - 1, rows: rows, visible: visible) == rows[0].id)
+        #expect(dropTarget(at: boundary + 1, rows: rows, visible: visible) == rows[1].id)
         // Exactly halfway resolves upward, because the rows arrive in the order
         // they are drawn and the first one to tie keeps it.
-        #expect(dropTarget(at: boundary, rows: rows, visible: visible) == rows[1].id)
+        #expect(dropTarget(at: boundary, rows: rows, visible: visible) == rows[0].id)
     }
 
     @Test("A row scrolled out of sight is not a drop target")
@@ -102,7 +114,7 @@ struct DropTargetTests {
     func partiallyVisibleRowsCount() {
         // A row scrolled half out of the band is still half on screen, so it
         // stays a candidate and a drop aimed at the visible half lands on it.
-        // Not the first row at rest — `deviceRows()` puts that at 166…210,
+        // Not the first row at rest — `deviceRows()` puts that at 160.33…204.33,
         // wholly inside the band — this is the scrolled case.
         let straddling: (id: UUID, frame: CGRect) = (UUID(), CGRect(x: 32, y: 100, width: 338, height: 44))
         let all = [straddling] + deviceRows()

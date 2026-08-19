@@ -13,8 +13,11 @@ import SwiftUI
 /// a search field over the top. Not a new list built from the entries: the
 /// grouping of a batch into one row and the ordering are the same question both
 /// screens ask, and answering it twice is how they come to disagree. Since item
-/// 29 the two are in the same order as well — a collapsed row is dated by the
-/// last time you logged it, and that is what sorts the list.
+/// 29 the two sort on the same *field* — a collapsed row is dated by the last
+/// time you logged it, and that date is what orders this list. Not the same
+/// order, though: History sections its rows by day, and this list puts every
+/// row a tap cannot write below every row it can, however recently it was
+/// logged (see `Store.repeatItems`, and `RepeatRow` below).
 ///
 /// **The tracker's kind decides what is here, not the name** — see
 /// `Store.repeatItems` (docs/TODO.md item 21). So an unnamed row is here,

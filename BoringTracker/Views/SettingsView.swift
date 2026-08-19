@@ -383,8 +383,9 @@ struct SettingsView: View {
             // `onGeometryChange` by a temporary `NSLog`: the list reports
             // **(0, 116, 402, 724)** and the first row **160.3…204.3**, 44pt
             // clear of the band's top, so a wide span at the top of the list
-            // picks it with the finger still inside. Releasing at 150 moved the
-            // dragged block onto the first row, from inside the list.
+            // picks it with the finger still inside. Re-run on the new
+            // geometry: releasing at 150 moved the dragged block onto the first
+            // row, from inside the list, and the store shows it there.
             //
             // Re-measured for item 28, which cut a row from 74pt to 52. The
             // reading before it was 166…210 on an iPhone 17, 50pt clear; the
