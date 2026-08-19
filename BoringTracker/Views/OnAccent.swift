@@ -520,8 +520,9 @@ struct AccentFillButtonStyle: ButtonStyle {
 /// third of a point shorter, which is iOS laying its own capsule out on a
 /// fractional height. **Those two widths are that device and that bar layout**,
 /// taken at item 26; the bar's own arithmetic changed at item 33 and the height
-/// and the padding are what this style decides in any case. Outside the fills, home is byte-identical apart from a
-/// single row where the bar's top edge follows that third of a point.
+/// and the padding are what this style decides in any case. Outside the fills,
+/// home is byte-identical apart from a single row where the bar's top edge
+/// follows that third of a point.
 ///
 /// The 12pt horizontal padding is that measurement and not a round number:
 /// 11 drew the sheet's *Log* exactly 2pt narrow, which is the size of drift

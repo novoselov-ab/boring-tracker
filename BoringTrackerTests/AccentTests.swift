@@ -141,8 +141,14 @@ struct AccentFillPressTests {
         // to `Color.accentFillPressed`, because that is a colour and not a
         // motion — the gate is deliberately on the scale alone. What it does
         // hold is that the gate exists at all: it shipped without one, and the
-        // held Log pill measured the same 288x49.3pt with the setting on as
-        // with it off.
+        // held Log pill then measured the same 288x49.3pt with the setting on
+        // as with it off — item 27's numbers, at the 292pt pill it had.
+        //
+        // Re-taken on the 312pt pill, held down on an iPhone 17 Pro in dark,
+        // both readings `#07AA9A`: with Reduce Motion off the pill is
+        // 308.0x49.3pt at 18.0,784.3, and with it on it is 312.0x50.0 at
+        // 16.0,784.0 — the pressed colour without the movement, which is the
+        // whole of what the gate is for.
         for size in [CGSize(width: 312, height: 50), CGSize(width: 30, height: 30)] {
             #expect(AccentFillPress.scale(for: size, reduceMotion: true) == 1)
             #expect(AccentFillPress.scale(for: size, reduceMotion: false) < 1)
