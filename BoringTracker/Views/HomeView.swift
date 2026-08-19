@@ -180,10 +180,19 @@ struct HomeView: View {
     /// no word against a full-width pill, and the card's `+` is the same fill
     /// on the same screen without competing with the pill either.
     ///
-    /// **The 70pt-wide slot is kept**, though the disc inside it is 44. It is
-    /// what the `.bordered` square measured, so the pill's width does not move;
-    /// and a control this often reached should not lose 26pt of target to a
-    /// change of colour.
+    /// **A 50pt circle, and the 70pt slot is gone** (docs/TODO.md item 33).
+    /// The slot was what the `.bordered` square before item 21 had measured,
+    /// and it was kept so the pill's width would not move — which left a 30pt
+    /// disc floating in the middle of 70pt of air beside a 50pt pill, agreeing
+    /// with it on nothing. Five alternatives were rendered and photographed
+    /// and the user picked this one: same height as the pill, same fully round
+    /// corner, and the 20pt the slot was wasting handed back to the pill,
+    /// which goes 292 to 312.
+    ///
+    /// It is still not a peer. Two prominent buttons were tried early and read
+    /// as a choice to make on arrival, and what keeps this secondary is that it
+    /// is a circle with no word on it against a pill that is six times its
+    /// width — not that it was smaller in height as well.
     @ViewBuilder
     private var logBar: some View {
         if !store.activeTrackers.isEmpty {
@@ -210,9 +219,9 @@ struct HomeView: View {
                 .buttonStyle(.accentPill)
                 .controlSize(.large)
                 Button { loggingAgain = true } label: {
-                    RepeatDisc()
-                        .frame(width: 70)
-                        .contentShape(.rect)
+                    // The disc is its own target here, at 50pt, so there is no
+                    // frame around it to pad it out to 44 or to reserve a slot.
+                    RepeatDisc(diameter: 50, glyph: 20)
                 }
                 // `.accentFill` rather than `.plain`, so the disc reads the
                 // press and recedes to `Color.accentFillPressed` like every

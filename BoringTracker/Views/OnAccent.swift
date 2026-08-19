@@ -679,19 +679,33 @@ struct RepeatDisc: View {
     /// so the Log again sheet's empty state can draw the same one.
     static let symbol = "plus.arrow.trianglehead.clockwise"
 
+    /// The circle. 30 on a row, where this is one control at the end of
+    /// something else, and 50 in home's bottom bar, where it is one of the two
+    /// things on the screen and has to agree with the pill beside it
+    /// (docs/TODO.md item 33).
+    var diameter: CGFloat = 30
+
+    /// **Not derived from `diameter`, because it is not proportional to it.**
+    /// Read off the photograph the user picked: the bar's circle is 50pt with a
+    /// glyph whose ink measures 20.3 × 22.3pt, against 30pt and 14.3 × 15.7 on
+    /// a row — the circle grows by 1.67 and the glyph by 1.42. A proportional
+    /// glyph would be `size: 23` and fills the circle in a way the chosen
+    /// rendering does not.
+    var glyph: CGFloat = 14
+
     var body: some View {
         Image(systemName: Self.symbol)
             // Fixed rather than a text style, for the reason home's + is: the
-            // disc and the 44pt target do not scale, so a glyph that does
-            // outgrows its own circle at the accessibility sizes.
-            .font(.system(size: 14, weight: .bold))
+            // disc and its target do not scale, so a glyph that does outgrows
+            // its own circle at the accessibility sizes.
+            .font(.system(size: glyph, weight: .bold))
             // `.onAccentFill()`, which is the same black on the fill and the
             // ordinary label colour on the grey one. It was `.tertiary` when
             // off, which measured 1.32:1 on a fill that was itself 1.24:1
             // against the row — a disc that was not there rather than a disc
             // that was off (docs/TODO.md item 26).
             .onAccentFill()
-            .frame(width: 30, height: 30)
+            .frame(width: diameter, height: diameter)
             // `accentFilled`, not `.tint`: the environment tint is the
             // ordinary label colour now, and a disc is a fill (docs/TODO.md
             // item 13c). "The accent is only ever a fill" is what this said,
@@ -702,7 +716,11 @@ struct RepeatDisc: View {
             // and the press's scale, so a disc presses and greys the same way
             // in all three places it appears (docs/TODO.md items 26 and 27).
             .accentFilled(.circle)
-            .frame(width: 44, height: 44)
+            // 44 where the circle is smaller than that, and the circle itself
+            // where it is not: a target under 44 is one Apple would object to,
+            // and one *larger* than the thing it belongs to steals the gap
+            // beside it.
+            .frame(width: max(44, diameter), height: max(44, diameter))
             .contentShape(.rect)
     }
 }
