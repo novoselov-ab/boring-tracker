@@ -97,7 +97,7 @@ struct AccentTests {
 struct AccentFillPressTests {
 
     private func travel(_ w: CGFloat, _ h: CGFloat) -> CGFloat {
-        let scale = AccentFillPress.scale(for: CGSize(width: w, height: h))
+        let scale = AccentFillPress.scale(for: CGSize(width: w, height: h), reduceMotion: false)
         return (max(w, h) - max(w, h) * scale) / 2
     }
 
@@ -115,8 +115,8 @@ struct AccentFillPressTests {
         // 0.9863 and 0.8667. Rendered and sampled: the pill goes 876x150 to
         // 864x148 device pixels at 3x, the disc 90x90 to 78x78 — 6px, which is
         // 2pt, off each end of both.
-        let pill = AccentFillPress.scale(for: CGSize(width: 292, height: 50))
-        let disc = AccentFillPress.scale(for: CGSize(width: 30, height: 30))
+        let pill = AccentFillPress.scale(for: CGSize(width: 292, height: 50), reduceMotion: false)
+        let disc = AccentFillPress.scale(for: CGSize(width: 30, height: 30), reduceMotion: false)
         #expect(abs(pill - 0.9863) < 0.0001)
         #expect(abs(disc - 0.8667) < 0.0001)
     }
@@ -125,6 +125,20 @@ struct AccentFillPressTests {
     func unmeasuredSize() {
         // `visualEffect` runs before the first layout reports a size, and a
         // scale worked out from zero is a control that flashes on appearing.
-        #expect(AccentFillPress.scale(for: .zero) == 1)
+        #expect(AccentFillPress.scale(for: .zero, reduceMotion: false) == 1)
+    }
+
+    @Test("Reduce Motion takes the movement and leaves the colour")
+    func reduceMotionDoesNotScale() {
+        // The half this cannot see is that `AccentFillBackground` still swaps
+        // to `Color.accentFillPressed`, because that is a colour and not a
+        // motion — the gate is deliberately on the scale alone. What it does
+        // hold is that the gate exists at all: it shipped without one, and the
+        // held Log pill measured the same 288x49.3pt with the setting on as
+        // with it off.
+        for size in [CGSize(width: 292, height: 50), CGSize(width: 30, height: 30)] {
+            #expect(AccentFillPress.scale(for: size, reduceMotion: true) == 1)
+            #expect(AccentFillPress.scale(for: size, reduceMotion: false) < 1)
+        }
     }
 }

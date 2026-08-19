@@ -399,8 +399,10 @@ struct HomeView: View {
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
     @Environment(\.dynamicTypeSize) private var typeSize
-    /// The app has exactly one animation, and this is it — so this is the only
-    /// place that has to ask.
+    /// This was "the app has exactly one animation, and this is it" until item
+    /// 27, which gave every accent fill a scale on press — a second animation,
+    /// on five controls, reached far more often than a count. It asks in
+    /// `AccentFillPress.scale(for:reduceMotion:)`; this is the other place.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let tracker: Tracker
     let open: () -> Void
@@ -616,11 +618,17 @@ private struct TrackerCard: View {
         // and slowing it does not make it a different decision.
         //
         // `nil` under Reduce Motion, which swaps the number instantly. Somebody
-        // who has asked the system for less motion has not asked for the app's
-        // one animation to run nearly three times longer than it used to, and
+        // who has asked the system for less motion has not asked for this
+        // animation to run nearly three times longer than it used to, and
         // what the count buys — watching the addition happen — is exactly the
-        // moving thing that setting turns off. This is the only animation in the
-        // app, so it is the only place that has to ask.
+        // moving thing that setting turns off.
+        //
+        // It said "the only animation in the app, so the only place that has to
+        // ask", and item 27 made that false in the same breath as it relied on
+        // it: the press scale it added shipped ungated, on every accent fill.
+        // Both ask now, and the argument is the one written here — a scale is
+        // the moving half of a press and the pressed colour is not, so the
+        // press keeps its colour where this keeps nothing.
         .animation(reduceMotion ? nil : .easeOut(duration: 0.8), value: headline.amount)
         .lineLimit(1)
         .minimumScaleFactor(0.6)

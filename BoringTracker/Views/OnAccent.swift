@@ -258,6 +258,10 @@ private struct AccentFillBackground<S: Shape>: View {
 /// `AccentFillPress` for the numbers.
 private struct AccentFilled<S: Shape>: ViewModifier {
     @Environment(\.accentFillPressed) private var isPressed
+    /// The press is a movement, so it is the second thing in the app that has
+    /// to ask — see `AccentFillPress.scale(for:reduceMotion:)`, which is where
+    /// the answer is applied so that a test can hold it.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let shape: S
 
@@ -266,6 +270,7 @@ private struct AccentFilled<S: Shape>: ViewModifier {
         // `@Sendable` one, and reaching into main-actor state from inside it is
         // a strict-concurrency warning in a project built with it complete.
         let isPressed = isPressed
+        let reduceMotion = reduceMotion
         return content
             .background(AccentFillBackground(shape))
             // `visualEffect` rather than a plain `.scaleEffect`, for the size:
@@ -275,8 +280,18 @@ private struct AccentFilled<S: Shape>: ViewModifier {
             // unscaled geometry, which is the half a `.scaleEffect` would get
             // wrong on a thumb resting at the edge of the pill.
             .visualEffect { effect, proxy in
-                effect.scaleEffect(isPressed ? AccentFillPress.scale(for: proxy.size) : 1)
+                effect.scaleEffect(
+                    isPressed
+                        ? AccentFillPress.scale(for: proxy.size, reduceMotion: reduceMotion)
+                        : 1
+                )
             }
+            // Kept on under Reduce Motion, and it is the colour it carries
+            // then: the scale above is already 1, so what animates is
+            // `AccentFillBackground`'s fill crossing to the pressed value over
+            // the same 0.12s instead of cutting between two frames. Turning
+            // this off as well would take away the half of the press that
+            // setting does not object to.
             .animation(AccentFillPress.animation, value: isPressed)
     }
 }
@@ -328,10 +343,29 @@ enum AccentFillPress {
     /// across four to five frames rather than jumping.
     static let travel: CGFloat = 2
 
-    /// The scale for a fill that laid out at this size. `1` for a size that has
-    /// not been measured yet, so the first frame of a control is never drawn
-    /// mid-press.
-    static func scale(for size: CGSize) -> CGFloat {
+    /// The scale for a fill that laid out at this size, or `1` for the two
+    /// cases where the fill does not move at all.
+    ///
+    /// **Reduce Motion is one of them, and the app already had this argument
+    /// once.** `HomeView`'s counting number goes to no animation at all under
+    /// it, on the reasoning that somebody who asked the system for less motion
+    /// did not ask for this — and a scale is motion by any reading, where a
+    /// recoloured fill is not. So the movement is what the setting takes and
+    /// `Color.accentFillPressed` is what it leaves, which is item 26's whole
+    /// mechanism still intact rather than a control with no pressed state.
+    /// That comment said this was the app's only animation and the only place
+    /// that had to ask; item 27 made both halves untrue, and this is the second
+    /// place.
+    ///
+    /// **It is answered here rather than in the modifier** so that a test can
+    /// hold it, for the same reason the travel is pinned rather than the ratio:
+    /// a later edit that moves the gate up into the `visualEffect` closure, or
+    /// drops it, breaks something no screenshot of a default simulator shows.
+    ///
+    /// The other is a fill that has not been measured yet: `.zero`, where
+    /// scaling from nothing would draw a control's first frame mid-press.
+    static func scale(for size: CGSize, reduceMotion: Bool) -> CGFloat {
+        guard !reduceMotion else { return 1 }
         let longest = max(size.width, size.height)
         guard longest > 0 else { return 1 }
         return 1 - 2 * travel / longest
