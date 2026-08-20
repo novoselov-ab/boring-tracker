@@ -444,8 +444,12 @@ Store Connect, which needs the account.
       was checked against the source rather than written from the philosophy —
       no networking API appears anywhere in `BoringTracker/`, there are no
       third-party packages, and no permission-requiring framework is imported.
-      `docs/.nojekyll` is what stops GitHub also publishing `TODO.md` and the
-      rest of `docs/` as web pages; they stay repository source.
+      `docs/.nojekyll` is what stops GitHub rendering `TODO.md` and the rest
+      of `docs/` as web pages — the alternative, with Pages serving from
+      `/docs`, is a 138KB decision log published as a site. They are still
+      copied to the site as files, and a branch-folder deploy gives no way not
+      to: checked after the deploy, `…/TODO.md` returns 200 as
+      `text/markdown`, plain text rather than a page.
 - [x] **Support URL** — **`https://github.com/novoselov-ab/boring-tracker`**.
       The repository, public since 2026-08-19, with issues as the contact
       route the privacy page points people at.
