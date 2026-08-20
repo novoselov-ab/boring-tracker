@@ -28,6 +28,9 @@ export all your data as json/csv, or import it back. It is absolutely free, has
 no ads, and never will have any. My goal with it is to behave like a built-in
 iOS app (e.g. the calculator). It is boring, but does its job, hence the name.
 
+It is early: the design is settled and written down, the app is being built,
+and it is not on the App Store yet.
+
 ## Screenshots
 
 > **Placeholder — the screenshots do not exist yet.** They go here, at
@@ -70,24 +73,6 @@ anywhere. What helps instead:
 - Email me at [novoselov.ab@gmail.com](mailto:novoselov.ab@gmail.com). I would
   be glad to hear it is useful.
 
-## Docs
-
-- [Philosophy](docs/PHILOSOPHY.md) — the spirit, and the rules that must not be
-  broken.
-- [Product](docs/PRODUCT.md) — what the app actually is: the model, the
-  screens, the scope.
-- [Tech](docs/TECH.md) — how it's built, and why, with the benchmarks behind
-  the storage decision.
-- [Scale](docs/scale.md) — what five years of use (29,756 entries) does to the
-  app, measured screen by screen.
-- [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
-  submission.
-- [App Store](docs/APPSTORE.md) — the listing text and everything else the
-  submission needs.
-- [TODO](docs/TODO.md) — the short list of what's left, on the front of a much
-  longer record of what was decided and why, including the things that were
-  built, measured and reverted.
-
 ## Building it
 
 You need Xcode 26. Nothing else — no package manager, no dependencies to
@@ -124,9 +109,23 @@ booted and the app installed on it:
 open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/Library/Application Support/boring-tracker"
 ```
 
-## Status
+## Docs
 
-Early — the design is settled and written down, the app is being built.
+- [Philosophy](docs/PHILOSOPHY.md) — the spirit, and the rules that must not be
+  broken.
+- [Product](docs/PRODUCT.md) — what the app actually is: the model, the
+  screens, the scope.
+- [Tech](docs/TECH.md) — how it's built, and why, with the benchmarks behind
+  the storage decision.
+- [Scale](docs/scale.md) — what five years of use (29,756 entries) does to the
+  app, measured screen by screen.
+- [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
+  submission.
+- [App Store](docs/APPSTORE.md) — the listing text and everything else the
+  submission needs.
+- [TODO](docs/TODO.md) — the short list of what's left, on the front of a much
+  longer record of what was decided and why, including the things that were
+  built, measured and reverted.
 
 ## License
 
