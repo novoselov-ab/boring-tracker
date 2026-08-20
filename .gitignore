@@ -45,3 +45,8 @@ Config/Local.xcconfig
 docs/accent/
 !BoringTracker/**/*.png
 !**/Assets.xcassets/**/*.png
+
+# The App Store screenshot set, which is a shipped asset rather than a
+# measurement artefact: docs/screenshots/ is what the submission uploads and
+# what the README shows, so it is kept in the repo like the app icon is.
+!docs/screenshots/*.png
