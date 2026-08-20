@@ -27,10 +27,6 @@ struct ExportFile: Transferable {
     /// below rather than stored here, because this value is built when the
     /// settings list draws and read when a destination is chosen, and those are
     /// not the same day if the list has been on screen since before midnight.
-    /// An export should be named for the day it was taken, and the tap is when
-    /// it is taken. (This used to argue it from the *Save to Files* door dating
-    /// its name at the tap; `35a5fd0` deleted that door, and the reason stands
-    /// without it.)
     let stem: String
     let format: Format
     let document: StoreDocument
@@ -56,20 +52,14 @@ struct ExportFile: Transferable {
     /// Writes the bytes into a temporary directory of this file's own, so the
     /// name the receiver sees is `filename` and nothing else is exposed.
     ///
-    /// Old shares are pruned first, so this directory holds today's files
-    /// rather than one complete copy of the document per format per day for as
-    /// long as the app is installed. `tmp` is emptied by iOS only when storage
+    /// Old shares are pruned first: `tmp` is emptied by iOS only when storage
     /// runs short, which is not a schedule, and these are whole documents.
     ///
     /// **Anything thrown from here is reported by the share sheet, not by the
     /// app.** `ShareLink` has no error hook, so a full disk shows whatever iOS
-    /// shows and this code says nothing — worth knowing before treating a
-    /// silent share as it doing nothing at all. The comment used to contrast
-    /// this with "the Files route", which put the same failure through
-    /// `show(_:action:)` and named it; `35a5fd0` deleted that route, and the
-    /// surviving `show(_:action:)` calls are open, import, delete and restore.
-    /// So there is no longer a door out of this app that reports an export
-    /// failure in the app's own words.
+    /// shows and this code says nothing — there is no door out of this app that
+    /// reports an export failure in the app's own words. Worth knowing before
+    /// treating a silent share as it doing nothing at all.
     func written() throws -> URL {
         let directory = URL.temporaryDirectory.appending(path: "share", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
