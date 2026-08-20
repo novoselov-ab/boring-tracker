@@ -4,22 +4,28 @@
 
 iPhone app for tracking whatever you want — macros, habits, or any other data.
 
-Free, open source, no ads, no accounts, no subscription, no server. Type a
+Free, open source, no ads, no accounts, no subscription, no server, no feature bloat. Type a
 number, done.
 
-It's called Boring Tracker because that's the promise: no streaks, no badges,
-no confetti, no notifications guilting you back in. It has no opinion about
-your body. It just remembers the numbers you give it.
+Most other macro trackers want you to scan a barcode for every ingredient of a dish
+you cooked yourself. It takes a lot of time for no benefit. This one just lets you write down `600 calories, 40
+protein` and done, as fast as possible, minimum clicks, minimum wait/lag.
 
-Other macro trackers want you to scan a barcode for every ingredient of a dish
-you cooked yourself. This one just lets you write down `600 calories, 40
-protein` and get on with your day. And once it does that, it may as well track
-your weight, your water, or your cat's weight too.
+You can also use it to track anything you want: your cat weight, pushups, blood glucose, last time you changed a filter.
 
-Because it's open source and stores everything on your own device, it can't be
-taken away from you. If this project is ever abandoned, the app you have keeps
-working, your data exports to a plain readable file, and anyone can fork the
-source and ship it themselves.
+App is open source and stores everything on your own device, you can always export all your data as json/csv or import it. Is absolutely free, no ads and will never have any. My goal with it to behave like a builtin ios app (e.g. calculator). It is boring, but does its job, hence the name.
+
+## [[Screenshots]]
+
+[[We should add them, here or before or after, not sure what is the best way]]
+
+## [[Features]]
+
+[[here i want to have a list of all the features we have and explaining that it is a minimum required set, contibuitions/issues are accepted, but will be tested against our philosopy here]]
+
+## [[Support/Donations]]
+
+[[I want here to basically say that if you like an app and want to support/donate to developer best way is to donate to a charity of your choice and/or write me an email (is it on github? I can add it here otherwise, whatever is better), leave a review. I would be happy to know it is useful.]]
 
 ## Docs
 
