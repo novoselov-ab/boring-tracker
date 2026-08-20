@@ -818,18 +818,32 @@ extension View {
     /// Apply it to whatever the fill is drawn behind, and put the control's
     /// `contentShape` and its 44pt target *outside* it: the scale is drawn on
     /// the fill and the target does not move with it.
+    ///
+    /// **Which since item 37 means the fill is drawn 2pt past its own target
+    /// while it is held.** That is the shape of every fill here — the pill,
+    /// `UndoButton`'s capsule, and the two discs whose target is their fill —
+    /// and it is not a bug to fix at the call site: a press is what makes the
+    /// rim appear, so nobody aims at it, and a touch that drifts onto it keeps
+    /// the control. `AccentPillButtonStyle` carries the measurement. What it
+    /// does mean is that a fifth fill must not read its own held size back as
+    /// a target.
     func accentFilled<S: Shape>(_ shape: S) -> some View {
         modifier(AccentFilled(shape: shape))
     }
 
-    /// A light impact as a control goes down.
+    /// A light impact as a control takes a press.
     ///
     /// **Feedback, not celebration.** `PHILOSOPHY.md` bans haptic
     /// celebrations — a buzz for a streak, a saved entry, a job well done —
-    /// and this is the other thing: the physical half of a button going down
-    /// under a thumb, at the moment of the press rather than at the moment of
-    /// the result. Logging a number stays silent; touching the control is what
+    /// and this is the other thing: the physical half of a control answering a
+    /// thumb, at the moment of the press rather than at the moment of the
+    /// result. Logging a number stays silent; touching the control is what
     /// speaks.
+    ///
+    /// It said "a button going down under a thumb" until item 37, which is the
+    /// item that decided a press moves the control *toward* the thumb instead.
+    /// The haptic is unchanged and the sentence was wrong in a place somebody
+    /// would reasonably read the direction off.
     ///
     /// On the press and not on the release, so it arrives with the scale and
     /// the colour rather than after the action. `trigger` is the press state,

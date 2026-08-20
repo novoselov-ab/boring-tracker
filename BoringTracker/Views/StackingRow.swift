@@ -128,10 +128,13 @@ struct StackingRow<Leading: View, Trailing: View>: View {
 /// block moved rather than a third size chosen.
 ///
 /// The caption is what the row has to say about the tracker underneath its
-/// name: home dates the last reading, settings names the group an archived
-/// tracker would come back to. Absent on most rows, and `.caption2` in
-/// `.secondary` when it is there — the name is what identifies the row and the
-/// caption annotates it.
+/// name: home dates the last reading, and settings says what tapping the row
+/// would edit — the kind and the unit, plus the group on an archived row,
+/// which has no heading over it to say so (docs/TODO.md item 37). `.caption2`
+/// in `.secondary` — the name is what identifies the row and the caption
+/// annotates it. Absent on most of home's rows and on none of settings', which
+/// is why the parameter is optional and why settings' own row builder is where
+/// the wording lives.
 ///
 /// **One line until the text outgrows it, and the caller decides whether even
 /// that.** A name is unbounded free text — the editor sets no limit — so on

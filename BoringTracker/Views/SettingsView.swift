@@ -371,7 +371,10 @@ struct SettingsView: View {
     /// its readings are counted in vices. It was unambiguous while the group
     /// stood alone on this line, and putting the kind in front of it is what
     /// took that away.
-    private func editableSummary(of tracker: Tracker) -> String? {
+    /// Never `nil`: every tracker has a kind, so every row has something to
+    /// say here. `archivedGroup(of:)`, which this replaced, was absent on most
+    /// rows and optional for that reason.
+    private func editableSummary(of tracker: Tracker) -> String {
         var parts = [tracker.kind.label]
         if !tracker.unit.isEmpty { parts.append(tracker.unit) }
         if tracker.isArchived, !tracker.group.isEmpty { parts.append("in \(tracker.group)") }
