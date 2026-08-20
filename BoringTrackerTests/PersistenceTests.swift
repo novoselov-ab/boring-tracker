@@ -398,16 +398,29 @@ struct PersistenceTests {
 
     @Test("The pins a version 1 file carried are gone, and gone deliberately")
     func versionOnePinsAreDropped() throws {
-        let migrated = try StoreMigration.migrate(Data(Self.versionOneFile.utf8))
-        let text = String(decoding: try StoreCoding.encode(migrated), as: UTF8.self)
+        let object = try #require(
+            JSONSerialization.jsonObject(with: Data(Self.versionOneFile.utf8)) as? [String: Any]
+        )
 
+        let migrated = try StoreMigration.chain(
+            object, from: 1, to: 2, steps: StoreMigration.steps
+        )
+
+        // Asked of the migrated JSON rather than of the decoded document, which
+        // is what this assertion is worth: `StoreDocument` has no `pins`
+        // property, so encoding one can never produce the key however the step
+        // behaved, and the same expectation written that way passes with the
+        // drop deleted.
+        #expect(migrated["pins"] == nil)
+
+        // The other half of the decision: a pin does not come back as history.
         // The type was deleted before anything shipped, and turning a saved
         // shortcut into entries would write rows into a history at times when
-        // nothing was logged. Asserted on the re-encoded document because
-        // `StoreDocument` has no way left to express the loss.
-        #expect(!text.contains("pins"))
+        // nothing was logged.
+        let document = try StoreMigration.migrate(Data(Self.versionOneFile.utf8))
+        let text = String(decoding: try StoreCoding.encode(document), as: UTF8.self)
         #expect(!text.contains("usual breakfast"))
-        #expect(migrated.entries.count == 2)
+        #expect(document.entries.count == 2)
     }
 
     @Test("A version 1 file opens from disk, migrated, rather than being quarantined")
@@ -480,6 +493,26 @@ struct PersistenceTests {
 
         #expect(throws: StoreError.olderSchema(found: 4, supported: 6)) {
             try StoreMigration.chain(["schemaVersion": 4], from: 4, to: 6, steps: steps)
+        }
+    }
+
+    @Test("A step that produces something JSON cannot hold refuses, rather than killing the app")
+    func chainRefusesANonJSONStep() {
+        // `JSONSerialization` answers a `Date` in the dictionary with an
+        // Objective-C exception, which no Swift `try` can catch and which takes
+        // the process with it — on the launch path, a crash loop with no screen
+        // to get out of. Every other bad document is merely quarantined, and
+        // this keeps a future step's mistake in that same category.
+        let steps: [Int: StoreMigration.Step] = [
+            4: { document in
+                var document = document
+                document["stamped"] = Date()
+                return document
+            },
+        ]
+
+        #expect(throws: StoreError.self) {
+            try StoreMigration.chain(["schemaVersion": 4], from: 4, to: 5, steps: steps)
         }
     }
 

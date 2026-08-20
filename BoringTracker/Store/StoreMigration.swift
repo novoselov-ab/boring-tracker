@@ -34,6 +34,14 @@ enum StoreMigration {
     /// which refuses the document and leaves the file quarantined intact. A
     /// step that could refuse would be a second, weaker copy of that check.
     ///
+    /// **What a step must not do is put a value in that JSON cannot hold** — a
+    /// `Date`, a `UUID`, a `URL`, a Swift optional. `JSONSerialization` answers
+    /// that with an Objective-C exception rather than a Swift error, so it
+    /// cannot be caught and it takes the process down; on the launch path that
+    /// is a crash loop with no screen the user can reach to get out of it,
+    /// where every other bad document is merely quarantined. `chain` checks
+    /// each step's output for exactly this and refuses the document instead.
+    ///
     /// `@Sendable` only so that the table below can be a `static let` under
     /// strict concurrency. A step captures nothing and is called synchronously
     /// on whichever thread is doing the load.
@@ -93,10 +101,21 @@ enum StoreMigration {
                 throw StoreError.olderSchema(found: found, supported: target)
             }
             document = step(document)
+            // See `Step`: a value JSON cannot hold would not throw here, it
+            // would kill the process inside `JSONSerialization`. Checked per
+            // step rather than once at the end so the refusal names the step
+            // that did it, and so a chain cannot be half-applied before it is
+            // noticed.
+            guard JSONSerialization.isValidJSONObject(document) else {
+                throw StoreError.invalidDocument(
+                    "the migration step from version \(version) produced a value that is not JSON."
+                )
+            }
             version += 1
-            // The loop stamps the version, not the step. A step that forgot to
-            // would leave a document claiming to be older than it is, which is
-            // an infinite chain the next time it is loaded.
+            // The loop stamps the version, not the step, so that no step can
+            // forget to — and so the next one can read `schemaVersion` and
+            // trust it to say which shape it has been handed. The decoded
+            // document's own version is normalised afterwards either way.
             document["schemaVersion"] = version
         }
         return document
