@@ -216,13 +216,14 @@ enum AccentFillPress {
     /// How long a press stays on screen once it has arrived, however briefly the
     /// finger was down.
     ///
-    /// **A list withholds a touch, and hands a fast tap over as a single
-    /// instant.** `UIScrollView` delays a touch reaching the control under it, and
-    /// a tap *shorter* than that delay arrives as its down and up together inside
-    /// one update — so there is nothing for any amount of instant drawing to
-    /// render. Measured on a settings row off a 60fps capture: 60ms and 100ms taps
-    /// rendered nothing at all, 200ms and 400ms drew the pressed band on the first
-    /// frame after the touch.
+    /// **A fast tap is two frames, and two frames is not a pressed state.** This
+    /// was first needed because a list withheld the touch and handed a short tap
+    /// over as its down and up inside one update, so there was nothing to draw at
+    /// all; `BoringTrackerApp.init` has since turned that delay off, and what is
+    /// left is the ordinary case of a 40ms tap on a 60Hz screen.
+    ///
+    /// **What it costs is a flick.** A press cancelled by the list starting to
+    /// scroll is held here for the rest of the floor — see `RowPressState.set`.
     ///
     /// **A floor rather than a duration**, and only on rows: a fill outside a list
     /// gets its touch immediately.
@@ -446,14 +447,16 @@ extension View {
     /// and this is the physical half of a control answering a thumb, at the moment
     /// of the press rather than of the result.
     ///
-    /// **A scroll does not fire it**, which was the objection worth testing, since
-    /// a whole `RepeatRow` is a button. Recorded at 60fps, a flick that starts on
-    /// a row never enters the pressed state at all — nor does one that rests 0.2s
-    /// first — because a list delays the touch by 0.2s to 0.45s, by which point
-    /// the gesture is a press and not a scroll.
+    /// **A scroll fires it now, and that used to be the reason this was safe.** A
+    /// list held a row's touch back until the gesture had already declared itself
+    /// a scroll, so a flick never entered the pressed state; `BoringTrackerApp`
+    /// turned that delay off (docs/TODO.md item 40) and a flick that starts on a
+    /// row now presses it, briefly, on the way. Since a whole `RepeatRow` is a
+    /// button, that is most of the app's touch area.
     ///
-    /// **Whether it helps is unanswered**: the simulator has no haptics, so this
-    /// shipped unfelt.
+    /// **Whether either half helps is unanswered**: the simulator has no haptics,
+    /// so this shipped unfelt, and item 17 is the pass that keeps it or deletes
+    /// it.
     func pressHaptic(_ isPressed: Bool) -> some View {
         sensoryFeedback(.impact(weight: .light, intensity: 0.6), trigger: isPressed) { _, pressed in
             pressed

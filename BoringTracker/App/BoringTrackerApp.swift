@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main
 struct BoringTrackerApp: App {
@@ -11,6 +12,16 @@ struct BoringTrackerApp: App {
     /// screen the app has — including the sheets, which are presented outside
     /// the navigation stack.
     @AppStorage(Appearance.key) private var appearance = Appearance.system
+
+    /// **A `UIScrollView` holds a touch back before the control under it may
+    /// respond**, so that it can decide whether the finger is scrolling, and a
+    /// SwiftUI `List` is one. Turning that off is what makes a row press on the
+    /// frame it is touched rather than about 150ms later. What it costs is that
+    /// a flick starting on a row flashes that row's pressed wash; both halves
+    /// are measured in docs/TODO.md item 40.
+    init() {
+        UIScrollView.appearance().delaysContentTouches = false
+    }
 
     var body: some Scene {
         WindowGroup {

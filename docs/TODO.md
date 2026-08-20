@@ -490,16 +490,25 @@ settled from the accessibility tree.
 whether a press draws — item 32 settled that at 60fps, on taps down to 40ms —
 and both are about how one *feels*.
 
-- [ ] **Does the haptic help?** `.impact(.light)` on the press edge is on every
-      row of five screens now, which is most of the app's touch area. A
-      simulator logs "Haptics: unsupported" and nothing reaches CoreHaptics, so
-      this pass keeps it or deletes it.
+- [ ] **Does the haptic help — and does it now fire while you scroll?**
+      `.impact(.light)` on the press edge is on every row of five screens, which
+      is most of the app's touch area. Item 40 turned off the delay a list put
+      in front of a row's touch, and one thing that delay was doing was keeping
+      a flick out of the pressed state entirely: a flick that starts on a row
+      now enters it, so the same trigger that draws the wash fires the impact.
+      Measured as pixels, not as a buzz — a simulator logs "Haptics:
+      unsupported" and nothing reaches CoreHaptics, which is why this is the
+      first thing to hold a phone for. **If it buzzes on every flick, deleting
+      the press haptic is the fix already on the table**, and it costs nothing
+      that has ever been felt.
 - [ ] **What does a press called off look like?** SwiftUI reports a
-      cancellation and a release identically, so a finger that rests until the
-      list hands the touch over and then flicks within item 32's 0.1s floor
-      leaves the row washed while the list is already scrolling. Narrow,
-      cosmetic, and the fix is a second gesture watching for movement, which
-      `RowPress.swift` has twice decided not to add. Look at it on a phone
+      cancellation and a release identically, so a flick that starts on a row
+      leaves that row washed while the list is already scrolling. Item 40
+      measured it at 90ms — item 32's floor, holding a press the scroll had
+      cancelled — and made it common rather than narrow: it is now every flick
+      that starts on a row, not only one that rests first. Still cosmetic, and
+      the fix is still a second gesture watching for movement, which
+      `RowPress.swift` has three times decided not to add. Look at it on a phone
       before deciding it is worth machinery.
 
 **Pressed states are otherwise done and are not waiting on a device.** They sat
@@ -1206,12 +1215,14 @@ prefer colour over motion was mine and it was wrong in practice.
       The comment two lines from the gap said "the app has exactly one
       animation, and this is it — so this is the only place that has to ask",
       and this item is what made that false. Both places ask now.
-- [ ] **The haptic is in and unfelt.** `.impact(.light)` on the press edge, and
-      the one thing that could be checked is that a scroll does not fire it: a
-      flick that starts on a Log again row never enters the pressed state, nor
-      does one that rests 0.2s first. Whether it *helps* cannot be answered in
-      a simulator — UIKit logs "Haptics: unsupported" there and nothing reaches
-      CoreHaptics. **Item 17's device pass keeps it or deletes it.**
+- [ ] **The haptic is in and unfelt.** `.impact(.light)` on the press edge. The
+      one thing that could be checked was that a scroll did not fire it, and at
+      the time it did not: a flick that started on a Log again row never entered
+      the pressed state. **Item 40 changed that** — with the list's delay off, a
+      flick that starts on a row does press it, and the impact goes with the
+      wash. Whether either *helps* cannot be answered in a simulator — UIKit
+      logs "Haptics: unsupported" there and nothing reaches CoreHaptics.
+      **Item 17's device pass keeps it or deletes it.**
 - [ ] **The scale was judged by a synthesized press, not a thumb**, which is
       the same gap. Screenshots of a held control and a 60fps capture of the
       motion say it renders; they cannot say it feels like a press. Also item
@@ -1642,6 +1653,10 @@ drawn. A row presses as a whole cell rather than a box behind its text, and
 holds long enough that a list's delayed touch still shows one. `b9c0695`,
 `5b4cfab`
 
+The delay it was working around is gone — item 40 measured it and turned it off
+— so the 0.1s floor now serves the ordinary case of a 40ms tap being two frames,
+and the floor is what holds a cancelled press on screen during a flick.
+
 ## 33. Use pairing 1 for the bottom bar — done
 
 A 50pt accent circle, the pill's height and corner, and the 70pt slot handed
@@ -1929,6 +1944,104 @@ them:
   name over a value, and the value line cannot be blank without leaving a row
   that is a time and nothing else. It is one word, it is true, and it comes
   from `Tracker.entryText` so no screen invents its own.
+
+## 40. A press you cannot see coming — done
+
+Anton, on a real device: pressing and holding *Add Tracker* in settings, the
+pressed highlight arrives late, and he suspected it was general rather than that
+one row. It is general, and it is the list.
+
+**Method.** `xcrun simctl io booted recordVideo --codec h264` on an iPhone 17 Pro
+simulator, iOS 26.3, dark, debug build; frames decoded with `AVAssetReader` and
+`kCVPixelFormatType_32BGRA`, and one rect's mean luminance printed per frame. The
+recorder emits only when the screen changes, so on a still screen the emitted
+frames *are* the change timeline; inside a press they average 16.0ms apart —
+mean of the 61 steps in one recording, ragged between 6.6 and 26.7 — which is a
+60fps grid with the encoder's jitter on it. Every number below therefore has a
+resolution of one frame, about ±17ms.
+
+**Touch-down needs an anchor, and that is the part that makes the numbers mean
+anything.** Nothing on screen changes when a finger lands — that is the thing
+being measured — so a throwaway build carried a `UIGestureRecognizer` on the
+app's `UIWindow` that recognises nothing and paints a strip of the left margin
+white from `touchesBegan`. A recogniser on the window is handed the touch
+immediately whatever the scroll view does with it, and the strip draws on the
+next frame, which is the same frame budget the control has. Both ends of every
+number are therefore "first frame after the state was set": the difference is
+app-side only, and whatever the simulator's own injection costs cancels out. The
+press itself is a `CGEvent` mouse down held 800ms, three runs each.
+
+**Before — touch-down to first changed pixel, in ms:**
+
+| control | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| *Add Tracker*, settings | 162 | 162 | 152 |
+| the *Calories* row, settings | 152 | 152 | 142 |
+| a History row | 150 | 138 | 142 |
+| a probe button inside home's `List` | 153 | 148 | 143 |
+| **the same probe button outside the list** | **0** | **0** | **0** |
+| the Log pill on home | 0 | 0 | 0 |
+
+The last two rows are the finding. The two probe buttons are one control with
+one style, applied instantly and with no animation to wait for; the only thing
+that differs is whether it sits inside a `List`. Inside costs ~150ms and outside
+costs nothing, so this is `UIScrollView.delaysContentTouches` holding the touch
+back while it decides whether the finger is scrolling — the brief's hypothesis,
+and the number is that delay.
+
+So it is not that row, it is every row on every screen. And the Log pill's zero
+is not item 37's doing: item 37 changed what a press draws once it arrives, and
+what makes the pill's press *arrive* at once is that it is not in a list.
+
+**iOS's own settings list has the same delay**, and this is deliberately the
+weaker measurement of the set: Preferences carries no marker, so touch-down
+cannot be anchored inside it. Driven by the identical script, the *Camera* row's
+highlight first appears 1990ms and 2005ms into two recordings, while the 53
+marker-anchored recordings taken here put touch-down between 1786.7ms and
+1846.7ms. Same delay, on an assumption rather than on an anchor.
+
+**The fix is one line**, in `BoringTrackerApp.init`:
+`UIScrollView.appearance().delaysContentTouches = false`.
+
+**After — same method, three runs each: all six controls 0.0ms.** The pressed
+state lands on the frame the touch does, for *Add Tracker*, the settings row,
+the History row and both probe buttons, and the Log pill has not moved.
+
+**What it costs, measured rather than assumed:**
+
+- **A flick that starts on a row flashes that row.** A 30pt flick off the
+  *Calories* row: with the delay on the row never washes at all; with it off the
+  wash is on at the touch frame and gone 90ms later. That 90ms is
+  `AccentFillPress.minimumHold` holding a press the scroll had already cancelled
+  — `RowPressState.set` cannot tell a cancellation from a release, which used to
+  be a narrow case and is now every flick that starts on a row.
+- **And the same flick fires the press haptic**, because `pressHaptic` triggers
+  on the same boolean the wash does. That cannot be measured here — a simulator
+  logs "Haptics: unsupported" — so it is recorded as a consequence rather than
+  as a number, and item 17's device pass now has it as its first question.
+  Deleting the press haptic is the fix already on that table.
+- **Scrolling itself is unchanged.** Same synthesized 120pt drag starting on a
+  row, displacement read from the accent's y in a screenshot two seconds after
+  release, six runs per side — three flicked straight away and three after
+  resting 250ms first. With the delay on, 306–319pt; with it off, 298–316pt.
+  Same spread either way and the ranges overlap.
+- **Reorder, swipe-to-delete and the log path are unaffected.** The same
+  synthesized handle drag moved the *Food* group below *Weight* identically
+  either way; a swipe on a History row reveals the red delete action either way;
+  the log sheet opens, the keypad types and *Log* writes the entry.
+
+**The second option was not built.** Driving the pressed state from a
+`DragGesture(minimumDistance: 0)` is more code, it fights the scroll gesture it
+would have to live beside, and it can only reach rows this app draws itself —
+*Add Tracker*, *Share JSON…* and the *About* link wear the system's own
+highlight, and the one line above fixes those too.
+
+**The tension worth writing down.** PHILOSOPHY.md says boring and native, and
+this is now one step off native: the app presses faster than iOS's own settings
+list does. It also says nothing should animate that you have to wait for, and
+150ms of no feedback at all is the purest case of that. The second rule wins,
+because a person using the app reported the first one costing him something —
+which is the only evidence either rule was ever going to get.
 
 ## Noted, not scheduled
 

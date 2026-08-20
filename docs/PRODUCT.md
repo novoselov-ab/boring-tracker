@@ -507,6 +507,13 @@ fades in, anywhere: only the release is drawn. Two earlier attempts at "a press
 you can see" changed what was drawn and not when, and a tap is shorter than a
 fade (TODO item 32).
 
+**And the touch is no longer held back to get there.** A list withholds a touch
+before the control under it may respond, so that it can decide whether the
+finger is scrolling, and that put about 150ms in front of every row in the app —
+measured, and the reason a row felt slower than the Log pill, which is not in a
+list. The app turns it off, and the price is that a flick starting on a row
+flashes that row on its way (TODO item 40).
+
 Three of those rows are really *two* controls side by side — a History row, a
 home card and an active settings row each pair something that opens with a disc,
 a `+` or a drag handle — and there the wash covers the part you actually pressed

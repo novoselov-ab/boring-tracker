@@ -192,11 +192,14 @@ final class RowPressState: Equatable {
     /// `AccentFillPress.minimumHold`, where the measurement is.
     ///
     /// **It cannot tell a release from a cancellation.** SwiftUI reports both as
-    /// the pressed state going false, so a finger that rests long enough for the
-    /// list to hand the touch over and *then* flicks within the floor leaves the
-    /// row washed for the rest of it while the list is already scrolling. Narrow
-    /// and cosmetic; the fix would be a second gesture watching for movement,
-    /// which this file has twice decided not to add.
+    /// the pressed state going false, so a flick that starts on a row leaves that
+    /// row washed while the list is already scrolling. That used to be rare,
+    /// because the list withheld the touch until the flick had already been
+    /// recognised as a scroll; since `BoringTrackerApp.init` turned that delay
+    /// off it happens on every flick that starts on a row, and docs/TODO.md item
+    /// 40 has the measurement. Still cosmetic, and the fix is still a second
+    /// gesture watching for movement, which this file has now three times
+    /// decided not to add.
     func set(_ isPressed: Bool) {
         guard isPressed else {
             let held = since.map { ContinuousClock.now - $0 } ?? .seconds(1)
