@@ -1768,13 +1768,15 @@ than one screen taking a parameter. The cost is the baseline "Water" and
 Wanted, not yet queued. Written down with the part that isn't obvious, so
 picking one up doesn't start with rediscovering why it's awkward.
 
-- [ ] **What a press should do to an accent fill too small to give up 4pt.**
+- [ ] **What a press should do to an accent fill too small to take 4pt.**
       `AccentFillPress.scale(for:reduceMotion:)` moves each end of the fill's
-      longest edge 2pt, so a fill shorter than 4pt solved to a zero or negative
-      scale and turned inside out; that is guarded now and falls back to not
-      scaling. What the guard does *not* cover is the range just above it — a
-      6pt fill still solves to 0.33 and a 10pt one to 0.6, which reads as a
-      control vanishing rather than a control pressed.
+      longest edge 2pt, and outward since item 37. A fill shorter than 4pt is
+      at least doubled by that; it is guarded at `2 * travel` and falls back to
+      not scaling. What the guard does *not* cover is the range just above it —
+      a 6pt fill solves to 1.67 and a 10pt one to 1.4, which reads as a control
+      appearing rather than a control pressed. The same range read 0.33 and 0.6
+      while the press shrank, and the boundary itself was worse then: a
+      negative scale mirrored the fill rather than merely overstating it.
 
       Not guarded, deliberately, and this is the awkward part: every fix is a
       number nobody has measured. A floor on the scale, or `min(travel,
