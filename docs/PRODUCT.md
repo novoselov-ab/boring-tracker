@@ -13,23 +13,41 @@ Three nouns, and the third is only a string.
 A thing you track. You create it, you name it, you pick a unit. Examples:
 Calories, Protein, Water, Weight, Cat weight, Cigarettes, Pushups.
 
-A tracker is one of two kinds, and this is the only real decision the user
+A tracker is one of three kinds, and this is the only real decision the user
 makes:
 
 | Kind | Meaning | Day boundary | Examples |
 |---|---|---|---|
 | **Daily total** | Entries *add up* over the day | Resets at the day start — midnight unless you move it | Calories, protein, water, cigarettes, pushups |
 | **Measurement** | Each entry is a standalone reading | No reset, just points in time | Weight, cat's weight, blood pressure, sleep hours |
+| **Last time** | The date *is* the entry. There is no number | No reset; nothing to add up | Tyres, the water filter, the boiler service, the dentist, days since you last smoked |
 
 Everything else follows from this. A daily-total tracker shows "today: 1,340"
-and a big + button. A measurement tracker shows "last: 78.4 kg, 2 days ago".
+and a big + button. A measurement tracker shows "last: 78.4 kg, 2 days ago". A
+last-time tracker shows "3 days ago".
+
+**A last-time tracker is logged with one tap and nothing else.** No sheet, no
+keypad, no number, no confirmation — the + on its card writes the date and you
+are done. It is the fastest interaction in the app and that is the whole reason
+the kind exists: writing down that you changed the filter should cost less than
+remembering that you did. Everything about the kind follows from having no
+number: no unit and no decimal places are offered, there is no graph, and it
+does not appear in the Log again sheet, which is a way to save you retyping
+numbers you never typed.
+
+**It never reminds you.** No notifications, no intervals, no due dates, no
+"overdue", no colour that turns amber at ninety days. "Change the filter every
+90 days" is a different app and PHILOSOPHY.md rules out both halves of it:
+nothing here notifies, and nothing here decides you are late. The app says how
+long it has been; what that means is yours. This is the line between this kind
+and a maintenance app, and it is not a feature waiting for a later version.
 
 A tracker has:
 
 - name
-- unit (`kcal`, `g`, `kg`, `ml`, `reps`, or blank)
-- kind (daily total | measurement)
-- decimal places (0 for calories, 1 for weight)
+- unit (`kcal`, `g`, `kg`, `ml`, `reps`, or blank — not offered for last time)
+- kind (daily total | measurement | last time)
+- decimal places (0 for calories, 1 for weight — not offered for last time)
 - position in the list
 - archived flag (hide without deleting the history)
 
@@ -282,8 +300,12 @@ and a number** to log an arbitrary value from a cold launch.
 Small enough to list completely.
 
 - **Home** — your trackers as cards. Daily-total cards show today's number and
-  a + button. Measurement cards show the latest reading and when. That's the
-  whole main screen — arranging the list is a settings job. **Six to ten cards
+  a + button. Measurement cards show the latest reading and when. Last-time
+  cards show how long it has been, where the other two show a number — *today*,
+  *yesterday*, *3 days ago*, *2 months ago*, and an em dash until the first one
+  is logged. Whole days, cut where the app cuts a day, so something logged late
+  last night reads *yesterday* in the morning rather than "12 hours ago". That's
+  the whole main screen — arranging the list is a settings job. **Six to ten cards
   fit without scrolling** on a current iPhone, which is the density to hold a
   change to: four trackers must never fill a screen.
 
@@ -300,12 +322,18 @@ Small enough to list completely.
   did change, and the alternative is putting the animation back in the hands of
   everything that writes.
 - **Log sheet** — number pad, tracker(s), date/time (defaults to now, tappable
-  to change), optional name, Log. One group's trackers, or one loose tracker;
-  its title is how you switch between them, and the keypad never goes down to
-  do it. Backdating is first-class: you *will* forget dinner until the next
-  morning. There is no row of recent *values* — people do not log the same
-  number twice, they log the same food, which is what the Log again sheet is
-  for.
+  to change), optional name, Log. One group's trackers, or one loose tracker.
+  **Last-time trackers have no field here**, in a group or out of it: there is
+  nothing to type, and a row that has to be left empty for the sheet to mean
+  what it says is worse than no row. They are grouped everywhere a group is a
+  heading — on home, in settings — and simply not somewhere the keypad goes.
+  A home screen with nothing but last-time trackers has no bottom bar at all;
+  each card's own + is the whole of logging. The sheet's title is how you
+  switch between the groups that do take numbers, and the keypad never goes
+  down to do it. Backdating is first-class: you *will* forget dinner until
+  the next morning. There is no row of recent *values* — people do not log
+  the same number twice, they log the same food, which is what the Log again
+  sheet is for.
 - **History** — everything you've logged, newest first, grouped by day, and
   searchable by name through the same matcher the Log again sheet uses. Today
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
@@ -424,13 +452,18 @@ Small enough to list completely.
   screen is for.
 
   History says the same thing the same way. A row whose repeat disc is off
-  carries the reason on its quiet identity line — *Archived*, *Measurement*, or
-  the *Deleted tracker* it has always printed — and a row whose disc works
-  carries nothing extra.
+  carries the reason on its quiet identity line — *Archived*, *Measurement*,
+  *Last time*, or the *Deleted tracker* it has always printed — and a row whose
+  disc works carries nothing extra.
 
 - **Tracker detail** — the graph on top, that tracker's entries below, grouped
   by day. Swipe to delete, tap to edit. The entries are the row History draws,
-  in the same order and the same weights — see the reading-order rule above.
+  in the same order and the same weights — see the reading-order rule above. A
+  last-time tracker has **no graph** and its rows read *Logged* beside the time:
+  the date is the record, and the interval between one event and the next is a
+  different idea this kind deliberately does not have. Editing one of those
+  entries offers *when* and a name, and no value field — there is no number to
+  correct, and the day it happened on is the thing worth fixing.
 - **Graph** — daily totals as bars, measurements as a line with a moving
   average. Range switch: week / month / year / all. Nothing interactive beyond
   scrubbing for a value.
@@ -527,7 +560,8 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
 
 ## Scope
 
-**v1 ships:** trackers (both kinds), logging by typing a number, backdating,
+**v1 ships:** trackers (all three kinds), logging by typing a number, logging a
+last-time tracker with one tap, backdating,
 editing and deleting, history list, graphs, the Log again sheet, JSON + CSV
 export, JSON import, dark mode.
 
@@ -560,6 +594,11 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
   pile of unit and edge-case handling for something most users won't turn on.
 - **Apple Watch, iPad, Mac.** A Watch app is the best possible fit for this
   philosophy and still real, ongoing work. Not while there's no iPhone app.
+- **Reminders, intervals and due dates on a last-time tracker.** The obvious
+  next feature, and permanently out: it is the half of a maintenance app that
+  PHILOSOPHY.md rule 9 forbids, and adding it would make every other card in the
+  app a candidate for one. Elapsed time is information; a nudge is a different
+  product.
 - **Barcode scanning, food database, AI photo estimation, recipes, social,
   coaching, streaks.** Permanently out. See PHILOSOPHY.md.
 

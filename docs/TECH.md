@@ -170,16 +170,18 @@ as `store.backup.json`.
 ### An unknown value is kept, not refused
 
 A `String`-backed enum throws on a raw value it does not have, and a throw at
-the boundary is a refused document. So a `kind` a later version writes — the
-"last time" one in TODO.md, or anything after it — would stop a 1.0 build from
-opening the file at all, over one field it does not need to understand.
+the boundary is a refused document. So a `kind` a later version writes would
+stop this build from opening the file at all, over one field it does not need
+to understand. `lastTime` was written to test exactly that and then shipped as
+a real kind; the rule is what makes the next one free.
 
 `Tracker` stores `kindRaw`, the string as written, and offers `kind` as this
-build's reading of it. A value that is not `dailyTotal` or `measurement` reads
-as `.measurement`, which shows the latest value and when it was taken — the
-shape that still renders sensibly for a tracker whose behaviour is not here
-yet. The string goes back out on the next save exactly as it came in, and the
-CSV `tracker_kind` column carries it rather than the fallback.
+build's reading of it. A value that is not `dailyTotal`, `measurement` or
+`lastTime` reads as `.measurement`, which shows the latest value and when it
+was taken — the shape that still renders sensibly for a tracker whose
+behaviour is not here yet. The string goes back out on the next save exactly
+as it came in, and the CSV `tracker_kind` column carries it rather than the
+fallback.
 
 **The load is not the point; the save is.** Dropping an unrecognised tracker on
 decode is the tempting version and it is the destructive one: the next ordinary
@@ -195,6 +197,33 @@ Unknown *keys* are the same question one level up and it is not answered:
 the way out. See "Noted, not scheduled" in TODO.md for what that costs and what
 it would take.
 
+### The value a `lastTime` entry does not have
+
+A `lastTime` tracker records that something happened and when; there is no
+number anywhere in the interaction. Its entries still store `value: 0`, and
+`Entry.value` stays non-optional.
+
+**Because the alternative costs the whole app to buy one kind a `nil`.** An
+optional `value` reaches every sum, every average, every chart point, the merge
+tie-break, the CSV column and both editors — dozens of call sites that would
+each need an answer for a case only one kind can produce, and every one of them
+a place to get it wrong later. A stored 0 is a value the arithmetic already
+handles: it adds nothing to a total, and the totals index never sees it anyway,
+because that index is built from daily-total trackers only.
+
+**The 0 is written in one place and drawn in none.** `Store.logNow` is the only
+thing that writes it, and `Tracker.entryText` is the only thing any screen asks
+for an entry's value as text — it answers "Logged" for this kind, so History,
+tracker detail and anything added later cannot print the zero by forgetting to
+ask. **If a 0 ever appears on screen for a `lastTime` tracker, that is a bug**,
+not a display choice, and the place to fix it is whichever call site went to
+`format` instead.
+
+The cost of the choice is that the file and the CSV both carry a `0.0` that
+means nothing, and a spreadsheet summing the `value` column across every kind
+gets the same answer either way. That is the honest trade: the number is noise
+in the export and silence in the app.
+
 ### The CSV view
 
 JSON is the complete document and the only import format. CSV is a flat,
@@ -209,8 +238,8 @@ with these columns:
 | `tracker_id` | referenced tracker UUID, retained even if the tracker was deleted |
 | `tracker_name` | current tracker name, blank if the tracker was deleted |
 | `tracker_unit` | current unit, blank if unavailable |
-| `tracker_kind` | the stored kind string — `dailyTotal` or `measurement`, or one a later version wrote; blank if unavailable |
-| `value` | the stored number |
+| `tracker_kind` | the stored kind string — `dailyTotal`, `measurement` or `lastTime`, or one a later version wrote; blank if unavailable |
+| `value` | the stored number; always `0.0` for a `lastTime` entry, whose date is the data |
 | `name` | entry label, blank when absent |
 
 Fields containing commas, quotes, or line breaks use ordinary RFC 4180-style
@@ -525,7 +554,7 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     var id: UUID
     var name: String
     var unit: String
-    var kindRaw: String     // "dailyTotal" | "measurement" | whatever was written
+    var kindRaw: String     // "dailyTotal" | "measurement" | "lastTime" | whatever was written
     var decimals: Int
     var sortIndex: Int
     var isArchived: Bool

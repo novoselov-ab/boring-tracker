@@ -1899,6 +1899,37 @@ The asymmetry is the rule working, not a gap in it.
 
 - [ ] Close the item, and record the reasoning so it is not reopened.
 
+## 39. A "last time" kind, where the date is the data — done
+
+**A third `Tracker.Kind`, and the other two are untouched.** Tyres, the water
+filter, the boiler service, the dentist — things whose age you want and whose
+number does not exist. What it is and what it must never become are in
+[PRODUCT.md](PRODUCT.md); why `Entry.value` stays non-optional is in
+[TECH.md](TECH.md). `dad286f` model, `a04e447` UI.
+
+Four decisions the brief did not make, recorded because nothing else states
+them:
+
+- **The reading is the whole card, and the date is not repeated underneath
+  it.** The note that scheduled this said "142 days ago, with the date
+  underneath". Left out: the reading *is* the date, so the caption would be
+  the same fact twice — "today" over "Today" — on a card cut to one line on
+  purpose (item 11). The exact date is one tap away on the detail screen.
+- **Days, months and years; not weeks.** With weeks allowed the ladder reads
+  `last week` at 7 days and `2 weeks ago` at 13, which is vaguer than the day
+  count it replaces. `Elapsed` pins the whole ladder by test, because the
+  strings come from the system rather than from this repo.
+- **A one-tap log has no undo bar**, exactly like a log through the sheet. Undo
+  on home belongs to a repeat, whose bar says "Logged again" and whose slot the
+  store keeps one of; a second meaning in it would need a second wording, a
+  second gate on home, and a second way for the repeat's invariants to go
+  wrong. The entry is one tap away on the tracker's own screen, where a swipe
+  deletes it — the same route every other mistyped log takes.
+- **The row word is "Logged".** History and tracker detail draw an entry as a
+  name over a value, and the value line cannot be blank without leaving a row
+  that is a time and nothing else. It is one word, it is true, and it comes
+  from `Tracker.entryText` so no screen invents its own.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
@@ -2344,22 +2375,8 @@ the numbered items is going near the same code.
 
 ## After v1
 
-- [ ] **A "last time" kind, where the date is the data.** Tyres, batteries, the
-      water filter, the boiler service — things you want to know the age of and
-      never want to type a number for. Logging one is a single tap with no
-      number pad; the tracker reads "142 days ago", with the date underneath.
-      A third `Tracker.Kind`, and the two that exist stay exactly as they are.
-
-      **It must never become reminders, due dates or intervals.** "Change the
-      filter every 90 days" is a different app, and PHILOSOPHY.md rules out
-      both halves of it: nothing here notifies, and nothing here decides you
-      are late. The app says how long it has been; what that means is yours.
-
-      The forward-compatible half is already done, and deliberately early: a
-      `kind` string this build does not know survives a load and a save
-      unchanged, so a document a "last time" build writes can be opened by 1.0
-      without losing anything. See "An unknown value is kept, not refused" in
-      [TECH.md](TECH.md).
+- [x] **A "last time" kind, where the date is the data** — pulled into v1 and
+      shipped. It is item 39 above.
 
 - [ ] Home screen widget, Lock Screen widget, App Shortcuts / Siri.
 - [ ] Sync transport — the document already merges; this is only plumbing.
