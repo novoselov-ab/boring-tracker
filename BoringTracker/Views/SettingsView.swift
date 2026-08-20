@@ -76,36 +76,30 @@ struct SettingsView: View {
                 }
             }
 
-            // **Says the tap out loud, and keeps the chevron** (docs/TODO.md
-            // item 34). The `>` is iOS's disclosure indicator and is the right
-            // affordance — a pencil is what a row wears when editing is one of
-            // several things it does, which it is not here — but it was not
-            // obvious in use, and that is evidence rather than taste.
+            // **The drag, and only the drag** (docs/TODO.md item 37). Item 34
+            // put the tap in this footer as well — "Tap a tracker to edit it,
+            // including which group it is in" — in the idiom History and a
+            // tracker's own screen use for the same gesture, and it was still
+            // not obvious in use. A footer explains a screen; what nobody
+            // believed was a fact about a *row*, and it is the row that says it
+            // now: `rowButton` draws what tapping would edit, under the name.
             //
-            // Items 28 and 32 were the other candidate answer and are not one.
-            // They made the whole row a target and gave it a press you cannot
-            // miss, and both of those happen *after* a finger has landed. What
-            // was missing is the reason to land it. Feedback is not discovery.
+            // So the sentence is gone rather than kept alongside. Three
+            // explanations of one gesture — a caption, a chevron and a
+            // paragraph — is what item 34 already ruled out at two, and the one
+            // that reaches a reader who has not scrolled to the bottom of the
+            // list is the one on the row.
             //
-            // So it is a footer, which is what this app already does for a
-            // gesture that does not show: History and a tracker's own screen
-            // both carry "Tap a row to edit it, or swipe to delete." since item
-            // 22, in this same idiom — plain footer, no icon, no colour. And it
-            // is a footer *instead of* an icon rather than as well as one; two
-            // explanations of one tap is worse than either.
-            //
-            // Gated on there being a tracker rather than on `canReorder`,
-            // because the tap is worth explaining with one tracker and the drag
-            // is not.
-            if !store.activeTrackers.isEmpty {
+            // What is left is the drag, which genuinely has nowhere else to be
+            // said: a handle is not a word and the group rule behind it is two
+            // sentences. So the gate is `canReorder` now rather than "there is
+            // a tracker" — with one tracker there is no handle, and there is
+            // nothing left for this footer to carry.
+            if canReorder {
                 Section {
                     EmptyView()
                 } footer: {
-                    Text(
-                        canReorder
-                            ? "Tap a tracker to edit it, including which group it is in. Drag its handle to reorder. Between sections, its whole group moves with it."
-                            : "Tap a tracker to edit it, including which group it is in."
-                    )
+                    Text("Drag a tracker's handle to reorder. Between sections, its whole group moves with it.")
                 }
             }
 
@@ -305,17 +299,23 @@ struct SettingsView: View {
     /// the `HStack` rather than the default — an `HStack` puts its spacing on
     /// *both* sides of a `Spacer`, which `StackingRow` measured at 24pt where 8
     /// was meant.
+    ///
+    /// **The caption is what says the row can be edited** (docs/TODO.md item
+    /// 37). See `editableSummary(of:)` for what it holds and why it is a line
+    /// under the name rather than a value beside the chevron.
     private func rowButton(_ tracker: Tracker) -> some View {
         Button {
             editing = tracker
         } label: {
             HStack(spacing: 0) {
-                // `capped: false`: this row is nothing but the name, so a
-                // truncated one is the whole of what identifies it. It wrapped
-                // before item 28 and it wraps now.
+                // `capped: false`: the name is the whole of what identifies
+                // this row — the caption under it says what kind of tracker it
+                // is, not which one — so a truncated one is unreadable in a way
+                // home's card never is. It wrapped before item 28 and it wraps
+                // now.
                 TrackerRowName(
                     name: name(of: tracker),
-                    caption: archivedGroup(of: tracker),
+                    caption: editableSummary(of: tracker),
                     capped: false
                 )
                 Spacer(minLength: 8)
@@ -329,12 +329,53 @@ struct SettingsView: View {
         .buttonStyle(.row)
     }
 
-    /// Only in the archived list, which has no group headings of its own. Which
-    /// group a tracker rejoins when it comes back is the one thing that row
-    /// would otherwise not say.
-    private func archivedGroup(of tracker: Tracker) -> String? {
-        guard tracker.isArchived, !tracker.group.isEmpty else { return nil }
-        return tracker.group
+    /// What tapping this row would edit, under the name (docs/TODO.md item 37).
+    ///
+    /// **A row that shows its own settings is a row you tap to change them**,
+    /// which is the thing item 34's footer said and nobody read. The chevron
+    /// stays — it is iOS's disclosure indicator and it was never wrong, it was
+    /// alone — and this is what sits beside it. The two together are the shape
+    /// every drill-in row in iOS Settings has: what it is, what it is set to,
+    /// and a `>`.
+    ///
+    /// **Under the name rather than beside the chevron**, which was the other
+    /// candidate and is the one this screen cannot afford. A trailing value
+    /// competes with the name for one line's width, and settings is the screen
+    /// where a name has least of it — 44pt of that row is a drag handle, and
+    /// `capped: false` means the name wraps rather than truncating, so
+    /// "Calories burned exercising" would have gone to two lines to make room
+    /// for "Daily total · kcal". A caption costs no width at all and no height
+    /// either: a `.subheadline` over a `.caption2` is about 31pt against the
+    /// 44pt `RowButtonStyle` already floors the row at, so the screen is the
+    /// same length it was. Home's card has drawn its trackers this way since
+    /// item 11 and settings has drawn them in `TrackerRowName` since item 28 —
+    /// this fills the caption slot that was already there.
+    ///
+    /// The kind and the unit are two of the five things the editor edits, and
+    /// the two that say what the row *is*. The group is the third and appears
+    /// only on an archived row, which has no section heading over it to say so
+    /// — that was this method's whole job before item 37, and it keeps it.
+    /// Decimals and the name itself are visible in what the app already draws.
+    ///
+    /// **The separator carries a non-breaking space in front of it**, which is
+    /// a wrap and not a typographic preference: at AX5 a caption takes two
+    /// lines, and with an ordinary space "Daily total · kcal" broke as `Daily
+    /// total` / `· kcal` — a line starting with a dot. Bound to the word before
+    /// it, the same caption breaks as `Daily total ·` / `kcal`. Photographed
+    /// both ways at AX5 on an iPhone 17 Pro; the trailing dot reads as the
+    /// continuation it is.
+    ///
+    /// **"in Vices", not "Vices"**, and that word is the whole difference
+    /// between a group and a unit. A unit is free text — anything you type — so
+    /// an archived *Cigarettes* reading "Daily total · Vices" is a row saying
+    /// its readings are counted in vices. It was unambiguous while the group
+    /// stood alone on this line, and putting the kind in front of it is what
+    /// took that away.
+    private func editableSummary(of tracker: Tracker) -> String? {
+        var parts = [tracker.kind.label]
+        if !tracker.unit.isEmpty { parts.append(tracker.unit) }
+        if tracker.isArchived, !tracker.group.isEmpty { parts.append("in \(tracker.group)") }
+        return parts.joined(separator: "\u{00A0}· ")
     }
 
     private func archiveButton(_ tracker: Tracker) -> some View {

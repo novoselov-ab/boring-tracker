@@ -65,8 +65,11 @@ struct TrackerEditor: View {
 
         Section {
             Picker("Kind", selection: draft.kind) {
-                Text("Daily total").tag(Tracker.Kind.dailyTotal)
-                Text("Measurement").tag(Tracker.Kind.measurement)
+                // The words are `Tracker.Kind.label`'s since item 37, because a
+                // settings row now says the same two underneath a name.
+                ForEach(Tracker.Kind.allCases, id: \.self) { kind in
+                    Text(kind.label).tag(kind)
+                }
             }
             .pickerStyle(.segmented)
         } footer: {

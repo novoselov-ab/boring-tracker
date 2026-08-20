@@ -10,6 +10,20 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
         case dailyTotal
         /// Each entry is a standalone reading. Weight, the cat's weight.
         case measurement
+
+        /// What this kind is called on screen, in the one place it is named.
+        ///
+        /// The editor's picker wrote these two strings itself until item 37
+        /// gave a settings row the same words underneath the tracker's name.
+        /// Two screens one tap apart disagreeing about what a kind is called is
+        /// the failure `RepeatDisc` and `UndoButton` were extracted for, one
+        /// item apart, and it costs nothing to not have it here.
+        var label: String {
+            switch self {
+            case .dailyTotal: "Daily total"
+            case .measurement: "Measurement"
+            }
+        }
     }
 
     var id: UUID = UUID()
