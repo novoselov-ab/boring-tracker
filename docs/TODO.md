@@ -1763,6 +1763,31 @@ together — a History row's time is level with the repeat disc now — rather
 than one screen taking a parameter. The cost is the baseline "Water" and
 "0 ml" used to share. `a9487bc`
 
+## 38. One rule for saying a row is tappable — decided
+
+Item 37 put the explanation **on** the settings row — `Daily total · kcal`
+under the name — and removed the footer sentence. History and tracker detail
+still explain the same gesture in a footer, so the app has two idioms for one
+thing.
+
+Those rows genuinely cannot take the settings answer: no chevron, and their
+trailing half is already a value.
+
+**So the rule is: the row speaks when it can, and the footer is the fallback
+when it cannot.** That is one rule with a stated exception rather than two
+idioms competing, and it beats forcing every screen into a footer for the sake
+of symmetry.
+
+- [ ] Write the rule into `PRODUCT.md` beside the row descriptions, so the next
+      screen does not have to guess.
+- [ ] Leave History and tracker detail as they are — they are the exception,
+      correctly applied.
+
+Left open by item 37, and worth knowing: **a grown fill is drawn about 2pt past
+its own tap target.** Harmless today — the press was tested at the pill's edge
+and held — but it is the ceiling on ever increasing the travel, and it is the
+opposite failure from the one shrinking had.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
