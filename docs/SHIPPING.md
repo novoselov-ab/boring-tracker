@@ -322,8 +322,9 @@ Things that are easier handled early than discovered at submission:
   better things about this app. Keep it true.
 - **Privacy policy URL is required** for every app, even one that collects
   nothing. A short page stating that the app collects no data, has no servers,
-  and stores everything on the device. GitHub Pages is fine.
-- **Support URL is required.** The GitHub repository works.
+  and stores everything on the device. **Done** — `docs/index.html`, served by
+  GitHub Pages at `https://novoselov-ab.github.io/boring-tracker/`.
+- **Support URL is required.** The GitHub repository works, and it is public.
 - **App name availability.** Names are claimed globally and first-come. Check
   before getting attached to one. Display name and bundle id are separate: the
   display name can change any time, the **bundle id is permanent** — changing
@@ -423,11 +424,22 @@ back after release. Everything unmarked is ordinary work in this repository.
 Both are **mandatory for every app**, including one that collects nothing —
 see *Before submitting*.
 
-- [ ] **(human)** **Privacy policy URL.** One page saying the app collects no
-      data, has no servers, and keeps everything on the device. GitHub Pages
-      is fine.
-- [ ] **(human)** **Support URL.** The GitHub repository works, and it is
-      public now.
+Both are covered. What is left in each case is pasting the URL into App
+Store Connect, which needs the account.
+
+- [x] **Privacy policy URL** — **`https://novoselov-ab.github.io/boring-tracker/`**.
+      The page is `docs/index.html`, served by GitHub Pages from `main`, folder
+      `/docs`. One static file, no generator and nothing fetched from anywhere:
+      an analytics tag on the privacy page of an app whose claim is *collects
+      nothing* would undo the claim it is there to make. Everything it states
+      was checked against the source rather than written from the philosophy —
+      no networking API appears anywhere in `BoringTracker/`, there are no
+      third-party packages, and no permission-requiring framework is imported.
+      `docs/.nojekyll` is what stops GitHub also publishing `TODO.md` and the
+      rest of `docs/` as web pages; they stay repository source.
+- [x] **Support URL** — **`https://github.com/novoselov-ab/boring-tracker`**.
+      The repository, public since 2026-08-19, with issues as the contact
+      route the privacy page points people at.
 
 ### 4. The build
 

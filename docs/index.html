@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boring Tracker — privacy policy</title>
+<meta name="description" content="Boring Tracker is an iPhone app for writing down numbers. It collects nothing, has no servers, and keeps everything on your device.">
+<meta name="color-scheme" content="light dark">
+<!-- The icon, inline. A page that argues the app fetches nothing should not
+     itself fetch an image from somewhere to put in the tab. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2300786C'/%3E%3Cg fill='white'%3E%3Crect x='13' y='19' width='22' height='5' rx='2.5'/%3E%3Crect x='41' y='19' width='10' height='5' rx='2.5'/%3E%3Crect x='13' y='30' width='22' height='5' rx='2.5'/%3E%3Crect x='41' y='30' width='10' height='5' rx='2.5'/%3E%3Crect x='13' y='41' width='22' height='5' rx='2.5'/%3E%3Crect x='41' y='41' width='10' height='5' rx='2.5'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* System colours and the system font, so the page looks like the app and
+   loads nothing from anywhere. No webfont, no stylesheet, no script, no
+   analytics — an analytics tag on this page would be the funniest possible
+   mistake. */
+:root {
+  --bg: #f2f2f7;          /* iOS grouped background */
+  --panel: #ffffff;
+  --separator: #c6c6c8;
+  --label: #000000;
+  --label-secondary: #3c3c4399;
+  --accent: #009888;      /* AccentFill, light — the app's teal */
+  --accent-ink: #00695e;  /* darkened for text on white, for contrast */
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --panel: #1c1c1e;
+    --separator: #38383a;
+    --label: #ffffff;
+    --label-secondary: #ebebf599;
+    --accent: #00dac3;    /* AccentFill, dark */
+    --accent-ink: #00dac3;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 2.5rem 1.25rem 4rem;
+  background: var(--bg);
+  color: var(--label);
+  font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+main {
+  max-width: 36rem;
+  margin: 0 auto;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 1.75rem 1.5rem 2rem;
+}
+h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem;
+}
+.tagline { color: var(--label-secondary); margin: 0 0 1.75rem; }
+h2 {
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+  margin: 2.25rem 0 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--separator);
+}
+h3 { font-size: 1rem; margin: 1.5rem 0 0.4rem; }
+p { margin: 0.75rem 0; }
+ul { margin: 0.75rem 0; padding-left: 1.25rem; }
+li { margin: 0.4rem 0; }
+li::marker { color: var(--accent); }
+a { color: var(--accent-ink); text-underline-offset: 2px; }
+a:hover { text-decoration: none; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  color: var(--label-secondary);
+  overflow-wrap: anywhere;
+}
+.updated { color: var(--label-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+footer {
+  max-width: 36rem;
+  margin: 1.25rem auto 0;
+  padding: 0 1.5rem;
+  color: var(--label-secondary);
+  font-size: 0.9rem;
+}
+</style>
+</head>
+<body>
+<main>
+
+<h1>Boring Tracker</h1>
+<p class="tagline">An iPhone app for writing down numbers.</p>
+
+<p>Open it, tap, type a number, done. Calories and protein, your weight, water,
+cigarettes, pushups, hours of sleep — whatever it is you want to write down
+repeatedly. It keeps the history, adds up your day, and draws a plain graph.</p>
+
+<p>That is the whole app. It is called Boring Tracker because that is the
+promise: no streaks, no badges, no confetti, no notification asking where you
+have been. It has no opinion about your body.</p>
+
+<h2>What it refuses to do</h2>
+
+<p>These are rules rather than preferences, and they are written down in the
+repository as <a href="https://github.com/novoselov-ab/boring-tracker/blob/main/docs/PHILOSOPHY.md">PHILOSOPHY.md</a>,
+where anyone can hold the app to them.</p>
+
+<ul>
+  <li><strong>No ads.</strong> Ever, in any form, including recommended
+      products and affiliate links.</li>
+  <li><strong>No subscription.</strong> Free, all of it, with no pro tier, no
+      paid unlock and no tip jar that nags.</li>
+  <li><strong>No account.</strong> Nothing to sign up for, nothing to log in
+      to. The app is useful three seconds after install.</li>
+  <li><strong>No server.</strong> There is no backend, so there is nothing to
+      leak, nothing to pay for, and nothing that can switch the app off in
+      2029.</li>
+  <li><strong>No telemetry.</strong> No analytics, no crash reporting SDK, no
+      anonymous usage data.</li>
+  <li><strong>No third-party code.</strong> Apple's frameworks and nothing
+      else — third-party SDKs are how ads, telemetry and rot get in.</li>
+  <li><strong>No lock-in.</strong> Your data exports in one tap, to a plain
+      readable file, and imports back.</li>
+</ul>
+
+<h2>Privacy policy</h2>
+<p class="updated">Last updated 19 August 2026.</p>
+
+<p><strong>Boring Tracker collects no data.</strong> Not anonymised data, not
+aggregated data, not diagnostics. There is no developer copy of anything you
+type into it.</p>
+
+<p>The app is open source under the MIT licence, so every sentence below can be
+checked against the code that this page is served from rather than taken on
+trust. Where a claim names a file, that file is in the same repository.</p>
+
+<h3>No servers, and no network</h3>
+
+<p>There is no backend service behind this app and no account system. The app
+contains no networking code at all — no request is made to the developer or to
+anyone else, so nothing you enter can leave the device by itself.</p>
+
+<p>The one link out is the <em>Source on GitHub</em> row on the About screen. If
+you tap it, your browser opens GitHub in the ordinary way; that is your browser
+talking to GitHub, and it carries nothing about your data with it.</p>
+
+<h3>What is stored, and where</h3>
+
+<p>Everything the app knows lives on your device, inside the app's own
+container, in two places:</p>
+
+<ul>
+  <li>Your trackers and every entry, as a single JSON file
+      (<code>Application&nbsp;Support/boring-tracker/store.json</code>), with a
+      backup copy kept beside it so a bad write cannot cost you your
+      history.</li>
+  <li>Three interface preferences: light or dark appearance, what hour your day
+      starts at, and which group of trackers you used last.</li>
+</ul>
+
+<p>The app asks for no system permissions. It does not use the camera, the
+photo library, contacts, location, your health data, or notifications, and iOS
+will never prompt you to allow any of them, because the app never asks.</p>
+
+<p>Deleting the app deletes all of it. There is no copy anywhere else to
+delete, and nothing to close down or request.</p>
+
+<h3>How data leaves, when you send it</h3>
+
+<p>Export writes your data to a JSON or CSV file and hands it to the standard
+iOS share sheet. <strong>You</strong> choose where it goes — AirDrop, Files,
+Mail, or anywhere else you have installed. The app never picks a destination
+and never sends anything on its own. Import is the same in reverse: it reads a
+file you pick.</p>
+
+<p>Once a file is somewhere else, whatever is there governs it. If you mail an
+export to yourself, it is in your mail provider's hands; that is outside this
+app and outside this policy.</p>
+
+<h3>Device backups</h3>
+
+<p>The store file sits in the app's Application Support directory and is not
+marked to be excluded from backups. So if you have iPhone backups turned on, to
+iCloud or to a computer, your Boring Tracker data is included in them, exactly
+as other apps' data is. That is iOS doing what you have asked it to do, under
+Apple's terms; the app takes no part in it, and cannot read anything back from
+a backup other than by iOS restoring your device.</p>
+
+<h3>Children</h3>
+
+<p>The app collects nothing from anyone, so it collects nothing from children.
+It has no accounts, no ads, no messaging and no content served from anywhere.</p>
+
+<h3>Changes to this policy</h3>
+
+<p>If the app ever changes in a way that makes a sentence here untrue, this page
+changes with it. The page is a file in the repository, so every version of it
+and the date it changed are in the public history.</p>
+
+<h3>Contact</h3>
+
+<p>Questions, or something on this page that looks wrong:
+<a href="https://github.com/novoselov-ab/boring-tracker/issues">open an issue
+on GitHub</a>.</p>
+
+<h2>Links</h2>
+
+<ul>
+  <li><a href="https://github.com/novoselov-ab/boring-tracker">Source on
+      GitHub</a> — the whole app, and support.</li>
+  <li><a href="https://github.com/novoselov-ab/boring-tracker/blob/main/LICENSE">MIT
+      licence</a> — fork it, build it, ship your own.</li>
+  <li>App Store — not listed yet. The link goes here when it is.</li>
+</ul>
+
+</main>
+
+<footer>
+<p>No cookies, no analytics, no fonts or images loaded from anywhere else.
+This page is one file.</p>
+</footer>
+</body>
+</html>
