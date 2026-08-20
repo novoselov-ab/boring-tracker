@@ -1,7 +1,5 @@
 import Foundation
 
-/// What the graph draws, computed once per range change rather than per frame.
-///
 /// Kept apart from the view because it is arithmetic over days, which is where
 /// this app's bugs live — and arithmetic is testable in a way that a chart is
 /// not.
@@ -19,7 +17,6 @@ enum ChartRange: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// How far back the range reaches, or nil for everything there is.
     var days: Int? {
         switch self {
         case .week: 7
@@ -40,13 +37,10 @@ struct ChartPoint: Identifiable, Hashable, Sendable {
 
 enum ChartData {
 
-    /// The first day a range covers. Returns nil when there is nothing at all
-    /// to draw.
-    ///
     /// A fixed window is shown in full even when the data starts later, rather
     /// than being trimmed to the first entry. Trimming made every range look
-    /// identical for anyone with a few days of history, and it hides the thing
-    /// a gap is telling you — that nothing was logged then.
+    /// identical for anyone with a few days of history, and it hides the thing a
+    /// gap is telling you — that nothing was logged then.
     static func start(
         of range: ChartRange, today: DayKey, earliest: DayKey?, calendar: Calendar
     ) -> DayKey? {
@@ -56,14 +50,12 @@ enum ChartData {
     }
 
     /// One bar per day, including the days with nothing in them — a gap in a
-    /// calorie chart is information, and closing it up would draw a week of
-    /// eating as if it were continuous.
+    /// calorie chart is information.
     ///
     /// A bar sits at the moment its day *begins*, which is midnight unless the
-    /// day start has been moved (`DayStart`). Drawing it at midnight regardless
-    /// would put a 4am-to-4am day's bar four hours before the first thing it
-    /// could contain, and the axis under it would then disagree with the
-    /// heading History gives the same day.
+    /// day start has been moved. Drawing it at midnight regardless would put a
+    /// 4am-to-4am day's bar four hours before the first thing it could contain,
+    /// and the axis would then disagree with the heading History gives that day.
     static func dailyTotals(
         from start: DayKey, to end: DayKey, calendar: Calendar, dayStartHour: Int = 0,
         total: (DayKey) -> Double
@@ -82,8 +74,8 @@ enum ChartData {
         return points
     }
 
-    /// Measurements are points in time, not sums, so they are plotted where
-    /// they happened rather than bucketed into days.
+    /// Measurements are points in time, not sums, so they are plotted where they
+    /// happened rather than bucketed into days.
     static func readings(_ entries: [Entry], from start: Date) -> [ChartPoint] {
         entries
             .filter { $0.date >= start }
