@@ -1736,42 +1736,32 @@ as a different kind of object beside a pill.
       on the strength of a change to the second-most-used one, which is a bigger
       question than this item, so it goes to the user rather than being merged.
 
-## 37. Three fixes before release
+## 37. Three fixes before release — done
 
-### The press should scale up, not down
+**The press grows.** One line in `AccentFillPress.scale(for:reduceMotion:)`,
+which is the only place either a fill or a row works one out, so every accent
+fill and every row turned together and a mix of the two directions is not
+reachable. The travel stayed at 2pt and `9b21d82`'s guard kept its constant
+with a milder reason: below `2 * travel` a press at least doubles the control
+rather than turning it inside out. Judged by tapping fast, which is item 32's
+rule — three 40ms taps recorded frame by frame, and in all three the frame
+after the touch has the row's wash on and the disc already grown. `428ae66`
 
-Decided: **a press makes a control grow, not shrink.** iOS conventionally
-shrinks, and that is what was built — but the ask has been "make it feel nice"
-throughout, and growing reads as the control coming toward the thumb.
+**A settings row says what tapping it would edit**, under the name, in the
+caption slot `TrackerRowName` has had since item 28 — `Daily total · kcal`,
+`Measurement · kg`. The chevron stays, and item 34's footer sentence goes: a
+caption, a chevron and a paragraph is three explanations of one gesture. Under
+the name rather than beside the chevron because a trailing value costs the
+name the width it has least of; the rows are 52.0pt before and after.
+`67b4adb`
 
-- [ ] Every accent fill and every row grows on press. One direction everywhere.
-- [ ] Reduce Motion still takes the movement and keeps the colour.
-- [ ] Judge it by tapping fast, the way item 32 established — a press that
-      cannot be seen on a 40ms tap is not a press.
-
-### Settings still does not say that tapping edits
-
-Item 34 added a footer hint and kept the `>`, and it is still not obvious. The
-hint is evidently not carrying it.
-
-- [ ] Make it plain **on the row**, not only in a footer beneath the list. A
-      footer explains a screen; the question is about a row.
-- [ ] The `>` is iOS's disclosure indicator, so it is not wrong — but it is
-      doing this job alone and failing. Consider what sits beside it: the value
-      the row would edit, a clearer secondary line, or a different row shape
-      entirely.
-- [ ] Do not add an edit icon *and* keep the footer *and* keep the chevron.
-      Three explanations for one gesture is worse than one that works.
-
-### A two-line label knocks the number off centre
-
-On home, a card whose label wraps — "Weight" over "3 days ago" — pushes its
-number out of vertical centre. The number should stay centred against the whole
-row however many lines the label takes.
-
-- [ ] Fix the alignment.
-- [ ] Check one line, two lines, and the longest tracker name at AX sizes,
-      where wrapping is most likely.
+**A two-line label no longer knocks the number off centre.** `StackingRow`'s
+side-by-side branch is `.center` rather than `.firstTextBaseline`: home's
+number sat 5.83pt above the row's own centre and now sits 0.17pt off it, which
+is where a one-line row's number already was. All four screens took it
+together — a History row's time is level with the repeat disc now — rather
+than one screen taking a parameter. The cost is the baseline "Water" and
+"0 ml" used to share. `63cdb1e`
 
 ## Noted, not scheduled
 
