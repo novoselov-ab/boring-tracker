@@ -113,6 +113,10 @@ final class Store {
     /// lands at the real wall clock, under a `DayKey` the store does not consider
     /// today — a test that pins this and then asserts a total or a day label wants
     /// the real fix first.
+    ///
+    /// Deliberately not threaded any further. Running the timestamps a mutation
+    /// writes off a test-only clock is a change to the data path that buys the
+    /// data path nothing.
     private let pinnedNow: Date?
     private var now: Date { pinnedNow ?? Date() }
     private let file: StoreFile
@@ -130,7 +134,7 @@ final class Store {
     /// would flash an empty home screen for longer than the decode takes.
     convenience init(file: StoreFile = .standard()) {
         let loaded = file.load()
-        // **The one place `UserDefaults` is read**, and it is the app's entry point
+        // **The one place the store reads `UserDefaults`**, and it is the app's entry point
         // rather than the designated init below: reading it there made every `Store`
         // a test builds inherit whatever the last test to call `setDayStartHour` had
         // written — in the same process, in parallel, and across simulator runs.
@@ -976,7 +980,9 @@ final class Store {
     /// `validateImport` and refuses it, which would make a clear irreversible under a
     /// dialog that had just said it was not. So both destructive confirmations ask
     /// this first and say the other thing when the answer is no. No document this app
-    /// can produce fails it.
+    /// can produce fails it, and that rests on three things elsewhere: the editor
+    /// bounds `decimals` to 0…3, `add` renumbers when a `sortIndex` approaches
+    /// `Int.max`, and ids come from `UUID()`.
     var currentDocumentIsRestorable: Bool {
         (try? validateImport(document)) != nil
     }
