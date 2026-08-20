@@ -1653,7 +1653,7 @@ private view in `HistoryView.swift`, not a method on `HistoryView` — and
 - [ ] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
       next pass does not find this again and file it a third time.
 
-## 36. The entry editor confirms where the log sheet used to
+## 36. The entry editor confirms where the log sheet used to — closed, no change
 
 Item 5 moved the log sheet's confirm **out of the navigation bar** and put it
 directly above the keypad, because the keypad is up and the top-right corner of
@@ -1796,6 +1796,33 @@ Left open by item 37, and worth knowing: **a grown fill is drawn about 2pt past
 its own tap target.** Harmless today — the press was tested at the pill's edge
 and held — but it is the ceiling on ever increasing the travel, and it is the
 opposite failure from the one shrinking had.
+
+## 35 (decided). Tracker detail follows History
+
+**Tracker detail leads with the name, like History does.** Consistency wins.
+
+Item 35 laid out a real argument for the other order: on a tracker's own screen
+the tracker is fixed, so the *number* is what tells two rows apart, and leading
+with the name gives weight to the least distinguishing part. That is true, and
+it loses anyway — two screens one tap apart showing the same two facts in
+opposite orders reads as an app that has not decided, and a person moving
+between them has to re-learn where to look.
+
+- [ ] `TrackerDetailView.row` matches `HistoryRow`: the name leads, the numbers
+      follow, same weights and colours.
+- [ ] Say so in `PRODUCT.md` beside item 14b's reading-order rule, with the
+      argument that lost — so the next pass does not find this and file it a
+      third time.
+
+## 36 (closed). The editors keep Save in the navigation bar
+
+**No change.** Item 5 moved the *log sheet's* confirm above the keypad because
+logging is the common path and the top-right corner is not in a thumb's arc.
+Editing is rare, and `PHILOSOPHY.md` already says rare actions may live high.
+
+The asymmetry is the rule working, not a gap in it.
+
+- [ ] Close the item, and record the reasoning so it is not reopened.
 
 ## Noted, not scheduled
 
