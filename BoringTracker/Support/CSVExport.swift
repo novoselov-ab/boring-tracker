@@ -27,7 +27,7 @@ enum CSVExport {
                 entry.trackerID.uuidString,
                 tracker?.name ?? "",
                 tracker?.unit ?? "",
-                tracker?.kind.rawValue ?? "",
+                tracker?.kindRaw ?? "",
                 String(entry.value),
                 entry.name ?? "",
             ]

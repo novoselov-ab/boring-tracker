@@ -535,4 +535,169 @@ struct PersistenceTests {
             #expect(StoreMigration.steps[version] != nil, "no step from version \(version)")
         }
     }
+
+    // MARK: - A kind this build does not know
+
+    /// Written the way the encoder writes it — two-space indent, sorted keys —
+    /// so a re-encode can be compared to it byte for byte. `lastTime` is the
+    /// kind docs/TODO.md has as a post-v1 candidate; any unknown string does.
+    private static let unknownKindFile = """
+    {
+      "entries" : [
+        {
+          "date" : "2026-01-01T00:10:00Z",
+          "id" : "44444444-4444-4444-8444-444444444444",
+          "modified" : "2026-01-01T00:10:00Z",
+          "name" : "porridge",
+          "trackerID" : "11111111-1111-4111-8111-111111111111",
+          "value" : 600
+        },
+        {
+          "date" : "2026-01-01T00:20:00Z",
+          "id" : "55555555-5555-4555-8555-555555555555",
+          "modified" : "2026-01-01T00:20:00Z",
+          "name" : "front pair",
+          "trackerID" : "22222222-2222-4222-8222-222222222222",
+          "value" : 1
+        },
+        {
+          "date" : "2026-01-01T00:30:00Z",
+          "id" : "66666666-6666-4666-8666-666666666666",
+          "modified" : "2026-01-01T00:30:00Z",
+          "trackerID" : "33333333-3333-4333-8333-333333333333",
+          "value" : 78.4
+        }
+      ],
+      "schemaVersion" : 2,
+      "tombstones" : [
+        {
+          "deleted" : "2026-01-01T00:20:00Z",
+          "id" : "77777777-7777-4777-8777-777777777777"
+        }
+      ],
+      "trackers" : [
+        {
+          "decimals" : 0,
+          "group" : "Food",
+          "id" : "11111111-1111-4111-8111-111111111111",
+          "isArchived" : false,
+          "kind" : "dailyTotal",
+          "modified" : "2026-01-01T00:01:00Z",
+          "name" : "Calories",
+          "orderModified" : "2026-01-01T00:01:00Z",
+          "sortIndex" : 0,
+          "unit" : "kcal"
+        },
+        {
+          "decimals" : 0,
+          "group" : "",
+          "id" : "22222222-2222-4222-8222-222222222222",
+          "isArchived" : false,
+          "kind" : "lastTime",
+          "modified" : "2026-01-01T00:01:00Z",
+          "name" : "Tyres",
+          "orderModified" : "2026-01-01T00:01:00Z",
+          "sortIndex" : 1,
+          "unit" : ""
+        },
+        {
+          "decimals" : 1,
+          "group" : "Weight",
+          "id" : "33333333-3333-4333-8333-333333333333",
+          "isArchived" : false,
+          "kind" : "measurement",
+          "modified" : "2026-01-01T00:01:00Z",
+          "name" : "Weight",
+          "orderModified" : "2026-01-01T00:01:00Z",
+          "sortIndex" : 2,
+          "unit" : "kg"
+        }
+      ]
+    }
+    """
+
+    @Test("A tracker whose kind this build does not know still loads")
+    func unknownKindLoads() throws {
+        let document = try StoreMigration.migrate(Data(Self.unknownKindFile.utf8))
+
+        #expect(document.trackers.map(\.name) == ["Calories", "Tyres", "Weight"])
+        let tyres = try #require(document.trackers.first { $0.name == "Tyres" })
+        #expect(tyres.kindRaw == "lastTime")
+        // Not `dailyTotal`: the read-only-ish shape shows the latest value and
+        // when it was taken, which renders sensibly for a tracker built for
+        // behaviour this build does not have.
+        #expect(tyres.kind == .measurement)
+    }
+
+    @Test("Saving it back writes the kind it was given, not this build's reading of it")
+    func unknownKindSurvivesASave() throws {
+        let original = Data(Self.unknownKindFile.utf8)
+
+        let saved = try StoreCoding.encode(StoreMigration.migrate(original))
+
+        // The whole file, not just the kind: an older build must never be the
+        // reason a newer build's document comes back smaller than it went in.
+        #expect(String(decoding: saved, as: UTF8.self) == Self.unknownKindFile)
+    }
+
+    @Test("The entries of an unknown-kind tracker are neither dropped nor orphaned")
+    func unknownKindKeepsItsEntries() throws {
+        let document = try StoreMigration.migrate(Data(Self.unknownKindFile.utf8))
+
+        let tyres = try #require(document.trackers.first { $0.name == "Tyres" })
+        #expect(document.entries.count == 3)
+        #expect(document.entries.filter { $0.trackerID == tyres.id }.map(\.name) == ["front pair"])
+        let known = Set(document.trackers.map(\.id))
+        #expect(document.entries.allSatisfy { known.contains($0.trackerID) })
+    }
+
+    @Test("Choosing the kind it already reads as does not overwrite the string")
+    func unknownKindSurvivesThePicker() throws {
+        // The editor's picker has two segments and an unknown kind shows as
+        // `Measurement`, so tapping away and back reads as a revert. Writing
+        // "measurement" there loses the string *and* stamps the record newer,
+        // which spreads the loss to every other device at the next merge.
+        var tyres = Tracker(name: "Tyres")
+        tyres.kindRaw = "lastTime"
+
+        tyres.kind = .measurement
+        #expect(tyres.kindRaw == "lastTime")
+
+        // A kind actually chosen still lands, and going back is an ordinary
+        // measurement from then on.
+        tyres.kind = .dailyTotal
+        #expect(tyres.kindRaw == "dailyTotal")
+        tyres.kind = .measurement
+        #expect(tyres.kindRaw == "measurement")
+    }
+
+    @Test("Every stored field of a tracker reaches the file")
+    func trackerWritesEveryStoredProperty() throws {
+        // `Tracker` spells its `CodingKeys` out, to write `kindRaw` as `kind`.
+        // A property added later and left out of that list compiles, works in
+        // memory, and is silently absent from every save — so this asks the
+        // encoder what it wrote and the type what it holds.
+        let encoded = try #require(
+            try JSONSerialization.jsonObject(
+                with: StoreCoding.encoder().encode(Tracker(name: "Calories"))
+            ) as? [String: Any]
+        )
+        let stored = Mirror(reflecting: Tracker(name: "Calories")).children.compactMap(\.label)
+
+        #expect(!stored.isEmpty)
+        #expect(Set(encoded.keys) == Set(stored.map { $0 == "kindRaw" ? "kind" : $0 }))
+    }
+
+    @Test("An unknown kind is kept through a merge too, not just through a load")
+    func unknownKindSurvivesAMerge() throws {
+        // The other door into the file: import merges rather than replaces, so
+        // a kind preserved on load would still be lost if the union dropped it.
+        let document = try StoreMigration.migrate(Data(Self.unknownKindFile.utf8))
+
+        let merged = document.merged(with: StoreDocument())
+
+        let tyres = try #require(merged.trackers.first { $0.name == "Tyres" })
+        #expect(tyres.kindRaw == "lastTime")
+        #expect(merged.entries.count == 3)
+    }
 }

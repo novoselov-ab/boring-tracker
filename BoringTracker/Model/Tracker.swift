@@ -17,7 +17,10 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     var id: UUID = UUID()
     var name: String
     var unit: String = ""
-    var kind: Kind = .dailyTotal
+    /// The raw string, so a `kind` written by a later build survives being read
+    /// and saved by this one — docs/TECH.md, "An unknown value is kept, not
+    /// refused". The app asks `kind` below.
+    var kindRaw: String = Kind.dailyTotal.rawValue
     var decimals: Int = 0
     var sortIndex: Int = 0
     var isArchived: Bool = false
@@ -34,6 +37,46 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     /// differed only in `sortIndex` with equal timestamps, and the text tie-break
     /// gave each tracker its own highest index.
     var orderModified: Date = .stamp()
+
+    /// An unknown kind reads as `.measurement`: it shows the latest value and
+    /// when it was taken, which is the shape that renders sensibly for a
+    /// tracker built for behaviour this build does not have.
+    ///
+    /// **Setting it to what it already reads as writes nothing**, which is what
+    /// keeps the editor's two-segment picker from destroying a kind it cannot
+    /// draw. That picker shows `Measurement` for an unknown string, so tapping
+    /// away and back looks like a revert and would otherwise save
+    /// `"measurement"` over it — stamped newer, so the loss would then win the
+    /// merge on every other device.
+    var kind: Kind {
+        get { Kind(rawValue: kindRaw) ?? .measurement }
+        set { if newValue != kind { kindRaw = newValue.rawValue } }
+    }
+
+    /// Written out because the stored property is `kindRaw` and every caller
+    /// says `kind:`.
+    init(
+        id: UUID = UUID(), name: String, unit: String = "", kind: Kind = .dailyTotal,
+        decimals: Int = 0, sortIndex: Int = 0, isArchived: Bool = false, group: String = "",
+        modified: Date = .stamp(), orderModified: Date = .stamp()
+    ) {
+        self.id = id
+        self.name = name
+        self.unit = unit
+        self.kindRaw = kind.rawValue
+        self.decimals = decimals
+        self.sortIndex = sortIndex
+        self.isArchived = isArchived
+        self.group = group
+        self.modified = modified
+        self.orderModified = orderModified
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, unit
+        case kindRaw = "kind"
+        case decimals, sortIndex, isArchived, group, modified, orderModified
+    }
 
     func format(_ value: Double, includeUnit: Bool = true) -> String {
         let number = value.formatted(

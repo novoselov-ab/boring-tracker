@@ -48,6 +48,21 @@ struct CSVExportTests {
         #expect(text.contains(",\(trackerID.uuidString),,,,42.0,"))
     }
 
+    @Test("A kind this build does not know is exported as it was written")
+    func unknownKind() throws {
+        // The kind column says what the tracker is, and this build reading it
+        // as a measurement is not a fact about the document.
+        var tracker = Tracker(name: "Tyres")
+        tracker.kindRaw = "lastTime"
+        let entry = Entry(trackerID: tracker.id, value: 1, date: time(10))
+        let text = try #require(String(
+            data: CSVExport.data(document: StoreDocument(trackers: [tracker], entries: [entry])),
+            encoding: .utf8
+        ))
+
+        #expect(text.contains(",Tyres,,lastTime,"))
+    }
+
     @Test("Free-text names survive the round trip a spreadsheet parser makes")
     func adversarialNames() throws {
         // Names are typed by a person, so they contain whatever people type.
