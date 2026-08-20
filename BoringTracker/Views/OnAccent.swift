@@ -231,7 +231,7 @@ extension EnvironmentValues {
 ///
 /// Private, and reached only through `View.accentFilled(_:)`: item 27 added a
 /// second half to a press and a call site that draws this directly is a
-/// control that changes colour without going down.
+/// control that changes colour without moving.
 private struct AccentFillBackground<S: Shape>: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.accentFillPressed) private var isPressed
@@ -577,17 +577,26 @@ struct AccentPillButtonStyle: ButtonStyle {
             // and a later swap to a plain `.scaleEffect` would keep the
             // documented order while quietly breaking it.
             //
-            // **The check that proved this no longer discriminates, and item 37
-            // is why.** While the press shrank, a synthesized press at x = 17pt
-            // was inside the resting 16.0–328.0pt capsule and outside the
-            // 18.0–326.0 it drew at held: it engaged, held pressed and fired,
-            // so the target plainly was not the drawn shape. Growing puts the
-            // drawn shape *outside* the target instead — 14.0–330.0pt held,
-            // measured — and the failure it could produce is the mild one, a
-            // 2pt rim that looks pressable only once you are already pressing.
-            // The old test is dropped rather than restated with new numbers: a
-            // press at the pill's leading edge engages, grows and opens the log
-            // sheet, which is what the screen owes a thumb resting there.
+            // **The proof is item 27's and it survives the direction
+            // changing**, which is worth saying because the check itself does
+            // not. While the press shrank, a synthesized press at x = 17pt was
+            // inside the resting 16.0–328.0pt capsule and outside the
+            // 18.0–326.0 it drew at held: it engaged, held and fired, so the
+            // target was plainly not the drawn shape. That is a fact about
+            // `visualEffect` rather than about a number, and the sign of a
+            // scale cannot change whether a rendering modifier takes part in
+            // hit testing — so the same test cannot be re-run to mean anything
+            // now that the drawing is 14.0–330.0pt, *outside* the target.
+            //
+            // What the new direction does raise is a 2pt rim that is drawn and
+            // not targeted, and the worry with it — raised in review — is a
+            // thumb that lands on the edge, drifts onto the rim, and lets go
+            // into nothing. It does not happen, and that was checked rather
+            // than argued: pressed at x = 17pt, dragged out to x = 15pt and
+            // held there, the pill stays at `#07AA9A` through the drift and
+            // the release opens the log sheet. A control keeps tracking a
+            // touch that leaves it by 1pt, so the rim behaves like the pill it
+            // is drawn as.
             .contentShape(.capsule)
             .environment(\.accentFillPressed, configuration.isPressed)
             .pressHaptic(configuration.isPressed)

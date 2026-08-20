@@ -342,8 +342,8 @@ private struct RepeatRow: View {
         // What it gives up is the disc *recolouring* under the thumb: item 26's
         // `accentFillPressed` reaches a fill through the environment, and
         // handing it down from here as well would scale the disc twice — once
-        // with the row and once on its own. A row that goes down whole is the
-        // louder signal of the two, which is the whole of item 28.
+        // with the row and once on its own. A row that takes the press whole is
+        // the louder signal of the two, which is the whole of item 28.
         .buttonStyle(.row)
         .rowPress()
         .disabled(!canRepeat)

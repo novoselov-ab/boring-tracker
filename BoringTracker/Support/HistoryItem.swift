@@ -98,10 +98,20 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// which is the actionable half — it names the thing you could unarchive to
     /// make the row repeatable again. "Measurement" is reserved for the rows
     /// where unarchiving nothing would help.
+    ///
+    /// **That word comes from `Tracker.Kind.label`**, which is where the kinds
+    /// are named since item 37 gave a settings row the same two words. It read
+    /// `"Measurement"` as a literal here until review pointed out that the
+    /// extraction had left a third copy on the screen it is most visible on:
+    /// the strings agreed, so renaming the kind would have left History saying
+    /// the old word with every test still passing. "Archived" is not a kind and
+    /// stays a literal.
     func repeatBlockedReason(trackers: [UUID: Tracker]) -> String? {
         let resolved = entries.compactMap { trackers[$0.trackerID] }
         guard !resolved.isEmpty else { return nil }
-        return resolved.allSatisfy { $0.kind == .measurement } ? "Measurement" : "Archived"
+        return resolved.allSatisfy { $0.kind == .measurement }
+            ? Tracker.Kind.measurement.label
+            : "Archived"
     }
 
     /// What makes two rows the same thing you ate: the names you typed, and

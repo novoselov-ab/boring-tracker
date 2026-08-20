@@ -124,7 +124,8 @@ extension EnvironmentValues {
 
 extension View {
 
-    /// Draw this whole list row going down when the button in it is pressed.
+    /// Draw this whole list row moving under the thumb when the button in it is
+    /// pressed — outward since item 37, and `AccentFillPress` owns which way.
     ///
     /// Applied to the cell — the `HStack`, or whatever the row's outermost view
     /// is — and paired with `.buttonStyle(.row)` on the button inside it.
@@ -145,7 +146,7 @@ extension View {
     }
 }
 
-/// A row going down under a thumb.
+/// A row moving under a thumb.
 ///
 /// **The whole cell, not a box behind the text** (docs/TODO.md item 32). Item
 /// 28 drew a `Color.rowPressed` wash behind the *button's label*, and that was

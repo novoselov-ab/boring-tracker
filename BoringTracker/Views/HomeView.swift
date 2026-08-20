@@ -562,9 +562,10 @@ private struct TrackerCard: View {
             }
             // `.row`, not `.plain`: the left half of this card is a control
             // whose whole press was `.plain` dimming its text 25%, which is not
-            // a press anyone noticed (docs/TODO.md item 28). It goes down the
-            // way the `+` beside it does now — same travel, same curve, in the
-            // row's own colour rather than the accent's (`RowButtonStyle`).
+            // a press anyone noticed (docs/TODO.md item 28). It moves the way
+            // the `+` beside it does now — same travel, same direction, same
+            // curve, in the row's own colour rather than the accent's
+            // (`RowButtonStyle`).
             .buttonStyle(.row)
             // Left on the `Button`, deliberately, though the label above had to
             // move inside. Moving this too was tried and reverted: the claim it
@@ -581,7 +582,7 @@ private struct TrackerCard: View {
             .accessibilityHint("Shows the history")
             logButton
         }
-        // The whole card goes down, not the half of it that is the button —
+        // The whole card takes the press, not the half of it that is the button —
         // see `rowPress()`, which is where the press is drawn and why it is
         // here rather than inside the style (docs/TODO.md item 32).
         .rowPress()
