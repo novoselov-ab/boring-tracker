@@ -396,7 +396,11 @@ back after release. Everything unmarked is ordinary work in this repository.
       would advertise iPad — which PRODUCT.md puts under "not while there's no
       iPhone app", and which pulls in iPad screenshots and an iPad review
       pass. Decide before the first release: dropping iPad afterwards strands
-      whoever installed it there.
+      whoever installed it there. The build is also portrait-only with no
+      `UIRequiresFullScreen`, and an iPad-family app that cannot do Split View
+      has historically been rejected for it; whether that still holds under
+      the iOS 26 SDK is **unverified**, so treat the cost of keeping the
+      default as more than screenshots until somebody checks.
 - [ ] **(human)** **Make the repository public.** It is private today
       (checked 2026-08-19). The support URL below is the repository, and rule
       8 of PHILOSOPHY.md — open source, anyone can fork and ship it — is one

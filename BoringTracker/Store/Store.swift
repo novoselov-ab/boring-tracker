@@ -1438,9 +1438,17 @@ final class Store {
         while true {
             let incoming = try StoreMigration.migrate(file.importBackupData())
             try validateImport(incoming)
-            // The filesystem swap installs these exact bytes as the live file.
-            // Keep memory exact too; compaction belongs to ordinary import,
-            // where the transformed document is subsequently saved.
+            // The filesystem swap installs the recovery file's bytes as the
+            // live document, so memory is kept exact too; compaction belongs to
+            // ordinary import, where the transformed document is subsequently
+            // saved.
+            //
+            // The two are the same document but not always the same bytes: a
+            // recovery file from an older schema is now migrated rather than
+            // refused, so memory holds the migrated version while the file
+            // stays at its own until the next ordinary save. That converges,
+            // because the step is deterministic — reading those same bytes at
+            // the next launch produces the document memory already has.
             let result = incoming
 
             let before = document

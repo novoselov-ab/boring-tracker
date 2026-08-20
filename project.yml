@@ -20,10 +20,11 @@ settings:
     MARKETING_VERSION: "1.0"
     # The build number, and deliberately nothing but a counter. It has to
     # increase for every upload App Store Connect accepts — including a second
-    # upload of the same MARKETING_VERSION after a rejection — and it is never
-    # shown to anyone, so encoding a date or a commit in it buys nothing and
-    # costs a decision each time. Add one. It resets for nobody and means
-    # nothing else.
+    # upload of the same MARKETING_VERSION after a rejection — so add one, every
+    # time. It is shown, beside the version on the About screen, and that is the
+    # whole of what it is for: telling two uploads of "1.0" apart in a bug
+    # report. Encoding a date or a commit count in it would say more than
+    # anybody needs and cost a decision each time.
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Automatic
     # No DEVELOPMENT_TEAM on purpose: the project must build and run in the

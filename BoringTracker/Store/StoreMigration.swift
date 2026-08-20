@@ -35,12 +35,21 @@ enum StoreMigration {
     /// step that could refuse would be a second, weaker copy of that check.
     ///
     /// **What a step must not do is put a value in that JSON cannot hold** — a
-    /// `Date`, a `UUID`, a `URL`, a Swift optional. `JSONSerialization` answers
-    /// that with an Objective-C exception rather than a Swift error, so it
-    /// cannot be caught and it takes the process down; on the launch path that
-    /// is a crash loop with no screen the user can reach to get out of it,
-    /// where every other bad document is merely quarantined. `chain` checks
-    /// each step's output for exactly this and refuses the document instead.
+    /// `Date`, a `UUID`, a `URL`, anything that is not a string, number, bool,
+    /// array or dictionary. `JSONSerialization` answers those with an
+    /// Objective-C exception rather than a Swift error, so it cannot be caught
+    /// and it takes the process down; on the launch path that is a crash loop
+    /// with no screen the user can reach to get out of it, where every other
+    /// bad document is merely quarantined. `chain` checks each step's output
+    /// for exactly this and refuses the document instead.
+    ///
+    /// One thing the check does not catch, measured rather than assumed: a
+    /// Swift `Optional` holding `nil`, boxed into `Any`, bridges to `NSNull`
+    /// and is perfectly valid JSON — `["group": maybeString as Any]` writes
+    /// `"group": null`. That decodes as a missing value, so the file is
+    /// quarantined at the next launch instead of migrated. Bad, but not the
+    /// same kind of bad, and no guard here can tell it from a step that meant
+    /// to write a null.
     ///
     /// `@Sendable` only so that the table below can be a `static let` under
     /// strict concurrency. A step captures nothing and is called synchronously

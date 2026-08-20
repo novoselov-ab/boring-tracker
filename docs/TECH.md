@@ -117,11 +117,14 @@ project's storage decision was made to avoid. `steps` is a dictionary keyed by
 the version each step *reads*, and the chain applies one per version, stamping
 `schemaVersion` between them so a step can trust what it is looking at. The one
 thing a step may not do is put a value in that JSON cannot hold — a `Date`, a
-`UUID`, a Swift optional — because `JSONSerialization` answers that with an
-Objective-C exception rather than a Swift error, which cannot be caught and
-would take the process down on the launch path. The chain checks each step's
-output and refuses the document instead, so a broken step lands in the same
-quarantine as a broken file.
+`UUID`, anything that is not a string, number, bool, array or dictionary —
+because `JSONSerialization` answers that with an Objective-C exception rather
+than a Swift error, which cannot be caught and would take the process down on
+the launch path. The chain checks each step's output and refuses the document
+instead, so a broken step lands in the same quarantine as a broken file. A nil
+Swift optional is the exception it cannot catch: boxed into `Any` it bridges to
+`NSNull` and is valid JSON, so it writes a `null` that the decoder then refuses
+one step later.
 
 **The refusal is still the load-bearing part**, and it is unchanged. A *newer*
 file is refused outright: it comes from a build that knows more, and no step
