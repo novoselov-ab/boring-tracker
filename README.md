@@ -1,5 +1,9 @@
 # Boring Tracker
 
+[[Can we put app icon from ios somewhere around here. On title or something. Whatever other repos do I dunno]]
+
+[[Overall I think we should look at other popular open source apps and check how their readme structured, for inspiration.]]
+
 [![Build and test](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml)
 
 iPhone app for tracking whatever you want — macros, habits, or any other data.
@@ -27,6 +31,8 @@ iOS app (e.g. the calculator). It is boring, but does its job, hence the name.
 > `tracker.png`. Replace this block with them.
 
 ## Features
+
+[[this must be much much shorter, just a quick list of features, most self evident for users to get idea, no need to explain]]
 
 This is the minimum set that makes the app useful. Nothing is here because
 another tracker has it.
@@ -72,6 +78,8 @@ good and still be wrong for this app, and most of the rules there exist to say
 no to something.
 
 ## Support
+
+[[I don't like wording "Dont do that!". Specially at the start, I want in a usual style "If you want to support develoepr, but then "plot twist" do this instead (I don't even give any way to donate to me anyway?)]]
 
 Do not donate to me. If the app is useful to you and you want to do something
 about it:
