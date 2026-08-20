@@ -54,19 +54,29 @@ plain file: if it's ever abandoned, existing installs keep working, data
 exports, and anyone can fork and ship it. That's worth stating in the README,
 because paid competitors can't say it.
 
-## The EU trader requirement
+## The EU trader requirement — declaring non-trader
 
 Under the Digital Services Act, Apple requires developers distributing in the
 EU to declare **trader status**. This is not optional — apps whose developers
-didn't declare have been removed from EU storefronts.
+didn't declare have been removed from EU storefronts. The answer here is
+"non-trader", not silence.
+
+**Decided: non-trader.** The name being public is fine; the address is not, and
+that distinction is exactly what the rule turns on.
 
 - Declaring **trader** means Apple publicly displays your name, address, phone
-  number, and email on the listing in EU storefronts. For an individual, that
+  number and email on the listing in EU storefronts. For an individual, that
   can mean a home address.
-- A genuinely free, non-commercial app with no ads and no purchases is a
-  reasonable **non-trader** case, which avoids publishing contact details.
-- Any monetization at all — paid app, in-app purchase, ads — makes you a
-  trader.
+- **Non-trader** publishes no contact details. A trader acts for purposes
+  relating to their trade, business, craft or profession, and this app has no
+  price, no in-app purchases, no ads, no subscription and collects no data to
+  monetize. There is no commercial purpose to point at.
+- **The seller name is a separate question with no choice in it.** An
+  individual account publishes under the developer's legal name whichever way
+  the trader question is answered. That part is accepted.
+- Any monetization at all — paid app, in-app purchase, ads, even a tip jar —
+  would likely make this a trade, and with it the address becomes public. One
+  more thing rule 1 in PHILOSOPHY.md is quietly buying.
 
 **This policy has shifted more than once since it landed, so verify it at
 enrollment rather than trusting this page.** If you do end up classed as a
@@ -376,12 +386,11 @@ back after release. Everything unmarked is ordinary work in this repository.
 - [ ] **(human)** **Accept the agreements App Store Connect asks for.** A free
       app with no purchases should need no tax or banking details, but which
       agreements a free app must accept is **unverified** here.
-- [ ] **(human)** **Settle the EU trader declaration.** Not optional — see
-      *The EU trader requirement*. Non-trader is the reasonable case for a
-      genuinely free, non-commercial app with no ads and no purchases;
-      declaring trader publishes name, address, phone and email on EU
-      listings. That page says the policy has shifted more than once, so
-      verify it at enrollment rather than trusting it.
+- [ ] **(human)** **Answer the EU trader declaration: non-trader.** Decided —
+      see *The EU trader requirement*, which says why a free app with no ads
+      and no purchases isn't a trade, and why the seller name is public
+      regardless. Still needs your hand at enrollment, and the policy has
+      shifted more than once, so read what Apple actually asks on the day.
 - [ ] **(human)** **Claim the name.** `Boring Tracker`, unclaimed as of the
       August 2026 check in *Naming and the competitive landscape*, and claimed
       first-come. Re-check before getting attached to it. Trademarks were
