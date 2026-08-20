@@ -11,7 +11,19 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    MARKETING_VERSION: "0.1.0"
+    # The version people see, and the one App Store Connect claims. 1.0 rather
+    # than 0.1.0 for the first release: the store has no prerelease channel, so
+    # a 0.x on the listing tells everyone who reads it that the developer does
+    # not consider the app finished — and this one is finished in the only sense
+    # this project recognises, which is that it does what PRODUCT.md says and
+    # nothing else. docs/TODO.md already calls the freeze "v1".
+    MARKETING_VERSION: "1.0"
+    # The build number, and deliberately nothing but a counter. It has to
+    # increase for every upload App Store Connect accepts — including a second
+    # upload of the same MARKETING_VERSION after a rejection — and it is never
+    # shown to anyone, so encoding a date or a commit in it buys nothing and
+    # costs a decision each time. Add one. It resets for nobody and means
+    # nothing else.
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Automatic
     # No DEVELOPMENT_TEAM on purpose: the project must build and run in the
@@ -57,6 +69,12 @@ targets:
         # Home screen labels truncate around 12 characters, so the icon says
         # "Boring" while the App Store listing is "Boring Tracker".
         INFOPLIST_KEY_CFBundleDisplayName: Boring
+        # Export compliance, answered here so App Store Connect stops asking on
+        # every upload. The app uses no encryption of its own and makes no
+        # network connection at all (docs/PHILOSOPHY.md rule 4), so the answer
+        # is NO and stays NO. On the target rather than the project because the
+        # test bundle is not uploaded to anything. See docs/SHIPPING.md.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait

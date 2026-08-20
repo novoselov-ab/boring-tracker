@@ -44,7 +44,7 @@ struct AboutView: View {
 
     /// Read from the bundle rather than written here, so it cannot disagree
     /// with what was actually built. The build number is shown beside it
-    /// because a bug report naming only "0.1.0" cannot say which build.
+    /// because a bug report naming only "1.0" cannot say which build.
     static var version: String {
         let info = Bundle.main.infoDictionary
         let marketing = info?["CFBundleShortVersionString"] as? String ?? "—"
