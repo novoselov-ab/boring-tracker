@@ -12,8 +12,8 @@ common knowledge says *unverified* instead.
 
 ## Before you paste any of this
 
-- [ ] **Screenshots exist** at the size in *Assets* below. There are none in
-      the repository yet.
+- [x] **Screenshots exist** at the size in *Assets* below — five of them, in
+      `docs/screenshots/`, captured 2026-08-20.
 - [ ] **Re-check the name is still unclaimed.** `Boring Tracker` was free in
       the August 2026 check in SHIPPING.md, and names are first-come.
 
@@ -222,7 +222,9 @@ takes the icon from the uploaded build, so there is nothing to attach by hand.
 
 ### Screenshots
 
-**None exist yet.** This is the gap between here and a submission.
+Five, in `docs/screenshots/`: `home.png`, `log.png`, `again.png`,
+`history.png`, `graph.png`. Upload them in that order — it is the order a
+stranger should meet the app in, and the first one is the one most people see.
 
 Required set, **verified** on 2026-08-20 against Apple's *Screenshot
 specifications* page in the App Store Connect help:
@@ -252,8 +254,15 @@ xcrun simctl io booted screenshot home.png
 sips -g pixelWidth -g pixelHeight home.png   # expect 1320 x 2868
 ```
 
-Four screens are worth showing, and they are also what answers *Guideline 4.2*
-by showing the functionality that exists: **home** with several trackers,
-**the log sheet** with the number pad up, **history**, and **a tracker's graph**.
-Put them in `docs/screenshots/` as `home.png`, `log.png`, `history.png` and
-`tracker.png` — the README links that path and currently carries a placeholder.
+What they show, and it is also what answers *Guideline 4.2* by showing the
+functionality that exists: **home** with eight trackers covering all three
+kinds, **the log sheet** with the number pad up, **log again**, **history**,
+and **a weight graph** over a year. The README shows the same five files, so
+there is one set to keep current rather than two.
+
+Captured 2026-08-20 on the iPhone 17 Pro Max simulator, dark appearance set on
+the device with the app left on its own System setting. All five measured at
+**1320 × 2868 with no alpha channel** — `simctl io screenshot` writes an alpha
+channel, so each was re-rendered through an opaque context and checked with
+`sips` per file. The data in them is invented: eight trackers and 1,967 entries
+over 151 days, written straight into `store.json` in the simulator's container.

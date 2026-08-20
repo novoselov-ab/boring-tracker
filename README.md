@@ -33,9 +33,17 @@ and it is not on the App Store yet.
 
 ## Screenshots
 
-> **Placeholder — the screenshots do not exist yet.** They go here, at
-> `docs/screenshots/`, as `home.png`, `log.png`, `history.png` and
-> `tracker.png`. Replace this block with them.
+<p align="center">
+  <img src="docs/screenshots/home.png" width="150" alt="Home, with daily totals, measurements and two last-time trackers">
+  <img src="docs/screenshots/log.png" width="150" alt="The log sheet, with the number pad already up">
+  <img src="docs/screenshots/again.png" width="150" alt="Log again: anything logged before, repeated with one tap">
+  <img src="docs/screenshots/history.png" width="150" alt="History, grouped by day and searchable by name">
+  <img src="docs/screenshots/graph.png" width="150" alt="A weight graph over a year, with a moving average">
+</p>
+
+<p align="center">
+  <sub>Home · the log sheet · log again · history · a graph</sub>
+</p>
 
 ## Features
 
