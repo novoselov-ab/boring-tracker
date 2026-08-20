@@ -210,16 +210,24 @@ each need an answer for a case only one kind can produce, and every one of them
 a place to get it wrong later. A stored 0 is a value the arithmetic already
 handles: it adds nothing to any sum. The totals index does hold these entries —
 it is keyed by tracker and day and takes every entry, without asking the kind —
-so a `lastTime` day occupies a key there worth 0. Nothing reads that key, since
-only a daily-total card and its graph ask for a total.
+so a `lastTime` day occupies a key there worth 0. Nothing reads that key: the
+three callers that ask for a total are a home card, its graph and the day
+headings on a tracker's own screen, and each of them is gated on the kind.
 
-**The 0 is written in one place and drawn in none.** `Store.logNow` is the only
+**The 0 is written in one place and drawn in one.** `Store.logNow` is the only
 thing that writes it, and `Tracker.entryText` is the only thing any screen asks
 for an entry's value as text — it answers "Logged" for this kind, so History,
 tracker detail and anything added later cannot print the zero by forgetting to
-ask. **If a 0 ever appears on screen for a `lastTime` tracker, that is a bug**,
+ask. **If a 0 appears on screen beside a `lastTime` tracker, that is a bug**,
 not a display choice, and the place to fix it is whichever call site went to
 `format` instead.
+
+The one place it does appear is a row whose tracker has been **deleted with its
+history kept**, which History draws as "Deleted tracker: 0". That is honest
+rather than broken: the kind lived on the tracker, so once the tracker is gone
+nothing knows this entry ever had no number, and the stored value is the only
+true thing left to print. Fixing it would mean writing the kind onto every
+entry — a field on the record for one row nobody will read.
 
 The cost of the choice is that the file and the CSV both carry a `0.0` that
 means nothing, and a spreadsheet summing the `value` column across every kind

@@ -128,17 +128,24 @@ struct LastTimeTests {
         #expect(first?.id != second?.id)
     }
 
-    @Test("The zero adds nothing to a total")
+    @Test("The zero adds nothing to a total, and the index takes it all the same")
     func zeroAddsNothingToATotal() {
-        // The totals index takes every entry without asking the kind, so this one
-        // is in there — worth 0, which is what makes the shared `Entry.value`
-        // affordable. Nothing reads that key: only a daily-total card asks.
+        // Both halves, because the first alone cannot tell "in the index, worth 0"
+        // from "not in the index": `total(for:on:)` answers 0 either way, so a
+        // later filter by kind would leave this test green and docs/TECH.md wrong
+        // again. The second entry is the discriminator — a value that reaches the
+        // total proves the index is not asking the kind. Only a hand-edited file
+        // puts a number on this tracker; the app writes 0 and reads it back
+        // through `entryText`, never through a sum.
         let tyres = Tracker(name: "Tyres", kind: .lastTime)
         let store = makeStore(StoreDocument(trackers: [tyres]), now: date(2026, 3, 14, 9))
         store.add(Entry(trackerID: tyres.id, value: 0, date: date(2026, 3, 14, 9)))
 
         #expect(store.total(for: tyres.id, on: day(2026, 3, 14)) == 0)
         #expect(store.latestEntry(for: tyres.id)?.value == 0)
+
+        store.add(Entry(trackerID: tyres.id, value: 5, date: date(2026, 3, 14, 11)))
+        #expect(store.total(for: tyres.id, on: day(2026, 3, 14)) == 5)
     }
 
     // MARK: - What the screens read
