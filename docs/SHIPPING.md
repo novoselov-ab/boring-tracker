@@ -413,16 +413,23 @@ back after release. Everything unmarked is ordinary work in this repository.
       `CURRENT_PROJECT_VERSION` is a bare counter: **add one for every upload
       App Store Connect accepts**, including a re-upload of the same version
       after a rejection.
-- [ ] **(human)** **Decide whether this is an iPhone app or a universal one.**
-      `TARGETED_DEVICE_FAMILY` is XcodeGen's default `"1,2"`, so the listing
-      would advertise iPad — which PRODUCT.md puts under "not while there's no
-      iPhone app", and which pulls in iPad screenshots and an iPad review
-      pass. Decide before the first release: dropping iPad afterwards strands
-      whoever installed it there. The build is also portrait-only with no
-      `UIRequiresFullScreen`, and an iPad-family app that cannot do Split View
-      has historically been rejected for it; whether that still holds under
-      the iOS 26 SDK is **unverified**, so treat the cost of keeping the
-      default as more than screenshots until somebody checks.
+- [x] **(human)** **Decide whether this is an iPhone app or a universal one.**
+      **iPhone only**, decided 2026-08-20. `TARGETED_DEVICE_FAMILY` is now
+      `"1"` on the app target in `project.yml`, set explicitly rather than left
+      to XcodeGen's `"1,2"` default, and it reads back as `1` in both the Debug
+      and Release configurations of the generated project. The test bundle
+      keeps the default and does not matter — it is never uploaded.
+
+      What that buys: one screenshot set instead of two, no iPad review pass,
+      and no need to answer the Split View question. The build is portrait-only
+      with no `UIRequiresFullScreen`, and an iPad-family app that cannot do
+      Split View has historically been rejected for it; whether that still
+      holds under the iOS 26 SDK stayed **unverified**, and dropping iPad is
+      what makes it moot rather than a risk to carry. PRODUCT.md put iPad under
+      "not while there's no iPhone app" anyway. Adding iPad later is an
+      ordinary update; removing it after release would have stranded whoever
+      installed it there, which is why this had to be settled before the first
+      submission and not after.
 - [x] **Make the repository public.** Done — it is public as of 2026-08-19,
       under the MIT license `LICENSE` carries. The support URL below is the
       repository, and rule 8 of PHILOSOPHY.md — open source, anyone can fork

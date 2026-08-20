@@ -80,6 +80,12 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        # iPhone only. XcodeGen's default is "1,2", which would advertise the
+        # listing as an iPad app and pull in a second screenshot set, an iPad
+        # review pass, and the Split View question an app this portrait-only
+        # would rather not answer. Adding iPad later is an ordinary update;
+        # removing it after release strands whoever installed it there.
+        TARGETED_DEVICE_FAMILY: "1"
         # Scoped to the simulator only. Unconditional NO also blocks device
         # builds, which must be signed; the simulator needs no signature, so
         # keeping it off there preserves the no-account clone-and-run path.
