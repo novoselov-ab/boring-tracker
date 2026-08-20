@@ -292,7 +292,8 @@ struct LogSheet: View {
 /// The Log button's write, **once per presentation**. `dismiss()` starts an
 /// animated dismissal and the sheet stays laid out and hit-testable while it
 /// slides away, so a second tap in that window writes a second copy of a log
-/// already on its way out — `RepeatView.log` guards its row the same way.
+/// already on its way out — `RepeatView.log` guards one presentation the same
+/// way.
 ///
 /// A flag rather than a time window: one presentation logs once, so there is no
 /// interval to choose. At file scope because `@State` exists only inside a
