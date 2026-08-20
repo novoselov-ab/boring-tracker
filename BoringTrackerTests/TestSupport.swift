@@ -71,7 +71,9 @@ extension StoreDocument {
                     id: id,
                     name: "T\(Int.random(in: 0...9, using: &random))",
                     unit: ["kcal", "g", ""].randomElement(using: &random)!,
-                    kind: Bool.random(using: &random) ? .dailyTotal : .measurement,
+                    // Every kind, so the conflict space the merge is fuzzed over
+                    // includes the one whose entries carry no number.
+                    kind: Tracker.Kind.allCases.randomElement(using: &random)!,
                     // Not the position in the shared pool: that gave every
                     // document the same index for the same id, so two of them
                     // could never disagree about where a tracker sits and the
