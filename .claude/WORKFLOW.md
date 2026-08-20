@@ -1,0 +1,293 @@
+# Workflow
+
+How each item in [TODO.md](../docs/TODO.md) gets built. One item at a time,
+finished properly, before the next one starts.
+
+This is about how the work gets done with agents, not about the app. It lives
+here rather than in `docs/` deliberately — `docs/` is the project, and someone
+reading it to understand or fork Boring Tracker should not have to wade through
+process.
+
+## The loop
+
+For every TODO step:
+
+1. **Implement**, with tests for anything where a silent bug costs data or
+   trust — see the testing section of [TECH.md](../docs/TECH.md).
+2. **Run the tests.** They pass before anything else happens.
+3. **Review, in a fresh session.** Not the session that wrote the code.
+4. **Fix what's worth fixing** (see below).
+5. **Re-run the tests.**
+6. **Review again**, until a round turns up nothing worth fixing.
+7. **Push**, and tick the item off in TODO.md.
+
+### Commit messages carry the reasoning
+
+The subject line says what changed; **the body says why, and the body is the
+point.** Several decisions in this project have been recovered from commit
+messages months after the code stopped explaining itself — what was tried and
+rejected, what a number was measured against, which alternative looked better
+and wasn't.
+
+A subject line with no body is not a finished commit here, however tidy the
+diff. And never claim a measurement, a tool or a test run that did not happen:
+see "Always check, not just read" below.
+
+### Every measured claim is a liability
+
+Commit bodies here carry the reasoning, and that has been worth it. But a
+sentence asserting a measurement is a promise someone has to check, and the
+evidence is now clear about the cost: across this project, **seven claims did
+not survive being checked** — an invented test target, a screenshot of the
+wrong app, a bisection whose minimal case never reproduced, a 14ms figure that
+measured 4–6, four numbers in one document, a chevron credited to the wrong
+modifier, and a computed answer that was wrong in the case it called
+impossible. One item needed five review rounds, and the loop kept converging on
+claims rather than on code.
+
+So: **write fewer measured claims, and only ones you actually measured.** State
+the number you took, say how, and leave the rest as ordinary prose. "This is
+faster" needs no defence; "this is 41ms" does. Where a claim matters but you
+could not verify it, say *unverified* — that is honest and costs nobody a
+round.
+
+The lever on this cost is writing fewer of them, not reviewing harder.
+
+### The commit body is the record — the source is not
+
+The rule above is about **commit messages**. It has leaked into source before,
+and the result was measured on 2026-08-19: **5,481 of 9,684 non-blank lines in
+`BoringTracker/` were comments — 56.6%**, one file at 82.5%. Nothing asked for
+that. It came from briefs saying "say why" without saying where.
+
+Where is: the commit body, `docs/`, and the review report. Not the source.
+
+A comment in this repo earns its line only if it answers a **why** the code
+cannot: a measured number and where it came from, an alternative that was
+tried and failed, a platform behaviour being worked around, a constraint that
+is invisible locally. Everything else — restating the next line, narrating
+structure, `// MARK`-style ceremony, "we used to" — is cost with no reader.
+
+The cost is not aesthetic. Two sessions have already been spent repairing
+comments that had gone false while the code moved on, and one of them nearly
+shipped a wrong contrast number that a comment still asserted. **Prose in
+source is not free: it has to be kept true, and at volume it cannot be.** A
+fact worth keeping is worth putting somewhere it will be re-read — a doc — not
+somewhere it will be scrolled past.
+
+### A commit that decides is not a commit that does
+
+Say which one it is in the subject line. "Make teal a fill colour everywhere"
+reads as the change; if the diff only adds a paragraph to `docs/TODO.md`, the
+subject should say **Decide**, **Note** or **Record**. Two commits on this repo
+got that wrong and a later session had to point out that no Swift had moved.
+
+History is read to find out when something happened. A decision and its
+implementation are different events, often days apart, and the subject line is
+what tells them apart at a glance.
+
+### Pushing is pre-authorised — do not ask
+
+Committing and pushing to `main` is part of finishing a step, not a separate
+decision to bring back to the user. **Do not stop to ask for permission to
+push.** Push when the tests pass and the review has converged, then report what
+you did.
+
+This is a solo repo with no collaborators, everything lands on `main`, and
+anything wrong is recoverable from history. Asking each time costs a round trip
+and buys nothing.
+
+The repo is public as of 2026-08-19, which changes one thing and not this one:
+the suite runs on every push and the README carries its badge, so **a red
+`main` is now visible to anyone who looks**. Push freely, but push green —
+that is the same rule the loop above already states, with a witness.
+
+Two things still stop and ask, and they are not this: destructive git that
+rewrites or discards work (`reset --hard`, `clean -fd`, force pushes,
+history rewrites), and anything outward-facing beyond pushing to this repo.
+
+### Why the review is a separate session
+
+An author reviewing their own work re-reads what they meant, not what they
+wrote. A session with fresh context reads the diff cold, the way a stranger
+on GitHub would, and that is the entire value. Reviewing in-place is faster
+and reliably worse.
+
+```
+/code-review high
+```
+
+**Always `high`, never `ultra`.** `high` gives broad coverage and will raise
+things it isn't certain about, which is what this loop wants.
+
+Add `--fix` to apply findings directly to the working tree, but read them
+first: applying everything blindly is how a review loop starts making the code
+worse.
+
+## What is worth fixing
+
+The loop needs a stopping rule or it ping-pongs on taste forever.
+
+**Always fix**
+
+- Correctness bugs, and anything that can lose, corrupt or silently alter
+  stored data.
+- Violations of the rules in [PHILOSOPHY.md](../docs/PHILOSOPHY.md): a new
+  dependency, a tap added to the common path, an animation you have to wait
+  for, anything that collects data.
+- Failing or missing tests on a data-critical path — day boundaries,
+  aggregation, merge, export/import round trips.
+
+**Usually fix**
+
+- Simplifications that *delete* code, especially a concept the app doesn't
+  need.
+- Performance on the common path — launch, opening the log sheet, saving.
+
+**Always check, not just read**
+
+A claimed measurement or a cited tool is a fact, and facts get verified. Item 5
+recorded a correct timing credited to "the same XCUI tap" — in a repo that has
+never had a UI test target. The number was right and its provenance was
+invented, which is worse than no number, because it survives scrutiny it never
+earned.
+
+So when a commit or a doc says something was measured, reproduce it; when it
+names a tool, confirm the tool exists here. This is the failure a code review
+is structurally weakest against, since nothing in the diff looks wrong.
+
+**Do not fix**
+
+- Style preferences and naming taste.
+- Speculative generality: abstractions for a second case that doesn't exist.
+- "Best practice" cited without a concrete failure it would prevent. This app
+  has one criterion pair — performance and simplicity — and neither is a
+  synonym for convention.
+
+**Stop** when a review round produces nothing in the first two categories. If
+three rounds haven't converged, that isn't a review problem — it's a design
+problem, and it should come back to the user rather than being polished
+further.
+
+## Sessions
+
+Each step runs in its own agterm session with a written brief, so context
+stays scoped and the work is inspectable. A brief says what to build, what is
+explicitly out of scope, how to verify, and that pushing needs no permission.
+The out-of-scope list matters as much as the task: it is what stops one step
+quietly turning into three.
+
+Permission mode is **not inherited** — every spawned session is a fresh
+`claude` process — so it is passed explicitly:
+
+```sh
+agtermctl session new --cwd "$(git rev-parse --show-toplevel)" \
+  --name "<step>" --after "$AGTERM_SESSION_ID" \
+  --command 'zsh -lc "claude --permission-mode auto '\''Read <brief-path> and carry out the task it describes.'\''"'
+```
+
+The brief is passed **by path, not by value** — a long brief inlined into a
+nested shell quote is where the quoting breaks.
+
+After spawning, check `agtermctl tree --json` and confirm the new session's
+`foreground` is `claude`. A malformed `--command` fails silently into a bare
+shell, and the session looks perfectly fine in the sidebar.
+
+### Leave the repo on `main`
+
+A session that creates a branch must return to `main` before it finishes, even
+if its work is stuck. One left the repo on a proof branch after its push was
+refused, and the next two sessions — and I — spent a while reading a history
+that looked wrong because we were not standing where we thought we were.
+
+If a branch has to survive, say so in the report and switch back anyway. The
+branch keeps.
+
+### Check the screen is unlocked before planning to drive the UI
+
+A locked Mac takes the accessibility tree and synthesized clicks with it, so
+anything needing a touch driver becomes impossible — and it fails *late*, after
+the work is built, not when it is planned. Pressed states have gone unverified
+three separate times for exactly this reason.
+
+Check first:
+
+```sh
+ioreg -n Root -d1 -a | grep -q CGSSessionScreenIsLocked && echo locked || echo unlocked
+```
+
+The key is simply absent when unlocked. If it says `locked`, **say so at the
+start** and plan around it — screenshots through a launch-argument probe, the
+store read directly, reasoning stated as reasoning. Do not build something whose
+only verification is a tap you cannot perform, then report it as unverified at
+the end.
+
+It is the *lock* that matters, not the display sleeping. `caffeinate -dimsu`
+keeps the machine awake; the lock itself is a Settings choice.
+
+### Spawning a session: `--command` is argv, not a shell line
+
+`agtermctl session new --command` execs argv directly. It does **not** go
+through a shell, so quotes in it are never interpreted. This:
+
+```sh
+--command "claude --permission-mode auto 'Read brief.md and do it.'"
+```
+
+hands `claude` the arguments `'Read`, `brief.md`, `and`, `do`, `it.'` — it
+errors, exits, and **the session closes instantly**, leaving nothing in the
+sidebar. Four sessions were spawned this way on 2026-08-19 and all four
+vanished; `session new` had already printed four ids, so the failure looked
+like success.
+
+Wrap it:
+
+```sh
+agtermctl session new --no-select --wait --name work \
+  --cwd /Users/ananas/dev/whatever-tracker \
+  --command "zsh -lc 'claude --permission-mode auto \"Read brief.md and do it.\"'"
+```
+
+- **`zsh -lc`** gives a real shell, and a login shell fixes PATH — the GUI PATH
+  is not the terminal's.
+- **`--wait`** holds a failed session open with its error on screen instead of
+  closing it. That is the difference between diagnosing this in a minute and
+  not noticing at all.
+
+**A returned session id is not proof it is running.** Check `tree --json` and
+confirm `foreground` shows your program with the brief as a *single*
+argument.
+
+### Talking to a running session
+
+`agtermctl session type` **types, it does not submit.** A payload containing
+newlines does not get sent at all — it sits in the input unsubmitted, and the
+session carries on with whatever it was doing while you assume it was
+redirected. That has already cost one wrong-direction session here.
+
+Send the message as **one line, with no trailing newline**, then send a lone
+newline as a **separate call**:
+
+```sh
+agtermctl session type --target "$ID" 'one line, no newline at the end'
+agtermctl session type --target "$ID" '
+'
+```
+
+Then confirm: the footer reads *"Press up to edit queued messages"* if it
+landed, and an empty input with the session still working means it did not.
+Grep the session text for a distinctive word from the message before trusting
+that a redirect arrived.
+
+**Pass `--select`, or the text lands in a session you cannot submit to.** Every
+call above needs it. Without it the payload reaches the input buffer of a
+session whose surface is not the active one and simply sits there — the grep
+for your distinctive word *succeeds*, because the text is on screen, so the
+confirmation above passes while nothing has been sent. A following newline does
+nothing either, by `session type` or by `--stdin`. Four calls went into
+convincing one session to read a brief before `--select` was the answer.
+
+`.claude/settings.local.json` carries the allowlist for what these sessions
+routinely run — xcodegen, xcodebuild, the git subcommands, agtermctl, read-only
+inspection. It is machine-local and gitignored. Destructive git (`reset --hard`,
+`clean -fd`) is deliberately absent, so it still stops and asks.

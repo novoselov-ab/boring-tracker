@@ -30,7 +30,6 @@ Config/Local.xcconfig
 # Task briefs handed to agent sessions. Per-task scratch, not project history —
 # the reasoning that matters ends up in the commit message instead.
 .claude/briefs/
-.claude/WORKFLOW.md
 
 # Measurement artefacts. Screenshots, recordings and captures are how sessions
 # verify UI work, and they keep wanting to land next to the document that cites
