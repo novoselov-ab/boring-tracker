@@ -53,6 +53,7 @@ struct LogSheet: View {
     @State private var typed: [UUID: String] = [:]
     @State private var date = Date()
     @State private var name = ""
+    @State private var wrote = false
     @FocusState private var focused: Field?
 
     init(target: Target) {
@@ -278,15 +279,37 @@ struct LogSheet: View {
     }
 
     private func log() {
-        let amounts = amounts
-        guard !amounts.isEmpty else { return }
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        store.add(values: amounts, at: date, name: trimmed.isEmpty ? nil : trimmed)
+        guard logOnce(&wrote, values: amounts, at: date,
+                      name: trimmed.isEmpty ? nil : trimmed, into: store) else { return }
         // Written on log rather than on open, so dismissing a group you only
         // went to look at doesn't move where + lands tomorrow.
         lastGroup = group.rawValue
         dismiss()
     }
+}
+
+/// The Log button's write, **once per presentation**. `dismiss()` starts an
+/// animated dismissal and the sheet stays laid out and hit-testable while it
+/// slides away, so a second tap in that window writes a second copy of a log
+/// already on its way out — `RepeatView.log` guards its row the same way.
+///
+/// A flag rather than a time window: one presentation logs once, so there is no
+/// interval to choose. At file scope because `@State` exists only inside a
+/// rendered view, and this has to be testable.
+@MainActor
+@discardableResult
+func logOnce(
+    _ wrote: inout Bool,
+    values: [UUID: Double],
+    at date: Date,
+    name: String?,
+    into store: Store
+) -> Bool {
+    guard !wrote, !values.isEmpty else { return false }
+    wrote = true
+    store.add(values: values, at: date, name: name)
+    return true
 }
 
 #Preview {

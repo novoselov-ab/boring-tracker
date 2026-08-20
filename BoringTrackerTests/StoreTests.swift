@@ -913,6 +913,45 @@ struct StoreTests {
         #expect(store.latestEntry(for: weight.id)?.value == 78.4)
     }
 
+    // MARK: - The log sheet's action (docs/TODO.md item 17)
+
+    /// `logOnce` is what the sheet's Log button calls, and the flag it takes is
+    /// the sheet's `@State` — which only a rendered view can hold, so the double
+    /// tap is fired here instead of at a button.
+    @Test("A second tap on one presentation of the log sheet writes nothing")
+    func aSecondTapOnOnePresentationWritesNothing() {
+        let calories = Tracker(name: "Calories")
+        let store = makeStore(StoreDocument(trackers: [calories]))
+        let when = date(2026, 3, 14, 8)
+        var wrote = false
+
+        #expect(logOnce(&wrote, values: [calories.id: 600], at: when, name: "porridge",
+                        into: store))
+        #expect(logOnce(&wrote, values: [calories.id: 600], at: when, name: "porridge",
+                        into: store) == false)
+
+        #expect(store.entries.count == 1)
+        #expect(store.total(for: calories.id, on: DayKey(year: 2026, month: 3, day: 14)) == 600)
+    }
+
+    /// The flag belongs to one trip through the sheet, so opening it again logs
+    /// again. A guard that outlived the presentation would break the app rather
+    /// than the double tap.
+    @Test("The next presentation logs again")
+    func aFreshPresentationLogsAgain() {
+        let calories = Tracker(name: "Calories")
+        let store = makeStore(StoreDocument(trackers: [calories]))
+        let when = date(2026, 3, 14, 8)
+        var first = false
+        var second = false
+
+        logOnce(&first, values: [calories.id: 600], at: when, name: nil, into: store)
+        logOnce(&second, values: [calories.id: 250], at: when, name: nil, into: store)
+
+        #expect(store.entries.count == 2)
+        #expect(store.total(for: calories.id, on: DayKey(year: 2026, month: 3, day: 14)) == 850)
+    }
+
     // MARK: - Export and import
 
     @Test("Export then import into an empty store reproduces it exactly")
