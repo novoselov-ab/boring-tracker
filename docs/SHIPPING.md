@@ -382,7 +382,10 @@ back after release. Everything unmarked is ordinary work in this repository.
 
 - [ ] **(human)** **Enrol in the Apple Developer Program.** $99/year, as an
       **individual** — see *Enrolling*, which also covers why not an
-      organization and what a lapsed membership does.
+      organization and what a lapsed membership does. **Submitted 2026-08-20**
+      from the Apple Developer app on the phone, with the identity check; it
+      reads *Enrollment Pending*. Nothing below that needs an account can start
+      until Apple approves it.
 - [ ] **(human)** **Accept the agreements App Store Connect asks for.** A free
       app with no purchases should need no tax or banking details, but which
       agreements a free app must accept is **unverified** here.
