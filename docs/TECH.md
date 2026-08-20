@@ -98,6 +98,18 @@ serialization format *and* the mapping between them, forever, for no benefit.
   N+1, run at load, and a chain of them carries an older file up to the
   current version one step at a time. This is simpler than any framework's
   migration system and it's ours.
+- **Dates are ISO 8601 at whole seconds, and that is the format's constraint
+  rather than a preference.** Milliseconds were tried and rejected on
+  measurement: `Date.ISO8601FormatStyle` is not a fixed point at that
+  precision. `…:38.328Z` parses to a `Double` a hair below 38.328, which
+  formats back as `…:38.327Z`, so a document stopped equalling itself after a
+  save and a load. Whole seconds are exactly representable, so the file is
+  lossless — and `Date.stamp()` canonicalises at the point of creation, so an
+  in-memory timestamp can never be finer than the file and no merge decision
+  can flip after a round trip. Two rules downstream depend on it:
+  `StoreDocument.beats` breaks ties between records stamped in the same
+  *second*, and `Store.sameDocument` exists because two deletions inside one
+  second carry the identical timestamp.
 
 ### Migrating an older file
 
@@ -271,6 +283,17 @@ half the time, on nothing but array order.
 Whether a copy was actually kept is carried back in `ImportSummary` rather than
 assumed, so the completion alert cannot promise a safety net that a no-op import
 never created.
+
+**A failed import is not evidence about the file.** The same call fails when a
+*write* fails — a full disk is the realistic one — and only a `DecodingError`
+says anything about what was handed in. Reporting every error as a damaged
+export told a phone that had run out of storage that its backup was corrupt,
+and sent its owner off to re-export a file that was fine.
+
+**"Nothing was changed" is true of import, restore and clear alike**, and it is
+true structurally rather than by three careful wordings: all three are one
+`Store.applyIncoming`, and every way it can fail throws before memory or the
+live file has moved.
 
 The price of the rest, stated: a merge that *does* change something advances the
 slot, so it can still overwrite a pre-replace copy. That is a worse trade only
@@ -520,6 +543,34 @@ There is no `Pin`. Saved presets were replaced by searching your own named
 entries, which is a feature delivered by removing a type rather than adding
 one.
 
+### The history row, and the three rules it carries
+
+`HistoryItem` is derived, not stored — a batch's surviving members, or one
+ordinary entry — and three of its rules are invisible from the code that
+implements them.
+
+**`names` is the single place that decides what a batch is called.** Members
+can disagree, because tracker detail edits one entry at a time. While the row
+and `BatchEditor` each had their own rule for picking one, the editor opened
+blank on a batch the row showed a name for, and saving wrote that blank over
+every member.
+
+**`keeping(_:)` is asked twice per row on the Log again path and the two asks
+must stay separate** — once to decide membership, once to cut the row down to
+what a tap will write. Merging them into one predicate decides membership on
+what a tap writes, which empties the list the moment anything is archived; that
+is why membership keeps archived members and content does not, and why the
+call returns `self` unallocated when everything is kept.
+
+**`RepeatKey` compares values as stored and names exactly.** As *stored*,
+because `decimals` is editable: keying on the formatted string would make the
+key depend on a setting, and cost a `Tracker.format` per value over thousands
+of rows. The accepted price is that dropping a tracker to zero decimals can
+leave two rows both reading "rice / 100 kcal". *Exactly*, unlike `matches`,
+which folds case and diacritics: search decides what you are shown, the key
+decides what is hidden behind a row, and a normalisation that swallows the
+wrong two rows is invisible from the screen.
+
 ## The store object
 
 One `@Observable @MainActor final class Store` holds the arrays and is the
@@ -608,6 +659,20 @@ a real device, and that is TODO item 17.
   entries in Debug and 41.4ms in Release**, counted the same way — one build
   when the sheet opens, and none for anything else. Opening that sheet blocks
   the main thread for 216ms, most of which is the list rather than the walk.
+
+  What that walk is made of, for anyone tempted to take a piece of it out.
+  These were taken while the screen was built, lived in the source comments,
+  and were moved here by the 2026-08-19 comment pass without being re-measured:
+  Debug, iPhone 17 simulator, five to ten runs a column, and where two variants
+  are compared they alternate in one binary so a warm-up lands on both.
+  **Deduplicating rows costs about 5ms over 7,644 entries and 8ms over
+  15,294**, and **projecting each row onto what a tap can actually write costs
+  about 1ms and 2ms** — at the smaller size that second figure is inside the
+  noise, at the larger one it is consistent. The worst shape is the one where
+  nothing collapses at all: 15,294 entries that all differ cost 49.9–51.0ms
+  against 32.2–32.8 undeduplicated. Deduplicating makes the *keystroke*
+  cheaper rather than dearer — 0.08–0.16ms against 5.3 and 9.9 for the plain
+  list — because there are far fewer rows left to filter.
 
 ## Smaller decisions, settled
 
@@ -831,6 +896,52 @@ and not the pictures. Every ratio quoted in this subsection was recomputed from
 its hex value on 2026-08-19 and reproduces; the `L*` figures are recomputed too,
 and the ceiling's differs by 0.2 from the one the original pass recorded, which
 is a white-point difference and moves nothing.
+
+### The pressed and the disabled fill are the system's own arithmetic
+
+Two more colours are not chosen at all — the pressed fill and the disabled one
+are the system's own arithmetic, and both reproduce on paper. Every ratio and
+every composite below was recomputed on 2026-08-19 from the hex values and
+matches what was sampled, to the byte.
+
+**A `.plain` press composites the fill at 75% over what is behind it.**
+`#009888` at 75% over white is exactly `#40B2A6`, and `#00DAC3` at 75% over the
+card's `#1C1C1E` is exactly `#07AA9A` — both confirmed against screenshots of a
+real press. So a `.plain` accent control needs no pressed colour of its own; it
+darkens by 1.38–1.68 against rest, which is a press you can see.
+
+**`.borderedProminent` is the exception, and it is the reason `.accentPill`
+exists.** Pressed in dark mode, iOS draws the fill at 80% under a white wash —
+`#33E1CF`, which is 1.08:1 against its own rest colour and *lighter*, while
+every other accent fill on the same screen darkens. A press that goes the wrong
+way on the most-tapped control in the app is not a press, and the style is not
+something a tint can reach into.
+
+**The disabled fill is `.systemGray2`, and what sits on it has to flip with the
+appearance.** It draws `#AEAEB2` on History's light row and `#636366` on the
+dark one — 2.21:1 and 2.84:1 against those rows — with `Color.primary` on top at
+9.50:1 and 5.99:1. The `.quaternary` it replaced drew `#E8E8E8` at 1.23:1, which
+is a disc that is not there rather than a disc that is off, and the `.tertiary`
+glyph on top of that managed 1.32:1.
+
+**One fixed grey cannot serve every row an archived disc lands on**, and that is
+accepted rather than solved. The Log again sheet is a `.medium` detent whose
+inset-grouped rows are `#DBDBDD`, where the same disc measures 1.60:1 against
+the 1.8:1 this was aiming at. Nothing fixed clears 1.8 on both `#FFFFFF` and
+`#DBDBDD` short of `.systemGray`, which is 2.36 on the sheet but 3.26 on white —
+close enough to the enabled fill's 3.59 to be read as live. `.systemGray3` was
+ruled out arithmetically at 1.68:1 on white.
+
+**The press *scale* is derived, and writing it down again is a mistake this
+project has already made.** The travel is 2pt per end of the fill's longest
+edge, so the scale is a function of the size the fill laid out at. A table of
+six controls' scales lived in source, went stale the moment the bottom bar's
+arithmetic changed, and was still quoting a pill that no longer existed. What is
+worth keeping is the guard: while the press *shrank*, `1 - 2 * travel / longest`
+was zero at 4pt and negative below it, so a 3pt fill was mirrored through its
+own centre. Growing cannot invert anything, so the same constant now guards a
+milder rule — below it, a press at least doubles the fill.
+
 ### Sampling a colour off the screen
 
 Read the screenshot's own bytes. `NSBitmapImageRep.colorAt(x:y:)` does **not**
@@ -885,6 +996,21 @@ every body pass of the settings list, including during a reorder drag, and
 the write to a temporary file happen in its `FileRepresentation`, once a
 destination has been chosen.
 
+It is **one** `FileRepresentation`, typed `.data`, rather than one per format.
+The representation is static, so it cannot ask an instance which type it is, and
+declaring both would let a receiver asking for JSON take whichever was first and
+be handed a CSV.
+
+Two consequences of leaving by this door. **`ShareLink` has no error hook**:
+anything thrown while writing the temporary file is reported by the share sheet
+rather than by the app, so a full disk shows whatever iOS shows. Since `35a5fd0`
+removed the *Save to Files* route there is no way out of this app that reports
+an export failure in the app's own words — the remaining `show(_:action:)` calls
+are open, import, delete and restore. And **`SentTransferredFile` copies what it
+is handed** unless told otherwise, so deleting the share file once the sheet has
+taken it is safe; `tmp` is emptied by iOS only when storage runs short, which is
+not a schedule, and these are whole documents, hence the one-hour prune.
+
 ## `withAnimation` does not reach a list row's background
 
 The mark on the row a repeat just wrote fades out (TODO item 20), and the fade
@@ -906,6 +1032,83 @@ constant for the whole hold and then at background in the very next frame,
 against a smooth ~785ms decay once the modifier moved. Row *content* animates
 from an ambient transaction as usual; the background view a `List` installs
 behind the cell does not.
+
+## More SwiftUI that does not do what it says
+
+One place for the rest of them. Each cost at least a session, none of them log
+anything, and every one leaves a build that compiles and a screen that draws.
+
+**Modifiers written under `.onGeometryChange` are silently dropped.** Settings
+reads every row's frame for its drop target, and `.listRowInsets` or
+`.rowPress()` written *inside* the reader's builder never take: the row keeps
+the platform's 74pt inset, and the press scales the row without drawing its
+background wash. Two sessions lost an hour each to this, once for the insets and
+once for the press. `.swipeActions` is not one of these — checked rather than
+assumed. Both must be applied outside.
+
+**A `List`'s `frame(in: .global)` is already the safe area.** On an iPhone 17
+the proxy reports `(0, 116, 402, 724)` with `safeAreaInsets` of 116 top and 34
+bottom, so the frame is what is left *after* the insets, and adding
+`insets.top` back on counts it twice: the drop band moved to 232…806 and left
+the first row outside it, so letting go squarely on that row dropped the tracker
+below it.
+
+**A named coordinate space declared on a `List` is not reachable from inside its
+rows.** Each side silently falls back to a different default, which is how every
+drop landed on a row nobody dropped anything on. Both ends of a comparison have
+to read `.global`. `dropTarget` — a free function in `SettingsView.swift`, and
+SwiftUI-free and unit-tested for this reason — has been wrong twice this way,
+both times silently rewriting stored order and stamping it as a decision, and
+neither time did it show in a screenshot of the list at rest.
+
+**A `Button` hit-tests its label's drawn content unless it is given a
+`contentShape`.** A label that is two pieces of drawn content with a `Spacer`
+between them has a dead gap in the middle — most of a row's width. A row
+tappable in two narrow places is worse than one that plainly is not: a miss
+teaches you the tap failed rather than that you aimed wrong.
+
+**An `HStack` puts its spacing on both sides of a `Spacer`**, measured at 24pt
+where 8 was meant, so a row that wants one gap says `spacing: 0` plus
+`Spacer(minLength: 8)`.
+
+**`.pickerStyle(.segmented)` drops the picker's own label**, so the section
+needs a header or nothing on screen names the setting. It is also the one
+control `.tint(.primary)` does not spoil the way it spoils a `Toggle`: a
+segmented control's selection is a background, not a fill drawn in the tint.
+
+**`dismiss()` freezes the presentation's content.** A state change made on the
+same tap is never drawn — the sheet slides away for about 300ms still showing
+what it had before the tap. Held for 0ms and 50ms the mark still never appeared;
+at 500ms it did, which is a delay on the common path rather than a fix. Anything
+a sheet wants to say about what it just did has to be said by the screen it
+uncovers.
+
+**A `.searchable` condition that flips while the sheet is up blanks the sheet.**
+The Log again list fills its snapshot in `onAppear`, one pass after the first, so
+`!(items?.isEmpty ?? true)` took the field from absent to present underneath a
+presentation that was already up: the sheet came back with no title and no list,
+on every fixture and every text size. Asked as `!= true` the field is present
+from the first pass and never has to appear.
+
+**Focusing a field inside a transaction with animations disabled suppresses the
+keypad altogether.** The log sheet is presented without animation, so a single
+`await Task.yield()` before setting focus — letting that transaction finish — is
+what makes an instant presentation still raise the keyboard.
+
+**A `task` on a `NavigationStack`'s root content is cancelled by a push.**
+Tapping History during home's one-second confirmation left the flag set with
+nothing running to unset it, so coming back drew a checkmark for an old write.
+
+**`.plain`'s disabled opacity is about 0.502**, and replacing the button style
+takes the dimming with it silently: the Log again sheet's archived rows came
+back drawing the same `#000000` a live row draws. The replacement dims by 0.5,
+read off pixels rather than assumed — it draws `#6D6D6E` where the old build
+drew `#6D6D6E`, and `#969696` on the dark sheet's `#2C2C2C` row.
+
+**A caption that can wrap needs a non-breaking space before its `·`.** At AX5
+the settings caption takes two lines, and with an ordinary space "Daily total ·
+kcal" broke as `Daily total` / `· kcal` — a line starting with a dot. Bound to
+the word before it, the same caption breaks as `Daily total ·` / `kcal`.
 
 ## Testing
 
