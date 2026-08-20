@@ -49,8 +49,6 @@ struct TrackerEditor: View {
         .onAppear(perform: load)
     }
 
-    // MARK: - The fields
-
     @ViewBuilder
     private func fields(_ draft: Binding<Tracker>) -> some View {
         Section {
@@ -65,8 +63,8 @@ struct TrackerEditor: View {
 
         Section {
             Picker("Kind", selection: draft.kind) {
-                // The words are `Tracker.Kind.label`'s since item 37, because a
-                // settings row now says the same two underneath a name.
+                // `Tracker.Kind.label`, not literals: a settings row says the
+                // same two words underneath a tracker's name.
                 ForEach(Tracker.Kind.allCases, id: \.self) { kind in
                     Text(kind.label).tag(kind)
                 }
@@ -105,13 +103,9 @@ struct TrackerEditor: View {
         }
     }
 
-    /// When a daily total starts again, in this phone's terms.
-    ///
     /// **Not the word "midnight".** It was hard-coded here, and the day start
-    /// became settable — so the one screen that explains what a daily total
-    /// *is* went on promising a boundary the app had stopped using. Found by
-    /// looking at the editor rather than by reading the diff, which is the
-    /// point of looking.
+    /// became settable — so the one screen that explains what a daily total *is*
+    /// went on promising a boundary the app had stopped using.
     private var resetsAt: String {
         store.dayStartHour == DayStart.midnight
             ? "midnight"
@@ -211,8 +205,6 @@ struct TrackerEditor: View {
             }
         }
     }
-
-    // MARK: - State
 
     /// Edits go into a copy, so backing out with Cancel really does change
     /// nothing. Optional only because it is filled in `onAppear`.
