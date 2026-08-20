@@ -1745,7 +1745,7 @@ reachable. The travel stayed at 2pt and `9b21d82`'s guard kept its constant
 with a milder reason: below `2 * travel` a press at least doubles the control
 rather than turning it inside out. Judged by tapping fast, which is item 32's
 rule — three 40ms taps recorded frame by frame, and in all three the frame
-after the touch has the row's wash on and the disc already grown. `428ae66`
+after the touch has the row's wash on and the disc already grown. `f97b671`
 
 **A settings row says what tapping it would edit**, under the name, in the
 caption slot `TrackerRowName` has had since item 28 — `Daily total · kcal`,
@@ -1753,7 +1753,7 @@ caption slot `TrackerRowName` has had since item 28 — `Daily total · kcal`,
 caption, a chevron and a paragraph is three explanations of one gesture. Under
 the name rather than beside the chevron because a trailing value costs the
 name the width it has least of; the rows are 52.0pt before and after.
-`67b4adb`
+`f2d657a`
 
 **A two-line label no longer knocks the number off centre.** `StackingRow`'s
 side-by-side branch is `.center` rather than `.firstTextBaseline`: home's
@@ -1761,7 +1761,7 @@ number sat 5.83pt above the row's own centre and now sits 0.17pt off it, which
 is where a one-line row's number already was. All four screens took it
 together — a History row's time is level with the repeat disc now — rather
 than one screen taking a parameter. The cost is the baseline "Water" and
-"0 ml" used to share. `63cdb1e`
+"0 ml" used to share. `a9487bc`
 
 ## Noted, not scheduled
 
