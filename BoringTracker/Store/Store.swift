@@ -306,10 +306,10 @@ final class Store {
         dayKey(entry.date)
     }
 
-    /// Which day a moment falls in, for this store. **Every day derived inside
-    /// the store goes through here**, so the offset is applied once rather than
-    /// remembered at seven call sites — which is how one of them comes to
-    /// disagree with the totals index.
+    /// Which day a moment falls in, for this store. **Every day derived after the
+    /// store is built goes through here**, so the day-start offset is applied in one
+    /// place rather than remembered at each call site — which is how one of them
+    /// comes to disagree with the totals index.
     func dayKey(_ date: Date) -> DayKey {
         DayKey(date, calendar: calendar, dayStartHour: dayStartHour)
     }
