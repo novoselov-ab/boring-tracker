@@ -34,7 +34,10 @@ struct TrackerDetailView: View {
         // 12.0–13.0ms, at 29,320 entries.
         let days = days
         List {
-            if !days.isEmpty {
+            // No chart for a `lastTime` tracker: it has no numbers to plot, and
+            // the interval between one event and the next is a different idea
+            // that this kind deliberately does not have (docs/PRODUCT.md).
+            if !days.isEmpty, tracker.kind != .lastTime {
                 Section {
                     TrackerChart(tracker: tracker)
                 }
@@ -43,7 +46,9 @@ struct TrackerDetailView: View {
                 ContentUnavailableView(
                     "Nothing logged yet",
                     systemImage: "number",
-                    description: Text("Tap + to add the first \(tracker.name.lowercased()).")
+                    description: Text(tracker.kind == .lastTime
+                        ? "Tap + the first time you do it."
+                        : "Tap + to add the first \(tracker.name.lowercased()).")
                 )
                 .listRowBackground(Color.clear)
             }
@@ -73,10 +78,17 @@ struct TrackerDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Log", systemImage: "plus") {
-                    LogSheet.present(
-                        .init(group: LogGroup(of: tracker), tracker: trackerID),
-                        using: $logging
-                    )
+                    // One tap and no sheet for a `lastTime` tracker, the same
+                    // as its card's + — the two are the same action and must
+                    // not be two different amounts of work.
+                    if tracker.kind == .lastTime {
+                        store.logNow(tracker)
+                    } else {
+                        LogSheet.present(
+                            .init(group: LogGroup(of: tracker), tracker: trackerID),
+                            using: $logging
+                        )
+                    }
                 }
                 .navBarAccent()
             }
@@ -114,7 +126,7 @@ struct TrackerDetailView: View {
                 // navigation title has said it already.
                 LogRowLabel(
                     identity: entry.name,
-                    values: tracker.format(entry.value)
+                    values: tracker.entryText(entry.value)
                 )
             } trailing: {
                 Text(entry.date.formatted(date: .omitted, time: .shortened))

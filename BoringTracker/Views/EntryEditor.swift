@@ -20,15 +20,21 @@ struct EntryEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    LabeledContent(tracker?.name ?? "Value") {
-                        HStack(spacing: 6) {
-                            TextField("0", text: $typed)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .font(.title3.monospacedDigit())
-                                .focused($focused)
-                            if let unit = tracker?.unit, !unit.isEmpty {
-                                Text(unit).foregroundStyle(.secondary)
+                    // No value field for a `lastTime` entry: its date is the
+                    // whole record, so *when* is the thing there is to fix, and
+                    // a keypad here would be offering to edit the 0 that the
+                    // rest of the app works to keep off the screen.
+                    if takesAmount {
+                        LabeledContent(tracker?.name ?? "Value") {
+                            HStack(spacing: 6) {
+                                TextField("0", text: $typed)
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.trailing)
+                                    .font(.title3.monospacedDigit())
+                                    .focused($focused)
+                                if let unit = tracker?.unit, !unit.isEmpty {
+                                    Text(unit).foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
@@ -51,7 +57,7 @@ struct EntryEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save)
-                        .disabled(NumberInput.parse(typed) == nil)
+                        .disabled(takesAmount && NumberInput.parse(typed) == nil)
                         .navBarAccent()
                 }
             }
@@ -60,16 +66,23 @@ struct EntryEditor: View {
             typed = tracker?.editText(entry.value) ?? "\(entry.value)"
             date = entry.date
             name = entry.name ?? ""
-            focused = true
+            focused = takesAmount
         }
     }
 
     private var tracker: Tracker? { store.tracker(entry.trackerID) }
 
+    /// True where a tracker has been deleted, deliberately: the entry still
+    /// holds whatever number it was written with, and that is the one screen
+    /// left that can show it.
+    private var takesAmount: Bool { tracker?.kind != .lastTime }
+
     private func save() {
-        guard let value = NumberInput.parse(typed) else { return }
         var updated = entry
-        updated.value = value
+        if takesAmount {
+            guard let value = NumberInput.parse(typed) else { return }
+            updated.value = value
+        }
         updated.date = date.canonicalized
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         updated.name = trimmed.isEmpty ? nil : trimmed

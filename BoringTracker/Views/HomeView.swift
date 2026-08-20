@@ -173,9 +173,14 @@ struct HomeView: View {
     /// floating in the middle of 70pt of air beside a 50pt pill. Five
     /// alternatives were rendered and photographed and the user picked this one;
     /// the pill goes 292 to 312.
+    /// Gated on there being a group the keypad can open rather than on there
+    /// being trackers at all: a home screen of nothing but `lastTime` trackers
+    /// has both of these controls dead — no fields for the pill to show and
+    /// nothing repeatable behind the disc — so the bar goes away instead, and
+    /// each card's own + is the whole of logging.
     @ViewBuilder
     private var logBar: some View {
-        if !store.activeTrackers.isEmpty {
+        if store.groupToLog(preferring: lastGroup) != nil {
             HStack(spacing: 8) {
                 // Unlike a card's small +, this opens the last-used group
                 // rather than this row's.
@@ -222,6 +227,20 @@ struct HomeView: View {
             .frame(maxWidth: .infinity)
             .background(.bar)
         }
+    }
+
+    /// What a card's + does. For a `lastTime` tracker it is the entire
+    /// interaction: the tap writes the date and there is nothing to type, so a
+    /// sheet would be a keypad in front of a field that has to stay empty
+    /// (docs/PRODUCT.md). Every other kind opens this row's group.
+    private func log(_ tracker: Tracker) {
+        guard tracker.kind != .lastTime else {
+            store.logNow(tracker)
+            return
+        }
+        LogSheet.present(
+            .init(group: LogGroup(of: tracker), tracker: tracker.id), using: $logging
+        )
     }
 
     /// Straight into whatever you logged last, with the keypad up. No picker
@@ -275,12 +294,7 @@ struct HomeView: View {
                         TrackerCard(
                             tracker: tracker,
                             open: { path.append(.tracker(tracker.id)) },
-                            log: {
-                                LogSheet.present(
-                                    .init(group: LogGroup(of: tracker), tracker: tracker.id),
-                                    using: $logging
-                                )
-                            }
+                            log: { log(tracker) }
                         )
                     }
                 } header: {

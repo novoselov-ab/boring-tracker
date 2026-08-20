@@ -145,8 +145,11 @@ struct LogSheet: View {
         }
     }
 
+    /// The group's fields, which is everything in it that takes a number. A
+    /// `lastTime` tracker in a group is logged from its own card in one tap and
+    /// has nothing to type here, so it is not drawn — see `Store.amountTrackers`.
     private var trackers: [Tracker] {
-        store.trackers(in: group)
+        store.amountTrackers(in: group)
     }
 
     /// Deduplicated, because the walk steps by *value*: `@FocusState` has only
@@ -198,7 +201,7 @@ struct LogSheet: View {
     /// single time.
     @ViewBuilder
     private var title: some View {
-        let groups = store.logGroups
+        let groups = store.loggableGroups
         if groups.count > 1 {
             Menu {
                 Picker("Log", selection: $group) {

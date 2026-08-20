@@ -14,6 +14,11 @@ struct BatchEditor: View {
         var id: UUID { entry.id }
         var entry: Entry
         var typed: String
+        /// False for a `lastTime` member, which has no number to edit. Decided
+        /// once in `prepare` rather than asked of the store per redraw, so a
+        /// kind changed while this sheet is open cannot leave a field on screen
+        /// that `parsedValues` has stopped reading.
+        var takesAmount: Bool
     }
 
     var body: some View {
@@ -22,15 +27,19 @@ struct BatchEditor: View {
                 Section {
                     ForEach($drafts) { $draft in
                         LabeledContent(trackerName(for: draft.entry)) {
-                            HStack(spacing: 6) {
-                                TextField("0", text: $draft.typed)
-                                    .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .font(.body.monospacedDigit())
-                                if let unit = store.tracker(draft.entry.trackerID)?.unit,
-                                   !unit.isEmpty {
-                                    Text(unit).foregroundStyle(.secondary)
+                            if draft.takesAmount {
+                                HStack(spacing: 6) {
+                                    TextField("0", text: $draft.typed)
+                                        .keyboardType(.decimalPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .font(.body.monospacedDigit())
+                                    if let unit = store.tracker(draft.entry.trackerID)?.unit,
+                                       !unit.isEmpty {
+                                        Text(unit).foregroundStyle(.secondary)
+                                    }
                                 }
+                            } else {
+                                Text(draft.typed).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -67,13 +76,16 @@ struct BatchEditor: View {
         Set(item.entries.map(\.date)).count > 1 || Set(item.entries.map(\.name)).count > 1
     }
 
+    /// Only the members that have a number. A `lastTime` member is left out and
+    /// keeps the value it was written with — `save` writes the date and the name
+    /// over the whole batch either way, which is the edit it came here to make.
     private var parsedValues: [UUID: Double]? {
         var result: [UUID: Double] = [:]
-        for draft in drafts {
+        for draft in drafts where draft.takesAmount {
             guard let value = NumberInput.parse(draft.typed) else { return nil }
             result[draft.id] = value
         }
-        return result.count == drafts.count ? result : nil
+        return result.count == drafts.count(where: \.takesAmount) ? result : nil
     }
 
     private func trackerName(for entry: Entry) -> String {
@@ -83,9 +95,11 @@ struct BatchEditor: View {
     private func prepare() {
         guard drafts.isEmpty else { return }
         drafts = item.entries.map { entry in
-            let text = store.tracker(entry.trackerID)?.editText(entry.value)
-                ?? entry.value.formatted(.number.grouping(.never))
-            return Draft(entry: entry, typed: text)
+            let tracker = store.tracker(entry.trackerID)
+            let text = tracker?.kind == .lastTime
+                ? tracker?.entryText(entry.value) ?? ""
+                : tracker?.editText(entry.value) ?? entry.value.formatted(.number.grouping(.never))
+            return Draft(entry: entry, typed: text, takesAmount: tracker?.kind != .lastTime)
         }
         date = item.date
         // `item.names`, the same list the row reads, so a batch whose newest

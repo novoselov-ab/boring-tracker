@@ -51,39 +51,49 @@ struct TrackerEditor: View {
 
     @ViewBuilder
     private func fields(_ draft: Binding<Tracker>) -> some View {
+        // A `lastTime` tracker has no number, so it has no unit and no decimal
+        // places. Both fields are hidden rather than shown and ignored: a
+        // question with no meaningful answer is still a decision the user has to
+        // make, and offering it is how a settings screen grows (PHILOSOPHY.md).
+        // Anything already stored is left alone, so switching a tracker to this
+        // kind and back finds its unit where it was.
         Section {
             TextField("Name", text: draft.name)
                 .focused($nameFocused)
-            TextField("Unit", text: draft.unit)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
+            if takesAmount(draft.wrappedValue) {
+                TextField("Unit", text: draft.unit)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+            }
         } footer: {
-            Text("Calories in kcal, protein in g, weight in kg. A unit is optional.")
+            if takesAmount(draft.wrappedValue) {
+                Text("Calories in kcal, protein in g, weight in kg. A unit is optional.")
+            }
         }
 
         Section {
             Picker("Kind", selection: draft.kind) {
                 // `Tracker.Kind.label`, not literals: a settings row says the
-                // same two words underneath a tracker's name.
+                // same words underneath a tracker's name.
                 ForEach(Tracker.Kind.allCases, id: \.self) { kind in
                     Text(kind.label).tag(kind)
                 }
             }
             .pickerStyle(.segmented)
         } footer: {
-            Text(draft.wrappedValue.kind == .dailyTotal
-                 ? "Entries add up over the day and start again at \(resetsAt)."
-                 : "Each entry is a reading on its own. Nothing resets.")
+            Text(kindFooter(draft.wrappedValue.kind))
         }
 
-        Section {
-            Picker("Decimals", selection: draft.decimals) {
-                ForEach(0...3, id: \.self) { places in
-                    Text(places.formatted()).tag(places)
+        if takesAmount(draft.wrappedValue) {
+            Section {
+                Picker("Decimals", selection: draft.decimals) {
+                    ForEach(0...3, id: \.self) { places in
+                        Text(places.formatted()).tag(places)
+                    }
                 }
+            } footer: {
+                Text("How the number is shown: \(preview(draft.wrappedValue)).")
             }
-        } footer: {
-            Text("How the number is shown: \(preview(draft.wrappedValue)).")
         }
 
         Section {
@@ -100,6 +110,20 @@ struct TrackerEditor: View {
         } footer: {
             Text("Trackers in a group are logged together, in one sheet — "
                 + "calories and protein come from the same meal.")
+        }
+    }
+
+    private func takesAmount(_ tracker: Tracker) -> Bool {
+        tracker.kind != .lastTime
+    }
+
+    /// What the chosen kind means, in the one place someone is choosing it.
+    private func kindFooter(_ kind: Tracker.Kind) -> String {
+        switch kind {
+        case .dailyTotal: "Entries add up over the day and start again at \(resetsAt)."
+        case .measurement: "Each entry is a reading on its own. Nothing resets."
+        case .lastTime:
+            "One tap writes the date and nothing else. The card reads how long it has been."
         }
     }
 
