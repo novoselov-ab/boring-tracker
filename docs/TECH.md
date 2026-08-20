@@ -208,8 +208,10 @@ optional `value` reaches every sum, every average, every chart point, the merge
 tie-break, the CSV column and both editors — dozens of call sites that would
 each need an answer for a case only one kind can produce, and every one of them
 a place to get it wrong later. A stored 0 is a value the arithmetic already
-handles: it adds nothing to a total, and the totals index never sees it anyway,
-because that index is built from daily-total trackers only.
+handles: it adds nothing to any sum. The totals index does hold these entries —
+it is keyed by tracker and day and takes every entry, without asking the kind —
+so a `lastTime` day occupies a key there worth 0. Nothing reads that key, since
+only a daily-total card and its graph ask for a total.
 
 **The 0 is written in one place and drawn in none.** `Store.logNow` is the only
 thing that writes it, and `Tracker.entryText` is the only thing any screen asks

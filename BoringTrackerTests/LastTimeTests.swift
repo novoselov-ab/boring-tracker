@@ -128,11 +128,11 @@ struct LastTimeTests {
         #expect(first?.id != second?.id)
     }
 
-    @Test("The zero does not reach the totals index")
-    func zeroIsNotADailyTotal() {
-        // It would read as a logged day of 0 on a chart and a home card if the
-        // kind ever changed under it; the index is built from the kind, so this
-        // pins that the entry contributes nothing while it is a `lastTime`.
+    @Test("The zero adds nothing to a total")
+    func zeroAddsNothingToATotal() {
+        // The totals index takes every entry without asking the kind, so this one
+        // is in there — worth 0, which is what makes the shared `Entry.value`
+        // affordable. Nothing reads that key: only a daily-total card asks.
         let tyres = Tracker(name: "Tyres", kind: .lastTime)
         let store = makeStore(StoreDocument(trackers: [tyres]), now: date(2026, 3, 14, 9))
         store.add(Entry(trackerID: tyres.id, value: 0, date: date(2026, 3, 14, 9)))
@@ -171,7 +171,10 @@ struct LastTimeTests {
 
     @Test("A named one keeps the name on top and still names its tracker")
     func namedHistoryRow() {
-        let tyres = Tracker(name: "Tyres", kind: .lastTime)
+        // With a unit left over from being a measurement, which is the case the
+        // row's unit test used to get wrong: "Logged" carries no unit, so the unit
+        // is no evidence that the row has said which tracker it is.
+        let tyres = Tracker(name: "Tyres", unit: "km", kind: .lastTime)
         let entry = Entry(trackerID: tyres.id, value: 0, date: time(10), name: "front pair")
         let item = try! #require(HistoryItem(entries: [entry]))
 

@@ -10,6 +10,10 @@ struct TrackerDetailView: View {
     @Environment(Store.self) private var store
     @State private var editing: Entry?
     @State private var logging: LogSheet.Target?
+    /// The entry the toolbar's + last wrote, for the same haptic home hangs on the
+    /// same action. The new row lands at the top of a list you may be scrolled a
+    /// long way down, so this tap can be as invisible here as it is there.
+    @State private var loggedNow: UUID?
 
     var body: some View {
         Group {
@@ -25,6 +29,7 @@ struct TrackerDetailView: View {
         .sheet(item: $logging) { target in
             LogSheet(target: target)
         }
+        .logHaptic(loggedNow)
     }
 
     @ViewBuilder
@@ -82,7 +87,7 @@ struct TrackerDetailView: View {
                     // as its card's + — the two are the same action and must
                     // not be two different amounts of work.
                     if tracker.kind == .lastTime {
-                        store.logNow(tracker)
+                        loggedNow = store.logNow(tracker)?.id
                     } else {
                         LogSheet.present(
                             .init(group: LogGroup(of: tracker), tracker: trackerID),

@@ -164,7 +164,14 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         // Reachable in two taps: settings offers a deletion that keeps history.
         let identitySaysDeleted = displayName == nil
             && !entries.contains { trackers[$0.trackerID] != nil }
-        let units = entries.compactMap { trackers[$0.trackerID]?.unit }
+        // A `lastTime` tracker is left out: its text is "Logged" and carries no
+        // unit, so a unit left on it by an earlier kind is not evidence about any
+        // row — including somebody else's, whose name it could make look duplicated.
+        let units = entries.compactMap { entry -> String? in
+            guard let tracker = trackers[entry.trackerID], tracker.kind != .lastTime
+            else { return nil }
+            return tracker.unit
+        }
         let values = entries
             .map { entry in
                 guard let tracker = trackers[entry.trackerID] else {
@@ -172,8 +179,15 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
                         ? entry.value.formatted()
                         : "Deleted tracker: \(entry.value.formatted())"
                 }
+                // **A `lastTime` entry always takes the name once it is not
+                // alone**, whatever unit it is carrying. The editor hides that
+                // field rather than erasing it, so a tracker switched over from a
+                // measurement still has `km` on it — and the unit test below would
+                // then read "this row says which tracker it is", while what the row
+                // actually draws is "Logged", which says nothing (found in review).
                 let needsName = !alone
-                    && (tracker.unit.isEmpty || units.count(where: { $0 == tracker.unit }) > 1)
+                    && (tracker.kind == .lastTime || tracker.unit.isEmpty
+                        || units.count(where: { $0 == tracker.unit }) > 1)
                 return needsName
                     ? "\(tracker.name): \(tracker.entryText(entry.value))"
                     : tracker.entryText(entry.value)
