@@ -11,7 +11,7 @@ struct AboutView: View {
             Section {
                 LabeledContent("Version", value: Self.version)
             } footer: {
-                Text("Boring Tracker keeps every number on this device. No account, no server, no analytics, and nothing to pay for.")
+                Text("Everything you log stays on this device. No account, no server, no analytics, nothing to pay for.")
             }
 
             Section {
@@ -24,7 +24,7 @@ struct AboutView: View {
                 }
                 .formRowAccent()
             } footer: {
-                Text("The whole app is open source. If this project is ever abandoned, the copy you have keeps working, your data exports to a plain readable file, and anyone can fork it.")
+                Text("The whole app is open source under the MIT licence. Your data exports as JSON or CSV and imports back.")
             }
         }
         .navigationTitle("About")
