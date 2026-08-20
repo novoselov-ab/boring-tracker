@@ -1736,6 +1736,43 @@ as a different kind of object beside a pill.
       on the strength of a change to the second-most-used one, which is a bigger
       question than this item, so it goes to the user rather than being merged.
 
+## 37. Three fixes before release
+
+### The press should scale up, not down
+
+Decided: **a press makes a control grow, not shrink.** iOS conventionally
+shrinks, and that is what was built — but the ask has been "make it feel nice"
+throughout, and growing reads as the control coming toward the thumb.
+
+- [ ] Every accent fill and every row grows on press. One direction everywhere.
+- [ ] Reduce Motion still takes the movement and keeps the colour.
+- [ ] Judge it by tapping fast, the way item 32 established — a press that
+      cannot be seen on a 40ms tap is not a press.
+
+### Settings still does not say that tapping edits
+
+Item 34 added a footer hint and kept the `>`, and it is still not obvious. The
+hint is evidently not carrying it.
+
+- [ ] Make it plain **on the row**, not only in a footer beneath the list. A
+      footer explains a screen; the question is about a row.
+- [ ] The `>` is iOS's disclosure indicator, so it is not wrong — but it is
+      doing this job alone and failing. Consider what sits beside it: the value
+      the row would edit, a clearer secondary line, or a different row shape
+      entirely.
+- [ ] Do not add an edit icon *and* keep the footer *and* keep the chevron.
+      Three explanations for one gesture is worse than one that works.
+
+### A two-line label knocks the number off centre
+
+On home, a card whose label wraps — "Weight" over "3 days ago" — pushes its
+number out of vertical centre. The number should stay centred against the whole
+row however many lines the label takes.
+
+- [ ] Fix the alignment.
+- [ ] Check one line, two lines, and the longest tracker name at AX sizes,
+      where wrapping is most likely.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so
