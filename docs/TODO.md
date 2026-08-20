@@ -20,6 +20,9 @@ as a plan. **What is actually left:**
 - [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
   a decision the user makes, not on work. Why the light value is where it is is
   in [TECH.md](TECH.md).
+- [41. The home screen label is `Boring`, for a reason that is not
+  true](#41-the-home-screen-label-is-boring-for-a-reason-that-is-not-true) —
+  measured; open on a decision the user makes, not on work.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -2076,6 +2079,46 @@ list does. It also says nothing should animate that you have to wait for, and
 150ms of no feedback at all is the purest case of that. The second rule wins,
 because a person using the app reported the first one costing him something —
 which is the only evidence either rule was ever going to get.
+
+## 41. The home screen label is `Boring`, for a reason that is not true
+
+**Measured 2026-08-20** on an iPhone 17 and a 375pt SE simulator, in a
+throwaway worktree, because the reason had never been measured: `project.yml`
+and SHIPPING.md both say home screen labels "truncate around 12 characters",
+and iOS truncates on rendered *width*, not on characters.
+
+**`Boring Tracker` fits in full on both devices, with no ellipsis.** On the SE
+it fits by being condensed about 20% — 74.5pt against 89pt for the two words
+measured separately — which is iOS tightening a string before it will
+ellipsise it. So the 12-character rule is not the rule, and the tradeoff the
+short label was chosen to avoid does not exist in the form it was written down.
+
+The cost of the short label, on the other hand, is real, and it is Spotlight:
+
+| Label | home screen | Spotlight `tracker` | Spotlight `boring` |
+|---|---|---|---|
+| `Boring` (shipping) | fits, 35.3pt | **not found** | Top Hit |
+| `Boring Tracker` | fits, both devices | Top Hit | Top Hit |
+| `Tracker` | fits, 42.3pt | Top Hit | **not found** |
+
+Spotlight was exercised on the iPhone 17 only, twice, with a clean uninstall
+and a 25s settle, and with `boring` run as the control in the same minute — so
+the negative for `tracker` is a real negative and not an index that had not
+finished building. Widths came from a white-pixel extent scan of the label row,
+against ~86pt of available width read off a label that was genuinely truncated
+on the same screen.
+
+One thing that looks exactly like truncation and is not: **before the app has
+been opened once**, the new-app dot takes label width, and the label renders as
+`BoringTracker` with the space collapsed (iPhone 17) or `Boring T…` (SE). It
+goes away on first launch. A screenshot of a fresh install shows the squeeze; a
+user after their first tap does not.
+
+- [ ] **Anton's call, not a session's.** The evidence says the full name is
+      free, and that the short one costs every search for the word the app is
+      named after. The decision is still his. Whatever is chosen,
+      `project.yml`'s comment and SHIPPING.md's bullet have to stop citing
+      12 characters.
 
 ## Noted, not scheduled
 

@@ -68,8 +68,12 @@ targets:
         # and un-rounded — the App Store rejects an alpha channel, and iOS
         # applies the rounded mask itself. See docs/SHIPPING.md, *The icon*.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # Home screen labels truncate around 12 characters, so the icon says
-        # "Boring" while the App Store listing is "Boring Tracker".
+        # The icon says "Boring" while the App Store listing is "Boring
+        # Tracker". The reason this file used to give — labels truncate around
+        # 12 characters — was measured on 2026-08-20 and is false: iOS
+        # truncates on width, and "Boring Tracker" fits in full on an iPhone 17
+        # and on a 375pt SE. What the short label does cost is Spotlight, which
+        # does not find the app for "tracker". Open, and Anton's: TODO.md 41.
         INFOPLIST_KEY_CFBundleDisplayName: Boring
         # Export compliance, answered here so App Store Connect stops asking on
         # every upload. The app uses no encryption of its own and makes no
