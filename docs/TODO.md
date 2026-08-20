@@ -1904,6 +1904,32 @@ The asymmetry is the rule working, not a gap in it.
 Wanted, not yet queued. Written down with the part that isn't obvious, so
 picking one up doesn't start with rediscovering why it's awkward.
 
+- [ ] **An unknown *key* is dropped on save, and an unknown *value* is not.**
+      `Tracker.kindRaw` fixed the value half. The key half is real and
+      unfixed: `Codable` ignores a key it has no property for, so a field a
+      later version adds to a tracker, an entry or the document is gone from
+      the next ordinary save this build makes — the same silent data loss the
+      `kind` work exists to prevent, one level up. Checked rather than assumed,
+      at `1e6479f`: a document carrying `colour` on a tracker, `mood` on an
+      entry and a top-level `reminders` array decodes with every record intact
+      and re-encodes with all three keys gone.
+
+      **The window it can happen in is narrower than it looks**, which is why
+      this is noted and not queued. A newer version that adds a field almost
+      certainly bumps `schemaVersion`, and a newer `schemaVersion` is refused
+      outright by `StoreMigration` — the file is quarantined intact, nothing is
+      rewritten, nothing is lost. The loss needs a newer build that adds a
+      field *without* bumping, which is exactly the case the `kind` change was
+      bought for and the one a future version has to be disciplined about.
+
+      Fixing it properly is a design change, not a patch: every model type
+      grows an `[String: JSONValue]` of leftovers, a hand-written `init(from:)`
+      and `encode(to:)` to fill and re-emit it, a `JSONValue` type the app
+      otherwise has no use for, and an answer to what merge does when two
+      devices hold different leftovers under the same id. That is a real
+      session with its own tests, and it should be measured against what the
+      schema-version refusal already covers before anyone starts.
+
 - [ ] **What a press should do to an accent fill too small to take 4pt.**
       `AccentFillPress.scale(for:reduceMotion:)` moves each end of the fill's
       longest edge 2pt, and outward since item 37. A fill shorter than 4pt is
@@ -2317,6 +2343,23 @@ the numbered items is going near the same code.
       released a few points past an edge the finger cannot see.
 
 ## After v1
+
+- [ ] **A "last time" kind, where the date is the data.** Tyres, batteries, the
+      water filter, the boiler service — things you want to know the age of and
+      never want to type a number for. Logging one is a single tap with no
+      number pad; the tracker reads "142 days ago", with the date underneath.
+      A third `Tracker.Kind`, and the two that exist stay exactly as they are.
+
+      **It must never become reminders, due dates or intervals.** "Change the
+      filter every 90 days" is a different app, and PHILOSOPHY.md rules out
+      both halves of it: nothing here notifies, and nothing here decides you
+      are late. The app says how long it has been; what that means is yours.
+
+      The forward-compatible half is already done, and deliberately early: a
+      `kind` string this build does not know survives a load and a save
+      unchanged, so a document a "last time" build writes can be opened by 1.0
+      without losing anything. See "An unknown value is kept, not refused" in
+      [TECH.md](TECH.md).
 
 - [ ] Home screen widget, Lock Screen widget, App Shortcuts / Siri.
 - [ ] Sync transport — the document already merges; this is only plumbing.

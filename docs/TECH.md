@@ -167,6 +167,34 @@ and the next ordinary save writes it out as version 2 — and because every save
 copies the old `store.json` aside first, the original survives one further save
 as `store.backup.json`.
 
+### An unknown value is kept, not refused
+
+A `String`-backed enum throws on a raw value it does not have, and a throw at
+the boundary is a refused document. So a `kind` a later version writes — the
+"last time" one in TODO.md, or anything after it — would stop a 1.0 build from
+opening the file at all, over one field it does not need to understand.
+
+`Tracker` stores `kindRaw`, the string as written, and offers `kind` as this
+build's reading of it. A value that is not `dailyTotal` or `measurement` reads
+as `.measurement`, which shows the latest value and when it was taken — the
+shape that still renders sensibly for a tracker whose behaviour is not here
+yet. The string goes back out on the next save exactly as it came in, and the
+CSV `tracker_kind` column carries it rather than the fallback.
+
+**The load is not the point; the save is.** Dropping an unrecognised tracker on
+decode is the tempting version and it is the destructive one: the next ordinary
+save writes the document back without it, so opening the file on the older
+phone deletes a tracker and every entry underneath it, quietly and for good.
+Refusing the whole document is safe but too blunt for one field — the file is
+quarantined and the user is locked out of everything this build could have
+shown them. **An older build must never be the reason a newer build's data
+disappears**, and preserving a string it cannot interpret costs nothing.
+
+Unknown *keys* are the same question one level up and it is not answered:
+`Codable` ignores a key it has no property for, which means it also drops it on
+the way out. See "Noted, not scheduled" in TODO.md for what that costs and what
+it would take.
+
 ### The CSV view
 
 JSON is the complete document and the only import format. CSV is a flat,
@@ -181,7 +209,7 @@ with these columns:
 | `tracker_id` | referenced tracker UUID, retained even if the tracker was deleted |
 | `tracker_name` | current tracker name, blank if the tracker was deleted |
 | `tracker_unit` | current unit, blank if unavailable |
-| `tracker_kind` | `dailyTotal` or `measurement`, blank if unavailable |
+| `tracker_kind` | the stored kind string — `dailyTotal` or `measurement`, or one a later version wrote; blank if unavailable |
 | `value` | the stored number |
 | `name` | entry label, blank when absent |
 
@@ -497,7 +525,7 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     var id: UUID
     var name: String
     var unit: String
-    var kind: Kind          // .dailyTotal | .measurement
+    var kindRaw: String     // "dailyTotal" | "measurement" | whatever was written
     var decimals: Int
     var sortIndex: Int
     var isArchived: Bool
@@ -517,7 +545,8 @@ struct Entry: Codable, Identifiable, Hashable, Sendable {
 }
 ```
 
-`Entry.modified` is not decoration and this listing used to omit it: "`modified`
+`Tracker.kind` is a computed reading of `kindRaw` and not a stored field — see
+"An unknown value is kept, not refused". `Entry.modified` is not decoration and this listing used to omit it: "`modified`
 on every record" under "Mergeable by design" is a requirement of the merge, and
 an `Entry` without one cannot take part in last-write-wins. It is distinct from
 `date` — editing last Tuesday's dinner today moves `modified` and leaves `date`
