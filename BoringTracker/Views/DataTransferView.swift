@@ -1,10 +1,8 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The escape hatch promised by rule 6: complete JSON out and back in, plus a
-/// CSV view for spreadsheets, and the one action that ends with nothing left.
-/// These are the app's destructive workflows, so merge and replace are said
-/// apart before either one runs and a clear says what it is about to remove.
+/// The escape hatch promised by rule 6: complete JSON out and back in, a CSV
+/// view for spreadsheets, and the one action that ends with nothing left.
 struct DataTransferView: View {
     @Environment(Store.self) private var store
 
@@ -13,12 +11,9 @@ struct DataTransferView: View {
     @State private var isRestoringBackup = false
     @State private var isChoosingImportMode = false
     /// Whether the document a destructive action is about to replace could come
-    /// back out of the recovery slot — see `Store.currentDocumentIsRestorable`.
-    ///
-    /// Captured when the button is tapped rather than read from inside the
-    /// alert: the check walks every tracker and entry, and an alert's content
-    /// is not somewhere to put an O(n) question about a document that cannot
-    /// change while the alert is up.
+    /// back out of the recovery slot. Captured when the button is tapped rather
+    /// than read from inside the alert: the check walks every tracker and entry,
+    /// and the document cannot change while the alert is up.
     @State private var isRecoverable = true
     @State private var presentedAlert: PresentedAlert?
 
@@ -36,22 +31,16 @@ struct DataTransferView: View {
         }
     }
 
-    /// Two sections, and the split is load-bearing rather than tidy-mindedness.
-    ///
     /// **A `ShareLink` will not present from a container that carries a
     /// `.confirmationDialog`.** No sheet, no error, nothing in the log; a
     /// `Button` beside it works on the same tap. That dialog is the import
-    /// merge/replace chooser, and while export and import shared one *Data*
-    /// section it silently took the share sheet with it — which is why the
-    /// export left through Files only and why `531d71c` recorded the share
-    /// sheet as impossible in SwiftUI. It is not: give the dialog its own
-    /// section and the `ShareLink` above presents.
+    /// merge/replace chooser, and while export and import shared one section it
+    /// silently took the share sheet with it.
     ///
-    /// So the two directions are two sections, and the import section owns
-    /// every presentation that belongs to importing. **Do not "simplify" these
-    /// back into one section** — nothing about the result looks broken, the
-    /// rows still draw, and the button just stops working (docs/TODO.md item
-    /// 18b, docs/TECH.md).
+    /// So the two directions are two sections, and the import section owns every
+    /// presentation that belongs to importing. **Do not "simplify" these back
+    /// into one section** — nothing looks broken, the rows still draw, and the
+    /// button just stops working.
     var body: some View {
         let json = exportFile(.json)
         let csv = exportFile(.csv)
@@ -77,12 +66,6 @@ struct DataTransferView: View {
                     isImporting = true
                 }
                 .formRowAccent()
-                // "Previous Data", not "Data Before Last Import", since item 24:
-                // the slot is filled by a clear as well as by an import, and a
-                // row offering to undo the import you did last week when what
-                // it holds is the document you cleared a minute ago is a wrong
-                // sentence about the one action that undoes a destructive one.
-                // The alert this row raises has always called it that.
                 if store.hasImportBackup {
                     Button("Restore Previous Data…", systemImage: "arrow.uturn.backward") {
                         isRestoringBackup = true
@@ -112,19 +95,11 @@ struct DataTransferView: View {
             } message: {
                 Text("Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, anything this changes is kept here as a recoverable backup.")
             }
-            // Left on the import section, where it has always presented from.
-            // It now serves the clear confirmation below as well as import's
-            // own two alerts — one `.alert(item:)` for the screen, rather than a
-            // second presentation attached to a section carrying a
-            // `.confirmationDialog`, which is the shape that silently broke
-            // `ShareLink` above.
+            // One `.alert(item:)` for the whole screen, on the section that
+            // already carries the `.confirmationDialog`, so no other section
+            // acquires a presentation — see `ShareLink` above.
             .alert(item: $presentedAlert, content: alert)
 
-            // The third whole-document action, beside the two that already move
-            // the whole document (docs/TODO.md item 24). One button, one
-            // confirmation, and the safety is the recoverable copy rather than
-            // the ceremony — see `Store.clearAll`.
-            //
             // Off when there is nothing to delete, rather than raising a dialog
             // that offers to remove nothing.
             Section {
@@ -132,48 +107,37 @@ struct DataTransferView: View {
                     isRecoverable = store.currentDocumentIsRestorable
                     presentedAlert = .confirmClear
                 } label: {
-                    // **"All Data", not "Everything".** `TrackerEditor` already
-                    // has a *Delete Everything* — the one that takes a single
-                    // tracker with its history — and it says, correctly, that it
-                    // cannot be undone. Two buttons with one name and opposite
-                    // promises, both reached from this screen, is how somebody
-                    // learns here that "Delete Everything" is recoverable and
-                    // then finds out there that it is not.
+                    // **"All Data", not "Everything".** `TrackerEditor`'s
+                    // *Delete Everything* takes one tracker with its history and
+                    // says, correctly, that it cannot be undone. Two buttons with
+                    // one name and opposite promises, both reached from this
+                    // screen, is how somebody learns here that it is recoverable
+                    // and finds out there that it is not.
                     Label("Delete All Data…", systemImage: "trash")
                 }
                 .disabled(!hasAnything)
             } footer: {
-                // Hedged, and deliberately: whether the copy can be read back
-                // depends on the document, the check is O(n) over every entry,
-                // and a footer is drawn on every pass of this screen's body
-                // while a confirmation is built once. So the footer says what
-                // normally happens and points at the sentence that knows.
+                // Hedged, deliberately: whether the copy can be read back is an
+                // O(n) question, and a footer is drawn on every body pass while a
+                // confirmation is built once. So it says what normally happens
+                // and points at the sentence that knows.
                 Text("Removes every tracker and entry from this device. The document you have now is normally kept as a recoverable copy, so this can be undone until the next import or clear replaces it — the confirmation says if it cannot be.")
             }
         }
     }
 
-    /// What the share sheet is handed. Built on every body pass, which is why
-    /// `ExportFile` carries the document rather than the encoded bytes.
-    ///
-    /// Reading `store.document` here is also what subscribes this screen to
-    /// every entry and tombstone, where it used to watch nothing but the
-    /// recovery file. That is three array retains on a screen nobody's day runs
-    /// through, and the alternative — handing the store itself to a `Sendable`
-    /// value that is read off the main actor — is not one.
+    /// Built on every body pass, which is why `ExportFile` carries the document
+    /// rather than the encoded bytes.
     private func exportFile(_ format: ExportFile.Format) -> ExportFile {
         ExportFile(stem: stem(format), format: format, document: store.document)
     }
 
     /// The undated stem. The date is added at the moment of use, so a settings
-    /// screen left open across midnight cannot hand the share sheet
-    /// yesterday's name.
+    /// screen left open across midnight cannot hand the share sheet yesterday's
+    /// name.
     private func stem(_ format: ExportFile.Format) -> String {
         format == .csv ? "boring-tracker-entries" : "boring-tracker"
     }
-
-
-
 
     private func selectImport(_ result: Result<[URL], any Error>) {
         do {
@@ -194,11 +158,10 @@ struct DataTransferView: View {
             do {
                 let summary = try await store.importData(pendingImport, mode: mode)
                 self.pendingImport = nil
-                // Said for a merge as well as a replace, and only when it is
-                // true of the run that just happened. An import that changed
-                // nothing does not take the recovery slot, so on a fresh
-                // install there may be no copy at all — and a reassurance the
-                // Settings list then contradicts is worse than none.
+                // Only when it is true of the run that just happened. An import
+                // that changed nothing does not take the recovery slot, so there
+                // may be no copy at all — and a reassurance the Settings list
+                // then contradicts is worse than none.
                 let backup = summary.keptBackup
                     ? " A backup of the previous document was kept on this device." : ""
                 presentedAlert = .message(
@@ -221,13 +184,12 @@ struct DataTransferView: View {
         return "\(added) \(removed)"
     }
 
-    /// "1 tracker", "1,247 entries". Grouped, because the number is the whole
-    /// point of the clear confirmation and `1247` is a number you skim past.
+    /// Grouped, because the number is the whole point of the clear confirmation
+    /// and `1247` is a number you skim past.
     private func count(_ value: Int, _ singular: String, _ plural: String) -> String {
         "\(value.formatted()) \(value == 1 ? singular : plural)"
     }
 
-    /// Whether there is anything for a clear to remove.
     private var hasAnything: Bool {
         !store.trackers.isEmpty || !store.entries.isEmpty
     }
@@ -238,18 +200,17 @@ struct DataTransferView: View {
                 let summary = try await store.clearAll()
                 presentedAlert = .message(
                     title: "Everything deleted",
-                    // Not `describe(_:)`, which leads with what was added. A
+                    // Not `describe(_:)`, which leads with what was added: a
                     // clear can never add anything, so that sentence would put
                     // "Added 0 trackers and 0 entries" in front of the only
                     // number on the screen that means anything.
                     detail: "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) "
                         + "and \(count(summary.entriesRemoved, "entry", "entries"))."
-                        // `keptBackup` only says the copy was *written*.
-                        // Whether it can be read back out again is the other
-                        // question, and it is the one the confirmation just
-                        // answered — so a document that was warned about as
-                        // unrecoverable must not be told, one alert later, that
-                        // Restore brings it back.
+                        // `keptBackup` only says the copy was *written*. Whether
+                        // it can be read back out again is the other question,
+                        // and it is the one the confirmation just answered — so a
+                        // document warned about as unrecoverable must not be
+                        // told, one alert later, that Restore brings it back.
                         + (summary.keptBackup && isRecoverable
                             ? " Restore Previous Data brings it back."
                             : "")
@@ -283,21 +244,10 @@ struct DataTransferView: View {
                 }
             )
         case .confirmClear:
-            // **One confirmation, and it names the count.** A number is what
-            // makes somebody stop; "are you sure" is what they tap through, and
-            // a second dialog behind the first protects nothing the first did
-            // (docs/TODO.md item 24).
-            //
-            // Destructive, and not the default button: `.cancel` is the bold
-            // one in a two-button alert, so the tap your thumb finds is the one
-            // that keeps your data.
-            //
-            // Export is *suggested* rather than required. Gating a clear behind
-            // an export would put a file-picker in front of somebody who has
-            // already decided, and the recoverable copy — not the export — is
-            // what makes the decision safe to make. The Export rows are two
-            // sections up on this same screen, so pointing at them is a real
-            // offer rather than a shrug.
+            // One confirmation, naming the count: a number is what makes somebody
+            // stop, and a second dialog behind the first protects nothing the
+            // first did. `.cancel` is the bold button in a two-button alert, so
+            // the tap your thumb finds is the one that keeps your data.
             Alert(
                 title: Text("Delete \(count(store.trackers.count, "tracker", "trackers")) and \(count(store.entries.count, "entry", "entries"))?"),
                 message: Text(isRecoverable
@@ -311,18 +261,12 @@ struct DataTransferView: View {
         }
     }
 
-    /// Says what actually went wrong.
-    ///
-    /// Only a decode failure is evidence about the file. Every other error on
-    /// the import path used to be reported as a damaged export, and an import
-    /// can now fail because a *write* failed — the pre-import copy, or the
-    /// imported document itself. So a phone that had run out of storage told
-    /// its owner their backup was corrupt and sent them off to re-export a file
-    /// that was fine, while the real problem, which was also breaking every
-    /// ordinary save, went unmentioned.
-    ///
-    /// "Nothing was changed" survives the correction: import and restore both
-    /// fail before they touch memory, whichever step threw.
+    /// Only a decode failure is evidence about the file. Every other error on the
+    /// import path used to be reported as a damaged export, and an import can
+    /// fail because a *write* failed — the pre-import copy, or the imported
+    /// document itself. So a phone that had run out of storage told its owner
+    /// their backup was corrupt and sent them off to re-export a file that was
+    /// fine.
     private func show(_ error: any Error, action: String) {
         pendingImport = nil
         // True of a clear for the same reason it is true of the other two: the
@@ -347,8 +291,8 @@ struct DataTransferView: View {
             do {
                 let summary = try await store.restoreImportBackup()
                 isRestoringBackup = false
-                // The same sentence import uses. Written separately, this one
-                // counted removed entries and stayed silent about removed
+                // `describe`, not a sentence of its own: written separately this
+                // one counted removed entries and stayed silent about removed
                 // trackers — which is exactly what a restore is most likely to
                 // remove, since it undoes an import that added them.
                 presentedAlert = .message(
