@@ -163,7 +163,7 @@ struct AccentFillPressTests {
         }
     }
 
-    @Test("Going down is not animated and coming back up is")
+    @Test("Arriving is not animated and coming back is")
     func onlyTheReleaseAnimates() {
         // docs/TODO.md item 32. Two earlier items changed *what* a press draws
         // and neither changed when it draws it, which is what a tap could

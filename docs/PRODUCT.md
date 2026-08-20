@@ -437,9 +437,13 @@ on its text and on its chevron and nowhere in between is worse than one that is
 plainly not tappable, because a miss teaches you the tap failed rather than that
 you aimed wrong. And it responds to the press — the whole row fills with the
 same grey iOS presses its own rows to, edge to edge and clipped to the card the
-way the platform does it, and goes down by the same 2pt the app's buttons have
-gone down by since item 27. Under Reduce Motion it takes the colour and not the
-movement, which is the rule every press in this app follows.
+way the platform does it, and **grows** by the same 2pt every accent fill in the
+app grows by. One direction everywhere, and it is out rather than in: iOS
+conventionally shrinks a pressed control, which is what items 27 and 28 built,
+and item 37 turned it around because a control coming toward the thumb is what
+the ask has meant by "make it feel nice" throughout. Under Reduce Motion it
+takes the colour and not the movement, which is the rule every press in this app
+follows.
 
 **A press applies on the frame the touch lands.** Nothing about a pressed state
 fades in, anywhere: only the release is drawn. Two earlier attempts at "a press

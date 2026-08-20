@@ -174,8 +174,16 @@ extension View {
 /// held settings row at 3x: with the setting off the row's name starts at
 /// x = 98px at rest and x = 92 held — 6 device pixels *outward*, which is the
 /// 2pt travel — and with it on the name is at x = 98 in both while the row
-/// still fills with `#3A3A3C`. Item 27 took the same reading while the press
-/// shrank and the name moved the other way, to x = 105.
+/// still fills with `#3A3A3C`.
+///
+/// **The 6 pixels are the measurement; the 98 is not quite.** Item 27 read the
+/// same glyph at 99 at rest and 105 held, and a rest column cannot depend on
+/// which way a press goes — nothing here moves that row. The two readings are
+/// one device pixel apart on an antialiased edge, which is where the ink
+/// threshold falls and not where the text is: this one reads 98 at every
+/// threshold from 40 to 180 out of 255, so it is stable rather than lucky, and
+/// the two sessions' scans simply cut the same edge differently. Both agree on
+/// the 6, and the 6 is what says a press moves anything at all.
 ///
 /// **What owning the row's background costs is two units of blue on one
 /// screen.** At rest this draws `rest`, whose default is

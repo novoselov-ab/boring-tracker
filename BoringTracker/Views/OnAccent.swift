@@ -288,7 +288,7 @@ private struct AccentFilled<S: Shape>: ViewModifier {
                         : 1
                 )
             }
-            // **Nothing going down, 0.12s coming back**, which is item 32 and
+            // **Nothing on the way in, 0.12s coming back**, which is item 32 and
             // is argued in `AccentFillPress.animation(pressed:)`. The fill
             // reaches `Color.accentFillPressed` on the frame the touch lands,
             // and the ramp that used to be there — seven frames of it, recorded
@@ -806,7 +806,7 @@ extension View {
     }
 
     /// Fill this label with the accent, in whichever of its three states its
-    /// control is in, and let it go down when the control does.
+    /// control is in, and let it move when the control is pressed.
     ///
     /// **One modifier rather than a background and a scale written out at each
     /// site**, because the four accent fills in the app — the pill, the undo
@@ -855,10 +855,10 @@ extension View {
     /// starts on a row never enters the pressed state at all — nor does one
     /// that rests 0.2s first — because a list delays the touch. It takes
     /// somewhere between 0.2s and 0.45s of a stationary finger before the disc
-    /// goes down, by which point the gesture is a press and not a scroll.
+    /// presses at all, by which point the gesture is a press and not a scroll.
     ///
     /// **What that recording does not cover is a press called off** (found in
-    /// review): a finger that waits out the list's delay, goes down, and then
+    /// review): a finger that waits out the list's delay, presses, and then
     /// slides off the row to abandon the tap has already been given the impact
     /// for an action that never runs. Left as it is — the whole point of this
     /// is feedback at the moment of the press rather than at the moment of the
