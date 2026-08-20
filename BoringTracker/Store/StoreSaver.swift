@@ -2,19 +2,15 @@ import Foundation
 
 /// Gets the document onto disk, later and elsewhere.
 ///
-/// An actor rather than a plain `async` function, and deliberately so: under
-/// Swift 6 a `nonisolated async` call from the main actor is not guaranteed to
-/// leave it, and the whole point here is that encoding and writing must never
-/// happen on the way to the next frame. An actor has its own executor, so the
-/// work provably runs off the main actor and, being serial, two saves can never
-/// interleave onto the same file.
+/// An actor rather than a `nonisolated async` function: under Swift 6 such a
+/// call from the main actor is not guaranteed to leave it, and encoding must
+/// never happen on the way to the next frame. Being serial, two saves also
+/// cannot interleave onto the same file.
 actor StoreSaver {
 
-    /// How long a change may sit in memory before it is written.
-    ///
-    /// This is a coalescing window, not a trailing debounce: the timer starts
-    /// at the *first* unsaved change, so continuous typing still reaches disk
-    /// every half second instead of being postponed indefinitely.
+    /// A coalescing window, not a trailing debounce: the timer starts at the
+    /// *first* unsaved change, so continuous typing still reaches disk every half
+    /// second instead of being postponed indefinitely.
     private let window: Duration
     private let file: StoreFile
 
@@ -23,13 +19,10 @@ actor StoreSaver {
     private var writtenRevision: UInt64 = 0
     private var writer: Task<Void, Never>?
 
-    /// The last write failure, if any. Kept so the app can say so out loud
-    /// rather than quietly losing data.
     private(set) var lastError: (any Error)?
 
-    /// How many times the file has actually been written. The debounce is only
-    /// worth having if this stays far below the number of edits, so it is
-    /// something to assert rather than assume.
+    /// Writes actually performed, so the debounce can be asserted rather than
+    /// assumed.
     private(set) var writeCount = 0
 
     init(file: StoreFile, window: Duration = .milliseconds(500)) {
@@ -39,17 +32,14 @@ actor StoreSaver {
 
     /// Takes ownership of the newest version of the document.
     ///
-    /// The revision matters because the store hands documents over from the
-    /// main actor through unstructured tasks, which are not delivered in the
-    /// order they were created. Without it, a stale document that arrived late
-    /// would overwrite a newer one.
+    /// The revision matters because the store hands documents over from the main
+    /// actor through unstructured tasks, which are not delivered in the order they
+    /// were created; without it a stale document arriving late would win.
     func save(_ document: StoreDocument, revision: UInt64) {
-        // Older than what is queued, or older than what is already on disk:
-        // either way there is nothing here worth writing.
         guard revision >= pendingRevision, revision > writtenRevision else { return }
         pending = document
         pendingRevision = revision
-        guard writer == nil else { return }  // a write is already on its way
+        guard writer == nil else { return }
         writer = Task {
             // Cancellation here means "write now", not "give up" — that is how
             // `flush()` turns the pending change into an immediate write.
@@ -60,29 +50,21 @@ actor StoreSaver {
 
     /// Waits for the write that is already on its way, without hurrying it.
     ///
-    /// **This is how an ordinary save finds out whether it worked.**
-    /// `save(_:revision:)` returns the moment the document is queued, so the
-    /// write it will do has not happened yet and the error it might produce
-    /// does not exist to be read — which is why `lastError`, kept here
-    /// precisely so the app can say so out loud, went unread on every path
-    /// except `flush`. A user logging all evening onto a full disk was told
-    /// nothing until the app was next backgrounded.
+    /// **This is how an ordinary save finds out whether it worked.** `save` returns
+    /// the moment the document is queued, so without this `lastError` went unread
+    /// on every path except `flush` — a user logging all evening onto a full disk
+    /// was told nothing until the app was next backgrounded.
     ///
-    /// Deliberately not `flush`: it cancels nothing and forces nothing early,
-    /// so the coalescing window still does its job and a burst of edits is
-    /// still one write. Everything scheduled during one window waits on the
-    /// same task and comes back together.
+    /// Deliberately not `flush`: it forces nothing early, so a burst of edits is
+    /// still one write and everything scheduled in one window comes back together.
     func settled() async {
         await writer?.value
     }
 
-    /// Writes anything outstanding and waits for it to land. Called when the
-    /// app leaves the foreground, so backgrounding or force-quitting can lose
-    /// at most the last moment of typing.
-    ///
-    /// It takes the document rather than trusting what has been scheduled: a
-    /// change made microseconds before backgrounding may still be in flight,
-    /// and that is exactly the change most worth not losing.
+    /// Writes anything outstanding and waits for it to land. It takes the document
+    /// rather than trusting what has been scheduled: a change made microseconds
+    /// before backgrounding may still be in flight, and that is exactly the change
+    /// most worth not losing.
     func flush(_ document: StoreDocument, revision: UInt64) async {
         save(document, revision: revision)
         let inFlight = writer
@@ -104,8 +86,8 @@ actor StoreSaver {
             lastError = nil
         } catch {
             lastError = error
-            // Hold on to it: the next change or flush retries. Dropping it
-            // would mean the in-memory state and the file disagree forever.
+            // Hold on to it: the next change or flush retries. Dropping it would
+            // leave the in-memory state and the file disagreeing forever.
             pending = document
         }
     }

@@ -2,17 +2,8 @@ import Foundation
 import Darwin
 
 enum StoreError: Error, Equatable {
-    /// The file was written by a newer version of the app. Refusing beats
-    /// guessing: decoding it with today's rules would drop whatever is new and
-    /// then save that loss back over the original.
     case futureSchema(found: Int, supported: Int)
-    /// The file was written by an older version, and this build has no step
-    /// that reads it. Refused for the same reason and with the same danger:
-    /// today's decoder would silently ignore every field that has since been
-    /// renamed or removed, and the next save would write that loss back.
     case olderSchema(found: Int, supported: Int)
-    /// Structurally decodable, but not a document the merge rules can handle
-    /// consistently (for example, the same id both live and deleted).
     case invalidDocument(String)
 }
 
@@ -29,16 +20,13 @@ extension StoreError: LocalizedError {
     }
 }
 
-/// Where the document came from, so the app can be honest about it.
 enum StoreOrigin: Equatable, Sendable {
-    /// Normal launch.
     case file
     /// The main file would not decode; the previous good copy did.
     case backup
-    /// Nothing on disk yet — a first launch.
     case fresh
-    /// Neither file could be read. Both were moved aside to this URL rather
-    /// than overwritten, and the app started over. The user gets told.
+    /// Neither file could be read. Both were moved aside to this URL rather than
+    /// overwritten, and the app started over. The user gets told.
     case unreadable(quarantine: URL)
 }
 
@@ -47,10 +35,6 @@ struct StoreLoad: Sendable {
     var origin: StoreOrigin
 }
 
-/// Reading and writing the one file the app owns.
-///
-/// Every write is the entire document, written atomically, with the previous
-/// version kept alongside. See "Writing safely" in docs/TECH.md.
 struct StoreFile: Sendable {
 
     let url: URL
@@ -68,13 +52,11 @@ struct StoreFile: Sendable {
 
     var directory: URL { url.deletingLastPathComponent() }
 
-    /// The real location: `Application Support/boring-tracker/`.
-    ///
-    /// Inside the App Group container when the entitlement is present, so a
-    /// widget can read the same file later without the store moving after
-    /// people already have history in it. Signing an App Group needs a paid
-    /// developer account, and the project deliberately builds without one, so
-    /// the plain container is the fallback.
+    /// The real location: `Application Support/boring-tracker/`, inside the App
+    /// Group container when the entitlement is present so a widget can read the
+    /// same file later. Signing an App Group needs a paid developer account and
+    /// this project deliberately builds without one, so the plain container is the
+    /// fallback.
     static func standard(appGroup: String? = Self.appGroupIdentifier) -> StoreFile {
         let fileManager = FileManager.default
         let base = appGroup
@@ -83,9 +65,8 @@ struct StoreFile: Sendable {
         return StoreFile(directory: base.appendingPathComponent("boring-tracker", isDirectory: true))
     }
 
-    /// Matches the permanent bundle id from docs/SHIPPING.md. Like the bundle
-    /// id, this cannot change after shipping without stranding the data of
-    /// everyone who already has the app.
+    /// Matches the permanent bundle id in docs/SHIPPING.md, and like it cannot
+    /// change after shipping without stranding everyone's data.
     static let appGroupIdentifier = "group.com.novoselov.boringtracker"
 
     // MARK: - Reading
@@ -140,37 +121,25 @@ struct StoreFile: Sendable {
             // costs essentially nothing per save.
             try? fileManager.copyItem(at: url, to: backupURL)
         }
-        // Writes a temporary file and renames it, so a reader — or a crash —
-        // sees either the whole old document or the whole new one.
+        // Writes a temp file and renames it, so a reader — or a crash — sees
+        // either the whole old document or the whole new one.
         try data.write(to: url, options: .atomic)
     }
 
-    /// Throws away the rolling save backup.
+    /// Throws away the rolling save backup. **Only a clear does this.**
     ///
-    /// **Only a clear does this**, and it is the difference between "removes
-    /// every tracker and entry from this device" being true and being nearly
-    /// true. `write` copies the old `store.json` aside before every save, so
-    /// the write that lands the empty document leaves the entire pre-clear
-    /// history in `store.backup.json` — and `load` falls back to that file
-    /// whenever the main one fails to decode. Nothing rewrites it until the
-    /// next save, which for somebody who cleared the app and put the phone down
-    /// is never.
-    ///
-    /// The one copy a clear leaves is the recovery slot, which the confirmation
-    /// names out loud. An undisclosed second copy of a history somebody has
-    /// just asked to be rid of is not a safety net; it is the opposite of the
-    /// thing they asked for.
-    ///
-    /// Safe to lose here specifically: what it protects against is a torn or
-    /// unreadable `store.json`, and the file this runs after is a freshly
-    /// written, complete, empty document. The next ordinary save recreates it.
+    /// `write` copies the old `store.json` aside before every save, and `load`
+    /// falls back to that file, so without this the entire pre-clear history
+    /// survives a clear in `store.backup.json` — an undisclosed second copy of the
+    /// data somebody just asked to be rid of. Safe here specifically: what it
+    /// protects against is a torn `store.json`, and the file this runs after is a
+    /// freshly written, complete, empty document.
     func discardSaveBackup() {
         try? FileManager.default.removeItem(at: backupURL)
     }
 
-    /// Keeps the exact in-memory document that an import is about to change.
-    /// This is separate from the rolling save backup: recent edits may not have
-    /// reached that file yet when the user imports.
+    /// Keeps the exact in-memory document an import is about to change. Separate
+    /// from the rolling save backup: recent edits may not have reached that file.
     func writeImportBackup(_ document: StoreDocument) throws {
         try prepareDirectory()
         try StoreCoding.encode(document).write(to: importBackupURL, options: .atomic)
@@ -179,25 +148,19 @@ struct StoreFile: Sendable {
     /// Writes the pre-import copy *beside* the recovery slot without disturbing
     /// what is in it.
     ///
-    /// The slot holds one document, so overwriting it is itself destructive.
-    /// Writing straight into it and only then writing the imported document
-    /// meant a failure on that second write — a full disk is the realistic one —
-    /// left the user with neither: the document they had before the import they
-    /// regretted was already gone, replaced by the one they were importing over.
-    /// Staged here, committed once the imported document is safely down.
+    /// The slot holds one document, so overwriting it is itself destructive:
+    /// writing straight into it and only then writing the import meant a failure
+    /// on that second write — a full disk — left the user with neither.
     func stageImportBackup(_ document: StoreDocument) throws {
         try prepareDirectory()
         try StoreCoding.encode(document).write(to: importBackupStagingURL, options: .atomic)
     }
 
-    /// Advances the recovery slot to the staged copy, reporting whether it
-    /// managed to. `rename(2)` replaces in one step, so there is never a moment
-    /// with no slot at all.
-    ///
-    /// Deliberately does not throw: by the time this runs the import is already
-    /// on disk and has succeeded. A failure here means the safety net did not
-    /// advance, which the summary then says out loud rather than turning a
-    /// completed import into an error.
+    /// Advances the recovery slot to the staged copy, reporting whether it managed
+    /// to. `rename(2)` replaces in one step, so there is never a moment with no
+    /// slot at all. Deliberately does not throw: the import is already on disk by
+    /// now, so a failure here means the safety net did not advance, which the
+    /// summary says out loud rather than failing a completed import.
     @discardableResult
     func commitStagedImportBackup() -> Bool {
         guard FileManager.default.fileExists(atPath: importBackupStagingURL.path) else {
@@ -222,10 +185,10 @@ struct StoreFile: Sendable {
         try Data(contentsOf: importBackupURL)
     }
 
-    /// Exchanges the live document and the pre-import recovery document in
-    /// one filesystem operation. There is deliberately no sequence of two
-    /// moves here: a crash must leave either the old pair or the new pair,
-    /// never two copies of the document the user was trying to get away from.
+    /// Exchanges the live document and the pre-import recovery document in one
+    /// filesystem operation. Deliberately not two moves: a crash must leave either
+    /// the old pair or the new pair, never two copies of the document the user was
+    /// trying to get away from.
     func swapWithImportBackup() throws {
         let result = renameatx_np(
             AT_FDCWD, url.path,
