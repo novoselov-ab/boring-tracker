@@ -44,7 +44,7 @@ another tracker has it.
 
 - **Daily totals** — calories, protein, water. Resets at your day boundary.
 - **Measurements** — weight, blood glucose. A standalone reading, no reset.
-- **Last time** — tyres, the water filter. One tap, no number: "142 days ago".
+- **Last time** — tyres, the water filter. One tap, no number: "2 months ago".
 - **Groups**, so trackers you log together take one sheet.
 - **Logging** — the + opens what you logged last, with the number pad up.
 - **Log again** — repeat anything you have logged, one tap, searchable.
