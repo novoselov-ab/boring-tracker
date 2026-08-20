@@ -787,3 +787,141 @@ glyph, and the price is on the strip: the app is a blue app in light and a mint
 app in dark. That is item 18's decision reopened, not a tweak to it.
 
 The user picks. Dark is untouched either way.
+
+---
+
+## Is the app azure? The fourth pass, and the first one in both appearances
+
+The pass above ends by saying `#009DD2` "makes the app blue in light and mint in
+dark, which reopens item 18". This is that question, taken as the question it
+is: **not what colour light mode should be, but whether the app is azure** — so
+dark is a candidate here rather than a fixed control, for the first time since
+item 13f chose the mint from twelve measured colours.
+
+Photographs in `~/dev/boring-tracker-pairing/` as `31d-*.png`: home, settings
+and History, **in both appearances**, for today's pair and for each of the two
+azure hues the user is choosing between, plus eight dark candidates on the
+bottom bar for the derivation below. `31d-pair-bar.png`, `31d-pair-home.png`
+and `31d-pair-history.png` put light beside dark for each pairing, which is the
+strip that answers the identity question. Today's `#009888` / `#00DAC3` is the
+control in every strip. **Nothing in `BoringTracker/` changed.**
+
+### Dark's mint is bright *and* saturated, and the azure hues cannot be both
+
+Dark ships `#00DAC3`: `L*` 78.5, `C*` 49.3. Both halves of that matter, and
+sRGB hands them out differently along the two hues in question. Walking the
+gamut boundary at each hue (bisection on chroma, sRGB primaries, D65):
+
+| hue | most chromatic colour anywhere on the hue | at the mint's own `L*` 78.5 |
+|---|---|---|
+| mint `h` 181.4 — today's | `#00FEE3`, `C*` 55.3 at `L*` 90 | `#00DAC3`, `C*` 49.3 |
+| azure `h` 247.2 — from `#009DD2` | `#00BFFE`, `C*` 45.9 at `L*` 72.5 | `#7CD0FF`, `C*` 33.4 |
+| blue `h` 278.0 — from `#2693FF` | `#0090FE`, `C*` 64.3 at `L*` 59 | `#ADC6FF`, `C*` 30.9 |
+
+**No azure in sRGB is as colourful as dark's mint, at any lightness.** The blue
+hue can beat it — by 15 units — but only 20 `L*` further down. Hold the mint's
+lightness exactly and both hues arrive at a third less chroma than it has,
+which is the pale end of `31d-strip-dark-ladder.png` and reads, on black, like
+a control that has been disabled.
+
+So the dark value was derived as **the in-gamut colour of the light candidate's
+own CIELAB hue that sits closest to `#00DAC3` in the `(L*, C*)` plane**: azure
+`#04BFFF` (`L*` 72.7, `C*` 45.9), blue `#81AFFF` (`L*` 71.2, `C*` 44.8).
+
+Then eight dark candidates were photographed on the bar — three azure, four
+blue, today's mint as the control — and **the rule survives for azure and does
+not for blue.** `#04BFFF` reads as an accent beside the mint; `#81AFFF` reads
+as a pastel, and `#599FFF` (`L*` 65.1, `C*` 54.7, further down the same hue) is
+what a blue app's dark accent would actually want. That is a judgement from
+`31d-strip-dark-ladder.png` and not a measurement, and it is why the blue
+carried through the full app below is `#599FFF` rather than the rule's answer.
+
+### The numbers, dark
+
+| candidate | fill | nav glyph on `#191919` | `Form` row on `#1C1C1E` | black label on the fill | `L*` | `C*` |
+|---|---|---|---|---|---|---|
+| today, the control | `#00DAC3` | 9.89 | 9.57 | 11.82 | 78.5 | 49.3 |
+| azure | `#04BFFF` | 8.29 | 8.02 | 9.90 | 72.6 | 46.0 |
+| blue | `#599FFF` | 6.55 | 6.34 | 7.83 | 65.1 | 54.7 |
+
+And light, the same three surfaces, for the two candidates this pass is about:
+
+| candidate | fill | bar glyph on `#FBFBFF` | `Form` row on `#FFFFFF` | black label on the fill |
+|---|---|---|---|---|
+| today, the control | `#009888` | 3.48 | 3.59 | 5.85 |
+| azure | `#009DD2` | 3.01 | 3.11 | 6.75 |
+| blue | `#2693FF` | 3.04 | 3.13 | 6.70 |
+
+Every ratio is arithmetic on colours read back out of the screenshots, not on
+the hex the probe was asked for — the `Log` pill and the gear glyph on home,
+the *Add Tracker* row's label on settings, each the most common exact colour in
+its rect. The control rows are the check: light's 3.48 and 3.59 are item 18's
+two published numbers, and dark's 9.89, 9.57 and 11.82 are three of this page's
+own from [the numbers, dark](#the-numbers-dark). All four candidate fills came
+back exactly the hex their launch argument named, on all eighteen shots, which
+is the discriminator a stale screenshot cannot pass.
+
+**Dark's floors are not what is deciding.** Every number in the dark table is
+two to three times the 3:1 a UI element needs, and every black label clears the
+4.5 its size wants. Dark is the permissive room this page said it was in the
+first pass; what moves is margin, not legality.
+
+**One surface reads off its fill, and it is not the one in the table.** On
+History the toolbar glyph came back `#0DE7D0` against a `#00DAC3` fill in dark,
+`#11CCFF` against `#04BFFF`, `#65ACFF` against `#599FFF` — brighter by about
+thirteen units per channel — and slightly *darker* than the fill in light
+(`#009688` against `#009888`). Home's gear is exactly the fill in both
+appearances on all six shots, so it is what the nav-glyph column measures.
+
+### So: is it one app?
+
+`31d-pair-bar.png` is the strip that answers it, and the answer is yes.
+
+- **Today's pair** — teal `#009888` beside mint `#00DAC3` — is plainly one
+  family: the same hue, lighter and more vivid in dark.
+- **The azure pair** — `#009DD2` beside `#04BFFF` — is plainly one family in
+  exactly the same way. It is a different app from today's, and it is *one*
+  app.
+- **The blue pair** — `#2693FF` beside `#599FFF` — is the weakest of the three.
+  The dark half reads pale and slightly lavender next to its own light half on
+  `31d-pair-history.png`, and its gear on `31d-strip-nav.png` is the softest
+  glyph in the set at 6.55.
+
+The last pass's "blue app in light, mint app in dark" was a statement about
+pairing azure with *today's* dark value, and it does not survive deriving a
+dark azure. What survives is the cost of doing that.
+
+### What azure costs in dark
+
+Stated plainly, because dark is the appearance this app is used in:
+
+- **Every dark number goes down and none of them breaks.** Nav glyph 9.89 →
+  8.29, `Form` row 9.57 → 8.02, black label 11.82 → 9.90. Azure in dark is a
+  slightly quieter accent, not a muddy or an illegible one, and the
+  photographs agree — on `31d-strip-nav.png` the mint gear is the brightest of
+  the six and the azure gear is crisp.
+- **The one thing that cannot be bought back is colour.** `C*` 45.9 against the
+  mint's 49.3 is the whole azure hue's ceiling, six `L*` below where the mint
+  sits, so the dark accent gets a little less light *and* a little less colour
+  at once. On the bar strip that is a small difference; it is not nothing.
+- **Blue costs considerably more**: 6.55 as a glyph against the mint's 9.89, a
+  dark half that reads pastel, and a pairing that is the least convincing of
+  the three.
+
+### Recommendation
+
+**If the app is to be azure, the pair is `#009DD2` light and `#04BFFF` dark**,
+and it is a real option rather than a trade of dark for light — one app in both
+appearances, every surface measured, nothing near a floor.
+
+**If the app is to stay as it is, that is the better dark mode**, by 1.6 on the
+glyph and 1.9 on the label, and by the only colour of the three that is both as
+bright and as saturated as sRGB allows at its own lightness.
+
+**`#2693FF` is the one to drop.** It was the lightest-reading light candidate in
+the last pass, and this one shows what it costs on the other side: no dark blue
+of that hue is both bright and colourful, and the pair reads as two relatives
+rather than one app.
+
+The user picks, and this time the pick is the whole app rather than one
+appearance of it.

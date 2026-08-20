@@ -1551,7 +1551,23 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       weakest. Numbers, the H-K model behind the ordering, and the same-app
       comparison against dark's `#00DAC3` are the last section of
       [accent-options.md](accent-options.md).
-- [ ] Dark mode is settled and measured. **Not touched.**
+- [x] **Rendered a fourth time, in both appearances**, because the user likes
+      azure and that is a question about the app rather than about light mode:
+      a dark azure was derived for each of the two candidates and photographed
+      beside it as `31d-*.png` — home, settings and History, light and dark,
+      with today's `#009888` / `#00DAC3` as the control in every strip.
+      **No azure in sRGB is as colourful as dark's mint at any lightness**
+      (`C*` 45.9 against 49.3), so a dark azure gives up a little light and a
+      little colour at once: nav glyph 9.89 → 8.29, `Form` row 9.57 → 8.02,
+      black label 11.82 → 9.90, every one of them still two to three times its
+      floor. **The pairing holds**: `#009DD2` with `#04BFFF` reads as one app
+      the way today's pair does, which retires "blue in light, mint in dark" —
+      that was azure against *today's* dark, not against a dark azure.
+      `#2693FF` is the one to drop; its dark half is pale at 6.55 on the glyph.
+      Numbers, the gamut walk behind them and the pair strips are the last
+      section of [accent-options.md](accent-options.md).
+- [ ] Dark mode is settled and measured. **Not touched** — until item 31d,
+      which reopened it on purpose and left it unchanged.
 - [ ] **The user picks, and nothing was merged.** Deeper, the recommendation
       is `#00796B` with a white label, or `#00857A` if the black label has to
       stay — and the second one is the compromise, because it is the same hue
