@@ -12,10 +12,6 @@ common knowledge says *unverified* instead.
 
 ## Before you paste any of this
 
-- [ ] **The description says nothing about a "last time" tracker, and that is
-      deliberate.** See *One sentence held back*, at the bottom. If that kind
-      has shipped by the time you submit, add the sentence; if it has not,
-      change nothing.
 - [ ] **Screenshots exist** at the size in *Assets* below. There are none in
       the repository yet.
 - [ ] **Re-check the name is still unclaimed.** `Boring Tracker` was free in
@@ -81,7 +77,7 @@ the one to edit if something needs saying between releases.
 
 ### Description
 
-4,000 characters, **unverified** limit. The text below is 1,914 characters,
+4,000 characters, **unverified** limit. The text below is 1,950 characters,
 counted.
 
 ```
@@ -91,7 +87,7 @@ Free, open source, no ads, no accounts, no subscription, no server, no feature b
 
 Most other macro trackers want you to scan a barcode for every ingredient of a dish you cooked yourself. It takes a lot of time for no benefit. This one just lets you write down "600 calories, 40 protein" and done, as fast as possible, minimum clicks, minimum wait/lag.
 
-You can also use it to track anything you want: your cat's weight, pushups, blood glucose.
+You can also use it to track anything you want: your cat's weight, pushups, blood glucose, the last time you changed a filter.
 
 A tracker is either a daily total, which adds entries up over the day and starts again at the day boundary, or a measurement, which is a standalone reading. Trackers you log at the same time share a group, so one sheet takes both numbers at once.
 
@@ -261,25 +257,3 @@ by showing the functionality that exists: **home** with several trackers,
 **the log sheet** with the number pad up, **history**, and **a tracker's graph**.
 Put them in `docs/screenshots/` as `home.png`, `log.png`, `history.png` and
 `tracker.png` — the README links that path and currently carries a placeholder.
-
-## One sentence held back
-
-The README and the website both say the app can track "the last time you
-changed a filter". **The app cannot do that yet.** `Tracker.Kind` has two
-cases, `dailyTotal` and `measurement`; the third is written up in TODO.md and
-is not built. What exists today is only the forward-compatibility work that
-lets a document written by a future build survive being opened by this one.
-
-Both of those places can be edited in seconds if the kind does not land. **The
-App Store description cannot**, so it does not make the claim, and no example
-in it depends on a feature that does not exist.
-
-If the kind ships before you submit, add it back to the fourth paragraph of the
-description:
-
-```
-You can also use it to track anything you want: your cat's weight, pushups, blood glucose, the last time you changed a filter.
-```
-
-That is 36 characters more, well inside the limit. If it does not ship, delete
-this section along with the sentence in the README and on the website.

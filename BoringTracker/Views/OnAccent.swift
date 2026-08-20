@@ -225,8 +225,10 @@ enum AccentFillPress {
     /// **What it costs is a flick.** A press cancelled by the list starting to
     /// scroll is held here for the rest of the floor — see `RowPressState.set`.
     ///
-    /// **A floor rather than a duration**, and only on rows: a fill outside a list
-    /// gets its touch immediately.
+    /// **A floor rather than a duration**, and only rows have one — the fills
+    /// never did. What made a row different was that its touch arrived late;
+    /// item 40 took that delay away, so whether a row still needs a floor is an
+    /// open question there.
     static let minimumHold: Duration = .milliseconds(100)
 }
 

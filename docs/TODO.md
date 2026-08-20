@@ -503,11 +503,13 @@ and both are about how one *feels*.
       that has ever been felt.
 - [ ] **What does a press called off look like?** SwiftUI reports a
       cancellation and a release identically, so a flick that starts on a row
-      leaves that row washed while the list is already scrolling. Item 40
-      measured it at 90ms — item 32's floor, holding a press the scroll had
-      cancelled — and made it common rather than narrow: it is now every flick
-      that starts on a row, not only one that rests first. Still cosmetic, and
-      the fix is still a second gesture watching for movement, which
+      leaves that row washed while the list is already scrolling. Item 40 made
+      it common rather than narrow — it is now every flick that starts on a row,
+      not only one that rests first — and item 32's floor holds a press the
+      scroll has already cancelled, for its 100ms and then the release fade,
+      which on the numbers already recorded is 100 plus 82. The 90ms item 40
+      first reported is too short to be that; see the correction there. Still
+      cosmetic, and the fix is still a second gesture watching for movement, which
       `RowPress.swift` has three times decided not to add. Look at it on a phone
       before deciding it is worth machinery.
 
@@ -2011,10 +2013,17 @@ the History row and both probe buttons, and the Log pill has not moved.
 
 - **A flick that starts on a row flashes that row.** A 30pt flick off the
   *Calories* row: with the delay on the row never washes at all; with it off the
-  wash is on at the touch frame and gone 90ms later. That 90ms is
-  `AccentFillPress.minimumHold` holding a press the scroll had already cancelled
-  — `RowPressState.set` cannot tell a cancellation from a release, which used to
-  be a narrow case and is now every flick that starts on a row.
+  wash is on at the touch frame and gone from the sampled band 90ms later.
+  **That 90ms is not `AccentFillPress.minimumHold` expiring, which is what this
+  first said.** `RowPressState.set` cannot tell a cancellation from a release,
+  so it holds the press for the rest of the floor — 100ms — and then fades it
+  out over `AccentFillPress.release`, 0.12s asked for and 82ms recorded as
+  visible. Nothing in that path can end a wash in 90ms. Likeliest is that the
+  row scrolled out of the fixed band being sampled while it was still washed;
+  that is reasoning, not a measurement, and a re-measure has to follow the row
+  rather than a rect. The direction is not in doubt either way: every flick that
+  starts on a row now washes it for at least the floor, where that used to be a
+  narrow case.
 - **And the same flick fires the press haptic**, because `pressHaptic` triggers
   on the same boolean the wash does. That cannot be measured here — a simulator
   logs "Haptics: unsupported" — so it is recorded as a consequence rather than
@@ -2029,6 +2038,19 @@ the History row and both probe buttons, and the Log pill has not moved.
   synthesized handle drag moved the *Food* group below *Weight* identically
   either way; a swipe on a History row reveals the red delete action either way;
   the log sheet opens, the keypad types and *Log* writes the entry.
+- **Unchecked, and reasoning rather than measurement: a flick that starts on the
+  reorder handle.** Settings' handle carries a `DragGesture(minimumDistance: 4)`
+  as a `highPriorityGesture`, and it is fed by the delivery this one line
+  changed — it used to see nothing until the scroll view had had its ~150ms to
+  claim the touch, and now it sees the touch on the first frame and can win at
+  4pt. The drag measured above is the deliberate one, a finger that rests and
+  then moves, which behaves the same either way. The case nobody has run is a
+  fast vertical flick that begins on the 44pt handle, and `reorderGesture`'s
+  `onEnded` commits from wherever the finger lets go — so if the drag wins that
+  race, a scroll rewrites the stored order. Check it before the device pass: it
+  needs a synthesized flick, not a thumb. If it reproduces, the cheap answer is
+  a larger `minimumDistance`, since a reorder always starts from a finger that
+  has already stopped.
 
 **The second option was not built.** Driving the pressed state from a
 `DragGesture(minimumDistance: 0)` is more code, it fights the scroll gesture it
