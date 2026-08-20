@@ -39,40 +39,20 @@ iOS app (e.g. the calculator). It is boring, but does its job, hence the name.
 This is the minimum set that makes the app useful. Nothing is here because
 another tracker has it.
 
-**Trackers.** Two kinds. A **daily total** adds entries up over the day and
-starts again at the day boundary — calories, protein, water, cigarettes,
-pushups. A **measurement** is a standalone reading with no reset — your weight,
-your cat's weight, blood glucose. You give a tracker a name, a unit and the
-number of decimal places, and that is the whole setup.
+- **Daily totals** — calories, protein, water. Resets at your day boundary.
+- **Measurements** — weight, blood glucose. A standalone reading, no reset.
+- **Last time** — tyres, the water filter. One tap, no number: "142 days ago".
+- **Groups**, so trackers you log together take one sheet.
+- **Logging** — the + opens what you logged last, with the number pad up.
+- **Log again** — repeat anything you have logged, one tap, searchable.
+- **History**, grouped by day and searchable. Edit, delete, undo.
+- **Graphs** — bars, lines, moving average. Week, month, year, or all of it.
+- **Export and import** — JSON or CSV out, JSON back in.
+- **Archive** a tracker without losing its data.
+- **Settings** — day boundary, light or dark, and the trackers themselves.
 
-**Groups.** Trackers you log at the same time share a group, so one sheet takes
-both numbers. Calories and protein arrive together; a group is what stops that
-costing two logs.
-
-**Logging.** The + opens whatever you logged last, with the number pad already
-up. An optional name — the food, not the tracker — is what lets you find it
-again. The time defaults to now and is tappable, so you can log dinner the next
-morning.
-
-**Log again.** The things you have logged before, most recent first, one tap
-each. Searchable by name. There is no preset to create and maintain: a preset
-here is just something you already logged.
-
-**History.** Everything, newest first, grouped by day, searchable by name. One
-row per thing you logged, even when it wrote two numbers, so editing or
-deleting it is one action. Swipe to delete, tap to edit, or repeat it with one
-tap. Deletes and repeats can be undone.
-
-**Graphs.** Daily totals as bars, measurements as a line with a moving average.
-Week, month, year, or all of it.
-
-**Your data.** Export everything as JSON or CSV, import JSON back, merging or
-replacing — and the document it replaces is kept, so an import can be undone.
-The JSON format is documented in [docs/TECH.md](docs/TECH.md). Archive a
-tracker to hide it without losing what you logged against it.
-
-**Settings.** The hour your day starts at, light or dark, and the trackers
-themselves — add, edit, reorder, archive, delete.
+Why each of these exists, and what was left out, is in
+[docs/PRODUCT.md](docs/PRODUCT.md).
 
 Issues and pull requests are welcome. Both get judged against
 [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md), so read it first — a feature can be
