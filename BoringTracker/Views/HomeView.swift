@@ -6,62 +6,36 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage(LogSheet.lastGroupKey) private var lastGroup = ""
     @State private var logging: LogSheet.Target?
-    /// Whether the Log again sheet is up. Not a `Route`: it comes up over home
-    /// and leaves as soon as it has written something, so it is a presentation
-    /// rather than a place (docs/TODO.md item 20).
     @State private var loggingAgain = false
-    /// The row the sheet wrote from here, while it is still the one the store
-    /// would take back.
-    ///
-    /// The store keeps one undo slot for the whole app and a repeat's offer
-    /// stands until something newer is written, so "is there a repeat to undo"
-    /// is not the same question as "did this screen write it". Only the second
-    /// one belongs on home. Comparing the row rather than keeping a flag is
-    /// what makes it self-clearing: an undo empties the slot and a repeat made
-    /// on History replaces it, and either way this stops matching.
+    /// The row the sheet wrote *from here*. The store keeps one undo slot for
+    /// the whole app, so "is there a repeat to undo" is not the same question as
+    /// "did this screen write it" — and comparing the row rather than keeping a
+    /// flag is what makes it self-clearing.
     @State private var wroteRow: HistoryItem.ID?
-    /// The row the Log again sheet last wrote, while the bar is still saying so
-    /// (docs/TODO.md item 30).
+    /// The row the Log again sheet last wrote, while the disc is acknowledging
+    /// it (docs/TODO.md item 30).
     ///
-    /// **The acknowledgement the sheet could not draw itself.** Item 30's first
-    /// candidate was the *row* marking as the sheet leaves. It was built and
-    /// recorded on an iPhone 17 Pro and it does not work: calling `dismiss()`
-    /// stops the presentation's content updating, so a checkmark set on the
-    /// same tap is never drawn — the sheet slides away for about 300ms showing
-    /// the state it had before the tap. Held for **0ms and 50ms** the mark
-    /// still never appeared; at **500ms** it did. That is a delay on the most
-    /// repeated action in the app, and the item's own rule is that this delays
-    /// nothing, so the row is not where it goes.
-    ///
-    /// So it is the disc the sheet came *out* of — the item's other candidate,
-    /// the dismissal carrying the information. It is under the thumb that just
-    /// tapped, nothing is in front of it by the time it is drawn, and it is the
-    /// same `RepeatDisc` in the same two states History's rows already use.
+    /// **The acknowledgement the sheet could not draw itself.** Marking the
+    /// *row* as the sheet leaves was built and recorded on an iPhone 17 Pro and
+    /// does not work: `dismiss()` stops the presentation's content updating, so
+    /// a checkmark set on the same tap is never drawn — the sheet slides away
+    /// for about 300ms showing the state it had before the tap. Held for **0ms
+    /// and 50ms** the mark still never appeared; at **500ms** it did, which is a
+    /// delay on the most repeated action in the app.
     ///
     /// **The written row rather than a flag**, so two repeats a moment apart are
-    /// two different values — every write gets a fresh batch id
-    /// (`Store.lastLoggedAgainRow`). That is what re-arms `logHaptic(_:)` and
-    /// what restarts the clock below.
-    ///
-    /// **Set, and then still checked against the store.** This says which write
-    /// the bar is acknowledging; whether that write is still standing is the
-    /// store's answer, so the disc asks both — see `logBar`. A flag alone kept
-    /// a checkmark up over an Undo tapped inside the same second.
-    ///
-    /// **Not `lastLoggedAgainAt`, which was here first and is too coarse**
-    /// (found in review). `Date.stamp()` canonicalises to whole seconds so the
-    /// file is lossless, so two repeats inside one second carry the *same*
-    /// date: the second tap would change nothing, buzz nothing, and leave the
-    /// first tap's clock to clear the mark early.
+    /// two different values — every write gets a fresh batch id. Not
+    /// `lastLoggedAgainAt`, which was here first and is too coarse:
+    /// `Date.stamp()` canonicalises to whole seconds, so two repeats inside one
+    /// second carry the *same* date, and the second would change nothing, buzz
+    /// nothing, and leave the first tap's clock to clear the mark early.
     @State private var loggedAgain: HistoryItem.ID?
-    /// The tracker being made from the row at the end of the list. Home's only
-    /// editor, and the only reason this screen owns a third sheet.
     @State private var addingTracker: Tracker?
     @State private var path: [Route] = []
 
-    /// Everything reachable from here. An enum rather than a bare `UUID` so
-    /// settings can be pushed onto the same stack instead of arriving as a
-    /// second sheet over the top of the log sheet.
+    /// An enum rather than a bare `UUID` so settings can be pushed onto the same
+    /// stack instead of arriving as a second sheet over the top of the log
+    /// sheet.
     enum Route: Hashable {
         case tracker(UUID)
         case history
@@ -78,40 +52,16 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Boring Tracker")
-            // Always the small title, never the large one. A large title is
-            // only drawn at the top of the scroll and swaps for the inline one
-            // as you move, so the screen reads as changing when nothing but
-            // the offset has: the same words, twice the size, in a different
-            // place. Inline says it once. It is also what every other screen
-            // here already does, which is the point of this item.
-            //
-            // It gives vertical space back rather than taking it — the large
-            // title's own band is gone — so the density item 11 bought is
-            // intact; the card count is in the commit body.
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 0) {
-                    // Home writes an undo-able thing now: the Log again sheet
-                    // dismisses onto this screen, so this is where the offer to
-                    // take it back has to be (docs/TODO.md item 20). The same
-                    // `UndoBar` History draws, not a copy — one wording for one
-                    // undo slot.
-                    //
-                    // **Only what the sheet wrote from here.** The store's slot
-                    // is global, so reading it directly meant that repeating a
-                    // row on History and tapping Back pinned "Logged again" over
-                    // the main screen — an offer for something done on another
-                    // screen, which is exactly what `offersDeletion: false`
-                    // exists to stop in the other direction. The bar expires
-                    // itself since item 20b, so this is no longer the thing
-                    // standing between you and an Undo tapped ten minutes later;
-                    // it is still what the bar means, which is the undo of the
-                    // screen that wrote the thing.
-                    //
-                    // `offersDeletion: false` for the reason the sheet used to
-                    // pass it: home has deleted nothing, and a deletion's offer
-                    // is deliberately never expired, so without it a swipe on
-                    // History would pin "Deleted batch" here instead.
+                    // **Only what the sheet wrote from here.** The store's
+                    // undo slot is global, so reading it directly meant that
+                    // repeating a row on History and tapping Back pinned
+                    // "Logged again" over the main screen. `offersDeletion:
+                    // false` stops the same thing in the other direction: home
+                    // has deleted nothing, and a deletion's offer is
+                    // deliberately never expired.
                     if offersUndo {
                         UndoBar(offersDeletion: false)
                     }
@@ -150,39 +100,25 @@ struct HomeView: View {
             .sheet(isPresented: $loggingAgain) {
                 // Told by the sheet rather than watched for: the write and the
                 // dismissal happen in the same breath, so an `onChange` on the
-                // store would have to guess whether the sheet was still up when
-                // it fired.
+                // store would have to guess whether the sheet was still up.
                 RepeatView {
                     wroteRow = store.lastLoggedAgainRow
                     loggedAgain = store.lastLoggedAgainRow
                 }
             }
-            // No clock here any more. The expiry is `UndoBar`'s, on every screen
-            // that draws the bar (docs/TODO.md item 20b): the bar empties itself
-            // ten seconds after the write, so this screen only has to answer the
-            // other question — whose write is it. Home kept its own copy of the
-            // ten and History kept none, which is exactly the drift 20b names.
         }
-        // The mark clears itself, and `task(id:)` rather than a bare `Task` for
-        // the reason History's own mark uses one: a second repeat while the
-        // first is up restarts the clock instead of racing it. A second —
-        // chosen rather than measured; there is nothing here to measure
-        // against.
-        //
-        // **The clock starts at the write, not at the uncovering**, so not all
-        // of it is on screen: the sheet is still sliding away when this begins.
-        // Off a 30fps recording of a synthesized tap, the disc is drawn as a
-        // checkmark in the first frame the bar is fully uncovered and holds for
-        // about 0.8s of the one. Left as it is — the alternative is starting
-        // from the sheet's `onDismiss`, which buys 0.2s and gives up the thing
-        // the recording shows, which is that the mark is already there as the
-        // sheet uncovers it rather than appearing afterwards.
-        //
         // **Outside the `NavigationStack`, not on its root content** (found in
         // review). A `task` on the root is cancelled by a push, so tapping
         // History inside that second left the flag set with nothing running to
         // unset it, and coming back drew a checkmark for a write that was by
-        // then old. Out here it survives the push and clears on time.
+        // then old.
+        //
+        // The clock starts at the write, not at the uncovering, so not all of
+        // it is on screen. Off a 30fps recording of a synthesized tap, the disc
+        // is drawn as a checkmark in the first frame the bar is fully uncovered
+        // and holds for about 0.8s of the one; starting from the sheet's
+        // `onDismiss` instead buys 0.2s and gives up the mark already being
+        // there as the sheet uncovers it.
         .task(id: loggedAgain) {
             guard loggedAgain != nil else { return }
             try? await Task.sleep(for: .seconds(1))
@@ -194,20 +130,16 @@ struct HomeView: View {
     /// Whether the Log again disc is saying "written".
     ///
     /// Three conditions, and each of them is a way the mark went stale in
-    /// review. It has to be **this screen's** write — `loggedAgain`, set by the
-    /// sheet on its way out. It has to be one the store is **still holding**,
-    /// the same comparison `offersUndo` makes: Undo sits 44pt above this disc
-    /// and is reachable well inside the second, and a checkmark standing over
-    /// an emptied slot is the app acknowledging a write it has just taken back.
-    /// And it has to be **recent**, because `Task.sleep` does not run while the
-    /// app is suspended — background inside the second, come back ten minutes
-    /// later, and home draws before the sleep resumes.
+    /// review: it has to be **this screen's** write, one the store is **still
+    /// holding** — Undo sits 44pt above this disc, and a checkmark over an
+    /// emptied slot is the app acknowledging a write it has just taken back —
+    /// and **recent**, because `Task.sleep` does not run while the app is
+    /// suspended, so backgrounding inside the second and coming back ten minutes
+    /// later draws home before the sleep resumes.
     ///
-    /// Two seconds, against a mark that lives for one: `lastLoggedAgainAt` is
+    /// Two seconds against a mark that lives for one: `lastLoggedAgainAt` is
     /// canonicalised to whole seconds, so it can sit up to half a second either
-    /// side of the moment it describes and the window has to clear that. It is
-    /// a guard, not the clock — `task(id:)` below is still what takes the mark
-    /// down on time.
+    /// side of the moment it describes.
     private var isConfirming: Bool {
         guard let loggedAgain, store.lastLoggedAgainRow == loggedAgain,
               let at = store.lastLoggedAgainAt
@@ -215,125 +147,69 @@ struct HomeView: View {
         return Date().timeIntervalSince(at) < 2
     }
 
-    /// Whether the bar is drawn: this screen wrote the pending repeat.
-    ///
-    /// Only whose write it is. How old it is belongs to `UndoBar`, which asks it
-    /// the same way on every screen since item 20b, so this cannot be the screen
-    /// that answers it a second time and differently.
-    ///
-    /// The row it compares against comes from the store rather than from a flag
-    /// of its own, so an offer cannot be left standing by a screen that stopped
-    /// running: the sheet reports the row it wrote, and if something newer takes
-    /// the store's one slot the two stop matching.
+    /// Whether the bar is drawn: this screen wrote the pending repeat. Only
+    /// whose write it is — how old it is belongs to `UndoBar`, which asks it the
+    /// same way on every screen since item 20b.
     private var offersUndo: Bool {
         wroteRow != nil && store.lastLoggedAgainRow == wroteRow
     }
 
     /// The bottom bar: the one big thing, and one small one beside it.
     ///
-    /// **The small one is the risk in item 16.** The bottom of home holds the
-    /// most frequent action in the app, and a peer beside it competes with it
-    /// for the same thumb — so Repeat is not a peer. It is a wordless disc in a
-    /// slot a fifth of the bar wide, against a pill that takes the rest, and it
-    /// does not set the bar's height. Two prominent buttons were tried first
-    /// and read as a choice to make on arrival, which is a decision in front of
-    /// logging and wrong by default (docs/PHILOSOPHY.md). It said "a bordered
-    /// square" here until item 27, which item 21 had already stopped being
-    /// true; what makes it secondary is the size and the missing word, not the
-    /// border it no longer has.
+    /// **The Log pill leads and the Log again disc trails**, swapped from the
+    /// other way round in item 27 and decided by the user: the pill spans most
+    /// of the bar either way, so it stays under the thumb wherever the small
+    /// control sits.
     ///
-    /// **On the trailing side, and it was on the leading one until item 27.**
-    /// The original argument was that a right-handed thumb rests at the bottom
-    /// right, so the primary action belongs there and the rarer one is kept out
-    /// of the easiest place on the screen. That argument was weaker than it
-    /// looked: the pill spans most of the bar either way, so it stays under the
-    /// thumb wherever the small control sits, and the leading side is no less
-    /// reachable for a 44pt target than the trailing one. Decided by the user.
+    /// **Repeat is not a peer, and that is the constraint the sides do not
+    /// change.** Two prominent buttons were tried first and read as a choice to
+    /// make on arrival, which is a decision in front of logging
+    /// (docs/PHILOSOPHY.md). What keeps this secondary is a circle with no word
+    /// on it against a pill six times its width.
     ///
-    /// The constraint that does hold is the paragraph above, and swapping sides
-    /// is not a licence to make these two equals.
-    ///
-    /// The control is History's repeat disc, deliberately — `RepeatDisc`, the
-    /// same view rather than the same idea drawn again. It already means "log
-    /// this again" in this app, one screen away, and a word here would take
-    /// another 60pt off the pill to say what the screen it opens says in its
-    /// own title.
-    ///
-    /// **It was a grey `.bordered` square with a white glyph until item 21**,
-    /// which made this the one place in the app that answered "what kind of
-    /// control is this?" differently from the two other places the same action
-    /// appears. The worry above is what put it there, and it is not what
-    /// colour was buying: this stays secondary because it is a 30pt disc with
-    /// no word against a full-width pill, and the card's `+` is the same fill
-    /// on the same screen without competing with the pill either.
-    ///
-    /// **A 50pt circle, and the 70pt slot is gone** (docs/TODO.md item 33).
-    /// The slot was what the `.bordered` square before item 21 had measured,
-    /// and it was kept so the pill's width would not move — which left a 30pt
-    /// disc floating in the middle of 70pt of air beside a 50pt pill, agreeing
-    /// with it on nothing. Five alternatives were rendered and photographed
-    /// and the user picked this one: same height as the pill, same fully round
-    /// corner, and the 20pt the slot was wasting handed back to the pill,
-    /// which goes 292 to 312.
-    ///
-    /// It is still not a peer. Two prominent buttons were tried early and read
-    /// as a choice to make on arrival, and what keeps this secondary is that it
-    /// is a circle with no word on it against a pill that is six times its
-    /// width — not that it was smaller in height as well.
+    /// **A 50pt circle, and the 70pt slot is gone** (docs/TODO.md item 33). The
+    /// slot had been measured for the `.bordered` square this used to be, and
+    /// was kept so the pill's width would not move — which left a 30pt disc
+    /// floating in the middle of 70pt of air beside a 50pt pill. Five
+    /// alternatives were rendered and photographed and the user picked this one;
+    /// the pill goes 292 to 312.
     @ViewBuilder
     private var logBar: some View {
         if !store.activeTrackers.isEmpty {
             HStack(spacing: 8) {
-                // Unlike a card's small +, this is the primary action: it
-                // opens the last-used group instead of this row's. It stays
-                // centred enough to sit inside either hand's thumb arc.
+                // Unlike a card's small +, this opens the last-used group
+                // rather than this row's.
                 Button(action: logLastGroup) {
                     Label("Log", systemImage: "plus")
                         .frame(maxWidth: .infinity)
-                        // Dark on the fill, not the white iOS draws by
-                        // default — see `Color.onAccent`. Inside the label,
-                        // because that is where a `.disabled` outside can
-                        // still reach it.
+                        // Inside the label, because that is where a
+                        // `.disabled` outside can still reach it.
                         .onAccentFill()
                 }
                 // `.accentPill`, not `.borderedProminent` with a tint. The
-                // fill is the same and so are the metrics, measured either
-                // side of the change; what a tint could not reach is the
-                // pressed state, which iOS drew 1.08:1 against rest in dark
-                // mode and in the opposite direction from every other accent
-                // fill on this screen (docs/TODO.md item 26,
-                // `AccentPillButtonStyle`).
+                // fill is the same and so are the metrics, measured either side
+                // of the change; what a tint could not reach is the pressed
+                // state, which iOS drew 1.08:1 against rest in dark mode and in
+                // the opposite direction from every other accent fill on this
+                // screen (docs/TODO.md item 26).
                 .buttonStyle(.accentPill)
                 .controlSize(.large)
                 Button { loggingAgain = true } label: {
-                    // The disc is its own target here, at 50pt, so there is no
-                    // frame around it to pad it out to 44 or to reserve a slot.
                     RepeatDisc(diameter: 50, glyph: 20, confirmed: isConfirming)
                 }
                 // `.accentFill` rather than `.plain`, so the disc reads the
-                // press and recedes to `Color.accentFillPressed` like every
-                // other accent fill (docs/TODO.md item 26).
+                // press and recedes to `Color.accentFillPressed`.
                 .buttonStyle(.accentFill)
-                // The glyph stays; only what VoiceOver reads changes. "Log
-                // again" is what the screen it opens is called and what
-                // History's disc already says (docs/TODO.md item 20).
                 .accessibilityLabel("Log again")
-                // The half of item 30 that reaches you wherever you are
-                // looking, and the only half a sheet's own dismissal cannot
-                // outrun. On home rather than inside `RepeatView`: the sheet
-                // stops updating the moment it is dismissed, and the one signal
-                // that has to arrive is not the one to hang off a view being
-                // torn down.
+                // On home rather than inside `RepeatView`: the sheet stops
+                // updating the moment it is dismissed, so the one signal that
+                // has to arrive cannot hang off a view being torn down.
                 //
-                // **The same buzz for a partial repeat**, which is deliberate
-                // (raised in review). `Store.logAgain` writes what it can and
-                // records what it skipped — a weigh-in batch repeats its
-                // calories and drops its weight, by item 23 — and the honest
-                // wording for that is already on screen at the same instant, in
-                // the undo bar directly above this: "Logged 1 of 2 again". A
-                // second haptic meaning "partly" would be a vocabulary of two
-                // buzzes nobody is going to learn, for a distinction the
-                // sentence beside it already draws.
+                // **The same buzz for a partial repeat**, deliberately (raised
+                // in review). The honest wording is already on screen at the
+                // same instant, in the undo bar directly above this: "Logged 1
+                // of 2 again". A second haptic meaning "partly" would be a
+                // vocabulary of two buzzes nobody is going to learn.
                 .logHaptic(loggedAgain)
             }
             .frame(maxWidth: horizontalSizeClass == .regular ? 440 : .infinity)
@@ -352,30 +228,21 @@ struct HomeView: View {
     /// in between — that would be a tap on the common path, every time.
     private func logLastGroup() {
         guard let group = store.groupToLog(preferring: lastGroup) else { return }
-        // No `tracker:` — the sheet already lands on the first field of the
-        // group when none is named, and it resolves that from the store as it
-        // opens rather than from a snapshot taken here.
+        // No `tracker:` — the sheet lands on the group's first field when none
+        // is named, and resolves it from the store as it opens rather than from
+        // a snapshot taken here.
         LogSheet.present(.init(group: group), using: $logging)
     }
 
-    /// A dead end otherwise: with every tracker deleted or archived there is
-    /// nothing to log against and nothing on screen that says how to fix that.
     private var empty: some View {
         ContentUnavailableView {
             Label("No trackers", systemImage: "number")
         } description: {
             Text("Add one to start counting whatever you like.")
         } actions: {
-            // Spelled out rather than the string convenience so the label can
-            // be drawn dark on the fill like every other prominent button here.
-            // It is a rare screen, but a screen that says the same thing a
-            // different way is what item 13 is named after.
             NavigationLink(value: Route.settings) {
                 Text("Add Tracker").onAccentFill()
             }
-            // The same pill home's bar draws, for the same reason it is
-            // shared: a rare screen is exactly where a second design language
-            // survives unnoticed (docs/TODO.md item 26).
             .buttonStyle(.accentPill)
         }
     }
@@ -386,18 +253,8 @@ struct HomeView: View {
     /// Blocks are `LogGroup`s rather than runs of adjacent trackers, so what is
     /// drawn as one block is exactly what one + opens. A group's trackers need
     /// not sit next to each other — `update` leaves a tracker's position alone
-    /// when its group changes — and
-    /// grouping by adjacency drew a group under two identical headings while
-    /// the sheet behind either one held all of it. The screen was contradicting
-    /// the sheet it launches.
-    ///
-    /// Still not a gather: every loose tracker is its own group, so nothing
-    /// jumps to the bottom of the screen for having no group and there is no
-    /// "Other" heading. Only a group's stragglers move, up to where that
-    /// group already is.
-    ///
-    /// Nothing here reorders. Ordering lives in settings, where member drags
-    /// stay inside a run and a run itself moves as one block.
+    /// when its group changes — and grouping by adjacency drew a group under two
+    /// identical headings while the sheet behind either one held all of it.
     private var runs: [[Tracker]] {
         store.activeTrackerRuns
     }
@@ -407,12 +264,6 @@ struct HomeView: View {
             if let notice = LoadNotice(origin: store.origin, saveError: store.saveError) {
                 Section { NoticeRow(notice: notice) }
             }
-            // One ordered list, in the order the groups first appear: a group
-            // gets its heading over its trackers, and every loose tracker is a
-            // bare card where it already sits (docs/PRODUCT.md). Nothing is
-            // gathered at the bottom and there is no "Other" heading — having
-            // no group is the normal state, not a leftover, and it needs no
-            // special case here.
             // Keyed on the first card, not on the run itself: `Tracker` hashes
             // over every stored property, including the two timestamps and the
             // sort index that a reorder rewrites on every row. Keyed by value,
@@ -445,43 +296,30 @@ struct HomeView: View {
         // Every loose tracker is its own section (see `runs`), so the gap
         // between sections is paid once per card rather than once per group —
         // with ten trackers the default spacing was costing more vertical room
-        // than two whole cards. Compact is the standard shorter value; nothing
-        // here is hand-tuned.
+        // than two whole cards.
         .listSectionSpacing(.compact)
     }
 
     /// A quiet way to make another tracker, at the end of the cards.
     ///
     /// **Inline and scrolling with the list, not pinned above it.** Home's
-    /// bottom already holds Log and the Log again disc, and those two are the
-    /// most frequent action in the app and the second most; a third control
-    /// down there competes with them for the same thumb, which is the risk item
-    /// 16 already weighed once and answered by making Repeat visibly not a peer
-    /// (docs/PHILOSOPHY.md, "frequent actions live low"). Making a tracker is
-    /// the opposite kind of thing — you do it a handful of times ever — so it
-    /// gets no permanent screen and no reserved thumb space, and it is reached
-    /// by scrolling past everything you actually came for.
+    /// bottom already holds the most frequent action in the app and the second
+    /// most, and a third control down there competes with them for the same
+    /// thumb (docs/PHILOSOPHY.md, "frequent actions live low").
     ///
-    /// **Not a card.** A clear row background and secondary text, so it reads
-    /// as a line under the last tracker rather than as another tracker. That
-    /// quietness is the whole of what keeps it out of the way of somebody who
-    /// arrived to log a number — **not the fold**, which it is nowhere near.
-    /// Measured on an iPhone 17 (1206×2622) at the default type size: nine
-    /// loose cards still leave the row fully visible above the Log bar, and it
-    /// takes ten to push it off the screen. The commit that added it recorded
-    /// "four or more and it is below the fold", and that does not reproduce.
+    /// What keeps it out of the way is that it is quiet — **not the fold**,
+    /// which it is nowhere near. Measured on an iPhone 17 (1206×2622) at the
+    /// default type size: nine loose cards still leave the row fully visible
+    /// above the Log bar, and it takes ten to push it off the screen. The commit
+    /// that added it recorded "four or more and it is below the fold", and that
+    /// does not reproduce.
     ///
-    /// It opens the editor rather than pushing Settings. Settings is where the
-    /// same button lives, and going there costs a screen change and a second
-    /// tap to reach a sheet this one opens directly — a label that says "add
-    /// tracker" and delivers a screen with an *Add Tracker* button on it is a
-    /// promise kept a step late. The empty state still pushes Settings, because
-    /// somebody with no trackers at all has more to do there than make one.
+    /// It opens the editor rather than pushing Settings, which is where the same
+    /// button lives: a label that says "add tracker" and delivers a screen with
+    /// an *Add Tracker* button on it is a promise kept a step late.
     private var addTrackerRow: some View {
         Section {
             Button {
-                // No group, for the reason the settings button gives: a group
-                // is a claim about the new tracker that nobody has made yet.
                 addingTracker = Tracker(name: "")
             } label: {
                 Label("Add Tracker", systemImage: "plus")
@@ -490,69 +328,47 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
             }
-            // The same press every other row in the app has since item 28 —
-            // this one is a row that does something, so it wears the same
-            // style as the cards above it.
             .buttonStyle(.row)
             // `rest: .clear` rather than a `listRowBackground` of its own:
-            // this row is deliberately not a card (see the doc above), and
             // `rowPress()` owns the row's background so that a press can fill
-            // the whole cell.
+            // the whole cell, and this row is deliberately not a card.
             .rowPress(rest: Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 16))
         }
     }
 }
 
-/// A daily total, or the latest reading. The two kinds of tracker are the only
-/// real decision in the product, so they are the only real difference here.
+/// A daily total, or the latest reading.
 ///
 /// One line, not three. The stacked name-over-number card was 118pt tall and
 /// four of them filled a phone, which made the home screen a thing you scroll
-/// rather than a thing you read (docs/TODO.md item 11). Name left, number right,
-/// caption tucked under the name for the measurement kind: the same information
-/// in the height of a standard list row, and the number is still the loudest
-/// thing on it.
-///
-/// At `.xxxLarge` and above it goes back to stacking — see
-/// `DynamicTypeSize.stacksRows`. The row is only worth compressing while it
-/// still reads.
+/// rather than a thing you read (docs/TODO.md item 11). At `.xxxLarge` and above
+/// it goes back to stacking — see `DynamicTypeSize.stacksRows`.
 private struct TrackerCard: View {
     @Environment(Store.self) private var store
-    /// This was "the app has exactly one animation, and this is it" until item
-    /// 27, which gave every accent fill a scale on press — a second animation,
-    /// on five controls, reached far more often than a count. It asks in
-    /// `AccentFillPress.scale(for:reduceMotion:)`; this is the other place.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let tracker: Tracker
     let open: () -> Void
     let log: () -> Void
 
     var body: some View {
-        // Read once per pass and handed down. Both of these scan the whole
-        // entry history — `total` and `latestEntry` are linear — and they are
-        // wanted three times over between the layout and the spoken label. Six
-        // to ten of these cards are on screen by design, which is the point of
-        // this item, so a per-card constant factor is the one that shows.
+        // Read once per pass and handed down. `total` and `latestEntry` both
+        // scan the whole entry history and are wanted three times over between
+        // the layout and the spoken label, on six to ten cards at once.
         let headline = headline
         let caption = caption
         return HStack(spacing: 8) {
             // Two buttons with disjoint frames rather than a NavigationLink
             // wrapping a button: a link would either swallow the + or leave its
-            // chevron stranded in the middle of the card. ("Two *plain*
-            // buttons" until review — the + has been `.accentFill` since item
-            // 26, and what matters here was never the style but that they are
-            // two buttons and not one.)
+            // chevron stranded in the middle of the card.
             Button(action: open) {
                 summary(headline, caption)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
-                    // Spelled out rather than composed from the child order,
-                    // which put "8 hours ago" before "78.4 kg" once the caption
-                    // moved up beside the name. The number is the reading; the
-                    // qualifier goes after it. On the label content rather than
-                    // on the `Button` — applied outside, the button still read
-                    // its children in layout order and this had no effect.
+                    // On the label content rather than on the `Button`:
+                    // applied outside, the button still read its children in
+                    // layout order, which put "8 hours ago" before "78.4 kg"
+                    // once the caption moved up beside the name.
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(
                         [tracker.name, headline.text, caption]
@@ -560,31 +376,21 @@ private struct TrackerCard: View {
                             .joined(separator: ", ")
                     )
             }
-            // `.row`, not `.plain`: the left half of this card is a control
-            // whose whole press was `.plain` dimming its text 25%, which is not
-            // a press anyone noticed (docs/TODO.md item 28). It moves the way
-            // the `+` beside it does now — same travel, same direction, same
-            // curve, in the row's own colour rather than the accent's
-            // (`RowButtonStyle`).
+            // `.row`, not `.plain`: `.plain`'s whole press here was dimming
+            // the text 25%, which is not a press anyone noticed (docs/TODO.md
+            // item 28).
             .buttonStyle(.row)
-            // Left on the `Button`, deliberately, though the label above had to
-            // move inside. Moving this too was tried and reverted: the claim it
-            // rested on — that these modifiers do nothing out here — is
-            // contradicted twice in this repo, by `logButton` below and by
-            // HistoryView's repeat disc, both of which label a button from
-            // outside and are read correctly. (Both said `.plain` here until
-            // review; item 26 made them `.accentFill`, which changes the style
-            // and not the fact being cited.) The difference may be the
-            // `children: .ignore` above turning this button into a container,
-            // in which case the hint belongs inside after all. Unverified
-            // either way: it needs VoiceOver, not a reading of the tree, and
-            // guessing costs the hint entirely on the users who rely on it.
+            // Left on the `Button`, deliberately, though the label above had
+            // to move inside. Moving this too was tried and reverted:
+            // `logButton` below and HistoryView's repeat disc both label a
+            // button from outside and are read correctly. The difference may be
+            // the `children: .ignore` above turning this button into a
+            // container, in which case the hint belongs inside after all —
+            // **unverified**, since it needs VoiceOver rather than a reading of
+            // the tree, and guessing costs the hint entirely.
             .accessibilityHint("Shows the history")
             logButton
         }
-        // The whole card takes the press, not the half of it that is the button —
-        // see `rowPress()`, which is where the press is drawn and why it is
-        // here rather than inside the style (docs/TODO.md item 32).
         .rowPress()
         // The row is as tall as the + and no taller. The default inset-grouped
         // row padding was adding 46pt of its own, which is most of a second row.
@@ -593,94 +399,57 @@ private struct TrackerCard: View {
 
     /// One line normally, stacked once the text outgrows it.
     ///
-    /// The whole point of item 11 is that a name and a number fit on one row,
-    /// and at ordinary sizes they do. Past `stacksRows` they cannot: the number
-    /// is sized first, the name absorbs the entire shortfall, and the screen
-    /// becomes a column of numbers with no legible labels — at AX3 and up
-    /// "Calories" rendered as a single clipped glyph. Density is worth having
-    /// only while the row is still readable, so above the threshold this falls
-    /// back to the stacked shape the card had before, which has room for both.
-    /// Somebody reading at AX5 is not the person counting how many cards fit.
+    /// Past `stacksRows` a name and a number cannot share a row: the number is
+    /// sized first, the name absorbs the entire shortfall, and at AX3 and up
+    /// "Calories" rendered as a single clipped glyph.
     private func summary(_ headline: Headline, _ caption: String?) -> some View {
-        // The arrangement, the threshold and the measured `spacing: 0` all
-        // moved into `StackingRow` when the three list screens turned out to
-        // want the same row and the same fallback. Nothing this card *draws*
-        // changed with them: home is byte-identical at `large`, `.xxxLarge` and
-        // AX5 to a build with the card back on its own copy of the layout.
-        //
-        // Two things did change shape, and are inert rather than absent —
-        // written down because whatever makes them matter will not look like a
-        // change to this card. `StackingRow`'s stacked branch adds
-        // `frame(maxWidth: .infinity)`, which the card's own `VStack` never had;
-        // the caller already fills the width, so it buys nothing here. And the
-        // `layoutPriority` below now applies in *both* branches, where the card
-        // set it on the side-by-side one only: a `List` row proposes its height
-        // freely, so inside the `VStack` there is nothing for it to arbitrate.
+        // Two things changed shape when this moved into `StackingRow`, and are
+        // inert rather than absent — written down because whatever makes them
+        // matter will not look like a change to this card. The stacked branch
+        // adds `frame(maxWidth: .infinity)`, which the card's own `VStack` never
+        // had and the caller already does. And the `layoutPriority` below now
+        // applies in *both* branches: a `List` row proposes its height freely,
+        // so inside the `VStack` there is nothing for it to arbitrate.
         StackingRow {
             nameBlock(caption)
         } trailing: {
             headlineText(headline)
-                // The number gets the width it needs and the name is what
-                // gives way, because the number is the one thing on this
-                // row that has to be readable across a kitchen and a
-                // truncated name still says which tracker it is. How far
-                // that goes is bounded by `stacksRows` rather than by
-                // anything here: the worst case left side by side is
-                // "Calorie…" beside "1,234,567 kcal", on an SE at
-                // `.xxLarge`. A floor on the name was tried instead and
-                // reverted — `minWidth` reserves its width whether the name
-                // needs it or not, so "Weight" kept an 83pt blank gap and
-                // charged it to the number, which halved. That is this
-                // row's priority backwards, and for the common short name.
+                // The number gets the width it needs and the name gives way:
+                // the number has to be readable across a kitchen and a
+                // truncated name still says which tracker it is. A floor on the
+                // name was tried instead and reverted — `minWidth` reserves its
+                // width whether the name needs it or not, so "Weight" kept an
+                // 83pt blank gap and charged it to the number, which halved.
                 //
-                // Priority is the caller's, deliberately: a History row lets
-                // its *time* take the width instead, and one container cannot
-                // hold both answers.
+                // Priority is the caller's: a History row lets its *time* take
+                // the width instead, and one container cannot hold both
+                // answers.
                 .layoutPriority(1)
         }
     }
 
-    /// The name and its caption, in `TrackerRowName` rather than here.
-    ///
-    /// **This block moved out when settings turned out to draw the same
-    /// trackers at a different size** (docs/TODO.md item 28) — the type carries
-    /// the fonts, the line cap and the argument for all of it, and settings
-    /// now draws the same one. Nothing this card renders changed with the move:
-    /// the type asks `DynamicTypeSize.stacksRows` for the cap, which is the
-    /// same threshold this card's layout branches on.
-    ///
-    /// "8 hours ago" is the caption here, and it stays grey because it
-    /// genuinely is secondary to the reading it dates.
     private func nameBlock(_ caption: String?) -> some View {
         TrackerRowName(name: tracker.name, caption: caption)
     }
 
-    /// Shrunk from `.largeTitle` to `.title2`, which is the largest size that
-    /// fits beside the 44pt + without making the row taller than the button
-    /// already does. "Legible at a glance with one hand at the fridge" is a
-    /// floor, not a reason to spend a third of the screen on four numbers.
+    /// `.title2`, the largest size that fits beside the 44pt + without making
+    /// the row taller than the button already does.
     ///
     /// One line, and it shrinks rather than truncating — on *both* layouts. The
     /// scale factor used to live only on the one-line branch, which left the
     /// stacked branch, the one that exists because the text is already too big,
-    /// clipping "1,234 kcal" to "1,23…" at AX5 on an iPhone SE. A clipped total
-    /// is worse than a small one, and that is no less true where the type is
-    /// large on purpose.
+    /// clipping "1,234 kcal" to "1,23…" at AX5 on an iPhone SE.
     @ViewBuilder
     private func headlineText(_ headline: Headline) -> some View {
         Group {
             if let amount = headline.amount {
-                // Counts to the new number instead of swapping to it
-                // (docs/TODO.md item 20). Item 15 rolled the digits with
-                // `.contentTransition(.numericText)`, which is a handsome
-                // 0.3s and shows you a *different* number rather than the
-                // addition: 1,690 became 1,780 and you were left to work out
-                // that a 90 had gone in. Counting says which way and roughly
-                // how much before you have read a digit.
+                // Counts to the new number instead of swapping to it. Item 15
+                // rolled the digits with `.contentTransition(.numericText)`,
+                // which shows you a *different* number rather than the addition:
+                // 1,690 became 1,780 and you were left to work out that a 90 had
+                // gone in.
                 CountingNumber(value: amount) { tracker.format($0) }
             } else {
-                // A measurement tracker nobody has logged yet. There is no
-                // number to count from, so the em dash is simply replaced.
                 Text(headline.text)
             }
         }
@@ -691,120 +460,83 @@ private struct TrackerCard: View {
         //
         // It fixes the width of a digit, not the *number* of them. A count that
         // crosses a grouping boundary — 950 to 1,050 kcal, an ordinary lunch —
-        // gains a digit and a separator part-way through, and because the
-        // number carries `layoutPriority(1)` it takes that width out of the
-        // name's truncation budget, so a name long enough to truncate
-        // re-truncates mid-count. Raised in review and left: reserving the
-        // width is the `minWidth` that `summary` tried and reverted for the
-        // common short name, and reserving the *destination* width would move
-        // the name before the number arrives.
+        // gains a digit and a separator part-way through, and takes that width
+        // out of the name's truncation budget, so a name long enough to truncate
+        // re-truncates mid-count. Raised in review and left: reserving the width
+        // is the `minWidth` that `summary` tried and reverted.
         .monospacedDigit()
-        // On the card rather than at the place that writes, which is what
-        // keeps it honest in both directions. Nothing waits on it: `log()`
-        // still writes and dismisses in the same breath, and this counts
-        // behind the sheet on its way out — measured, see the commit and
-        // docs/TODO.md item 15. And it belongs to the number rather than to
-        // the log sheet, so logging again — which changes the same total by
-        // another door — gets it for free, as does an undo, an edit and a
-        // deletion.
+        // On the card rather than at the place that writes: logging again, an
+        // undo, an edit and a deletion all change the same total by another
+        // door and get this for free. Nothing waits on it — `log()` still
+        // writes and dismisses in the same breath, and this counts behind the
+        // sheet on its way out (docs/TODO.md item 15).
         //
         // 0.8s, where item 15 was 0.3s: at 0.3 a count is a flicker and reads
-        // as the swap it replaced. It is still an ease rather than a spring —
-        // a spring is a bounce, and a number that bounces is congratulating
-        // you (docs/PHILOSOPHY.md "Quiet") — and easing out means the count
-        // arrives rather than stopping dead.
+        // as the swap it replaced. An ease rather than a spring — a number that
+        // bounces is congratulating you (docs/PHILOSOPHY.md "Quiet").
         //
-        // Keyed on the amount rather than on the string it prints, because the
-        // amount is what is being interpolated. Two consequences, both looked
-        // at and kept: editing a tracker's unit or decimals changes the string
-        // without changing the number, and now swaps rather than transitions —
-        // which is right, since nothing was logged; and the midnight rollover
-        // still counts a daily total down to zero, now over 0.8s rather than
-        // 0.3s. Item 15 left that deliberately (the number really did change)
-        // and slowing it does not make it a different decision.
+        // Keyed on the amount rather than on the string it prints, so editing a
+        // tracker's unit or decimals swaps rather than transitions, and the
+        // midnight rollover still counts a daily total down to zero.
         //
-        // `nil` under Reduce Motion, which swaps the number instantly. Somebody
-        // who has asked the system for less motion has not asked for this
-        // animation to run nearly three times longer than it used to, and
-        // what the count buys — watching the addition happen — is exactly the
-        // moving thing that setting turns off.
-        //
-        // It said "the only animation in the app, so the only place that has to
-        // ask", and item 27 made that false in the same breath as it relied on
-        // it: the press scale it added shipped ungated, on every accent fill.
-        // Both ask now, and the argument is the one written here — a scale is
-        // the moving half of a press and the pressed colour is not, so the
-        // press keeps its colour where this keeps nothing.
+        // `nil` under Reduce Motion: what the count buys — watching the addition
+        // happen — is exactly the moving thing that setting turns off.
         .animation(reduceMotion ? nil : .easeOut(duration: 0.8), value: headline.amount)
         .lineLimit(1)
         .minimumScaleFactor(0.6)
     }
 
-    /// The bottom Log button, scaled down: same fill, same tint, same meaning.
+    /// The bottom Log button, scaled down: same fill, same meaning.
     ///
-    /// It used to be a bare blue glyph, which is a different design language
-    /// from the thing it is a smaller version of, and low enough contrast that
-    /// people did not read it as a control at all. The filled circle is 30pt so
-    /// it stays visibly secondary to the 50pt Log pill; the 44pt frame around
-    /// it is the tap target, and `contentShape` is what makes the frame — not
-    /// the fill — the thing your thumb has to hit.
+    /// It used to be a bare blue glyph — a different design language from the
+    /// thing it is a smaller version of, and low enough contrast that people did
+    /// not read it as a control at all. A tinted `.bordered` fill was tried
+    /// instead, on the grounds that eight solid dots down one screen is loud,
+    /// and rejected on the original complaint: a blue glyph on a pale blue disc
+    /// is exactly that low contrast again.
     ///
-    /// A tinted `.bordered` fill was tried instead, on the grounds that eight
-    /// solid dots down one screen is loud. It was rejected on the original
-    /// complaint: a blue glyph on a pale blue disc is exactly the low contrast
-    /// this was meant to fix, and the size and the idiom were only two of the
-    /// three things wrong with it.
+    /// The 44pt frame is the tap target, and `contentShape` is what makes the
+    /// frame rather than the 30pt fill the thing your thumb has to hit.
     private var logButton: some View {
         Button(action: log) {
             Image(systemName: "plus")
                 // Fixed, not `.subheadline`: the disc and the 44pt target are
                 // fixed too, and a text style scales without them. At AX3 the
                 // glyph outgrew its circle and the + drew as a crosshair
-                // straddling the edge — the "doesn't read as a control"
-                // complaint this button exists to fix, arriving by another
-                // door. A control that is already a comfortable target at
-                // every size has nothing to gain by growing.
+                // straddling the edge.
                 .font(.system(size: 15, weight: .bold))
-                // The same dark-on-accent the Log pill uses, for the same
-                // measured reason: this glyph sits on the identical fill six to
-                // ten times down the main screen, so on the old teal it was the
-                // identical 1.86:1. The two move together or the screen has two
-                // design languages again (docs/TODO.md item 13b).
+                // The same dark-on-accent the Log pill uses: this glyph sits
+                // on the identical fill six to ten times down the main screen,
+                // so on the old teal it was the identical 1.86:1 (docs/TODO.md
+                // item 13b).
                 //
-                // `.onAccentFill()` and not `Color.onAccent` written out, which
-                // is what this said until review: the background below carries
-                // all three states since item 26, and a foreground that names
-                // only the enabled one is half a control. Nothing disables this
-                // button today, so it draws exactly what it drew — but the
-                // first `.disabled` put on it would have painted black on
-                // `#636366` at 3.51:1 rather than the 5.99:1 the white glyph
-                // measures there, and nothing would have said so.
+                // `.onAccentFill()` and not `Color.onAccent` written out: the
+                // background below carries all three states since item 26, and a
+                // foreground that names only the enabled one is half a control.
+                // The first `.disabled` put on this button would have painted
+                // black on `#636366` at 3.51:1 rather than the 5.99:1 the white
+                // glyph measures there, and nothing would have said so.
                 .onAccentFill()
                 .frame(width: 30, height: 30)
                 // `accentFilled`, not `.tint` and not `Color.accentColor`: the
                 // environment tint is the ordinary label colour now, and
                 // `Color.accentColor` is still the system blue — item 18's
-                // catalog deliberately does not claim that magic name
-                // (docs/TODO.md items 13c and 18). The modifier is what puts
-                // the pressed colour and the press's scale on every accent
-                // fill at once (docs/TODO.md item 27).
+                // catalog deliberately does not claim that magic name. The
+                // modifier is what puts the pressed colour and the press's scale
+                // on every accent fill at once.
                 .accentFilled(.circle)
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
-        // `.accentFill` rather than `.plain`: the disc above draws its own
-        // pressed colour instead of taking iOS's 75% composite of whatever is
-        // behind it (docs/TODO.md item 26).
+        // `.accentFill` rather than `.plain`: the disc draws its own pressed
+        // colour instead of iOS's 75% composite of whatever is behind it.
         .buttonStyle(.accentFill)
         .accessibilityLabel("Log \(tracker.name)")
     }
 
-    /// What the card shows, and the number behind it.
-    ///
     /// Both together because both come from the same linear scan of the entry
-    /// history, and the transition needs the number to know which way the
-    /// digits should roll. `nil` where there is nothing to show — a
-    /// measurement tracker nobody has logged yet, which prints an em dash.
+    /// history, and the count needs the number to know which way to go. `nil`
+    /// where there is nothing to show, which prints an em dash.
     private struct Headline {
         var text: String
         var amount: Double?
@@ -837,25 +569,21 @@ private struct TrackerCard: View {
 
 /// A number that counts to its new value rather than swapping to it.
 ///
-/// `Animatable` on the view itself, which is the whole mechanism: SwiftUI
-/// interpolates `animatableData` across whatever animation is in flight and
-/// calls `body` for each frame, so the *value* is what animates and the text is
-/// simply drawn from it. There is no timer, no `TimelineView` and no state —
-/// nothing runs when nothing is changing.
+/// `Animatable` on the view itself is the whole mechanism: SwiftUI interpolates
+/// `animatableData` across whatever animation is in flight and calls `body` for
+/// each frame, so there is no timer, no `TimelineView` and no state — nothing
+/// runs when nothing is changing.
 ///
-/// It formats per frame, deliberately. A tracker's own `format` is what makes
-/// 1,690 read as "1,690 kcal" and 79.5 as "79.5 kg", and counting through
-/// numbers drawn by a second, simpler rule is how the card would disagree with
-/// itself mid-count — decimals and grouping included. Roughly fifty
-/// `FormatStyle` calls over the animation, on the one card whose number
-/// changed.
+/// It formats per frame, deliberately: counting through numbers drawn by a
+/// second, simpler rule is how the card would disagree with itself mid-count,
+/// decimals and grouping included. Roughly fifty `FormatStyle` calls over the
+/// animation, on the one card whose number changed.
 private struct CountingNumber: View, Animatable {
     var value: Double
     /// `@Sendable`, and `nonisolated` below, because SwiftUI interpolates the
     /// value off the main actor: `Animatable` is not main-actor isolated and a
     /// `View` is, so under Swift 6 the conformance only compiles when the part
-    /// the animator touches stands outside the isolation. It touches the
-    /// number, never the formatting.
+    /// the animator touches stands outside the isolation.
     let format: @Sendable (Double) -> String
 
     nonisolated var animatableData: Double {
@@ -867,8 +595,6 @@ private struct CountingNumber: View, Animatable {
         Text(format(value))
     }
 }
-
-// MARK: - Telling the user when something was wrong with their data
 
 private struct LoadNotice {
     var title: String
