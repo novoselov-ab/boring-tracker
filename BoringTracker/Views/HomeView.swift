@@ -552,6 +552,21 @@ private struct TrackerCard: View {
             return Headline(
                 text: latest.map { tracker.format($0.value) } ?? "—", amount: latest?.value
             )
+        case .lastTime:
+            // How long it has been, where the other two kinds print a number —
+            // that is the whole reading (docs/PRODUCT.md). No `amount`, so it
+            // swaps rather than counting: there is nothing to count through
+            // between "yesterday" and "today".
+            return Headline(text: elapsed ?? "—", amount: nil)
+        }
+    }
+
+    /// Whole days since the last one, from the day the entry belongs to rather
+    /// than from its clock time — so an oil change at 23:00 reads "yesterday" the
+    /// next morning and not "12 hours ago".
+    private var elapsed: String? {
+        store.latestEntry(for: tracker.id).map {
+            Elapsed.label(from: store.day(of: $0), to: store.today, calendar: store.calendar)
         }
     }
 
@@ -563,6 +578,12 @@ private struct TrackerCard: View {
             store.latestEntry(for: tracker.id).map {
                 $0.date.formatted(.relative(presentation: .named))
             }
+        // The date underneath the reading was in the note that scheduled this
+        // kind, and it is left out: the reading *is* the date, so the caption
+        // would be the same fact twice — "today" over "Today" — and it would
+        // cost a second line on a card that was cut to one on purpose.
+        case .lastTime:
+            nil
         }
     }
 }

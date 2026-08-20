@@ -67,8 +67,10 @@ struct TrackerChart: View {
     @ViewBuilder
     private var chart: some View {
         Chart {
-            switch tracker.kind {
-            case .dailyTotal:
+            // `if` rather than a `switch` over the kind: a chart builder has no
+            // empty branch to give `lastTime`, which plots nothing — the detail
+            // screen leaves this whole section out for it (docs/PRODUCT.md).
+            if tracker.kind == .dailyTotal {
                 ForEach(points) { point in
                     BarMark(
                         x: .value("Day", point.date, unit: .day),
@@ -80,7 +82,8 @@ struct TrackerChart: View {
                     // mode — a bar you cannot see is a chart that doesn't work.
                     .foregroundStyle(.primary)
                 }
-            case .measurement:
+            }
+            if tracker.kind == .measurement {
                 ForEach(average) { point in
                     LineMark(
                         x: .value("When", point.date),
@@ -158,6 +161,8 @@ struct TrackerChart: View {
             let low = points.min { $0.value < $1.value }?.value ?? 0
             let high = points.max { $0.value < $1.value }?.value ?? 0
             return "\(tracker.format(low)) to \(tracker.format(high))"
+        case .lastTime:
+            return ""
         }
     }
 
@@ -185,6 +190,9 @@ struct TrackerChart: View {
                 from: start.startOfDay(calendar: store.calendar, dayStartHour: store.dayStartHour)
             )
             average = ChartData.movingAverage(points)
+        case .lastTime:
+            points = []
+            average = []
         }
     }
 }

@@ -539,8 +539,10 @@ struct PersistenceTests {
     // MARK: - A kind this build does not know
 
     /// Written the way the encoder writes it — two-space indent, sorted keys —
-    /// so a re-encode can be compared to it byte for byte. `lastTime` is the
-    /// kind docs/TODO.md has as a post-v1 candidate; any unknown string does.
+    /// so a re-encode can be compared to it byte for byte. `duration` is a kind
+    /// nothing has built; any unknown string does. It used to be `lastTime`,
+    /// which is a case this build now has — the point of the fixture is a string
+    /// with no case behind it, so it had to move on.
     private static let unknownKindFile = """
     {
       "entries" : [
@@ -556,7 +558,7 @@ struct PersistenceTests {
           "date" : "2026-01-01T00:20:00Z",
           "id" : "55555555-5555-4555-8555-555555555555",
           "modified" : "2026-01-01T00:20:00Z",
-          "name" : "front pair",
+          "name" : "afternoon",
           "trackerID" : "22222222-2222-4222-8222-222222222222",
           "value" : 1
         },
@@ -593,9 +595,9 @@ struct PersistenceTests {
           "group" : "",
           "id" : "22222222-2222-4222-8222-222222222222",
           "isArchived" : false,
-          "kind" : "lastTime",
+          "kind" : "duration",
           "modified" : "2026-01-01T00:01:00Z",
-          "name" : "Tyres",
+          "name" : "Sleep",
           "orderModified" : "2026-01-01T00:01:00Z",
           "sortIndex" : 1,
           "unit" : ""
@@ -620,13 +622,13 @@ struct PersistenceTests {
     func unknownKindLoads() throws {
         let document = try StoreMigration.migrate(Data(Self.unknownKindFile.utf8))
 
-        #expect(document.trackers.map(\.name) == ["Calories", "Tyres", "Weight"])
-        let tyres = try #require(document.trackers.first { $0.name == "Tyres" })
-        #expect(tyres.kindRaw == "lastTime")
+        #expect(document.trackers.map(\.name) == ["Calories", "Sleep", "Weight"])
+        let sleep = try #require(document.trackers.first { $0.name == "Sleep" })
+        #expect(sleep.kindRaw == "duration")
         // Not `dailyTotal`: the read-only-ish shape shows the latest value and
         // when it was taken, which renders sensibly for a tracker built for
         // behaviour this build does not have.
-        #expect(tyres.kind == .measurement)
+        #expect(sleep.kind == .measurement)
     }
 
     @Test("Saving it back writes the kind it was given, not this build's reading of it")
@@ -644,31 +646,32 @@ struct PersistenceTests {
     func unknownKindKeepsItsEntries() throws {
         let document = try StoreMigration.migrate(Data(Self.unknownKindFile.utf8))
 
-        let tyres = try #require(document.trackers.first { $0.name == "Tyres" })
+        let sleep = try #require(document.trackers.first { $0.name == "Sleep" })
         #expect(document.entries.count == 3)
-        #expect(document.entries.filter { $0.trackerID == tyres.id }.map(\.name) == ["front pair"])
+        #expect(document.entries.filter { $0.trackerID == sleep.id }.map(\.name) == ["afternoon"])
         let known = Set(document.trackers.map(\.id))
         #expect(document.entries.allSatisfy { known.contains($0.trackerID) })
     }
 
     @Test("Choosing the kind it already reads as does not overwrite the string")
     func unknownKindSurvivesThePicker() throws {
-        // The editor's picker has two segments and an unknown kind shows as
-        // `Measurement`, so tapping away and back reads as a revert. Writing
+        // The editor's picker has a segment per known kind and an unknown kind
+        // shows as `Measurement`, so tapping away and back reads as a revert.
+        // Writing
         // "measurement" there loses the string *and* stamps the record newer,
         // which spreads the loss to every other device at the next merge.
-        var tyres = Tracker(name: "Tyres")
-        tyres.kindRaw = "lastTime"
+        var sleep = Tracker(name: "Sleep")
+        sleep.kindRaw = "duration"
 
-        tyres.kind = .measurement
-        #expect(tyres.kindRaw == "lastTime")
+        sleep.kind = .measurement
+        #expect(sleep.kindRaw == "duration")
 
         // A kind actually chosen still lands, and going back is an ordinary
         // measurement from then on.
-        tyres.kind = .dailyTotal
-        #expect(tyres.kindRaw == "dailyTotal")
-        tyres.kind = .measurement
-        #expect(tyres.kindRaw == "measurement")
+        sleep.kind = .dailyTotal
+        #expect(sleep.kindRaw == "dailyTotal")
+        sleep.kind = .measurement
+        #expect(sleep.kindRaw == "measurement")
     }
 
     @Test("Every stored field of a tracker reaches the file")
@@ -696,8 +699,8 @@ struct PersistenceTests {
 
         let merged = document.merged(with: StoreDocument())
 
-        let tyres = try #require(merged.trackers.first { $0.name == "Tyres" })
-        #expect(tyres.kindRaw == "lastTime")
+        let sleep = try #require(merged.trackers.first { $0.name == "Sleep" })
+        #expect(sleep.kindRaw == "duration")
         #expect(merged.entries.count == 3)
     }
 }

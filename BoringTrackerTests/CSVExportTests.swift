@@ -52,15 +52,15 @@ struct CSVExportTests {
     func unknownKind() throws {
         // The kind column says what the tracker is, and this build reading it
         // as a measurement is not a fact about the document.
-        var tracker = Tracker(name: "Tyres")
-        tracker.kindRaw = "lastTime"
+        var tracker = Tracker(name: "Sleep")
+        tracker.kindRaw = "duration"
         let entry = Entry(trackerID: tracker.id, value: 1, date: time(10))
         let text = try #require(String(
             data: CSVExport.data(document: StoreDocument(trackers: [tracker], entries: [entry])),
             encoding: .utf8
         ))
 
-        #expect(text.contains(",Tyres,,lastTime,"))
+        #expect(text.contains(",Sleep,,duration,"))
     }
 
     @Test("Free-text names survive the round trip a spreadsheet parser makes")

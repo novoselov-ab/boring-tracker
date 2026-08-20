@@ -279,13 +279,33 @@ final class Store {
         }
     }
 
+    /// The fields the log sheet draws for a group: everything in it except the
+    /// `lastTime` trackers, which have no number to type. Logging one is the tap
+    /// on its own card and nothing else, so a keypad row for it would be a field
+    /// you must leave empty for the sheet to mean what it says.
+    func amountTrackers(in group: LogGroup) -> [Tracker] {
+        trackers(in: group).filter { $0.kind != .lastTime }
+    }
+
+    /// The groups the log sheet can open, which is `logGroups` minus the ones
+    /// holding nothing but `lastTime` trackers. Those are still blocks on the
+    /// home screen and still rows in settings — they are only not somewhere the
+    /// keypad can go, and offering one would open a sheet with no fields and a
+    /// dead Log button.
+    var loggableGroups: [LogGroup] {
+        logGroups.filter { !amountTrackers(in: $0).isEmpty }
+    }
+
     /// What tapping + opens: what you logged last, or the first thing on the home
     /// screen if that is gone — archived, deleted, or moved into a group. Takes the
     /// remembered group as the plain string `UserDefaults` returns it as, because
     /// deciding whether it still means anything is this method's job. Never a picker
     /// (docs/PRODUCT.md).
+    ///
+    /// `nil` where nothing takes a number — every tracker is a `lastTime` one — and
+    /// the bottom bar goes away rather than opening an empty sheet.
     func groupToLog(preferring remembered: String) -> LogGroup? {
-        let available = logGroups
+        let available = loggableGroups
         if let group = LogGroup(rawValue: remembered), available.contains(group) {
             return group
         }
@@ -459,6 +479,21 @@ final class Store {
         scheduleSave()
     }
 
+    /// The whole of logging a `lastTime` tracker: an entry that says only that this
+    /// happened, now. One tap, no sheet, no keypad — docs/PRODUCT.md.
+    ///
+    /// The 0 is `Entry.value` being non-optional, not a reading. Making it optional
+    /// would have reached every sum, average, chart and export in the app for one
+    /// kind that has no number; it is written here, and `Tracker.entryText` is what
+    /// keeps it off the screen (docs/TECH.md).
+    ///
+    /// Through `add(values:)` like every other log, so the entry gets a batch id and
+    /// a canonicalised date by the same route: what was logged together is a property
+    /// of the log, not of how many trackers it touched.
+    func logNow(_ tracker: Tracker) {
+        add(values: [tracker.id: 0])
+    }
+
     /// Logs the same moment against several trackers at once. One name across all of
     /// them: the log sheet has one name field.
     func add(values: [UUID: Double], at date: Date = .stamp(), name: String? = nil) {
@@ -509,6 +544,12 @@ final class Store {
     /// weight nobody stood on the scale for, dated now, which home's Weight card then
     /// shows as today's reading.
     ///
+    /// **A `lastTime` tracker is refused for the opposite reason**: repeating one
+    /// would be honest — it happened again — but the row carries no values to repeat,
+    /// and the tap that writes it is already one tap on its own card. A screen that
+    /// exists to save you retyping numbers has nothing to offer a kind that never
+    /// typed any.
+    ///
     /// **The choke point rather than the control.** Disabling the disc on any row the
     /// Log again list would refuse reads more simply, but it refuses a weigh-in batch
     /// whole and leaves `logAgain` willing to write a measurement for whatever calls
@@ -535,7 +576,7 @@ final class Store {
     /// Every tracker a repeat may write to: still present, not archived, and a daily
     /// total. See `repeatableEntries(of:)` for why the kind belongs in this set.
     private var repeatTargets: Set<UUID> {
-        Set(trackers.lazy.filter { !$0.isArchived && $0.kind != .measurement }.map(\.id))
+        Set(trackers.lazy.filter { !$0.isArchived && $0.kind == .dailyTotal }.map(\.id))
     }
 
     /// Every tracker the Log again *list* is about: still present, a daily total,
@@ -547,7 +588,7 @@ final class Store {
     /// draw greyed. **Membership only** — what a listed row shows is `repeatTargets`
     /// where that leaves anything.
     private var repeatListTargets: Set<UUID> {
-        Set(trackers.lazy.filter { $0.kind != .measurement }.map(\.id))
+        Set(trackers.lazy.filter { $0.kind == .dailyTotal }.map(\.id))
     }
 
 

@@ -70,12 +70,16 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// the actionable half. The word comes from `Tracker.Kind.label` rather than
     /// a literal, so renaming the kind cannot leave History saying the old word
     /// with every test still passing.
+    ///
+    /// Two kinds are unrepeatable now, and a row of both — which only an
+    /// imported or hand-edited file produces, since neither can reach the log
+    /// sheet — is named by its newest member. That is true of part of the row in
+    /// the same way "Archived" is.
     func repeatBlockedReason(trackers: [UUID: Tracker]) -> String? {
         let resolved = entries.compactMap { trackers[$0.trackerID] }
         guard !resolved.isEmpty else { return nil }
-        return resolved.allSatisfy { $0.kind == .measurement }
-            ? Tracker.Kind.measurement.label
-            : "Archived"
+        guard resolved.allSatisfy({ $0.kind != .dailyTotal }) else { return "Archived" }
+        return resolved[0].kind.label
     }
 
     /// What makes two rows the same thing you ate. **Both halves**, and the
@@ -170,8 +174,8 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
                 let needsName = !alone
                     && (tracker.unit.isEmpty || units.count(where: { $0 == tracker.unit }) > 1)
                 return needsName
-                    ? "\(tracker.name): \(tracker.format(entry.value))"
-                    : tracker.format(entry.value)
+                    ? "\(tracker.name): \(tracker.entryText(entry.value))"
+                    : tracker.entryText(entry.value)
             }
             .joined(separator: ", ")
         return Line(identity: identity(of: entries, in: trackers), values: values)

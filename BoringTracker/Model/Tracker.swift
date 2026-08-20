@@ -5,11 +5,15 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     enum Kind: String, Codable, Sendable, CaseIterable {
         case dailyTotal
         case measurement
+        /// The date is the data and there is no number: tyres, a water filter,
+        /// the dentist. See docs/PRODUCT.md.
+        case lastTime
 
         var label: String {
             switch self {
             case .dailyTotal: "Daily total"
             case .measurement: "Measurement"
+            case .lastTime: "Last time"
             }
         }
     }
@@ -43,8 +47,8 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     /// tracker built for behaviour this build does not have.
     ///
     /// **Setting it to what it already reads as writes nothing**, which is what
-    /// keeps the editor's two-segment picker from destroying a kind it cannot
-    /// draw. That picker shows `Measurement` for an unknown string, so tapping
+    /// keeps the editor's picker from destroying a kind it cannot draw. That
+    /// picker shows `Measurement` for an unknown string, so tapping
     /// away and back looks like a revert and would otherwise save
     /// `"measurement"` over it — stamped newer, so the loss would then win the
     /// merge on every other device.
@@ -84,6 +88,16 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
         )
         guard includeUnit, !unit.isEmpty else { return number }
         return "\(number) \(unit)"
+    }
+
+    /// What one entry reads as in the place a number goes.
+    ///
+    /// A `lastTime` entry has no number. Its date is the whole record and the 0
+    /// in `Entry.value` is storage, never a reading — so every screen that draws
+    /// an entry asks this rather than `format`, and none of them can print it
+    /// (docs/TECH.md, "The value a `lastTime` entry does not have").
+    func entryText(_ value: Double) -> String {
+        kind == .lastTime ? "Logged" : format(value)
     }
 
     /// The value as it would be typed into the number pad: it has to read back
