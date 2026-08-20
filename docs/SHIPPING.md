@@ -302,9 +302,11 @@ applies the mask itself and a pre-rounded icon gets rounded twice.
 
 Things that are easier handled early than discovered at submission:
 
-- **Encryption export compliance.** The app uses no encryption, so set
-  `ITSAppUsesNonExemptEncryption` to `NO` in Info.plist and App Store Connect
-  stops asking on every build.
+- **Encryption export compliance.** The app uses no encryption, so
+  `ITSAppUsesNonExemptEncryption` is `NO` and App Store Connect stops asking on
+  every build. **Done** — it is `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption`
+  on the app target in `project.yml`, and it reads back out of the built
+  Release bundle as a boolean false.
 - **Privacy label: "Data Not Collected."** Genuinely true here, and one of the
   better things about this app. Keep it true.
 - **Privacy policy URL is required** for every app, even one that collects
@@ -337,3 +339,116 @@ version — which is the whole safety net described above.
 Being open source creates no conflict with App Store distribution. Linking the
 repository from the App Store description is worth doing; for the people who
 care about this app's promises, the source is the proof.
+
+## The checklist
+
+Everything above is the reasoning. This is the order.
+
+Assembled 2026-08-19 from the sections above and from the state of this
+repository. **No requirement here was invented**: each item either points at
+the section of this page that records it, or at something checkable in the
+repo. Anything that could not be confirmed from one of those two places is
+marked **unverified** rather than stated — Apple moves these rules, and a
+confident sentence is worse than an honest gap when the cost of being wrong is
+a rejected submission.
+
+**(human)** marks a step no session can do: it needs an Apple account, a
+payment, a judgement about the product, or a decision that cannot be walked
+back after release. Everything unmarked is ordinary work in this repository.
+
+### 1. Before anything can be uploaded at all
+
+- [ ] **(human)** **Enrol in the Apple Developer Program.** $99/year, as an
+      **individual** — see *Enrolling*, which also covers why not an
+      organization and what a lapsed membership does.
+- [ ] **(human)** **Accept the agreements App Store Connect asks for.** A free
+      app with no purchases should need no tax or banking details, but which
+      agreements a free app must accept is **unverified** here.
+- [ ] **(human)** **Settle the EU trader declaration.** Not optional — see
+      *The EU trader requirement*. Non-trader is the reasonable case for a
+      genuinely free, non-commercial app with no ads and no purchases;
+      declaring trader publishes name, address, phone and email on EU
+      listings. That page says the policy has shifted more than once, so
+      verify it at enrollment rather than trusting it.
+- [ ] **(human)** **Claim the name.** `Boring Tracker`, unclaimed as of the
+      August 2026 check in *Naming and the competitive landscape*, and claimed
+      first-come. Re-check before getting attached to it. Trademarks were
+      never searched — the same section says so.
+
+### 2. What the app itself has to carry
+
+- [ ] **(human)** **Choose the icon.** Six candidates and a recommendation
+      (`ledger`) are in *The icon*, along with the background colour and its
+      contrast numbers. The 1024 must be flat, opaque, and **not**
+      pre-rounded.
+- [ ] **Point the build at it.** `ASSETCATALOG_COMPILER_APPICON_NAME` is
+      deliberately empty in `project.yml`, so today's build ships no icon at
+      all. Add the set to the asset catalog, set the value to `AppIcon`, and
+      regenerate the project.
+- [x] **Encryption declaration.** `ITSAppUsesNonExemptEncryption` is `NO` on
+      the app target — see *Before submitting*.
+- [x] **Version numbers.** `MARKETING_VERSION` is `1.0`.
+      `CURRENT_PROJECT_VERSION` is a bare counter: **add one for every upload
+      App Store Connect accepts**, including a re-upload of the same version
+      after a rejection.
+- [ ] **(human)** **Decide whether this is an iPhone app or a universal one.**
+      `TARGETED_DEVICE_FAMILY` is XcodeGen's default `"1,2"`, so the listing
+      would advertise iPad — which PRODUCT.md puts under "not while there's no
+      iPhone app", and which pulls in iPad screenshots and an iPad review
+      pass. Decide before the first release: dropping iPad afterwards strands
+      whoever installed it there.
+- [ ] **(human)** **Make the repository public.** It is private today
+      (checked 2026-08-19). The support URL below is the repository, and rule
+      8 of PHILOSOPHY.md — open source, anyone can fork and ship it — is one
+      of the promises the listing is built on.
+- [ ] **Green suite, and a project that matches its spec.** `xcodebuild test`
+      passes and `xcodegen generate` leaves `BoringTracker.xcodeproj`
+      unchanged.
+
+### 3. Two pages that have to exist on the web
+
+Both are **mandatory for every app**, including one that collects nothing —
+see *Before submitting*.
+
+- [ ] **(human)** **Privacy policy URL.** One page saying the app collects no
+      data, has no servers, and keeps everything on the device. GitHub Pages
+      is fine.
+- [ ] **(human)** **Support URL.** The GitHub repository works — once it is
+      public.
+
+### 4. The build
+
+- [ ] **(human)** **Archive with the paid team and upload.** Verified in this
+      repository on 2026-08-19: a Release build for `generic/platform=iOS`
+      succeeds both unsigned and signed, the latter on a free personal team's
+      provisioning profile. A **distribution** archive and the upload itself
+      are **unverified** — both need the paid account.
+
+### 5. The listing
+
+- [ ] **(human)** **Name, subtitle, keywords, description.** Drafts are in
+      *Listing strategy*, including why the subtitle and keywords carry the
+      search terms rather than the name. Lead the description with what is
+      absent, and link the repository.
+- [ ] **(human)** **Screenshots**, at the iPhone display sizes App Store
+      Connect currently requires. **The exact set is unverified here** —
+      *Before submitting* records only that they are required, and the sizes
+      change; read them off App Store Connect at the time. iPad sizes are
+      needed only if the app is listed as supporting iPad, which is the
+      decision above.
+- [ ] **(human)** **App Privacy: "Data Not Collected".** Truthful here, which
+      *Before submitting* calls one of the better things about this app. It is
+      a claim about the whole app, so it stays true only while rule 5 does.
+- [ ] **(human)** **Age rating questionnaire.** Nothing here is contentious.
+- [ ] **(human)** **Price: free**, with no in-app purchases. Rule 1, and it is
+      also what keeps the non-trader case above intact.
+- [ ] **Encryption, again.** The Info.plist key is what stops the question
+      being asked per upload. Whether the first submission still asks it once
+      in the web form is **unverified**.
+
+### 6. Submitting
+
+- [ ] **(human)** **Submit for review**, and expect *Guideline 4.2, Minimum
+      Functionality* to be the one real risk — see *One review risk to be
+      aware of*. The answer is to show the functionality that exists, not to
+      add features.
