@@ -40,21 +40,18 @@ extension Entry: MergeableRecord {}
 /// schema and no mapping layer between the three.
 struct StoreDocument: Codable, Hashable, Sendable {
 
-    /// What a released build would use to recognise a file it cannot safely
-    /// read. Migration is a function from N to N+1, run at load; see
-    /// `StoreMigration`.
+    /// What a build recognises a file it cannot safely read by. Migration is a
+    /// function from N to N+1, run at load; see `StoreMigration`.
     ///
-    /// **Not bumped for every shape change while this is a prototype.** The
-    /// number's whole job is compatibility with a build that exists somewhere
-    /// else, and no such build exists: nothing has shipped, so the only older
-    /// files are on our own simulators. One of those is quarantined and started
-    /// over rather than converted — and it is the decoder that catches it, on
-    /// the first field that isn't there, not this number. Bumping it now would
-    /// be bookkeeping that implies a migration story the app hasn't earned yet.
-    ///
-    /// It starts being maintained when there is a first release to be
-    /// compatible with. That is also when the shape freezes, and when a step
-    /// from N to N+1 earns its keep.
+    /// **Bumping this now costs a step.** While nothing had shipped it was left
+    /// alone through several changes of shape, because the number's whole job
+    /// is compatibility with a build that exists somewhere else and no such
+    /// build existed — the only older files were on our own simulators, and one
+    /// of those is quarantined and started over rather than converted. The
+    /// first release ends that: from it on, every version of this number is a
+    /// shape somebody is holding, and a bump without a step in
+    /// `StoreMigration.steps` refuses to read their file. A test asserts there
+    /// is a step for every version below this one.
     static let currentSchemaVersion = 2
 
     /// How long a deletion is remembered. Long enough that a second device can

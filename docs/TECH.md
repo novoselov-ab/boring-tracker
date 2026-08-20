@@ -95,19 +95,56 @@ serialization format *and* the mapping between them, forever, for no benefit.
 - Pretty-printed with sorted keys — it's meant to be opened and read, and it
   diffs cleanly if someone keeps it in a git repo or Dropbox.
 - `schemaVersion` is an integer. Migration is a function from version N to
-  N+1, run at load. This is simpler than any framework's migration system and
-  it's ours.
-- **There is no migration step yet, deliberately.** Nothing has been released,
-  so no older file exists outside a development simulator, and one left there
-  is quarantined and started over like any file that won't decode. What does
-  exist is the guard that accepts the current version and nothing else, rather
-  than decoding an unfamiliar file with today's rules and saving the loss back
-  over the original — three lines, and needed from the first release. A *newer*
-  file is refused because it comes from a build that knows more; an *older* one
-  because there is no step that reads it, and letting it through would silently
-  drop whatever it holds under a key that has since been renamed. The first
-  shipped version is the first shape someone can be holding; that is when a
-  step earns its keep, and it takes the older versions with it.
+  N+1, run at load, and a chain of them carries an older file up to the
+  current version one step at a time. This is simpler than any framework's
+  migration system and it's ours.
+
+### Migrating an older file
+
+**This page used to say there was no migration step, deliberately, and that it
+would earn its keep at the first release. That is what changed here:** nothing
+has shipped yet, but the shape stops being ours alone the moment it does, so
+the step was written while it was still cheap rather than under the first
+version somebody else is holding. `StoreMigration` is the whole of it.
+
+**A step is a function over the file's own JSON**, `[String: Any]` in and out,
+not over `StoreDocument`. It has to be: `StoreDocument`, `Tracker` and `Entry`
+only ever describe the *current* shape, so a step written against them could
+not see the field it exists to rename — by the time one of them has decoded,
+the old field is gone. The alternative is a frozen copy of every model type for
+every version that ever existed, maintained forever, which is the cost this
+project's storage decision was made to avoid. `steps` is a dictionary keyed by
+the version each step *reads*, and the chain applies one per version, stamping
+`schemaVersion` between them so a step can trust what it is looking at.
+
+**The refusal is still the load-bearing part**, and it is unchanged. A *newer*
+file is refused outright: it comes from a build that knows more, and no step
+runs backwards. An *older* one is read only if a step exists for it and for
+every version between; a gap refuses the whole document rather than stopping
+halfway, because half a migration is a shape no version of the app has ever
+described. Everything refused is moved aside intact by `load`, never decoded
+with today's rules and saved back over the original.
+
+**Version 1 to version 2** is the one real step, and it converts to the shape
+version 2 has now rather than the one it had the day it was bumped (`d6520b2`):
+`group` and `orderModified` added to a tracker, `note` renamed to `name` on an
+entry. `orderModified` takes the record's own `modified` rather than the moment
+of the migration, or an old file would win every ordering conflict the first
+time it met another device. The intermediate prototype shapes — `section`
+before it was `group`, one timestamp before there were two — existed only on
+our own simulators, and no step reads them.
+
+**A version 1 file loses its `pins`**, and that is the only thing it loses. A
+pin was a saved value you could log with one tap; search-and-repeat over your
+own named entries replaced the feature before any of this shipped and the type
+went with it. Turning each pin into entries would write rows into a history at
+times when nothing was logged, and inventing a record of something the user
+never did is worse than losing a shortcut they can retype.
+
+Migrating does not rewrite the file. The document is carried forward in memory
+and the next ordinary save writes it out as version 2 — and because every save
+copies the old `store.json` aside first, the original survives one further save
+as `store.backup.json`.
 
 ### The CSV view
 
@@ -814,9 +851,9 @@ bug destroys data or trust, not UI:
 
 - day-boundary and aggregation math, including the DST and time zone cases
 - export → import round trip preserving everything exactly
-- schema migration from every past version, once any exist to migrate from —
-  today that is only the refusal of any version but the current one, in both
-  directions
+- schema migration from every past version — a version 1 document arriving as
+  a version 2 one, the chain applying two steps in order, and the refusal of a
+  newer version, of a version no step reads, and of a gap in the chain
 - decode failure falling back to the backup file
 - atomic write leaving a valid file when interrupted
 
@@ -841,7 +878,7 @@ Config/           Signing.xcconfig, and the untracked Local.xcconfig it includes
 BoringTracker/
   App/            entry point, root view
   Model/          Tracker, Entry, StoreDocument
-  Store/          Store, persistence, the version guard
+  Store/          Store, persistence, the version guard and its steps
   Views/          Home, LogSheet, History, TrackerDetail, TrackerChart,
                   RepeatView, Settings, editors
   Support/        date math, formatting

@@ -29,6 +29,7 @@
 		54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448B1DFA3C2C0226744A5DD7 /* NumberInput.swift */; };
 		57FD846D7584CBB6511F05B5 /* DayBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */; };
 		59C99FC257AE0E8CAD01633A /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = A459D3E53C6D189A1607B841 /* Store.swift */; };
+		646F1AF30157934600477366 /* StoreMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5DE9485BC9CD75B94EFB3C /* StoreMigration.swift */; };
 		6A961D806BDF355E33C21969 /* DayStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C2BDB7520A5674D63F4AFAB /* DayStart.swift */; };
 		6B57D79A245A869FCD38FA05 /* LogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */; };
 		6D30109F8D99D25059652053 /* UndoBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A41B0D09D319C37A1FF6883 /* UndoBar.swift */; };
@@ -121,6 +122,7 @@
 		C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExport.swift; sourceTree = "<group>"; };
 		CECB67213A9E9B62A18C2139 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CF11C76122F09E007BCACADE /* DayBoundaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayBoundaryTests.swift; sourceTree = "<group>"; };
+		DE5DE9485BC9CD75B94EFB3C /* StoreMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreMigration.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -239,6 +241,7 @@
 				A459D3E53C6D189A1607B841 /* Store.swift */,
 				5817F8C4CA51B7DCE31DFD64 /* StoreCoding.swift */,
 				00747A2D2ACDB434137D0C82 /* StoreFile.swift */,
+				DE5DE9485BC9CD75B94EFB3C /* StoreMigration.swift */,
 				4AACECDA0A3B2528BE4DEDF5 /* StoreSaver.swift */,
 			);
 			path = Store;
@@ -382,6 +385,7 @@
 				16DAB5EB550B24EE3D89DCDC /* StoreCoding.swift in Sources */,
 				F1CF8099B0D58833A89EF2A3 /* StoreDocument.swift in Sources */,
 				C156CD42E49B7C468483B502 /* StoreFile.swift in Sources */,
+				646F1AF30157934600477366 /* StoreMigration.swift in Sources */,
 				29208FB2BDFAC0D3ABE68B97 /* StoreSaver.swift in Sources */,
 				4A014E4818154348886F5C75 /* Tracker.swift in Sources */,
 				DB7398BCB98F2E2DF4B6E50B /* TrackerChart.swift in Sources */,
