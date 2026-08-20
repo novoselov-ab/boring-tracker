@@ -61,8 +61,9 @@ no to something.
 
 ## Support
 
-Do not donate to me. If the app is useful to you and you want to do something
-about it:
+If the app is useful to you and you want to support the developer, there is
+nothing to click — I do not take donations and there is no button for it
+anywhere. What helps instead:
 
 - Give the money to a charity of your choice.
 - Leave a review on the App Store.
