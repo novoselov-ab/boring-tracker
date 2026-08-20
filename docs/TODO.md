@@ -462,20 +462,32 @@ Three things that no agent can settle, because each needs a thumb, an ear, or
 a real phone rather than a simulator. **One errand, not three** — they were
 separate items and that was wrong.
 
-**Can a double-tap log twice?** `log()` does not disable the button before
-`dismiss()`, so a fast double-tap might write two entries. Two reviewers tried
-and could not land synthetic clicks fast enough, and both reported it as
-*unverified in either direction* rather than guessing.
+**Can a double-tap log twice? — settled, and guarded anyway.** It was tried
+three times: two reviewers could not land synthetic clicks fast enough and both
+reported it *unverified in either direction*, and Anton then tried it on a real
+phone with a real thumb, around eight times, and got one entry every time.
 
-- [ ] Settle whether it reproduces, with a real thumb.
-- [ ] If it does, disable the action on first tap rather than debouncing by
-      time — the action is idempotent per presentation, so state is the honest
-      fix.
-- [ ] If it doesn't, say so and close it.
+- [x] Settle whether it reproduces, with a real thumb. **It does not** — three
+      attempts, none of them reproduced it.
+- [x] If it does, disable the action on first tap rather than debouncing by
+      time. Done regardless, in `6a57cbd`: not observed is not the same as
+      cannot happen, nothing prevented it, and the window may differ on a
+      slower device, under memory pressure, or with Reduce Motion altering the
+      dismiss timing. A `wrote` flag on the sheet's own state, so one
+      presentation logs once; no timer, and `.disabled` still reads
+      `amounts.isEmpty` alone, because adding the flag there would repaint the
+      pill in its disabled style while the sheet is still sliding away.
+- [x] If it doesn't, say so and close it. Said, and closed.
 
-It matters more than its size suggests: a silent duplicate on the most frequent
-action in the app is the kind of wrong number nobody notices until a graph
-looks strange months later.
+The one-tap last-time log needs no guard, and that is a different answer rather
+than the same one: the control never goes away, so there is no gap between the
+write and the button ceasing to be hittable. A second tap there is an intended
+second log — `LastTimeTests.twoTapsAreTwoEntries` already pins it — and only a
+clock could tell it from a slip, which is the debounce this item rejected.
+
+It mattered more than its size suggested: a silent duplicate on the most
+frequent action in the app is the kind of wrong number nobody notices until a
+graph looks strange months later.
 
 **VoiceOver.** Commit `0564080` claims `.accessibilityLabel` on the card's +
 "had no effect at all", while `logButton` a few lines below and `HistoryView`
