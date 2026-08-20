@@ -362,9 +362,10 @@ Small enough to list completely.
   quieter is its size and the absence of a word, not its colour — it is the
   same disc, in the same accent, that a History row and a Log again row carry,
   because it is the same action, drawn at 50pt here against their 30 so that it
-  agrees with the pill on height and corner (TODO item 33). Searchable by name, like History. The whole
-  row is the button — there is nothing else a tap here could mean, so the
-  target is the full width rather than a disc on the end of it.
+  agrees with the pill on height and corner (TODO item 33). Searchable by name,
+  like History. The whole row is the button — there is nothing else a tap here
+  could mean, so the target is the full width rather than a disc on the end of
+  it.
 
   **It comes up over home at half height and leaves as soon as you have
   logged.** It was a pushed screen first, and a pushed screen with a title, a

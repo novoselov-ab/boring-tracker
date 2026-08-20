@@ -13,7 +13,7 @@ process.
 For every TODO step:
 
 1. **Implement**, with tests for anything where a silent bug costs data or
-   trust — see the testing section of [TECH.md](TECH.md).
+   trust — see the testing section of [TECH.md](../docs/TECH.md).
 2. **Run the tests.** They pass before anything else happens.
 3. **Review, in a fresh session.** Not the session that wrote the code.
 4. **Fix what's worth fixing** (see below).
@@ -71,9 +71,14 @@ decision to bring back to the user. **Do not stop to ask for permission to
 push.** Push when the tests pass and the review has converged, then report what
 you did.
 
-This is a solo repo with no collaborators and no CI gate to break, everything
-lands on `main`, and anything wrong is recoverable from history. Asking each
-time costs a round trip and buys nothing.
+This is a solo repo with no collaborators, everything lands on `main`, and
+anything wrong is recoverable from history. Asking each time costs a round trip
+and buys nothing.
+
+The repo is public as of 2026-08-19, which changes one thing and not this one:
+the suite runs on every push and the README carries its badge, so **a red
+`main` is now visible to anyone who looks**. Push freely, but push green —
+that is the same rule the loop above already states, with a witness.
 
 Two things still stop and ask, and they are not this: destructive git that
 rewrites or discards work (`reset --hard`, `clean -fd`, force pushes,
@@ -105,9 +110,9 @@ The loop needs a stopping rule or it ping-pongs on taste forever.
 
 - Correctness bugs, and anything that can lose, corrupt or silently alter
   stored data.
-- Violations of the rules in [PHILOSOPHY.md](PHILOSOPHY.md): a new dependency,
-  a tap added to the common path, an animation you have to wait for, anything
-  that collects data.
+- Violations of the rules in [PHILOSOPHY.md](../docs/PHILOSOPHY.md): a new
+  dependency, a tap added to the common path, an animation you have to wait
+  for, anything that collects data.
 - Failing or missing tests on a data-critical path — day boundaries,
   aggregation, merge, export/import round trips.
 

@@ -15,8 +15,11 @@ on:
 permissions:
   contents: read
 
-# One run per ref. This repo is private, so macOS minutes bill at 10x, and a
-# superseded commit's run is minutes spent on an answer nobody will read.
+# One run per ref. A superseded commit's run is an answer nobody will read, and
+# it holds a macOS runner while it produces it. This was originally a billing
+# argument — the repo was private and macOS minutes billed at 10x — and going
+# public on 2026-08-19 took that half away. The half that survives is the
+# runner: cancelling still gets the tip of the branch an answer sooner.
 # Cancelling means an intermediate commit can end with no result, which is the
 # trade: what matters is that the tip of a branch is green.
 concurrency:

@@ -33,7 +33,9 @@ source and ship it themselves.
   app, measured screen by screen.
 - [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
   submission.
-- [TODO](docs/TODO.md) — what's left, in implementation order.
+- [TODO](docs/TODO.md) — the short list of what's left, on the front of a much
+  longer record of what was decided and why, including the things that were
+  built, measured and reverted.
 
 ## Building it
 
@@ -74,3 +76,8 @@ open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/
 ## Status
 
 Early — the design is settled and written down, the app is being built.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Fork it, build it, ship your own; rule 8 of the
+philosophy is that you can.

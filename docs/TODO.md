@@ -1,5 +1,34 @@
 # TODO
 
+**Most of this file is not a to-do list.** It is the record of an app built one
+item at a time, and by now the finished items outnumber the open ones many times
+over. They are kept, and kept long, for two reasons: *why* something is the way
+it is has turned out to be the part worth having six months later, and several
+of them exist specifically to stop a settled question being reopened for the
+third time. A few record things that were built, measured and thrown away,
+which is knowledge the code no longer contains.
+
+So read it as a decision log with a short to-do list on the front, rather than
+as a plan. **What is actually left:**
+
+- [17. One pass on a real device](#17-one-pass-on-a-real-device) — the whole app
+  on hardware, which no simulator answers.
+- [27. The bottom bar: presses you cannot see, and a pairing that looks
+  wrong](#27-the-bottom-bar-presses-you-cannot-see-and-a-pairing-that-looks-wrong)
+- [30. Confirm a log where the eye actually
+  is](#30-confirm-a-log-where-the-eye-actually-is)
+- [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
+  a decision the user makes, not on work. Why the light value is where it is is
+  in [TECH.md](TECH.md).
+- [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
+  assigned.
+- [Small things, unscheduled](#small-things-unscheduled) — done in one pass
+  whenever something goes near the same code.
+- [After v1](#after-v1)
+
+Everything else below is finished, reverted, or closed without a change, and
+says so in its heading.
+
 Numbers are stable once assigned — commit messages refer to them, so a gap
 means an item was merged into another one, not that something was lost. Item 8
 is now part of item 17.
@@ -22,8 +51,21 @@ still true about the app that a future reader needs — which moves to
 then the item collapses like any other. Nothing is deleted that does not already
 exist somewhere else.
 
-Item 12 is deliberately not collapsed: it records a thing that was built,
-measured and reverted, and its length is what stops someone trying it again.
+Item 12 is deliberately not collapsed, and it is not the only one. The rule
+above is about *duplication* going stale, not about hiding the reasoning: where
+an item's argument is the only place a rule is written down — item 21's
+kind-based repeatability and its three edge cases, item 25's rejected scrubber
+and month index, the geometry in 33b — it stays where it is at full length. A
+done item collapses when what it decided has genuinely moved to PRODUCT.md or
+TECH.md, not merely because it is finished.
+
+**Screenshots are not in the repository.** Several items name a directory like
+`~/dev/boring-tracker-pairing/` and a file in it. Those renders and contact
+sheets stayed on the machine that made them, deliberately — they are megabytes
+of PNG that would sit in history forever to illustrate a decision the item
+already states in words. The path is there to say *a picture was taken and this
+is what it showed*, not as somewhere a reader can go. What was measured off
+those pictures is written next to them.
 
 **A measurement inside an item is dated by its commits**, which is the other
 reason done items keep their SHAs — the device, the build config and the method
@@ -1695,7 +1737,7 @@ radius rather than a height-derived one — variant `d` drew both controls at
 r18, which reaches "one family at two sizes" by changing the large control
 instead of the small one.
 
-## 33b-old. The original note
+## 33b-old. The original note — superseded by 33b above
 
 Same corner radius as the Log pill — not a circle, not a capsule — and slightly
 wider than tall, so it reads as a rounded square at a smaller size.

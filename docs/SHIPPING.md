@@ -180,9 +180,11 @@ byte-identical to the source, so nothing extra needed keeping: `.gitignore`
 refuses `*.png` but makes `**/Assets.xcassets/**/*.png` the exception.
 
 The six candidates were rendered so there was something to choose between, and
-they are not in the repo; they were written to `~/dev/boring-tracker-icon/` by a
-standalone Core Graphics script kept alongside them, which re-renders everything
-in about a second with no project and no simulator.
+they are not in the repo — they and the standalone Core Graphics script that
+drew them stayed on the machine that made them, outside the working copy. The
+script re-renders all six in about a second with no project and no simulator,
+so the way to see them again is to write it again from the descriptions below,
+not to go looking for a directory that was never published.
 
 ### What it has to be
 
@@ -237,9 +239,8 @@ does not have to be the accent colour, and here it should not be.
 
 ### The prompt
 
-For trying another tool's take on it — also saved at
-`~/dev/boring-tracker-icon/prompt.md`. It is deliberately full of negatives:
-a prompt that would produce any fitness app's icon is a failed prompt.
+For trying another tool's take on it. It is deliberately full of negatives: a
+prompt that would produce any fitness app's icon is a failed prompt.
 
 ```
 Design an iOS app icon for Boring Tracker.
@@ -409,10 +410,10 @@ back after release. Everything unmarked is ordinary work in this repository.
       has historically been rejected for it; whether that still holds under
       the iOS 26 SDK is **unverified**, so treat the cost of keeping the
       default as more than screenshots until somebody checks.
-- [ ] **(human)** **Make the repository public.** It is private today
-      (checked 2026-08-19). The support URL below is the repository, and rule
-      8 of PHILOSOPHY.md — open source, anyone can fork and ship it — is one
-      of the promises the listing is built on.
+- [x] **Make the repository public.** Done — it is public as of 2026-08-19,
+      under the MIT license `LICENSE` carries. The support URL below is the
+      repository, and rule 8 of PHILOSOPHY.md — open source, anyone can fork
+      and ship it — is one of the promises the listing is built on.
 - [ ] **Green suite, and a project that matches its spec.** `xcodebuild test`
       passes and `xcodegen generate` leaves `BoringTracker.xcodeproj`
       unchanged.
@@ -425,8 +426,8 @@ see *Before submitting*.
 - [ ] **(human)** **Privacy policy URL.** One page saying the app collects no
       data, has no servers, and keeps everything on the device. GitHub Pages
       is fine.
-- [ ] **(human)** **Support URL.** The GitHub repository works — once it is
-      public.
+- [ ] **(human)** **Support URL.** The GitHub repository works, and it is
+      public now.
 
 ### 4. The build
 
