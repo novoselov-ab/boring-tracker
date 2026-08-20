@@ -99,10 +99,13 @@ struct LastTimeTests {
         let store = makeStore(StoreDocument(trackers: [tyres]))
         let before = Date().canonicalized
 
-        store.logNow(tyres)
+        let written = store.logNow(tyres)
 
         #expect(store.entries.count == 1)
         let entry = try #require(store.entries.first)
+        // What it returns is what it wrote, and home hangs its haptic on that id:
+        // two taps a moment apart have to be two different values.
+        #expect(written == entry)
         #expect(entry.trackerID == tyres.id)
         #expect(entry.value == 0)
         #expect(entry.name == nil)
@@ -117,11 +120,12 @@ struct LastTimeTests {
         let tyres = Tracker(name: "Tyres", kind: .lastTime)
         let store = makeStore(StoreDocument(trackers: [tyres]))
 
-        store.logNow(tyres)
-        store.logNow(tyres)
+        let first = store.logNow(tyres)
+        let second = store.logNow(tyres)
 
         #expect(store.entries.count == 2)
         #expect(Set(store.entries.map(\.batchID)).count == 2)
+        #expect(first?.id != second?.id)
     }
 
     @Test("The zero does not reach the totals index")

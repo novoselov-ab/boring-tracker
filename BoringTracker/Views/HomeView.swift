@@ -12,6 +12,10 @@ struct HomeView: View {
     /// "did this screen write it" — and comparing the row rather than keeping a
     /// flag is what makes it self-clearing.
     @State private var wroteRow: HistoryItem.ID?
+    /// The entry a card's + last wrote, so the haptic has something that differs
+    /// per tap. Entry ids are fresh per write; two taps inside one second are two
+    /// values here where a date or a count would be one.
+    @State private var loggedNow: UUID?
     /// The row the Log again sheet last wrote, while the disc is acknowledging
     /// it (docs/TODO.md item 30).
     ///
@@ -119,6 +123,7 @@ struct HomeView: View {
         // and holds for about 0.8s of the one; starting from the sheet's
         // `onDismiss` instead buys 0.2s and gives up the mark already being
         // there as the sheet uncovers it.
+        .logHaptic(loggedNow)
         .task(id: loggedAgain) {
             guard loggedAgain != nil else { return }
             try? await Task.sleep(for: .seconds(1))
@@ -173,11 +178,12 @@ struct HomeView: View {
     /// floating in the middle of 70pt of air beside a 50pt pill. Five
     /// alternatives were rendered and photographed and the user picked this one;
     /// the pill goes 292 to 312.
-    /// Gated on there being a group the keypad can open rather than on there
-    /// being trackers at all: a home screen of nothing but `lastTime` trackers
-    /// has both of these controls dead — no fields for the pill to show and
-    /// nothing repeatable behind the disc — so the bar goes away instead, and
-    /// each card's own + is the whole of logging.
+    ///
+    /// **Gated on there being a group the keypad can open**, not on there being
+    /// trackers at all. A home screen of nothing but `lastTime` trackers has
+    /// both of these controls dead — no fields for the pill to show, nothing
+    /// repeatable behind the disc — so the bar goes away instead and each card's
+    /// own + is the whole of logging.
     @ViewBuilder
     private var logBar: some View {
         if store.groupToLog(preferring: lastGroup) != nil {
@@ -233,9 +239,18 @@ struct HomeView: View {
     /// interaction: the tap writes the date and there is nothing to type, so a
     /// sheet would be a keypad in front of a field that has to stay empty
     /// (docs/PRODUCT.md). Every other kind opens this row's group.
+    ///
+    /// **The one-tap write buzzes**, and it is the only log on this screen that
+    /// does. Found in review: every other write in the app answers "did that go
+    /// in?" on screen — a total counts up, a sheet closes, a repeat draws its undo
+    /// bar — and this one need not. A card reading "today" reads "today" after
+    /// another tap, so without this the second tap is silent, writes a duplicate
+    /// entry and looks exactly like a tap that missed. Not a celebration
+    /// (docs/PHILOSOPHY.md, "Quiet"): the same success notification the repeat
+    /// disc has carried since item 20, for the same reason.
     private func log(_ tracker: Tracker) {
         guard tracker.kind != .lastTime else {
-            store.logNow(tracker)
+            loggedNow = store.logNow(tracker)?.id
             return
         }
         LogSheet.present(

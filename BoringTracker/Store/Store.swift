@@ -316,8 +316,18 @@ final class Store {
         totals[DayTotal(tracker: tracker, day: day)] ?? 0
     }
 
-    /// The most recent reading, for measurement trackers. A reverse scan rather than
-    /// a second index: entries are already sorted, so it stops at the first match.
+    /// The most recent reading, for measurement and `lastTime` trackers. A reverse
+    /// scan rather than a second index: entries are already sorted, so it stops at
+    /// the first match.
+    ///
+    /// **It stops late for a tracker you log rarely**, which `lastTime` is by
+    /// design: at 30,001 entries, asking this for a tracker whose only entry is the
+    /// oldest costs 3.12–3.18ms against 0.0009ms for one logged an hour ago (Debug,
+    /// iPhone 17 simulator, three runs of 100 calls). One call per card per redraw,
+    /// so a five-year store with a few such cards pays a few milliseconds a redraw.
+    /// Left alone: the fix is a second index, and an index has to stay true through
+    /// add, edit, delete, undo and import — which is where this app's data bugs
+    /// would come from, for a cost that is under a frame in the slower build.
     func latestEntry(for tracker: UUID) -> Entry? {
         entries.last { $0.trackerID == tracker }
     }
@@ -487,11 +497,18 @@ final class Store {
     /// kind that has no number; it is written here, and `Tracker.entryText` is what
     /// keeps it off the screen (docs/TECH.md).
     ///
-    /// Through `add(values:)` like every other log, so the entry gets a batch id and
-    /// a canonicalised date by the same route: what was logged together is a property
+    /// Through `addBatch` like every other log, so the entry gets a batch id and a
+    /// canonicalised date by the same route: what was logged together is a property
     /// of the log, not of how many trackers it touched.
-    func logNow(_ tracker: Tracker) {
-        add(values: [tracker.id: 0])
+    ///
+    /// It returns what it wrote because this is the one write in the app whose
+    /// result may be drawn nowhere — a card already reading "today" reads "today"
+    /// after a second tap — so the caller needs something that differs per tap to
+    /// hang an acknowledgement on. A fresh entry id is that; a count or a date is
+    /// not (`Date.stamp()` has one-second resolution).
+    @discardableResult
+    func logNow(_ tracker: Tracker) -> Entry? {
+        addBatch([(tracker: tracker.id, value: 0, name: nil)]).first
     }
 
     /// Logs the same moment against several trackers at once. One name across all of

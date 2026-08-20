@@ -230,7 +230,12 @@ struct SettingsView: View {
     /// vices.
     private func editableSummary(of tracker: Tracker) -> String {
         var parts = [tracker.kind.label]
-        if !tracker.unit.isEmpty { parts.append(tracker.unit) }
+        // Not a `lastTime` tracker's unit, even when one is stored. The editor
+        // hides that field rather than erasing it, so a tracker switched over
+        // from a measurement still carries `km` — and this row was the one place
+        // left still printing it, beside a kind that has no numbers and with no
+        // field on any screen that could clear it (found in review).
+        if !tracker.unit.isEmpty, tracker.kind != .lastTime { parts.append(tracker.unit) }
         if tracker.isArchived, !tracker.group.isEmpty { parts.append("in \(tracker.group)") }
         return parts.joined(separator: "\u{00A0}· ")
     }
