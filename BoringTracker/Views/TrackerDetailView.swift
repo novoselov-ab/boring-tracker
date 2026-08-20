@@ -138,15 +138,40 @@ struct TrackerDetailView: View {
             // Without it this screen split the timestamp mid-token at AX5 —
             // `12:04 A` on one line and `M` on the next.
             StackingRow {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(tracker.format(entry.value))
-                        .font(.body.monospacedDigit())
-                    if let name = entry.name, !name.isEmpty {
-                        Text(name)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                // **The name leads, and this screen used to be the exception**
+                // — `520 kcal` in body text over `chicken salad` in grey, the
+                // reverse of the row History draws one tap away (docs/TODO.md
+                // item 35). The argument for the old order was real: the
+                // tracker is fixed here, so the number is what tells two rows
+                // apart, and leading with the name gives weight to the least
+                // distinguishing part of the row. It lost to consistency —
+                // two screens showing the same two facts in opposite orders
+                // read as an app that has not decided, and moving between them
+                // meant re-learning where to look. `LogRowLabel` is that row,
+                // shared, so the next change lands on both.
+                //
+                // `entry.name` and no fallback, where History falls back to the
+                // tracker or the group: that fallback exists because History
+                // mixes trackers and a row has to say which one it is. Here the
+                // navigation title has said it already, so an unnamed entry
+                // draws its value alone rather than repeating the title down
+                // the screen. Handed over as it is, blank and all — what counts
+                // as no name is `LogRowLabel`'s to decide, for all three
+                // screens.
+                //
+                // The value line loses `.monospacedDigit()` with the flip,
+                // which is History's treatment and costs nothing: these lines
+                // are leading-aligned and of different lengths, so tabular
+                // figures were never lining a column up. **The day heading
+                // above them keeps its own**, and that is the pairing rather
+                // than an oversight: the day totals are right-aligned at the
+                // same edge down the whole list, which is a column, and it is
+                // the one place on this screen where digits of different widths
+                // would visibly fail to line up.
+                LogRowLabel(
+                    identity: entry.name,
+                    values: tracker.format(entry.value)
+                )
             } trailing: {
                 Text(entry.date.formatted(date: .omitted, time: .shortened))
                     .font(.footnote)

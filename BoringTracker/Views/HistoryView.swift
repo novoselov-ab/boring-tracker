@@ -695,12 +695,13 @@ private struct HistoryRow: View {
                 // *Measurement* hyphenated across three lines. `StackingRow`
                 // is that fallback, shared.
                 StackingRow {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(identityLine(line, canRepeat: canRepeat))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Text(line.values)
-                    }
+                    // `LogRowLabel`, not a `VStack` written here: this is the
+                    // shape item 14b decided and tracker detail drew upside
+                    // down until item 35, and there is one of it now.
+                    LogRowLabel(
+                        identity: identityLine(line, canRepeat: canRepeat),
+                        values: line.values
+                    )
                 } trailing: {
                     Text(item.date.formatted(date: .omitted, time: .shortened))
                         .font(.footnote)

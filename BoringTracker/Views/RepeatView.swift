@@ -268,19 +268,17 @@ private struct RepeatRow: View {
                 // `kcal, 31` / `g` beside `Tue,` / `Aug 4`, two columns of
                 // fragments where the row has one sentence to say.
                 StackingRow {
-                    VStack(alignment: .leading, spacing: 2) {
-                        // The same word History puts here, from the same
-                        // call, for the same reason: a dimmed row says
-                        // "unavailable" and does not say why. On this screen
-                        // the answer is always "Archived" — a deleted
-                        // tracker's row is not listed at all and a measurement
-                        // member is projected away before the row is built —
-                        // but the sentence is not written twice to prove it.
-                        Text(identityLine(line, canRepeat: canRepeat))
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Text(line.values)
-                    }
+                    // The identity line carries the same word History puts
+                    // there, from the same call, for the same reason: a dimmed
+                    // row says "unavailable" and does not say why. On this
+                    // screen the answer is always "Archived" — a deleted
+                    // tracker's row is not listed at all and a measurement
+                    // member is projected away before the row is built — but
+                    // the sentence is not written twice to prove it.
+                    LogRowLabel(
+                        identity: identityLine(line, canRepeat: canRepeat),
+                        values: line.values
+                    )
                 } trailing: {
                     // The day, where History's row shows the time. History has
                     // already said which day in its section heading and this

@@ -218,3 +218,60 @@ extension EdgeInsets {
     /// tree.
     static let listRow = EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 12)
 }
+
+/// One logged row's leading half: what it was called on the first line, what it
+/// was on the second.
+///
+/// **Extracted because History and tracker detail disagreed about the order**
+/// (docs/TODO.md item 35). Item 14b put the identity first on History — the eye
+/// lands on what a row *is* before it lands on its numbers — and the Log again
+/// sheet followed, while tracker detail kept drawing the number on top with the
+/// name grey underneath. Two screens one tap apart, the same two facts, opposite
+/// orders. Three copies of one shape is how that happened, so there is one of it
+/// and all three call it.
+///
+/// The weights are History's, unchanged: the identity is a `.footnote` in
+/// `.secondary` and the values line is body text in the primary colour. Quiet
+/// was asked for deliberately in item 13 and item 14b fixed the order without
+/// re-loudening it, so the hierarchy here is position, not size.
+///
+/// **`identity` is optional, and only tracker detail passes nothing.** A History
+/// or Log again row always has something to lead with — your name for it, or
+/// the tracker, or the group it was logged as — because those lists mix
+/// trackers and a row has to say which one it is. A tracker's own screen has
+/// already said, in the navigation title, so an entry nobody named would lead
+/// with the title repeated down every row. It draws the value alone instead:
+/// one line, the same size and colour a named row's value line has, and the
+/// number leads on exactly the rows where there is nothing else to lead with.
+///
+/// Blank counts as nothing, and that is here rather than at the call site: this
+/// view owns what "no identity" means, and a caller passing an empty string
+/// otherwise gets an empty `Text` and 2pt of spacing above the value — a line
+/// of nothing that reads as a layout bug.
+///
+/// It is a guard on *nothing at all*, not a repair of a thin line, and the
+/// difference was pointed out in review. `HistoryItem.Line.identity` can come
+/// back blank on a hand-edited file whose tracker has no name, and on a row
+/// whose repeat is off History appends a reason to it — so that row arrives
+/// here as `" · Archived"`, which is not empty and is drawn as it is. Unchanged
+/// by this extraction, and it belongs to the line's own builder rather than to
+/// the view that draws it; the small-things list carries the blank-name case.
+///
+/// The trailing half stays with the caller: History and tracker detail put the
+/// time there and the Log again sheet puts the day, and which half gives way
+/// when they will not fit is `StackingRow`'s business rather than this one's.
+struct LogRowLabel: View {
+    var identity: String?
+    let values: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let identity, !identity.isEmpty {
+                Text(identity)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            Text(values)
+        }
+    }
+}

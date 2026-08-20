@@ -1628,7 +1628,7 @@ The chevron stays and the footer says the tap out loud, in the idiom item 22
 already uses on two screens. Items 28 and 32 were checked as the alternative
 answer first and are not one: both happen after a finger has landed. `18416ce`
 
-## 35. Two rows, two reading orders
+## 35. Two rows, two reading orders — decided, done
 
 A History row leads with **what you called it** and puts the numbers under it
 — item 14b decided that, and the Log again sheet follows it. A tracker detail
@@ -1649,9 +1649,13 @@ correctly produces two answers. The screens to compare are `HistoryRow` — a
 private view in `HistoryView.swift`, not a method on `HistoryView` — and
 `TrackerDetailView.row`.
 
-- [ ] Decide, with both screens open, whether detail should lead with the name.
-- [ ] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
-      next pass does not find this again and file it a third time.
+- [x] Decide, with both screens open, whether detail should lead with the name.
+      It should — see "35 (decided)" below, and PRODUCT.md for the rule and the
+      argument that lost.
+- [x] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
+      next pass does not find this again and file it a third time. It should,
+      and PRODUCT.md says *that* instead, in the same place and for the same
+      reason.
 
 ## 36. The entry editor confirms where the log sheet used to — closed, no change
 
@@ -1797,7 +1801,7 @@ its own tap target.** Harmless today — the press was tested at the pill's edge
 and held — but it is the ceiling on ever increasing the travel, and it is the
 opposite failure from the one shrinking had.
 
-## 35 (decided). Tracker detail follows History
+## 35 (decided). Tracker detail follows History — done
 
 **Tracker detail leads with the name, like History does.** Consistency wins.
 
@@ -1808,11 +1812,38 @@ it loses anyway — two screens one tap apart showing the same two facts in
 opposite orders reads as an app that has not decided, and a person moving
 between them has to re-learn where to look.
 
-- [ ] `TrackerDetailView.row` matches `HistoryRow`: the name leads, the numbers
-      follow, same weights and colours.
-- [ ] Say so in `PRODUCT.md` beside item 14b's reading-order rule, with the
+- [x] `TrackerDetailView.row` matches `HistoryRow`: the name leads, the numbers
+      follow, same weights and colours. Shared rather than matched by hand —
+      `LogRowLabel` in `StackingRow.swift` is the two lines, and History, tracker
+      detail and the Log again sheet all draw it. Three copies of one shape is
+      how these came apart, and the sheet is in because it was the third copy,
+      not because this item asked.
+
+      Two visible things came with the flip. The detail row's value loses
+      `.monospacedDigit()`, which is History's treatment: these lines are
+      leading-aligned and of different lengths, so tabular figures were not
+      lining a column up. And an entry with **no name** draws its value alone,
+      on one line, rather than falling back to the tracker the way History does
+      — that fallback exists because History mixes trackers, and here the
+      navigation title has already said which one it is. So the number leads on
+      exactly the rows that have nothing else to lead with.
+
+- [x] Say so in `PRODUCT.md` beside item 14b's reading-order rule, with the
       argument that lost — so the next pass does not find this and file it a
       third time.
+
+**Checked xSmall through AX5** on an iPhone 17 Pro simulator, twelve sizes, a
+launch-argument probe root in a throwaway worktree so no clicking was needed to
+reach the screen. Nothing clips and nothing splits mid-token: the row stacks at
+`.xxxLarge` like every other list row (`DynamicTypeSize.stacksRows`) and reads
+name / value / time down the left, and at AX5 a 48-character name wraps to three
+lines with the value under it. The frames are `StackingRow`'s, which is why
+there was nothing new to scale — this item moved two `Text`s inside a `VStack`.
+
+Still different, and deliberately left: a detail row is taller than a History
+row, because History sets `.listRowInsets(.listRow)` for the 44pt disc on its
+end and detail has no such control. That is a density question, not a reading
+order one — see "Small things".
 
 ## 36 (closed). The editors keep Save in the navigation bar
 
@@ -2114,6 +2145,15 @@ picking one up doesn't start with rediscovering why it's awkward.
 Real, small, and not worth a session each — the overhead of reading the docs,
 testing and reviewing dwarfs the work. **Do them in one pass**, whenever one of
 the numbered items is going near the same code.
+
+- [ ] **A tracker detail row is taller than the History row it now matches.**
+      Item 35 made the two read the same; they are still not the same height.
+      History sets `.listRowInsets(.listRow)` — 4pt top and bottom, measured in
+      item 11 for a row with a 44pt disc on its end — and tracker detail keeps
+      the platform's default insets, so the same two lines sit in a taller row
+      one tap away. Not obviously a bug: detail has no trailing control, and
+      `.listRow`'s trailing 12 is sized for one. Worth *deciding* rather than
+      leaving as an accident, the way item 28 decided it for settings.
 
 - [x] **Export through the share sheet.** Done in item 18b: export and import
       are two sections now, the confirmation dialog went with import, and a

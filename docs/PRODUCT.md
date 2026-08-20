@@ -330,6 +330,28 @@ Small enough to list completely.
   makes a list scannable, and the numbers are not the part that tells two rows
   apart. An entry with no name disappears under a non-empty query, because this
   searches names and the field says so.
+
+  **Every screen that lists what you logged reads in that order**, History,
+  tracker detail and the Log again sheet alike, and they draw one shared row
+  (`LogRowLabel`) rather than three of their own. Tracker detail was the
+  exception until item 35 — the number on top, the name grey underneath — and
+  the argument for that order was a real one worth writing down: on a tracker's
+  own screen the tracker is fixed, so the *number* is the thing that tells two
+  rows apart, and leading with the name gives the weight to the least
+  distinguishing part of the row. It lost to consistency. Two screens one tap
+  apart showing the same two facts in opposite orders reads as an app that has
+  not decided, and a person moving between them has to re-learn where to look —
+  which costs more, on every visit, than the ranking of two lines inside one
+  row can win back. **This is settled; an audit that finds the asymmetry again
+  is finding a decision, not a bug.**
+
+  **A row with nothing to identify it leads with its number**, and that is the
+  old order surviving exactly where it was right. History always has something
+  for the first line, because it mixes trackers and a row has to say which one
+  it is; a tracker's own screen has said so in the title already, so an unnamed
+  entry there would otherwise repeat the title down the whole list. It draws the
+  value alone instead — one line, the same size and colour a named row's value
+  line has.
 - **Log again** — the things you have logged to a daily total, most recently
   logged first, one tap each to log again. (Named or not: a name has decided
   nothing here since item 21, and the order stopped being a frequency count in
@@ -406,7 +428,8 @@ Small enough to list completely.
   carries nothing extra.
 
 - **Tracker detail** — the graph on top, that tracker's entries below, grouped
-  by day. Swipe to delete, tap to edit.
+  by day. Swipe to delete, tap to edit. The entries are the row History draws,
+  in the same order and the same weights — see the reading-order rule above.
 - **Graph** — daily totals as bars, measurements as a line with a moving
   average. Range switch: week / month / year / all. Nothing interactive beyond
   scrubbing for a value.
