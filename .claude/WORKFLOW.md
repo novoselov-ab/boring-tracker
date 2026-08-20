@@ -53,6 +53,28 @@ round.
 
 The lever on this cost is writing fewer of them, not reviewing harder.
 
+### The commit body is the record — the source is not
+
+The rule above is about **commit messages**. It has leaked into source before,
+and the result was measured on 2026-08-19: **5,481 of 9,684 non-blank lines in
+`BoringTracker/` were comments — 56.6%**, one file at 82.5%. Nothing asked for
+that. It came from briefs saying "say why" without saying where.
+
+Where is: the commit body, `docs/`, and the review report. Not the source.
+
+A comment in this repo earns its line only if it answers a **why** the code
+cannot: a measured number and where it came from, an alternative that was
+tried and failed, a platform behaviour being worked around, a constraint that
+is invisible locally. Everything else — restating the next line, narrating
+structure, `// MARK`-style ceremony, "we used to" — is cost with no reader.
+
+The cost is not aesthetic. Two sessions have already been spent repairing
+comments that had gone false while the code moved on, and one of them nearly
+shipped a wrong contrast number that a comment still asserted. **Prose in
+source is not free: it has to be kept true, and at volume it cannot be.** A
+fact worth keeping is worth putting somewhere it will be re-read — a doc — not
+somewhere it will be scrolled past.
+
 ### A commit that decides is not a commit that does
 
 Say which one it is in the subject line. "Make teal a fill colour everywhere"
