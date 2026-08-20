@@ -4,22 +4,82 @@
 
 iPhone app for tracking whatever you want — macros, habits, or any other data.
 
-Free, open source, no ads, no accounts, no subscription, no server. Type a
-number, done.
+Free, open source, no ads, no accounts, no subscription, no server, no feature
+bloat. Type a number, done.
 
-It's called Boring Tracker because that's the promise: no streaks, no badges,
-no confetti, no notifications guilting you back in. It has no opinion about
-your body. It just remembers the numbers you give it.
+Most other macro trackers want you to scan a barcode for every ingredient of a
+dish you cooked yourself. It takes a lot of time for no benefit. This one just
+lets you write down `600 calories, 40 protein` and done, as fast as possible,
+minimum clicks, minimum wait/lag.
 
-Other macro trackers want you to scan a barcode for every ingredient of a dish
-you cooked yourself. This one just lets you write down `600 calories, 40
-protein` and get on with your day. And once it does that, it may as well track
-your weight, your water, or your cat's weight too.
+You can also use it to track anything you want: your cat's weight, pushups,
+blood glucose, the last time you changed a filter.
 
-Because it's open source and stores everything on your own device, it can't be
-taken away from you. If this project is ever abandoned, the app you have keeps
-working, your data exports to a plain readable file, and anyone can fork the
-source and ship it themselves.
+The app is open source and stores everything on your own device. You can always
+export all your data as json/csv, or import it back. It is absolutely free, has
+no ads, and never will have any. My goal with it is to behave like a built-in
+iOS app (e.g. the calculator). It is boring, but does its job, hence the name.
+
+## Screenshots
+
+> **Placeholder — the screenshots do not exist yet.** They go here, at
+> `docs/screenshots/`, as `home.png`, `log.png`, `history.png` and
+> `tracker.png`. Replace this block with them.
+
+## Features
+
+This is the minimum set that makes the app useful. Nothing is here because
+another tracker has it.
+
+**Trackers.** Two kinds. A **daily total** adds entries up over the day and
+starts again at the day boundary — calories, protein, water, cigarettes,
+pushups. A **measurement** is a standalone reading with no reset — your weight,
+your cat's weight, blood glucose. You give a tracker a name, a unit and the
+number of decimal places, and that is the whole setup.
+
+**Groups.** Trackers you log at the same time share a group, so one sheet takes
+both numbers. Calories and protein arrive together; a group is what stops that
+costing two logs.
+
+**Logging.** The + opens whatever you logged last, with the number pad already
+up. An optional name — the food, not the tracker — is what lets you find it
+again. The time defaults to now and is tappable, so you can log dinner the next
+morning.
+
+**Log again.** The things you have logged before, most recent first, one tap
+each. Searchable by name. There is no preset to create and maintain: a preset
+here is just something you already logged.
+
+**History.** Everything, newest first, grouped by day, searchable by name. One
+row per thing you logged, even when it wrote two numbers, so editing or
+deleting it is one action. Swipe to delete, tap to edit, or repeat it with one
+tap. Deletes and repeats can be undone.
+
+**Graphs.** Daily totals as bars, measurements as a line with a moving average.
+Week, month, year, or all of it.
+
+**Your data.** Export everything as JSON or CSV, import JSON back, merging or
+replacing — and the document it replaces is kept, so an import can be undone.
+The JSON format is documented in [docs/TECH.md](docs/TECH.md). Archive a
+tracker to hide it without losing what you logged against it.
+
+**Settings.** The hour your day starts at, light or dark, and the trackers
+themselves — add, edit, reorder, archive, delete.
+
+Issues and pull requests are welcome. Both get judged against
+[docs/PHILOSOPHY.md](docs/PHILOSOPHY.md), so read it first — a feature can be
+good and still be wrong for this app, and most of the rules there exist to say
+no to something.
+
+## Support
+
+Do not donate to me. If the app is useful to you and you want to do something
+about it:
+
+- Give the money to a charity of your choice.
+- Leave a review on the App Store.
+- Email me at [novoselov.ab@gmail.com](mailto:novoselov.ab@gmail.com). I would
+  be glad to hear it is useful.
 
 ## Docs
 
@@ -33,6 +93,8 @@ source and ship it themselves.
   app, measured screen by screen.
 - [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
   submission.
+- [App Store](docs/APPSTORE.md) — the listing text and everything else the
+  submission needs.
 - [TODO](docs/TODO.md) — the short list of what's left, on the front of a much
   longer record of what was decided and why, including the things that were
   built, measured and reverted.
