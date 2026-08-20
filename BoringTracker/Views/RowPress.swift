@@ -155,7 +155,8 @@ extension View {
 /// it is now is the row's own background, which the list fills edge to edge and
 /// clips to the card exactly as it does for a `NavigationLink` it presses
 /// itself. On top of that the cell takes `AccentFillPress`'s 2pt travel, so a
-/// card, a pill and a disc all go down by the same distance.
+/// card, a pill and a disc all move the same distance — outward since item 37,
+/// which is one decision in one function and not a row's to make.
 ///
 /// **It applies on the frame the touch lands** —
 /// `AccentFillPress.animation(pressed:)` carries that argument — and on a row
@@ -170,9 +171,10 @@ extension View {
 /// `AccentFillPress.scale(for:reduceMotion:)`, the same one the fills ask.
 /// Checked both ways on one binary rather than by reading the key back, on a
 /// held settings row at 3x: with the setting off the row's name starts at
-/// x = 99px at rest and x = 105 held — 6 device pixels, which is the 2pt travel
-/// — and with it on the name is at x = 99 in both while the row still fills
-/// with `#3A3A3C`.
+/// x = 98px at rest and x = 92 held — 6 device pixels *outward*, which is the
+/// 2pt travel — and with it on the name is at x = 98 in both while the row
+/// still fills with `#3A3A3C`. Item 27 took the same reading while the press
+/// shrank and the name moved the other way, to x = 105.
 ///
 /// **What owning the row's background costs is two units of blue on one
 /// screen.** At rest this draws `rest`, whose default is
@@ -231,9 +233,11 @@ private struct RowPress<Rest: View>: ViewModifier {
             )
             // `visualEffect`, not `.scaleEffect`, and for the reason the fills
             // use it: the scale is worked out from the size the row laid out
-            // at, and hit testing keeps the unscaled geometry — a thumb resting
-            // at the edge of a row does not fall out of a target that shrank
-            // under it.
+            // at, and hit testing keeps the unscaled geometry. That mattered
+            // more when the press shrank — a thumb at the edge of a row would
+            // have fallen out of a target that moved under it — and it is what
+            // stops the outward version growing the target instead: what a row
+            // responds to is the row, pressed or not.
             .visualEffect { effect, proxy in
                 effect.scaleEffect(
                     isPressed

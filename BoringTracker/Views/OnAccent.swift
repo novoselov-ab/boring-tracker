@@ -277,8 +277,10 @@ private struct AccentFilled<S: Shape>: ViewModifier {
             // the scale is worked out from what the fill laid out at, and this
             // is the way to read that without a `GeometryReader` around every
             // control. It is also *only* visual — hit testing keeps the
-            // unscaled geometry, which is the half a `.scaleEffect` would get
-            // wrong on a thumb resting at the edge of the pill.
+            // unscaled geometry, which a `.scaleEffect` would not: it moved the
+            // target out from under a resting thumb while the press shrank, and
+            // since item 37 it would grow a target 2pt past the control anybody
+            // can see at rest.
             .visualEffect { effect, proxy in
                 effect.scaleEffect(
                     isPressed
@@ -306,8 +308,8 @@ private struct AccentFilled<S: Shape>: ViewModifier {
 /// **Item 26 gave every accent fill a measured pressed colour and it was still
 /// hard to notice**, on the Log pill and the Log again disc most of all. The
 /// measurement passed and the goal did not, so the mechanism is what changes
-/// here rather than the number — the control physically goes down under the
-/// thumb, and the colour stays as the second signal (docs/TODO.md item 27).
+/// here rather than the number — the control physically moves under the thumb,
+/// and the colour stays as the second signal (docs/TODO.md item 27).
 ///
 /// **iOS does not do this, and the item said it did.** `.borderedProminent`
 /// was rebuilt in this simulator to check: on an iPhone 17 Pro in dark, held
@@ -325,12 +327,12 @@ private struct AccentFilled<S: Shape>: ViewModifier {
 /// the size the fill actually laid out at:
 ///
 ///     control                  size (pt)   scale    each end moves
-///     Log / home bar           312 x 50    0.9872   2.00pt
-///     Log / log sheet          52.7 x 34   0.9241   2.00pt
-///     Add Tracker (small)      81.7 x 28   0.9510   2.00pt
-///     Undo                     ~60 x 32    0.9333   2.00pt
-///     Log again / home bar     50 x 50     0.9200   2.00pt
-///     a disc on a row          30 x 30     0.8667   2.00pt
+///     Log / home bar           312 x 50    1.0128   2.00pt
+///     Log / log sheet          52.7 x 34   1.0759   2.00pt
+///     Add Tracker (small)      81.7 x 28   1.0490   2.00pt
+///     Undo                     ~60 x 32    1.0667   2.00pt
+///     Log again / home bar     50 x 50     1.0800   2.00pt
+///     a disc on a row          30 x 30     1.1333   2.00pt
 ///
 /// The pill and the bar's disc are the sizes item 33 gave them; the pill was
 /// 292 x 50 at 0.9863 and the disc was not in this table at all, and the table
@@ -338,20 +340,38 @@ private struct AccentFilled<S: Shape>: ViewModifier {
 /// derived scale hides.
 ///
 /// The short edge moves less, which is the one thing a uniform scale cannot
-/// help — a 312x50 pill that took 2pt off its height as well would be doing
-/// something the eye reads as a squash rather than a press.
+/// help — a 312x50 pill that gained 2pt of height as well would be doing
+/// something the eye reads as a swell rather than a press.
+///
+/// **It grows, and that is a decision rather than a convention**
+/// (docs/TODO.md item 37). Every attempt before this one shrank the fill,
+/// which is what iOS-shaped controls do elsewhere and what a finger pressing
+/// a physical button does; the ask throughout has been that a press *feel*
+/// like something, and growing reads as the control coming toward the thumb
+/// rather than retreating from it. Nothing about the mechanism changed with
+/// the direction — the same travel, the same two call sites, the same gate —
+/// so a row and a fill still cannot disagree about it, which matters more
+/// here than before: a mix of the two directions on one screen would be worse
+/// than either of them everywhere.
 enum AccentFillPress {
 
     /// Points each end of the fill's longest edge travels on a press.
     ///
     /// **2 rather than 3 or 4, and all three were rendered held down** by a
-    /// synthesized press on an iPhone 17 Pro, screenshotted mid-press. At 4pt a
-    /// disc goes 30pt to 22 and loses a quarter of its width, which reads as a
-    /// different-sized control rather than the same one pressed; the pill at
-    /// 4pt pulls visibly away from its 16pt margins. At 2pt each end moves 6
-    /// device pixels at 3x. Still, that is small — what carries it is the
-    /// movement, and a 60fps capture of a press shows the ends travelling
-    /// across four to five frames rather than jumping.
+    /// synthesized press on an iPhone 17 Pro, screenshotted mid-press. That was
+    /// item 27, when the ends moved inward: at 4pt a disc went 30pt to 22 and
+    /// lost a quarter of its width, which read as a different-sized control
+    /// rather than the same one pressed, and the pill at 4pt pulled visibly
+    /// away from its 16pt margins. At 2pt each end moves 6 device pixels at 3x.
+    ///
+    /// **The distance survived the direction changing and the argument for it
+    /// half did.** Item 37 turned the travel outward, and the reason 4pt was
+    /// too much is not symmetric: a pill that grows past its 16pt margins is
+    /// crowding the screen edge rather than losing a quarter of itself. What
+    /// still holds at 2 is that this is the same control pressed, and what a
+    /// grown fill has that a shrunk one did not is somewhere to go — so if this
+    /// number is ever revisited, it is the *upward* room around each fill that
+    /// bounds it, not the fill's own size.
     static let travel: CGFloat = 2
 
     /// The scale for a fill that laid out at this size, or `1` for the three
@@ -379,17 +399,23 @@ enum AccentFillPress {
     /// The other two are sizes the rule cannot describe. A fill that has not
     /// been measured yet is `.zero`, and scaling from that would draw a
     /// control's first frame mid-press. And a fill shorter than the 4pt this
-    /// wants to take out of it solves to zero or a *negative* scale, which
-    /// mirrors the control rather than pressing it — `2 * travel` is where the
-    /// rule stops being defined, not a taste threshold, and nothing in the app
-    /// is within 26pt of it. It is guarded because the doc above sells this
+    /// adds to it **more than doubles** on a press, which reads as a control
+    /// appearing rather than a control pressed.
+    ///
+    /// `2 * travel` is that second boundary, and it is the same constant it was
+    /// while the fill shrank — `1 - 2 * travel / longest` was zero at 4pt and
+    /// negative below it, so a 3pt fill was mirrored through its own centre
+    /// (`9b21d82`). Growing cannot invert anything, so the guard is a milder
+    /// rule about the same number: below it a press at least doubles the fill.
+    /// Nothing in the app is within 26pt of either reading — the smallest fill
+    /// is a 30pt disc — and it is guarded because the doc above sells this
     /// modifier as what a fifth fill gets by writing it rather than by
     /// remembering, and a fifth fill is exactly who would find it.
     static func scale(for size: CGSize, reduceMotion: Bool) -> CGFloat {
         guard !reduceMotion else { return 1 }
         let longest = max(size.width, size.height)
         guard longest > 2 * travel else { return 1 }
-        return 1 - 2 * travel / longest
+        return 1 + 2 * travel / longest
     }
 
     /// The press is not animated. Only the release is.
@@ -541,8 +567,8 @@ struct AccentPillButtonStyle: ButtonStyle {
             .padding(.horizontal, horizontalPadding)
             .frame(minHeight: minHeight)
             .accentFilled(.capsule)
-            // The target is the capsule the pill lays out at and not the
-            // smaller one it is drawn at while held — and what makes that true
+            // The target is the capsule the pill lays out at, and not the
+            // larger one it is drawn at while held — and what makes that true
             // is `visualEffect` being visual only, not the fact that this line
             // comes after it. It credited the ordering until review, which is
             // worth correcting rather than tidying: an enclosing scale
@@ -551,14 +577,17 @@ struct AccentPillButtonStyle: ButtonStyle {
             // and a later swap to a plain `.scaleEffect` would keep the
             // documented order while quietly breaking it.
             //
-            // Checked rather than argued, because that is the failure this
-            // comment exists to prevent. A synthesized press at **x = 17pt** —
-            // inside the pill's resting 16.0–328.0pt and outside the
-            // 18.0–326.0pt it shrinks to — engages, holds pressed through the
-            // shrink (308.0x49.3pt at 18.0, `#07AA9A`), and fires the action on
-            // release: the log sheet opens. A thumb on the edge does not fall
-            // out of a target that moved under it. Re-taken at the 312pt pill
-            // item 33 left; it was first taken at 292 and read 307.9 and 306.0.
+            // **The check that proved this no longer discriminates, and item 37
+            // is why.** While the press shrank, a synthesized press at x = 17pt
+            // was inside the resting 16.0–328.0pt capsule and outside the
+            // 18.0–326.0 it drew at held: it engaged, held pressed and fired,
+            // so the target plainly was not the drawn shape. Growing puts the
+            // drawn shape *outside* the target instead — 14.0–330.0pt held,
+            // measured — and the failure it could produce is the mild one, a
+            // 2pt rim that looks pressable only once you are already pressing.
+            // The old test is dropped rather than restated with new numbers: a
+            // press at the pill's leading edge engages, grows and opens the log
+            // sheet, which is what the screen owes a thumb resting there.
             .contentShape(.capsule)
             .environment(\.accentFillPressed, configuration.isPressed)
             .pressHaptic(configuration.isPressed)

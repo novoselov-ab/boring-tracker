@@ -83,7 +83,8 @@ struct AccentTests {
     }
 }
 
-/// The other half of a press: how far the fill goes down (docs/TODO.md item 27).
+/// The other half of a press: how far the fill moves, and which way
+/// (docs/TODO.md items 27 and 37).
 ///
 /// **The rule is worth pinning because it is a rule and not a ratio.** One
 /// scale cannot serve a 312pt pill and a 30pt disc — 0.97 moves the pill's ends
@@ -96,20 +97,26 @@ struct AccentTests {
 @Suite("Accent fill press")
 struct AccentFillPressTests {
 
+    /// Signed, and positive means outward: item 37 turned the press from a
+    /// shrink into a growth and every number below flipped with it. An
+    /// unsigned distance here would have passed either way, which is the one
+    /// thing this suite must not do now that the direction is the decision.
     private func travel(_ w: CGFloat, _ h: CGFloat) -> CGFloat {
         let scale = AccentFillPress.scale(for: CGSize(width: w, height: h), reduceMotion: false)
-        return (max(w, h) - max(w, h) * scale) / 2
+        return (max(w, h) * scale - max(w, h)) / 2
     }
 
-    @Test("Every fill's longest edge moves the same two points")
+    @Test("Every fill's longest edge moves the same two points, outward")
     func constantTravel() {
         // Home's Log pill, the log sheet's Log, the empty screen's Add Tracker,
         // the undo capsule, home's bar disc, and any of the three row discs.
         // The pill is 312 and the bar disc 50 since item 33 moved them; the
         // pill was still 292 here and the bar disc was not here at all, which
         // the derived scale let pass. Both were rendered held down on an
-        // iPhone 17 Pro and sampled: the disc goes 150x150 to 138x138 device
-        // pixels at 3x, which is 2pt off each end.
+        // iPhone 17 Pro and sampled while the press still shrank: the disc went
+        // 150x150 to 138x138 device pixels at 3x, which is 2pt off each end.
+        // Item 37 kept the 2pt and reversed it, so the same disc now goes to
+        // 162x162.
         for size in [
             (312.0, 50.0), (52.67, 34.0), (81.67, 28.0), (60.0, 32.0), (50.0, 50.0), (30.0, 30.0),
         ] {
@@ -119,13 +126,14 @@ struct AccentFillPressTests {
 
     @Test("The pill and the disc need different scales to do that")
     func scalesDiffer() {
-        // 0.9872 and 0.8667. Rendered and sampled: the pill goes 936x150 to
-        // 924x148 device pixels at 3x, a row's disc 90x90 to 78x78 — 6px, which
-        // is 2pt, off each end of both.
+        // 1.0128 and 1.1333 — the same two points on a 312pt pill and on a 30pt
+        // disc, which is 4% of one control and 13% of the other. That spread is
+        // the reason the constant is the travel and not the ratio, and it is
+        // unchanged by the direction.
         let pill = AccentFillPress.scale(for: CGSize(width: 312, height: 50), reduceMotion: false)
         let disc = AccentFillPress.scale(for: CGSize(width: 30, height: 30), reduceMotion: false)
-        #expect(abs(pill - 0.9872) < 0.0001)
-        #expect(abs(disc - 0.8667) < 0.0001)
+        #expect(abs(pill - 1.0128) < 0.0001)
+        #expect(abs(disc - 1.1333) < 0.0001)
     }
 
     @Test("A fill that has not been measured yet is not drawn mid-press")
@@ -151,7 +159,7 @@ struct AccentFillPressTests {
         // whole of what the gate is for.
         for size in [CGSize(width: 312, height: 50), CGSize(width: 30, height: 30)] {
             #expect(AccentFillPress.scale(for: size, reduceMotion: true) == 1)
-            #expect(AccentFillPress.scale(for: size, reduceMotion: false) < 1)
+            #expect(AccentFillPress.scale(for: size, reduceMotion: false) > 1)
         }
     }
 
@@ -166,18 +174,23 @@ struct AccentFillPressTests {
         #expect(AccentFillPress.animation(pressed: false) == AccentFillPress.release)
     }
 
-    @Test("A fill too short to give up 4pt does not turn inside out")
+    @Test("A fill too short to take 4pt is left alone")
     func fillShorterThanItsOwnTravel() {
-        // `1 - 2 * travel / longest` is zero at 4pt and negative below it, and
-        // a negative scale mirrors the fill. Nothing in the app is near this —
-        // the smallest is a 30pt disc — but the modifier is documented as what
-        // a later fill gets without having to remember it.
+        // `9b21d82` guarded this while the press shrank, where `1 - 2 * travel
+        // / longest` was zero at 4pt and negative below it and a negative scale
+        // mirrored the fill. Growing cannot invert anything, so the same
+        // boundary now says something milder about the same number: at 4pt a
+        // press exactly doubles the fill, and below it more than doubles it,
+        // which is a control appearing rather than a control pressed. Nothing
+        // in the app is near it — the smallest is a 30pt disc — but the
+        // modifier is documented as what a later fill gets without having to
+        // remember it.
         for longest in [0.5, 1, 2, 3, 4] as [CGFloat] {
             let size = CGSize(width: longest, height: longest)
             #expect(AccentFillPress.scale(for: size, reduceMotion: false) == 1)
         }
         // And it starts working again immediately above the boundary rather
         // than being clamped over a range somebody chose.
-        #expect(AccentFillPress.scale(for: CGSize(width: 8, height: 8), reduceMotion: false) == 0.5)
+        #expect(AccentFillPress.scale(for: CGSize(width: 8, height: 8), reduceMotion: false) == 1.5)
     }
 }
