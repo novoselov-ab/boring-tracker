@@ -73,9 +73,9 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     ///
     /// Two kinds are unrepeatable now, and a row of both — which only an
     /// imported or hand-edited file produces, since neither can reach the log
-    /// sheet — is named by its newest surviving member, which is `entries[0]`
-    /// because `init` sorts newest first. That is true of part of the row in the
-    /// same way "Archived" is.
+    /// sheet — is named by `resolved[0]`: the newest member whose tracker still
+    /// exists, since `init` sorts newest first and `resolved` drops the deleted.
+    /// That is true of part of the row in the same way "Archived" is.
     func repeatBlockedReason(trackers: [UUID: Tracker]) -> String? {
         let resolved = entries.compactMap { trackers[$0.trackerID] }
         guard !resolved.isEmpty else { return nil }

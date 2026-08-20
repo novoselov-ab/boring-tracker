@@ -479,7 +479,16 @@ final class Store {
 
     // MARK: - Entries
 
-    func add(_ entry: Entry) {
+    /// Returns the record as **stored**, which is not the one it was handed: the
+    /// stamp below is applied here, so a caller that kept its own copy would be
+    /// holding a `modified` the document does not have. `addBatch` returns these
+    /// for that reason — it used to return its local copies, whose stamp came from
+    /// a second `Date.stamp()` and differed from the stored one whenever the two
+    /// calls straddled a half-second (`canonicalized` rounds). Nothing consumed
+    /// more than `id`, so nothing was wrong on screen; a future caller writing one
+    /// back through `update` would have put a stale stamp into the merge.
+    @discardableResult
+    func add(_ entry: Entry) -> Entry {
         var entry = entry
         entry.modified = .stamp()
         insertSorted(entry)
@@ -487,6 +496,7 @@ final class Store {
         forgetRepeatUndo()
         refreshToday()
         scheduleSave()
+        return entry
     }
 
     /// The whole of logging a `lastTime` tracker: an entry that says only that this
@@ -540,12 +550,12 @@ final class Store {
         let date = date.canonicalized
         let batch = UUID()
         return values.map { value in
-            let entry = Entry(
-                trackerID: value.tracker, value: value.value,
-                date: date, name: value.name, batchID: batch
+            add(
+                Entry(
+                    trackerID: value.tracker, value: value.value,
+                    date: date, name: value.name, batchID: batch
+                )
             )
-            add(entry)
-            return entry
         }
     }
 

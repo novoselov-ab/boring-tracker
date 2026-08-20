@@ -123,13 +123,14 @@ struct HomeView: View {
         // and holds for about 0.8s of the one; starting from the sheet's
         // `onDismiss` instead buys 0.2s and gives up the mark already being
         // there as the sheet uncovers it.
-        .logHaptic(loggedNow)
         .task(id: loggedAgain) {
             guard loggedAgain != nil else { return }
             try? await Task.sleep(for: .seconds(1))
             guard !Task.isCancelled else { return }
             loggedAgain = nil
         }
+        // Below the block above, which is entirely about that `task`'s clock.
+        .logHaptic(loggedNow)
     }
 
     /// Whether the Log again disc is saying "written".
