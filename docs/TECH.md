@@ -667,10 +667,10 @@ the floor with it. The measurements live beside the code in
 `BoringTracker/Views/OnAccent.swift`; what is here is the shape of the decision.
 
 **The contrast ratios are reproducible on paper, and were reproduced on
-2026-08-19.** Every ratio quoted in this section, in TODO items 13e and 18, and
-in all four tables of [accent-options.md](accent-options.md) was recomputed from
-the hex values with the WCAG 2.x formula — some fifty numbers — and every one
-matches to the second decimal. The *hex values* are the part that had to be
+2026-08-19.** Every ratio quoted in this section and in TODO items 13e and 18 was
+recomputed from the hex values with the WCAG 2.x formula — some fifty numbers,
+counting the four candidate tables the accent explorations left in git history —
+and every one matches to the second decimal. The *hex values* are the part that had to be
 sampled off a screen and cannot be re-derived; the two that ship are pinned by
 `AccentTests` instead, which asserts `AccentFill` resolves to `#009888` light
 and `#00DAC3` dark and that nothing claims the magic `AccentColor` name.
@@ -777,6 +777,60 @@ every time — the same pixels, byte for byte — and `toolbarForegroundStyle(_:
 is unavailable on iOS. A pale chevron beside a tinted `+` is what this OS draws,
 not something the app took away or can restore.
 
+
+### The light value is at a ceiling, and that was measured three ways
+
+The light `#009888` looks dimmer than the dark mint does, and it gets reported
+as murk about once a pass. It is not a mistake in the arithmetic — it is the top
+of a short window, and the window is what this note exists to stop being
+reopened.
+
+**The window has a floor and a ceiling, and both are contrast running out.**
+Walking the hue line one unit at a time: the last value that still clears 3:1 as
+a nav-bar glyph is `#00A493`, at 3.02, and `#00A594` is the first that does not,
+at 2.99. Going the other way, black on the fill crosses 4.5 — what a word that
+size wants, over the 3:1 a UI element needs — at `#008375`, which measures 4.50.
+So the usable interval is `#008375` to `#00A493`, `L*` 48.9 to 60.5, and
+`#009888` sits inside it at `L*` 56.3 with about seven points of room below and
+four above. Four `L*` points is not a colour change anyone notices: `#00A896`,
+which is only just distinguishable from today's, already measures 2.89 as a
+glyph, and `#00B3A0` — the first that reads as a genuinely lighter, fresher mint
+— measures 2.56. **The honest answer to "make light lighter" is that it cannot
+go much lighter while the accent is also a tint.** The bar glyph is the stricter
+of the two surfaces, so it sets the ceiling whether or not the `Form` rows carry
+the accent — dropping the tint from those rows does not buy the headroom back,
+and item 13c tried exactly that.
+
+**Holding the luminance and moving the hue instead does not help either.** Ten
+candidates were rendered right around the wheel at the luminance the tint needs.
+At that luminance the WCAG ratio is constant by construction, so what separates
+them is the glyph, and the two that read lightest as a filled pill read *weakest*
+as a glyph — a hazy periwinkle gear against its near-white circle where the
+green and the azure stay crisp. No hue that still belongs beside dark's mint
+reads lighter than the mint does.
+
+**The one real alternative is the whole app, not the light half.** Pairing an
+azure light value with today's dark mint reads as a blue app whose dark mode is
+a mint app; deriving a dark azure to go with it fixes that, and `#009DD2` light
+with `#04BFFF` dark is genuinely one app in both appearances, with every surface
+clear of its floor. What it costs is paid in dark, which is the appearance this
+app is used in: every dark number goes down without breaking — the black label
+on the fill goes 11.82 to 9.90 — and the dark half loses chroma it cannot buy
+back, `C*` 46.0 against the mint's 49.3, so it gets a little less light and a
+little less colour at once. **Today's dark is the better dark**, which is why
+the pair did not move. A plain blue (`#2693FF` light) was the other candidate
+and is the one to drop: no dark blue of that hue is both bright and colourful,
+and the pair reads as two relatives rather than one app.
+
+These come from four rendering passes — twelve dark candidates, then light
+deeper, light lighter, and light at constant luminance around the hue wheel —
+whose contact sheets, candidate tables and reversals were kept in `docs/` while
+the work was live and are now in git history. The screenshots behind them were
+deliberately never committed, so the history has the numbers and the reasoning
+and not the pictures. Every ratio quoted in this subsection was recomputed from
+its hex value on 2026-08-19 and reproduces; the `L*` figures are recomputed too,
+and the ceiling's differs by 0.2 from the one the original pass recorded, which
+is a white-point difference and moves nothing.
 ### Sampling a colour off the screen
 
 Read the screenshot's own bytes. `NSBitmapImageRep.colorAt(x:y:)` does **not**

@@ -1190,7 +1190,7 @@ pill.
 
 - [x] **Five alternatives rendered and photographed**, dark mode, iPhone 17 Pro,
       by a throwaway `-pairing <n>` probe in a worktree — the argv discriminator
-      from [accent-options.md](accent-options.md), all five confirmed. The
+      from the accent explorations, all five confirmed. The
       images are outside the repo in **`~/dev/boring-tracker-pairing/`**:
       `pairing-0.png` … `pairing-4.png` are whole screens and
       `pairing-strip.png` stacks the five bars for comparison.
@@ -1517,8 +1517,9 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       for the bar, the cards, the `Form` row, and black label against white.
       Every shot's fill was sampled back out of the PNG and matches the hex it
       was asked for. The numbers, the surfaces they were measured against and
-      the recommendation are the last section of
-      [accent-options.md](accent-options.md).
+      the recommendation were the last section of `docs/accent-options.md`,
+      which is now in git history; the conclusion that outlived it is in
+      [TECH.md](TECH.md).
 - [ ] **The 3:1 constraint is not what is choosing here.** Every candidate
       clears it as a tint and as a form-row foreground, today's included, so it
       separates nothing. What separates them is the black `Log` on the fill:
@@ -1544,8 +1545,8 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       every strip. **The window's ceiling is `#00A493`, at 3.02 as a nav-bar
       glyph** — twelve units of green above today, `L*` 60.7 against today's
       56.3. A mint that actually reads as lighter, `#00B3A0`, measures 2.56
-      and fails. Numbers and surfaces in the last section of
-      [accent-options.md](accent-options.md).
+      and fails. Numbers and surfaces were in `docs/accent-options.md`, now in
+      git history; the window they describe is in [TECH.md](TECH.md).
 - [x] **Rendered a third time, across the hue wheel**, because a ceiling on
       one hue line says nothing about the others. Ten candidates as
       `31c-*.png`, every one of them the most chromatic colour of its hue that
@@ -1558,8 +1559,8 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       outside the family, the hue 15° from the mint reads no lighter than the
       mint, and on the nav glyph the lightest-reading candidates read the
       weakest. Numbers, the H-K model behind the ordering, and the same-app
-      comparison against dark's `#00DAC3` are the last section of
-      [accent-options.md](accent-options.md).
+      comparison against dark's `#00DAC3` were in `docs/accent-options.md`, now
+      in git history; the finding is in [TECH.md](TECH.md).
 - [x] **Rendered a fourth time, in both appearances**, because the user likes
       azure and that is a question about the app rather than about light mode:
       a dark azure was derived for each of the two candidates and photographed
@@ -1573,8 +1574,9 @@ having a set at all, and it got applied as arithmetic instead of as a decision.
       the way today's pair does, which retires "blue in light, mint in dark" —
       that was azure against *today's* dark, not against a dark azure.
       `#2693FF` is the one to drop; its dark half is pale at 6.55 on the glyph.
-      Numbers, the gamut walk behind them and the pair strips are the last
-      section of [accent-options.md](accent-options.md).
+      Numbers, the gamut walk behind them and the pair strips were in
+      `docs/accent-options.md`, now in git history; what the azure pair would
+      cost is in [TECH.md](TECH.md).
 - [ ] Dark mode is settled and measured. **Not touched** — until item 31d,
       which reopened it on purpose and left it unchanged.
 - [ ] **The user picks, and nothing was merged.** Deeper, the recommendation

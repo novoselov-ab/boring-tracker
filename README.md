@@ -31,9 +31,6 @@ source and ship it themselves.
   the storage decision.
 - [Scale](docs/scale.md) — what five years of use (29,756 entries) does to the
   app, measured screen by screen.
-- [Accent options](docs/accent-options.md) — twelve colours rendered on the
-  real screens and sampled, which is how the accent got its two values. Kept as
-  evidence; its recommendation was not the one taken.
 - [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
   submission.
 - [TODO](docs/TODO.md) — what's left, in implementation order.
