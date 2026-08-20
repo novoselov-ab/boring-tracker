@@ -53,6 +53,29 @@ extension DynamicTypeSize {
 /// budget, which is the width a row has least of. The three list rows carried
 /// the same default-spaced shape and inherit the fix with the layout.
 ///
+/// **`.center`, and it is the trailing half this is for** (docs/TODO.md item
+/// 37). The row read `.firstTextBaseline` until then, which put the number on
+/// the same baseline as the *first* line of the leading half — so a card whose
+/// label is two lines, "Weight" over "yesterday", hung its number off the top
+/// of the row while the `+` beside it stayed centred. Measured on an iPhone 17
+/// Pro against the disc's own centre, which is the row's: the digits sat
+/// **5.83pt high** and now sit 0.17pt off it, the same 0.17 a one-line row
+/// already measured. Row heights are unchanged — every card is 52.0pt before
+/// and after.
+///
+/// What it costs is the shared baseline on a one-line row: "Water" and "0 ml"
+/// sat on one line and the name now rides 2.67pt higher, centred against a
+/// number half again its size. Photographed side by side before choosing, and
+/// it is the smaller of the two: a baseline two type sizes share is a nicety on
+/// the rows that were already right, and the two-line row was visibly broken.
+///
+/// It is one alignment for all four screens rather than a parameter, and that
+/// is a decision about a *shared* view: a History row's time leaves the
+/// identity line it used to sit on and lands level with the repeat disc at the
+/// end of the same row, which is the same rule reading the same way. A caller
+/// that wants the old pairing would be the second answer this type exists to
+/// prevent — see the note about the threshold below.
+///
 /// Nothing here is priority: which half gives way is the caller's decision and
 /// differs between them — the card gives the number `layoutPriority(1)` because
 /// a total has to be legible across a kitchen, and a History row lets the time
@@ -81,7 +104,10 @@ struct StackingRow<Leading: View, Trailing: View>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
+            // `.center`: the trailing half is centred against the whole row,
+            // whatever the leading half's height. See the note above for what
+            // that fixes and what it costs.
+            HStack(alignment: .center, spacing: 0) {
                 leading
                 Spacer(minLength: 8)
                 trailing
