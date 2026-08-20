@@ -96,8 +96,21 @@ anyone opens the app. It also avoids "simple", a word every competitor has
 already burned while shipping the opposite.
 
 - **App Store listing name:** Boring Tracker
-- **Home screen label** (`CFBundleDisplayName`): `Boring`, because home screen
-  labels truncate around 12 characters
+- **Home screen label** (`CFBundleDisplayName`): `Boring`, and the reason is no
+  longer truncation. **Measured 2026-08-20: `Boring Tracker` fits in full on an
+  iPhone 17 and on a 375pt SE, with no ellipsis** — iOS truncates on rendered
+  width, not on character count, so "labels truncate around 12 characters",
+  which this line used to say, was never the rule. The SE fits the two words by
+  condensing them about 20% (74.5pt against 89pt measured separately), which is
+  iOS tightening a string before it will ellipsise it. What the short label
+  *does* cost is Spotlight: with `Boring`, typing "tracker" does not find the
+  app, checked twice from a clean uninstall with a 25s settle and "boring" as a
+  same-minute control that was found both times. `Boring Tracker` is found by
+  both words; `Tracker` is found by "tracker" and not by "boring". Whether to
+  change the label is open — TODO.md item 41, which holds the screenshots.
+  **The trap:** before first launch the new-app dot steals label width and the
+  home screen renders `BoringTracker` or `Boring T…`, which looks like the
+  truncation this bullet used to claim and is not it.
 - **Bundle id:** `com.novoselov.boringtracker` — permanent
 
 Runners-up, both available if it ever has to change: **Napkin Tracker** (more
@@ -478,12 +491,19 @@ Store Connect, which needs the account.
       *Listing strategy*, including why the subtitle and keywords carry the
       search terms rather than the name. Lead the description with what is
       absent, and link the repository.
-- [ ] **(human)** **Screenshots**, at the iPhone display sizes App Store
-      Connect currently requires. **The exact set is unverified here** —
-      *Before submitting* records only that they are required, and the sizes
-      change; read them off App Store Connect at the time. iPad sizes are
-      needed only if the app is listed as supporting iPad, which is the
-      decision above.
+- [x] **(human)** **Screenshots.** Captured 2026-08-20: five 1320x2868 PNGs in
+      `docs/screenshots/` — home, log, again, history, graph — which are the
+      6.9-inch App Store set and the set the README shows, the same five files
+      for both. Shot on the iPhone 17 Pro Max simulator, which emits 1320x2868
+      directly, in dark with the app left on its own `System` setting so what is
+      photographed is the app following the phone. Each was re-rendered through
+      an opaque CoreGraphics context because the simulator writes PNGs *with* an
+      alpha channel and the store refuses those; `sips` reads back 1320x2868 and
+      `hasAlpha: no` on all five, and a pixel compare across the flatten reports
+      0 of 3,785,760 differing. iPad sizes are not needed — the decision above
+      is iPhone-only. **What the required set is remains Apple's to state:** the
+      sizes change, so read them off App Store Connect on the day rather than
+      trusting this line. Uploading them needs the account.
 - [ ] **(human)** **App Privacy: "Data Not Collected".** Truthful here, which
       *Before submitting* calls one of the better things about this app. It is
       a claim about the whole app, so it stays true only while rule 5 does.
@@ -500,3 +520,13 @@ Store Connect, which needs the account.
       Functionality* to be the one real risk — see *One review risk to be
       aware of*. The answer is to show the functionality that exists, not to
       add features.
+
+### 7. After the first release
+
+Things that cannot be done before there is an App Store id, recorded here so
+they are not lost the moment there is one.
+
+- [ ] **The "leave a review" link on the About screen.** It deliberately ships
+      without one: the URL needs the numeric App Store id, which does not exist
+      until the app does — see `017267c`. Once the id exists, that is the one
+      thing About is waiting for.
