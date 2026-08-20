@@ -470,11 +470,11 @@ lighten. The one control that lightened was the prominent Log button in dark
 mode, at 1.08:1 against its own rest colour, which is the complaint. The
 numbers are in `bb14a4f` and in `Color.accentFillPressed`.
 
-## 18. The app icon — the colour set half is done
+## 18. The app icon — done
 
-**All that is left here is the icon**, which is a design decision for the user
-rather than something to generate in passing. The colour question this item was
-named after is settled and the numbers are below.
+Both halves are in: the colour set below, and the icon itself — the `ledger`
+candidate `docs/SHIPPING.md` recommended, chosen by the user and installed from
+`~/dev/boring-tracker-icon/final/` without a pixel changed.
 
 The item originally argued that the accent had to become a colour set with light
 and dark variants, because one system hue could not serve both appearances: the
@@ -492,7 +492,16 @@ It does.
 - [x] **Build the colour set.** `AccentFill` in a new asset catalog: `#009888`
       light, `#00DAC3` dark.
 - [x] 13e resolves with it — the `Form` action rows have their colour back.
-- [ ] Then the app icon. **That is all this item has left.**
+- [x] **Then the app icon.** `AppIcon.appiconset` holds one image — the 1024
+      square, byte-identical to the source — because Xcode has derived every
+      smaller size from it since Xcode 14, and a hand-cut ladder would be the
+      same artwork to keep in sync in four places. The source is flat RGB with
+      no alpha channel (PNG colour type 2, no `tRNS`) and its four corners are
+      all `#00786C`, so nothing is pre-rounded and iOS applies its own mask
+      once. `ASSETCATALOG_COMPILER_APPICON_NAME` is `AppIcon` in `project.yml`,
+      which was deliberately empty until there was something to point it at.
+      Seen on the simulator home screen, in Spotlight and in Settings › Apps,
+      light and dark.
 
 **The numbers.** iPhone 17 Pro / iOS 26.3, `simctl io screenshot`, sRGB-tagged
 PNGs read through their own IDAT bytes rather than `NSBitmapImageRep` — black

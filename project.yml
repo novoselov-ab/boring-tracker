@@ -61,12 +61,13 @@ targets:
         # spaces in them; the home screen shows CFBundleDisplayName.
         PRODUCT_NAME: BoringTracker
         GENERATE_INFOPLIST_FILE: YES
-        # Empty on purpose. The asset catalog exists for one colour set
-        # (docs/TODO.md item 18) and has no `AppIcon` set in it, which is a
-        # hard build error while this defaults to "AppIcon" — the icon is the
-        # other half of item 18 and a design decision the user has not made.
-        # Set this to AppIcon when there is an icon to point it at.
-        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        # The set is `AppIcon.appiconset` in the catalog, and it holds exactly
+        # one image: the 1024 square. Xcode has derived every smaller size from
+        # it since Xcode 14, so a ladder of hand-cut PNGs would be duplicate
+        # artwork to keep in sync for nothing. The 1024 must stay flat, opaque
+        # and un-rounded — the App Store rejects an alpha channel, and iOS
+        # applies the rounded mask itself. See docs/SHIPPING.md, *The icon*.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Home screen labels truncate around 12 characters, so the icon says
         # "Boring" while the App Store listing is "Boring Tracker".
         INFOPLIST_KEY_CFBundleDisplayName: Boring

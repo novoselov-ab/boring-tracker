@@ -173,11 +173,16 @@ phrase this generic is unlikely to be contested.
 
 ## The icon
 
-Not chosen yet — six candidates were rendered so there is something to choose
-between. The images are not in the repo (`.gitignore` refuses `*.png`, and for
-good reason); they were written to `~/dev/boring-tracker-icon/` by a standalone
-Core Graphics script kept alongside them, which re-renders everything in about
-a second with no project and no simulator.
+**Chosen and installed: `ledger`**, the recommendation below. It lives in the
+asset catalog as `AppIcon.appiconset`, one 1024 square and nothing else — Xcode
+derives the smaller sizes. That copy is the only one in the repo and is
+byte-identical to the source, so nothing extra needed keeping: `.gitignore`
+refuses `*.png` but makes `**/Assets.xcassets/**/*.png` the exception.
+
+The six candidates were rendered so there was something to choose between, and
+they are not in the repo; they were written to `~/dev/boring-tracker-icon/` by a
+standalone Core Graphics script kept alongside them, which re-renders everything
+in about a second with no project and no simulator.
 
 ### What it has to be
 
@@ -298,6 +303,11 @@ The App Store rejects an icon with an alpha channel, so the 1024 must be a flat
 opaque square — and it must not have rounded corners baked in, because iOS
 applies the mask itself and a pre-rounded icon gets rounded twice.
 
+Both were checked on the installed one rather than assumed. The PNG's IHDR
+gives colour type 2 — truecolour, no alpha — with no `tRNS` chunk, and all four
+corner pixels read `#00786C`, the background, so there is nothing pre-rounded
+for iOS to round again.
+
 ## Before submitting
 
 Things that are easier handled early than discovered at submission:
@@ -377,14 +387,12 @@ back after release. Everything unmarked is ordinary work in this repository.
 
 ### 2. What the app itself has to carry
 
-- [ ] **(human)** **Choose the icon.** Six candidates and a recommendation
-      (`ledger`) are in *The icon*, along with the background colour and its
-      contrast numbers. The 1024 must be flat, opaque, and **not**
-      pre-rounded.
-- [ ] **Point the build at it.** `ASSETCATALOG_COMPILER_APPICON_NAME` is
-      deliberately empty in `project.yml`, so today's build ships no icon at
-      all. Add the set to the asset catalog, set the value to `AppIcon`, and
-      regenerate the project.
+- [x] **(human)** **Choose the icon.** `ledger`, the recommendation in *The
+      icon*, on the deep teal `#00786C` whose contrast numbers are there too.
+- [x] **Point the build at it.** `AppIcon.appiconset` holds the 1024 and
+      `ASSETCATALOG_COMPILER_APPICON_NAME` is `AppIcon`. Verified flat, opaque
+      and un-rounded, and seen on the simulator home screen, in Spotlight and
+      in Settings › Apps, in both appearances.
 - [x] **Encryption declaration.** `ITSAppUsesNonExemptEncryption` is `NO` on
       the app target — see *Before submitting*.
 - [x] **Version numbers.** `MARKETING_VERSION` is `1.0`.
