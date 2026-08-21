@@ -83,6 +83,13 @@ enrollment rather than trusting this page.** If you do end up classed as a
 trader, the usual answer is a virtual office or mailbox address rather than
 your home.
 
+**Checked on the day and declared: non-trader, 2026-08-20.** App Store Connect
+raised it itself, as a blocking banner — *to make content available in the EU
+you need to let us know if you are a trader* — and the definition it put in
+front of the choice was the DSA's own, linking to Apple's *Managing European
+Union Digital Services Act requirements*. That is the definition this section
+argues against, unchanged, so the reasoning above held on the day.
+
 ## Naming and the competitive landscape
 
 Researched August 2026 against the App Store search API. App Store listings
@@ -324,11 +331,10 @@ back after release. Everything unmarked is ordinary work in this repository.
 - [ ] **(human)** **Accept the agreements App Store Connect asks for.** A free
       app with no purchases should need no tax or banking details, but which
       agreements a free app must accept is **unverified** here.
-- [ ] **(human)** **Answer the EU trader declaration: non-trader.** Decided —
-      see *The EU trader requirement*, which says why a free app with no ads
-      and no purchases isn't a trade, and why the seller name is public
-      regardless. Still needs your hand at enrollment, and the policy has
-      shifted more than once, so read what Apple actually asks on the day.
+- [x] **(human)** **Answer the EU trader declaration: non-trader.** Done
+      2026-08-20 — declared non-trader in App Store Connect. See *The EU trader
+      requirement*, which says why a free app with no ads and no purchases
+      isn't a trade, and why the seller name is public regardless.
 - [ ] **(human)** **Claim the name.** `Boring Tracker`, unclaimed as of the
       August 2026 check in *Naming and the competitive landscape*, and claimed
       first-come. Re-check before getting attached to it. Trademarks were
