@@ -199,141 +199,50 @@ phrase this generic is unlikely to be contested.
 
 ## The icon
 
-**Chosen and installed: `ledger`**, the recommendation below. It lives in the
-asset catalog as `AppIcon.appiconset`, one 1024 square and nothing else — Xcode
-derives the smaller sizes. That copy is the only one in the repo and is
-byte-identical to the source, so nothing extra needed keeping: `.gitignore`
-refuses `*.png` but makes `**/Assets.xcassets/**/*.png` the exception.
+**A mint `+` inside a mint ring on a dark field.** It lives in the asset
+catalog as `AppIcon.appiconset`, one 1024 square and nothing else — Xcode
+derives every smaller size. `.gitignore` refuses `*.png` but makes
+`**/Assets.xcassets/**/*.png` the exception, so that one copy is tracked.
 
-The six candidates were rendered so there was something to choose between, and
-they are not in the repo — they and the standalone Core Graphics script that
-drew them stayed on the machine that made them, outside the working copy. The
-script re-renders all six in about a second with no project and no simulator,
-so the way to see them again is to write it again from the descriptions below,
-not to go looking for a directory that was never published.
+Field `#1C1C1E`, mark `#00E8D8`. The field is the app's own card colour, the
+surface the `+` buttons sit on, so the icon matches the thing it depicts. The
+mark was measured off the chosen artwork and redrawn with Core Graphics rather
+than repaired — ring outer radius 350.5px with a 47px stroke, plus bar 49px
+thick with round caps, centred on 512 — because the artwork arrived
+pre-masked and slightly lopsided.
 
-### What it has to be
+It replaced `ledger`, rows of label and number on a deep teal, which shipped
+first and was chosen from six rendered candidates. That reasoning is in the
+history rather than here; `git log` the appiconset for it.
 
-The name is the brief. *Boring Tracker* promises no streaks, no badges and no
-opinion about your body, so the icon cannot promise energy or transformation —
-an icon that oversells is the first broken promise a user sees. It should read
-as a utility that shipped inside iOS, which rules out the whole fitness
-vocabulary: flames, bolts, hearts, rings, gauges, arrows trending up.
+### What any icon here has to be
 
-The size that decides it is **40pt** — Spotlight, Settings, notifications —
-so everything was designed there and scaled up, and every candidate was also
-rendered at 20pt, which is where a mark actually dies.
+- **Full bleed and opaque.** One 1024×1024 square, sRGB, PNG colour type 2,
+  no alpha and no `tRNS`. The App Store rejects an alpha channel outright.
+- **No corners baked in.** iOS applies its own superellipse, so a pre-rounded
+  icon gets rounded twice. Watch for this in supplied artwork: the current
+  mark arrived with a rounded-rect mask already applied — corners `#000000`
+  against a `#100F10` field — and because that mask is anti-aliased, swapping
+  exact black alone would have left a grey halo tracing the old curve. The
+  check that catches both traps is a diagonal from each corner inward: it
+  must read one value all the way in to the mark.
+- **Designed at 40pt.** Spotlight, Settings and notifications are where most
+  people will ever see it, and a detail that does not survive 120×120 pixels
+  does not exist.
+- **Judged installed, not in a preview.** Build it, put it on the simulator,
+  and look at the home screen, the Settings app list and Spotlight in both
+  appearances. iOS 26 renders the mark with a glass treatment of its own —
+  a highlight, a shadow and a dimmer mint than the file contains — which no
+  1024 preview shows. A wide gradient across the field suppresses that
+  treatment; a flat or nearly flat field gets it.
 
-### The candidates
+### The silhouette cost of a dark icon
 
-`bars` (four bars, no trend), `grid` (one day marked on a grid of days),
-`ledger` (rows of label and number), `tally` (four and a crossbar), `point`
-(one value written down), `keypad` (the number pad is the interface).
-
-Judged from renders at device pixel sizes, not on a device — no simulator was
-involved. At 20pt, `grid` collapses into grey texture and `tally` into a
-scribble; `keypad` survives but reads as Calculator, which is a bad neighbour
-to be mistaken for. `bars`, `ledger` and `point` all hold.
-
-**The recommendation is `ledger`**: three rows, a label rule on the left and a
-shorter block right-aligned like a column of numbers. It says *things get
-written down here in rows*, which is what the app is, and unlike `bars` it
-promises no trend. `bars` is the safe runner-up and the most immediately
-readable as "tracker", at the cost of looking like every competitor.
-
-### Background colour, and why it is not the accent
-
-Three treatments were rendered: teal fill with a white mark, near-black with a
-teal mark, and near-white with a teal mark. An icon's background has to keep
-its silhouette against **both** home screens, and only the mid-luminance fill
-does. WCAG contrast of the icon background against the home screen behind it,
-computed in sRGB by the render script:
-
-| treatment | vs light `#EFEFF4` | vs dark `#0B0B0C` |
-|---|---|---|
-| teal `#00786C` | 4.69:1 | 3.66:1 |
-| ink `#1F2426` | 13.69:1 | 1.25:1 |
-| paper `#F2F2F7` | 1.03:1 | 17.63:1 |
-
-The near-white icon is invisible on a light home screen and the near-black one
-is invisible on a dark one, which the renders show plainly.
-
-The teal is `#00786C`, **darker than the shipped accent** `AccentFill`
-(`#009888`). White on the accent measures 3.59:1; darkening it to `#00786C`
-gets the mark to 5.38:1 while keeping the silhouette numbers above. The icon
-does not have to be the accent colour, and here it should not be.
-
-### The prompt
-
-For trying another tool's take on it. It is deliberately full of negatives: a
-prompt that would produce any fitness app's icon is a failed prompt.
-
-```
-Design an iOS app icon for Boring Tracker.
-
-What the app is. You open it, type a number, and it is gone. Calories, weight,
-water, cigarettes, pushups, hours of sleep — any number that repeats. It is
-free, has no account, no server, no ads and collects nothing. It is one
-person's utility, not a product with a brand.
-
-What the name promises. "Boring" is a commitment the app can be held to: no
-streaks, no badges, no confetti, no rings, no grades, no notification asking
-where you have been. The app has no opinion about your body. The icon must not
-promise energy, transformation or progress, because the app deliberately
-refuses to deliver any of it. It should look like a utility that shipped inside
-iOS — closer to Calculator, Clock or Files than to any fitness app.
-
-Design it at 40pt and scale up, not the reverse. 40pt is Spotlight, Settings
-and notifications, and that is where most people will ever see it. If a detail
-does not survive at 120x120 pixels, it does not exist.
-
-The composition. One flat, solid, mid-luminance background colour filling the
-whole square, and exactly one white mark on it. The mark is a plain geometric
-shape or a small group of them — bars, rules, dots — not an illustration.
-Generous margins: the mark occupies roughly the middle 65% of the square,
-because iOS crops the square to a rounded superellipse.
-
-The background colour must survive both home screens. Near-white disappears
-against a light home screen and near-black disappears against a dark one; a
-mid-luminance saturated colour is the only kind that keeps its silhouette on
-both. Use a deep teal around #00786C, which measures 4.7:1 against a light home
-screen and 3.7:1 against a dark one, with the white mark at 5.4:1 against the
-teal. Any substitute must clear roughly the same three numbers.
-
-Hard constraints.
-- No text, no letters, no digits. The app's name is already printed under the
-  icon, and a word at 40pt is a smudge.
-- No gradients, no glow, no drop shadows, no bevel, no 3D, no glass, no
-  texture, no outer border. Flat fills only.
-- One idea. Not a mark plus a badge plus a background pattern.
-- Nothing from the fitness-app vocabulary: no flame, no lightning bolt, no
-  heart, no dumbbell, no apple, no leaf, no droplet, no ring, no gauge, no
-  progress arc, no arrow trending up, no checkmark, no star, no trophy.
-- No mascot, no face, no hand, no character of any kind.
-- No tally marks. They read as a counter app, and that is the wrong shelf.
-- Nothing that resembles an existing Apple icon: not a keypad grid
-  (Calculator), not a bulleted list with round bullets (Reminders), not a
-  folder, not a lined yellow page (Notes).
-
-What good looks like. Somebody glancing at it at 40pt should read "something is
-written down here, in rows, with numbers" — a record, a ledger, a plotted
-value. Not "this app will improve you". Boring on purpose, and confident about
-it.
-
-Deliver a flat vector-style 1024x1024 square with no transparency and no
-pre-applied rounded corners — iOS applies the mask itself.
-```
-
-### Two things to remember when one is installed
-
-The App Store rejects an icon with an alpha channel, so the 1024 must be a flat
-opaque square — and it must not have rounded corners baked in, because iOS
-applies the mask itself and a pre-rounded icon gets rounded twice.
-
-Both were checked on the installed one rather than assumed. The PNG's IHDR
-gives colour type 2 — truecolour, no alpha — with no `tRNS` chunk, and all four
-corner pixels read `#00786C`, the background, so there is nothing pre-rounded
-for iOS to round again.
+A background keeps its silhouette against **both** home screens only if it is
+mid-luminance: near-white disappears on a light one, near-black on a dark one.
+`#1C1C1E` against a black wallpaper is the second case. It was chosen with
+that known and accepted — the mark carries the icon, not the field — but the
+constraint is real, and the lever on it is background luminance, not the mark.
 
 ## Before submitting
 
@@ -417,8 +326,8 @@ back after release. Everything unmarked is ordinary work in this repository.
 
 ### 2. What the app itself has to carry
 
-- [x] **(human)** **Choose the icon.** `ledger`, the recommendation in *The
-      icon*, on the deep teal `#00786C` whose contrast numbers are there too.
+- [x] **(human)** **Choose the icon.** A mint `+` inside a mint ring on the
+      `#1C1C1E` card colour; see *The icon*.
 - [x] **Point the build at it.** `AppIcon.appiconset` holds the 1024 and
       `ASSETCATALOG_COMPILER_APPICON_NAME` is `AppIcon`. Verified flat, opaque
       and un-rounded, and seen on the simulator home screen, in Spotlight and
