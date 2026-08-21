@@ -555,9 +555,27 @@ Store Connect, which needs the account.
       than assumed: the log sheet covers the cards entirely, History shows the
       repeat disc, and the graph screen shows a bare nav-bar `+` — all three are
       different controls that item 42 did not touch.
-- [ ] **(human)** **App Privacy: "Data Not Collected".** Truthful here, which
+- [x] **(human)** **App Privacy: "Data Not Collected".** **Answered and
+      published 2026-08-21.** One question — *do you or your third-party
+      partners collect any data from this app* — answered **no**, which ends the
+      questionnaire with no data types to categorise. Truthful here, which
       *Before submitting* calls one of the better things about this app. It is
       a claim about the whole app, so it stays true only while rule 5 does.
+
+      **Why no is the confident answer and not the cautious one.** Apple defines
+      collection as **transmitting data off the device**; data that only ever
+      sits on the phone is not collected under that definition. This app has no
+      networking code at all, no third-party SDK, no analytics or crash
+      reporting, and asks for no permissions — all of it checked against the
+      source and written up in `docs/index.html`. The one that gives people
+      pause is **export**: it leaves through the share sheet with the *user*
+      choosing the destination, which is the user moving their own data rather
+      than the developer collecting it. This is the field people over-declare
+      out of caution, and over-declaring here would make a false claim in the
+      more damaging direction — it would say the app collects something it does
+      not. **Not writable over the API** — see *Filling the listing without the
+      web UI*; it has to be answered in the browser and then **published**,
+      which is a separate button from saving.
 - [ ] **(human)** **Age rating questionnaire.** Nothing here is contentious.
 - [x] **(human)** **Price: free**, with no in-app purchases. **Set 2026-08-21**
       over the API and read back: a price schedule with base territory USA and a
