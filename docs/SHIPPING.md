@@ -537,13 +537,36 @@ Store Connect, which needs the account.
       0 of 3,785,760 differing. iPad sizes are not needed — the decision above
       is iPhone-only. **What the required set is remains Apple's to state:** the
       sizes change, so read them off App Store Connect on the day rather than
-      trusting this line. Uploading them needs the account.
+      trusting this line.
+
+      **Uploaded 2026-08-21** over the API, in the order APPSTORE.md fixes, and
+      all five read back **`assetDeliveryState: COMPLETE` at 1320x2868 with no
+      errors** — Apple processes them asynchronously, so a 200 on the upload is
+      not the same as an accepted asset, and this state is the one that answers.
+      Two things the API forced: the 6.9-inch set has **no display type of its
+      own** and goes into the **`APP_IPHONE_67`** bucket, established by posting
+      a deliberately invalid value and reading the accepted enum out of the
+      error; and each image is a **three-step reserve, PUT, commit**, where the
+      commit carries an **MD5 of the file** that Apple verifies, so a mangled
+      upload is refused rather than quietly kept.
+
+      **`home.png` and `again.png` are the item 42 re-shoots**, taken after the
+      card `+` became the outlined ring. The other three were checked rather
+      than assumed: the log sheet covers the cards entirely, History shows the
+      repeat disc, and the graph screen shows a bare nav-bar `+` — all three are
+      different controls that item 42 did not touch.
 - [ ] **(human)** **App Privacy: "Data Not Collected".** Truthful here, which
       *Before submitting* calls one of the better things about this app. It is
       a claim about the whole app, so it stays true only while rule 5 does.
 - [ ] **(human)** **Age rating questionnaire.** Nothing here is contentious.
-- [ ] **(human)** **Price: free**, with no in-app purchases. Rule 1, and it is
-      also what keeps the non-trader case above intact.
+- [x] **(human)** **Price: free**, with no in-app purchases. **Set 2026-08-21**
+      over the API and read back: a price schedule with base territory USA and a
+      manual price of **0.0**. Rule 1, and also what keeps the non-trader case
+      above intact. Two things worth knowing if this is ever redone: free is an
+      ordinary **price point** rather than a flag or the absence of a schedule,
+      and its `customerPrice` is the string **`0.0`, not `0.00`** — filtering
+      for the latter returns nothing and reads exactly like the app is not
+      allowed to be free.
 - [ ] **Encryption, again.** The Info.plist key is what stops the question
       being asked per upload. Whether the first submission still asks it once
       in the web form is **unverified**.
