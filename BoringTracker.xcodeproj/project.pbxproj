@@ -459,7 +459,7 @@
 				"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]" = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Boring;
+				INFOPLIST_KEY_CFBundleDisplayName = "Boring Tracker";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -543,7 +543,7 @@
 				"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]" = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Boring;
+				INFOPLIST_KEY_CFBundleDisplayName = "Boring Tracker";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
