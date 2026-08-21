@@ -1568,12 +1568,12 @@ out, or both.
 
 Things to try, and judge by thumb rather than by argument:
 
-- [x] **The row itself confirms** — built, recorded, rejected. It **cannot
-      work**.
-      `dismiss()` stops a presentation's content updating, so a checkmark set
-      on the same tap as the dismissal is never drawn: the sheet slides away
-      for about 300ms showing the state it had before the tap. Held for 0ms and
-      for 50ms the mark still never appeared; at 500ms it did. That is a delay
+- [x] **The row itself confirms** — built, recorded, and rejected, because it
+      **cannot work**. `dismiss()` stops a presentation's content updating, so a
+      checkmark set on the same tap as the dismissal is never drawn: the sheet
+      slides away for about 300ms showing the state it had before the tap —
+      290–293ms when it was re-timed below. Held for 0ms and for 50ms the mark
+      still never appeared; at 500ms it did. That is a delay
       on the most repeated action in the app and the rule below forbids it, so
       the row is not where this goes. Recorded at 60fps on an iPhone 17 Pro
       with a synthesized tap.
