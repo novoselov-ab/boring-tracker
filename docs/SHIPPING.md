@@ -690,10 +690,19 @@ of a null that a broad GET reported.
 
 ### 6. Submitting
 
-- [ ] **(human)** **Submit for review**, and expect *Guideline 4.2, Minimum
-      Functionality* to be the one real risk — see *One review risk to be
-      aware of*. The answer is to show the functionality that exists, not to
-      add features.
+- [x] **(human)** **Submit for review.** **Submitted 2026-08-21 16:30:51 UTC**
+      — review submission `31b9fdb4`, version 1.0 with build 1, state
+      **`WAITING_FOR_REVIEW`**. Over the API: open a `reviewSubmissions` for the
+      app, add the version as a `reviewSubmissionItems`, then PATCH
+      `submitted: true`. Nothing reaches Apple until that last PATCH, so the
+      first two steps are safe to run and inspect.
+
+      *Guideline 4.2, Minimum Functionality* is still the one real risk — see
+      *One review risk to be aware of*. The answer remains to show the
+      functionality that exists rather than to add features, and the reviewer
+      note already points at each of it. If it is rejected on 4.2 it arrives in
+      Resolution Center against the same build; replying is the move, not
+      rebuilding.
 
 ### 7. After the first release
 
