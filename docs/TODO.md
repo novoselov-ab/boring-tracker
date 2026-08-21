@@ -1550,12 +1550,12 @@ and three review rounds on top of it, and the last open box turned out to be
 answered by a bar that was already there.
 
 **If you are reading this because logging feels silent, read the next paragraph
-before building anything.** The complaint has been raised four times — twice for
-Log again, once for repeat-from-History, and once more in the brief that closed
-this item, which restated the original diagnosis as though the fix did not
-exist. It exists. The confirmation is home's Log again disc turning into a
-checkmark as the sheet leaves, plus the undo bar arriving with it, plus a
-`.success` haptic. Measured below.
+before building anything.** The complaint has been raised three times — this
+item, the earlier session that said the same thing about repeat-from-History and
+is quoted below, and the brief that closed this item, which restated the
+original diagnosis as though the fix did not exist. It exists. The confirmation
+is home's Log again disc turning into a checkmark as the sheet leaves, plus the
+undo bar arriving with it, plus a `.success` haptic. Measured below.
 
 **The diagnosis is placement, not strength.** The number counts up on the home
 card and the undo bar appears on home — both *behind* the sheet you are looking
@@ -1644,8 +1644,8 @@ holds **about 0.8s** of its one second, the rest being spent behind the sheet.
 half.** It does arrive, on both screens, and on History it is the whole answer.
 On home it is not sufficient on its own — it sits above the bar rather than in
 it, and says "Logged again" in secondary grey with a button beside it, which is
-a sentence to read rather than a mark to catch — and the checkmark lands under the
-thumb that just tapped. Neither was worth removing to prove a point.
+a sentence to read rather than a mark to catch — and the checkmark lands under
+the thumb that just tapped. Neither was worth removing to prove a point.
 
 **Nothing further is worth building here.** The remaining candidates all cost
 something the item already rules out: keeping the sheet up costs a tap, marking
