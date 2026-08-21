@@ -27,8 +27,8 @@ Boring Tracker
 
 30 characters maximum, **verified** against Apple's App Store Connect help
 (*App information*, which gives the name as 2–30 characters). Used: 14. This
-is the listing name and must be unique; the home screen label is `Boring`, set
-separately in `project.yml`, and does not have to be.
+is the listing name and must be unique; the home screen label is the same
+string, set separately in `project.yml`, and does not have to be unique.
 
 ### Subtitle
 

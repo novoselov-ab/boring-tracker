@@ -96,21 +96,24 @@ anyone opens the app. It also avoids "simple", a word every competitor has
 already burned while shipping the opposite.
 
 - **App Store listing name:** Boring Tracker
-- **Home screen label** (`CFBundleDisplayName`): `Boring`, and the reason is no
-  longer truncation. **Measured 2026-08-20: `Boring Tracker` fits in full on an
-  iPhone 17 and on a 375pt SE, with no ellipsis** — iOS truncates on rendered
-  width, not on character count, so "labels truncate around 12 characters",
-  which this line used to say, was never the rule. The SE fits the two words by
-  condensing them about 20% (74.5pt against 89pt measured separately), which is
-  iOS tightening a string before it will ellipsise it. What the short label
-  *does* cost is Spotlight: with `Boring`, typing "tracker" does not find the
-  app, checked twice from a clean uninstall with a 25s settle and "boring" as a
-  same-minute control that was found both times. `Boring Tracker` is found by
-  both words; `Tracker` is found by "tracker" and not by "boring". Whether to
-  change the label is open — TODO.md item 41, which holds the screenshots.
+- **Home screen label** (`CFBundleDisplayName`): `Boring Tracker` — the full
+  name, since 2026-08-20. It used to be `Boring`, because this line used to say
+  "labels truncate around 12 characters". **That was never the rule: iOS
+  truncates on rendered width, not on character count, and all 14 characters fit
+  with no ellipsis on an iPhone 17 and on a 375pt SE**, the narrowest phone this
+  app supports. The SE fits the two words by condensing them about 20% (74.5pt
+  against 89pt measured separately), which is iOS tightening a string before it
+  will ellipsise it.
+  The label is also the string Spotlight matches, and that is what the short one
+  cost: with `Boring`, typing "tracker" did not find the app at all, checked
+  twice from a clean uninstall with a 25s settle and "boring" as a same-minute
+  control that was found both times. With `Boring Tracker` both words return it
+  as Top Hit. (`Tracker` alone was found by "tracker" and not by "boring", which
+  is why the full name and not the other short one.)
   **The trap:** before first launch the new-app dot steals label width and the
-  home screen renders `BoringTracker` or `Boring T…`, which looks like the
-  truncation this bullet used to claim and is not it.
+  home screen renders `BoringTracker` or `Boring T…`, which looks exactly like
+  the truncation this bullet used to claim and is not it. Launch once, then
+  judge.
 - **Bundle id:** `com.novoselov.boringtracker` — permanent
 
 Runners-up, both available if it ever has to change: **Napkin Tracker** (more
@@ -146,7 +149,7 @@ Note that three different names are involved and only one must be unique:
 
 - **App Store listing name** — must be unique, claimed first-come, 30 chars.
 - **`CFBundleDisplayName`** — the label under the home screen icon. Does *not*
-  need to be unique. It is `Boring`, set in `project.yml` as
+  need to be unique. It is `Boring Tracker`, set in `project.yml` as
   `INFOPLIST_KEY_CFBundleDisplayName`, which is what the bullet at the top of
   this section already says. This line used to read `Whatever` — the name the
   project carried before the 2026-08-11 rename — and it contradicted its own

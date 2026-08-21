@@ -20,9 +20,6 @@ as a plan. **What is actually left:**
 - [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
   a decision the user makes, not on work. Why the light value is where it is is
   in [TECH.md](TECH.md).
-- [41. The home screen label is `Boring`, for a reason that is not
-  true](#41-the-home-screen-label-is-boring-for-a-reason-that-is-not-true) —
-  measured; open on a decision the user makes, not on work.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -2080,11 +2077,11 @@ list does. It also says nothing should animate that you have to wait for, and
 because a person using the app reported the first one costing him something —
 which is the only evidence either rule was ever going to get.
 
-## 41. The home screen label is `Boring`, for a reason that is not true
+## 41. The home screen label is `Boring`, for a reason that is not true — done
 
 **Measured 2026-08-20** on an iPhone 17 and a 375pt SE simulator, in a
 throwaway worktree, because the reason had never been measured: `project.yml`
-and SHIPPING.md both say home screen labels "truncate around 12 characters",
+and SHIPPING.md both said home screen labels "truncate around 12 characters",
 and iOS truncates on rendered *width*, not on characters.
 
 **`Boring Tracker` fits in full on both devices, with no ellipsis.** On the SE
@@ -2114,11 +2111,21 @@ been opened once**, the new-app dot takes label width, and the label renders as
 goes away on first launch. A screenshot of a fresh install shows the squeeze; a
 user after their first tap does not.
 
-- [ ] **Anton's call, not a session's.** The evidence says the full name is
-      free, and that the short one costs every search for the word the app is
-      named after. The decision is still his. Whatever is chosen,
-      `project.yml`'s comment and SHIPPING.md's bullet have to stop citing
-      12 characters.
+- [x] **Changed to `Boring Tracker`**, in `82cf49c`. The evidence above is the
+      whole argument: the full name is free on both devices, and the short one
+      cost every search for the word the app is named after. `project.yml`'s
+      comment and SHIPPING.md's bullet no longer cite 12 characters, and
+      APPSTORE.md no longer says the label is `Boring`.
+
+      Re-checked *after* the change rather than only before it. Both home
+      screens render `Boring Tracker` with no ellipsis once the app has been
+      opened once, and Spotlight on an iPhone 17 returns it as Top Hit for
+      `tracker` and for `boring`. One wrinkle worth knowing for the next
+      Spotlight check on this machine: a stale `boringtracker.uitests.xctrunner`
+      build was installed on the iPhone 17 from some earlier session, it matches
+      both queries itself, and it sat in the results beside the app until it was
+      uninstalled. The screenshots behind this paragraph were taken with it
+      gone.
 
 ## Noted, not scheduled
 
