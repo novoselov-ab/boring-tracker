@@ -72,14 +72,14 @@ no to something.
 
 ## Support
 
-If the app is useful to you and you want to support the developer, there is
-nothing to click — I do not take donations and there is no button for it
-anywhere. What helps instead:
+If you want to support this, I really appreciate it — but I would rather you
+gave the money to a charity. [GiveWell](https://www.givewell.org) is the one I
+recommend. Other things that help:
 
-- Give the money to a charity of your choice.
-- Leave a review on the App Store.
 - Email me at [novoselov.ab@gmail.com](mailto:novoselov.ab@gmail.com). I would
   be glad to hear it is useful.
+- Leave a review on the App Store.
+- Share it with someone who would use it.
 
 ## Building it
 
