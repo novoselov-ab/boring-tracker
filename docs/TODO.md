@@ -13,8 +13,6 @@ as a plan. **What is actually left:**
 
 - [17. One pass on a real device](#17-one-pass-on-a-real-device) — the whole app
   on hardware, which no simulator answers.
-- [27. The bottom bar: presses you cannot see, and a pairing that looks
-  wrong](#27-the-bottom-bar-presses-you-cannot-see-and-a-pairing-that-looks-wrong)
 - [30. Confirm a log where the eye actually
   is](#30-confirm-a-log-where-the-eye-actually-is)
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
@@ -503,9 +501,10 @@ this reason.
 - [ ] Look at the ring on a real screen. If it holds up, delete the disc; if it
       does not, the constant is one line.
 
-**Two questions about a press that only a thumb can answer.** Neither is about
-whether a press draws — item 32 settled that at 60fps, on taps down to 40ms —
-and both are about how one *feels*.
+**Three questions about a press that only a thumb can answer.** None of them is
+about whether a press draws — item 32 settled that at 60fps, on taps down to
+40ms — and all three are about how one *feels*. The third arrived here when
+item 27 closed; the first was already shared with it.
 
 - [ ] **Does the haptic help — and does it now fire while you scroll?**
       `.impact(.light)` on the press edge is on every row of five screens, which
@@ -518,6 +517,15 @@ and both are about how one *feels*.
       first thing to hold a phone for. **If it buzzes on every flick, deleting
       the press haptic is the fix already on the table**, and it costs nothing
       that has ever been felt.
+- [ ] **Does the 2pt scale read as a press under a thumb?** Item 27 replaced
+      colour with motion because colour alone had been measured and still was
+      not noticed, and the motion was then judged the same way the colour was —
+      by synthesized presses and a 60fps capture. Six controls were photographed
+      held down and every one moves 2pt at each end of its longest edge, so it
+      renders; whether 2pt is enough to feel is the question those pictures
+      cannot answer, and it is the same gap item 26 fell into one step earlier.
+      **If it is not enough, the number is one constant** — the mechanism is
+      already right and `accentFilled(_:)` is the only place it lives.
 - [ ] **What does a press called off look like?** SwiftUI reports a
       cancellation and a release identically, so a flick that starts on a row
       leaves that row washed while the list is already scrolling. Item 40 made
@@ -1188,9 +1196,20 @@ One pressed colour on every accent fill, and a disabled one you can see.
 The calendar is drawn only when two days have entries, and is absent rather than
 greyed below that; the reasoning is with item 25. `5aed442`
 
-## 27. The bottom bar: presses you cannot see, and a pairing that looks wrong
+## 27. The bottom bar: presses you cannot see, and a pairing that looks wrong — done
 
-Both from real use, both on the pair of controls at the bottom of home.
+Both from real use, both on the pair of controls at the bottom of home. Both
+halves are built and photographed: the press scale in `71a1925`, gated for
+Reduce Motion in `8ecdbfd`, and the pairing in `4c93cc7` and item 33.
+
+**Closed with nothing left to build here.** The two boxes below that never got
+ticked are not work this item can do — one asks whether a haptic helps and the
+other whether 2pt of scale feels like a press, and a simulator answers neither:
+UIKit logs "Haptics: unsupported" and a synthesized click has no thumb behind
+it. Both are now questions in [item 17](#17-one-pass-on-a-real-device), where
+the rest of the app's hold-a-phone checks live, and they are struck through
+below rather than deleted so the reasoning that put them there stays next to
+the work they came from.
 
 ### The pressed state still is not visible
 
@@ -1243,7 +1262,8 @@ prefer colour over motion was mine and it was wrong in practice.
       The comment two lines from the gap said "the app has exactly one
       animation, and this is it — so this is the only place that has to ask",
       and this item is what made that false. Both places ask now.
-- [ ] **The haptic is in and unfelt.** `.impact(.light)` on the press edge. The
+- [x] ~~**The haptic is in and unfelt.**~~ Moved to item 17.
+      `.impact(.light)` on the press edge. The
       one thing that could be checked was that a scroll did not fire it, and at
       the time it did not: a flick that started on a Log again row never entered
       the pressed state. **Item 40 changed that** — with the list's delay off, a
@@ -1251,10 +1271,10 @@ prefer colour over motion was mine and it was wrong in practice.
       wash. Whether either *helps* cannot be answered in a simulator — UIKit
       logs "Haptics: unsupported" there and nothing reaches CoreHaptics.
       **Item 17's device pass keeps it or deletes it.**
-- [ ] **The scale was judged by a synthesized press, not a thumb**, which is
+- [x] ~~**The scale was judged by a synthesized press, not a thumb**~~, which is
       the same gap. Screenshots of a held control and a 60fps capture of the
-      motion say it renders; they cannot say it feels like a press. Also item
-      17.
+      motion say it renders; they cannot say it feels like a press. Also moved
+      to item 17.
 
 **What was checked and was not true:** iOS's own prominent button does *not*
 scale on press. Rebuilt with `.borderedProminent` and held down on an iPhone 17
