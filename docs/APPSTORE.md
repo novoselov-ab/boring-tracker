@@ -192,6 +192,11 @@ declaration in SHIPPING.md intact.
 questionnaire ends there, with no data types to categorise and no third-party
 partners to declare.
 
+**This one has to be typed into the web UI.** It is the only part of the
+listing the App Store Connect API does not expose — see *Filling the listing
+without the web UI* in SHIPPING.md, which records the three 404s that establish
+it.
+
 What it rests on, all of it checked against the source and written up in
 `docs/index.html`:
 

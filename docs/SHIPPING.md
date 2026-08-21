@@ -293,6 +293,73 @@ defense the reviewer knows about. If it comes up, the answer is to show the
 real functionality — multiple tracker types, history, graphs, export/import —
 rather than to add features. Do not compromise the philosophy to pass review.
 
+## Filling the listing without the web UI
+
+Nearly all of the listing can be written over the **App Store Connect API**
+rather than typed into forms. Established 2026-08-20 by probing the live app
+record, not from documentation — every row below was either read back with a
+200 or refused with a 404.
+
+**The credential.** A `.p8` key generated in App Store Connect › Users and
+Access › Integrations, role **App Manager**. It downloads exactly once and
+cannot be re-fetched — losing it means revoking and generating another. It
+lives at `~/.appstoreconnect/`, mode 600, **outside the repository**, and the
+Key ID and Issuer ID are deliberately not written down here: this repo is
+public, and the three together are the whole credential. The key can price,
+submit and release the app, so it is not a config value.
+
+Auth is a JWT signed ES256, `aud` of `appstoreconnect-v1`, twenty-minute
+expiry. Two things bit on this machine and would bite again on a fresh clone:
+the system `python3` is a **3.6 framework build with no CA bundle**, so
+`urllib` fails the TLS handshake against Apple and the transport has to be
+`curl`; and neither PyJWT nor `cryptography` is installed, so the signature
+comes out of `openssl dgst -sha256 -sign` as **DER** and has to be unpacked
+into the raw `r||s` pair a JWS wants. Neither is exotic, both cost a round trip
+to discover.
+
+**The identifiers**, read back from the API on 2026-08-20:
+
+| what | value |
+|---|---|
+| app id | `6803768789` |
+| bundle id | `com.novoselov.boringtracker` |
+| SKU | `boring-tracker` |
+| version record | `1.0`, created with the app, state `PREPARE_FOR_SUBMISSION` |
+
+**What the API covers**, and what it does not:
+
+| Field | Route | Checked |
+|---|---|---|
+| Name, subtitle, privacy policy URL | `appInfoLocalizations` | resource reachable |
+| Description, keywords, promo text, what's new, marketing + support URL | `appStoreVersionLocalizations` | resource reachable |
+| Categories | `appInfos` relationships | present on the record |
+| Screenshots | `appScreenshotSets` → reserve, upload, commit | not yet exercised |
+| Price: free | `appPriceSchedule` | present on the record |
+| Age rating | `appInfos/{id}/ageRatingDeclaration` | **read back, 200** |
+| Submit for review | `reviewSubmissions` | present on the record |
+| Build upload | not the API — `xcrun altool --upload-app`, same key | — |
+| **App Privacy — the nutrition label** | **nothing** | **404** |
+
+**App Privacy has to be answered in the web UI.** There is no relationship for
+it on the app resource — the record carries 41 relationships and not one of
+them is data usage — and `/v1/appDataUsages`, `/v1/appDataUsageCategories` and
+`/v1/appDataUsagesPublishState` each return `PATH_ERROR`, *the resource does
+not exist*. This was expected to work and does not. It is also the one answer
+that is a public claim about the app rather than a form field, so answering it
+by hand is no great loss.
+
+**The age rating questionnaire is a single PATCH** of one object whose fields
+are all `null` until set. The live attribute list confirms the July 2025
+overhaul landed: alongside `healthOrWellnessTopics` and
+`medicalOrTreatmentInformation` — the two APPSTORE.md flags as the judgement
+call for an app that records calories — it now carries `ageAssurance`,
+`parentalControls`, `lootBox`, `socialMediaAgeRestricted`,
+`ageRatingOverrideV2` and `developerAgeRatingInfoUrl`.
+
+**Browser automation was considered and rejected.** Two-factor auth, session
+cookies that expire, and a JavaScript app that rearranges its own DOM, against
+a documented and stable REST API.
+
 ## Licensing and the App Store
 
 **MIT is the right choice and GPL would not be.** GPLv3 conflicts with Apple's
@@ -473,6 +540,9 @@ Things that cannot be done before there is an App Store id, recorded here so
 they are not lost the moment there is one.
 
 - [ ] **The "leave a review" link on the About screen.** It deliberately ships
-      without one: the URL needs the numeric App Store id, which does not exist
-      until the app does — see `017267c`. Once the id exists, that is the one
-      thing About is waiting for.
+      without one: the URL needs the numeric App Store id — see `017267c`.
+      **The id exists: `6803768789`**, read off the API on 2026-08-20, and it
+      arrived with the app record rather than with the release. So this is no
+      longer blocked and no longer belongs in "after the first release"; it can
+      go into 1.0 if it is wanted there. What was never checked is whether the
+      review sheet does anything useful before the app is actually on sale.
