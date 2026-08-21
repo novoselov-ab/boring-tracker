@@ -399,12 +399,13 @@ back after release. Everything unmarked is ordinary work in this repository.
 
 ### 1. Before anything can be uploaded at all
 
-- [ ] **(human)** **Enrol in the Apple Developer Program.** $99/year, as an
+- [x] **(human)** **Enrol in the Apple Developer Program.** $99/year, as an
       **individual** — see *Enrolling*, which also covers why not an
       organization and what a lapsed membership does. **Submitted 2026-08-20**
-      from the Apple Developer app on the phone, with the identity check; it
-      reads *Enrollment Pending*. Nothing below that needs an account can start
-      until Apple approves it.
+      from the Apple Developer app on the phone, with the identity check, and
+      **approved 2026-08-20** — one day, including the identity check. That was
+      the gate everything else waited on; the Free Apps Agreement was already
+      active the same day.
 - [x] **(human)** **Accept the agreements App Store Connect asks for.** Done —
       nothing had to be accepted by hand. **Verified 2026-08-20** in App Store
       Connect › Business: the **Free Apps Agreement** was already *Active*, dated
