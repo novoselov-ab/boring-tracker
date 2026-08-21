@@ -1,16 +1,8 @@
-<p align="center">
-  <img src="BoringTracker/Resources/Assets.xcassets/AppIcon.appiconset/boring-tracker-1024.png" width="128" alt="Boring Tracker app icon">
-</p>
+# <img src="BoringTracker/Resources/Assets.xcassets/AppIcon.appiconset/boring-tracker-1024.png" width="40" alt="Boring Tracker icon"> Boring Tracker
 
-<h1 align="center">Boring Tracker</h1>
+iPhone app for tracking whatever you want — macros, habits, or any other data.
 
-<p align="center">
-  iPhone app for tracking whatever you want — macros, habits, or any other data.
-</p>
-
-<p align="center">
-  <a href="https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml"><img src="https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml/badge.svg" alt="Build and test"></a>
-</p>
+[![Build and test](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml)
 
 Free, open source, no ads, no accounts, no subscription, no server, no feature
 bloat. Type a number, done.
