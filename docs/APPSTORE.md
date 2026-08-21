@@ -56,10 +56,9 @@ limit and it was not confirmed. Used: 94, counted, leaving headroom against a
 number that is itself unverified. Check it in App Store Connect, which rejects
 an over-length field rather than truncating it.
 
-*tally* was in this list and came out: SHIPPING.md, *Availability*, records
-that the tally-shaped names are crowded with counter apps and that being
-mistaken for a tally counter is the wrong association. No point buying it with
-a keyword.
+*tally* was in this list and came out. The tally-shaped names are crowded with
+counter apps, and being mistaken for a tally counter is the wrong association —
+no point buying it with a keyword.
 
 Comma-separated with no spaces after the commas, because spaces count. Nothing
 here repeats the name or the subtitle — *calorie*, *weight* and *tracker* are
