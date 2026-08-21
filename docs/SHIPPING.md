@@ -514,6 +514,39 @@ Store Connect, which needs the account.
       provisioning profile. A **distribution** archive and the upload itself
       are **unverified** — both need the paid account.
 
+### 4b. Signing, when the API key cannot use cloud signing
+
+`xcodebuild -exportArchive` with `signingStyle: automatic` fails on this account
+with **`Cloud signing permission error`** and **`No profiles for
+'com.novoselov.boringtracker' were found`**, even though the same API key reads
+`/v1/certificates` and `/v1/bundleIds` happily. The two are not the same
+permission: **cloud signing is the arrangement where Apple generates and holds
+the private key**, and an App Manager key is not allowed to ask for it. Creating
+a certificate from a CSR *is* allowed — established by POSTing a deliberately
+malformed CSR and getting back a complaint about the CSR rather than a 403.
+
+So the working route generates the key locally and never asks Apple for one:
+
+1. `openssl genrsa` a 2048-bit key, then a CSR against it.
+2. `POST /v1/certificates` with `certificateType: DISTRIBUTION` and that CSR.
+   Returned **`Apple Distribution: ANTON NOVOSELOV`**, id `KC2P7PT99U`, expiring
+   2027-08-21. `certificateContent` is base64 DER.
+3. `POST /v1/profiles` with `profileType: IOS_APP_STORE`, the bundle id record
+   (`FZA2V289Y5`) and that certificate. Write the decoded `profileContent` to
+   `~/Library/MobileDevice/Provisioning Profiles/<uuid>.mobileprovision`.
+4. Import the certificate and key so `codesign` can reach them, then export with
+   **`signingStyle: manual`**, naming the certificate and profile explicitly.
+
+**The private key never leaves this machine**, which is the part worth keeping:
+it is also the arrangement that survives losing access to the account.
+
+**Step 4 needs its own keychain, not `login.keychain`.** Making a key usable by
+`codesign` without a GUI prompt needs `security set-key-partition-list`, which
+wants the keychain's password — and for the login keychain that is the user's
+macOS account password. A keychain created for the purpose has a password the
+script already knows. `security list-keychains -d user -s` then prepends it to
+the search list, keeping what was there.
+
 ### 5. The listing
 
 - [x] **(human)** **Name, subtitle, keywords, description.** **Written
