@@ -20,9 +20,6 @@ as a plan. **What is actually left:**
 - [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
   a decision the user makes, not on work. Why the light value is where it is is
   in [TECH.md](TECH.md).
-- [43. A rate link on About, now that there is an
-  id](#43-a-rate-link-on-about-now-that-there-is-an-id) — decided, unbuilt; the
-  App Store id exists earlier than expected.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -535,6 +532,15 @@ and both are about how one *feels*.
       cosmetic, and the fix is still a second gesture watching for movement, which
       `RowPress.swift` has three times decided not to add. Look at it on a phone
       before deciding it is worth machinery.
+
+**Where the rate link actually lands.** Item 43 put a `Link` to
+`apps.apple.com/app/id6803768789?action=write-review` on About. The simulator
+has no App Store app, so it cannot answer this: Safari there refuses the URL as
+invalid, and refuses a live app's identical link the same way.
+
+- [ ] Tap *Leave a Review* on the phone and confirm it opens the App Store on
+      **this** app, on the write-a-review sheet. If the listing is not public
+      yet, the check waits for it rather than being reported as passed.
 
 **Pressed states are otherwise done and are not waiting on a device.** They sat
 here across four sessions as uncapturable — pressing a control in the simulator
@@ -2265,7 +2271,7 @@ accessibility tree, read from the simulator for both builds against the same
 fixture, returns identical rects for all six card buttons: `Log Calories` at
 `1196,301 44×44` in each, and so on down the screen.
 
-## 43. A rate link on About, now that there is an id
+## 43. A rate link on About, now that there is an id — done
 
 About deliberately shipped without one — `017267c` — because the URL needs the
 numeric App Store id and there was no app. **There is now: `6803768789`**, and
@@ -2291,11 +2297,25 @@ it is. This app has no marketing budget, no ads and no launch — the listing is
 the entire distribution strategy. A passive link is the cheapest honest lever on
 that, and it costs one row.
 
-**Unverified, and worth checking before it ships:** whether
-`?action=write-review` resolves at all before the app is actually on sale. A
-dead link on About is worse than no link. Check it once the app is live rather
-than assuming, which is also why this is 1.1 work and not a change to a build
-already in review.
+**Built as a `Link` row above *Support*.** `c54da7e`. Beside the Support
+message rather than as a fourth button inside it: that message opens by talking
+the reader out of giving money, and a review link reached only through it is two
+taps behind a deflection.
+
+**The id is right and the URL is not reachable yet — those are different
+things.** The App Store Connect API returns 200 for `apps/6803768789` with name
+*Boring Tracker* and bundle id `com.novoselov.boringtracker`, so the link points
+at this app. The public page 404s, and `itunes.apple.com/lookup` returns
+`resultCount: 0`, because the only version record is 1.0 in state
+`WAITING_FOR_REVIEW` — there is no listing to serve until it goes on sale,
+which necessarily happens before anything containing this row can be downloaded.
+
+**Still unverified: that the row lands on the store page.** The simulator has no
+App Store app, so the handoff fails there — Safari refuses the URL as
+invalid, and it refuses a *live* app's `?action=write-review` link the same way,
+which is what says the failure is the simulator and not the URL. Confirming it
+needs hardware or the live listing. [Item 17](#17-one-pass-on-a-real-device) is
+the device pass; check it there, or the first time the listing is public.
 
 ## Noted, not scheduled
 
