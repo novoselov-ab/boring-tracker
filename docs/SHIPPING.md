@@ -328,9 +328,21 @@ back after release. Everything unmarked is ordinary work in this repository.
       from the Apple Developer app on the phone, with the identity check; it
       reads *Enrollment Pending*. Nothing below that needs an account can start
       until Apple approves it.
-- [ ] **(human)** **Accept the agreements App Store Connect asks for.** A free
-      app with no purchases should need no tax or banking details, but which
-      agreements a free app must accept is **unverified** here.
+- [x] **(human)** **Accept the agreements App Store Connect asks for.** Done —
+      nothing had to be accepted by hand. **Verified 2026-08-20** in App Store
+      Connect › Business: the **Free Apps Agreement** was already *Active*, dated
+      Aug 20 2026 – Aug 20 2027, on the day enrollment was approved. The
+      **Paid Apps Agreement** sits at *New* and stays there: it is the only one
+      that wants tax and banking details, and none were asked for. So the
+      earlier guess was right — a free app with no purchases needs no financial
+      forms — and the agreement it does need arrives already signed.
+
+      **The two banners on that page are not blockers.** *"To offer apps or
+      other in-app purchases, you must update your legal entity information
+      prior to signing the Paid Apps Agreement"* is conditional on signing that
+      agreement, which this app never will. The other was the trader
+      declaration, handled in the item below; Business › Compliance now reads
+      **Digital Services Act — Active**, which is where that answer lands.
 - [x] **(human)** **Answer the EU trader declaration: non-trader.** Done
       2026-08-20 — declared non-trader in App Store Connect. See *The EU trader
       requirement*, which says why a free app with no ads and no purchases
