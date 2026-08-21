@@ -49,7 +49,9 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $path) {
             Group {
-                if store.activeTrackers.isEmpty {
+                if store.isBlank {
+                    WelcomeView()
+                } else if store.activeTrackers.isEmpty {
                     empty
                 } else {
                     list
@@ -736,7 +738,7 @@ private struct CountingNumber: View, Animatable {
     }
 }
 
-private struct LoadNotice {
+struct LoadNotice {
     var title: String
     var detail: String
 
@@ -761,7 +763,7 @@ private struct LoadNotice {
     }
 }
 
-private struct NoticeRow: View {
+struct NoticeRow: View {
     let notice: LoadNotice
 
     var body: some View {

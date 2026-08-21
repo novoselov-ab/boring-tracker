@@ -46,10 +46,6 @@ struct StoreDocument: Codable, Hashable, Sendable {
     var entries: [Entry] = []
     var tombstones: [Tombstone] = []
 
-    static var starter: StoreDocument {
-        StoreDocument(trackers: Tracker.starterSet)
-    }
-
     var isEmpty: Bool {
         trackers.isEmpty && entries.isEmpty && tombstones.isEmpty
     }

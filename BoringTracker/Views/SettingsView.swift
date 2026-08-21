@@ -361,7 +361,7 @@ func dropTarget(at y: CGFloat, rows: [(id: UUID, frame: CGRect)], visible: CGRec
 
 #Preview {
     let store = Store(
-        document: StoreDocument(trackers: Tracker.starterSet),
+        document: StoreDocument(trackers: StarterTracker.defaultTrackers()),
         file: StoreFile(directory: URL.temporaryDirectory.appending(path: "preview-settings"))
     )
     return NavigationStack {

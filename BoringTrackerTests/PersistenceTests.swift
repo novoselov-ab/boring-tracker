@@ -77,7 +77,7 @@ struct PersistenceTests {
 
     // MARK: - Loading
 
-    @Test("A first launch starts with something usable, not an empty screen")
+    @Test("A first launch creates nothing — the welcome screen decides what to start with")
     func freshInstall() {
         let file = temporaryStoreFile()
         defer { file.removeDirectory() }
@@ -85,8 +85,10 @@ struct PersistenceTests {
         let loaded = file.load()
 
         #expect(loaded.origin == .fresh)
-        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
-        #expect(loaded.document.trackers.map(\.group) == ["Food", "Food", "Weight"])
+        // Seeding Calories, Protein and Weight here is what every build up to 1.0
+        // did. An empty document is what puts `WelcomeView` on screen instead, and
+        // it is the same document a clear writes — see `WelcomeTests`.
+        #expect(loaded.document.isEmpty)
     }
 
     @Test("A normal launch reads the file it wrote")
@@ -149,7 +151,7 @@ struct PersistenceTests {
         #expect(try Data(contentsOf: quarantine.appendingPathComponent("store.json")) == garbage)
         #expect(try Data(contentsOf: quarantine.appendingPathComponent("store.backup.json")) == garbage)
         #expect(!FileManager.default.fileExists(atPath: file.url.path))
-        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
+        #expect(loaded.document.isEmpty)
     }
 
     // MARK: - Writing safely
@@ -328,7 +330,7 @@ struct PersistenceTests {
             return
         }
         #expect(try Data(contentsOf: quarantine.appendingPathComponent("store.json")) == data)
-        #expect(loaded.document.trackers.map(\.name) == ["Calories", "Protein", "Weight"])
+        #expect(loaded.document.isEmpty)
     }
 
     @Test("A future-schema file is kept, not replaced")

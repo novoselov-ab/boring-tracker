@@ -83,12 +83,12 @@ struct StoreFile: Sendable {
             return StoreLoad(document: document, origin: .backup)
         }
         guard mainExists || backupExists else {
-            return StoreLoad(document: .starter, origin: .fresh)
+            return StoreLoad(document: StoreDocument(), origin: .fresh)
         }
         // Something is there and none of it decodes. Move it aside instead of
         // letting the next save write over the only copy the user has left.
         let quarantine = quarantineAll(now: now)
-        return StoreLoad(document: .starter, origin: .unreadable(quarantine: quarantine))
+        return StoreLoad(document: StoreDocument(), origin: .unreadable(quarantine: quarantine))
     }
 
     func read(_ fileURL: URL) throws -> StoreDocument {

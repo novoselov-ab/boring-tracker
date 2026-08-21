@@ -145,7 +145,7 @@ final class Store {
     }
 
     init(
-        document: StoreDocument = .starter,
+        document: StoreDocument = StoreDocument(),
         origin: StoreOrigin = .fresh,
         file: StoreFile = .standard(),
         calendar: Calendar? = nil,
@@ -225,6 +225,18 @@ final class Store {
 
     func tracker(_ id: UUID) -> Tracker? {
         trackers.first { $0.id == id }
+    }
+
+    /// Nothing at all: no trackers, no entries, and no record of anything ever
+    /// having been deleted.
+    ///
+    /// **True on a fresh install and after `clearAll()`, and nowhere else** — which
+    /// is what makes those two land on the same screen (`WelcomeView`) without a
+    /// "has been welcomed" flag to keep in step with the document. Deleting your
+    /// last tracker by hand leaves a tombstone, so it is the ordinary empty state
+    /// that follows, not the welcome.
+    var isBlank: Bool {
+        trackers.isEmpty && entries.isEmpty && tombstones.isEmpty
     }
 
     var activeTrackers: [Tracker] {

@@ -478,7 +478,7 @@ private struct HistoryRow: View {
 }
 
 #Preview {
-    let trackers = Tracker.starterSet
+    let trackers = StarterTracker.defaultTrackers()
     let batch = UUID()
     let store = Store(
         document: StoreDocument(

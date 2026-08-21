@@ -1894,7 +1894,7 @@ struct StoreTests {
         // A fresh install: a different container with nothing in it.
         let installed = temporaryStoreFile()
         defer { installed.removeDirectory() }
-        let fresh = Store(document: .starter, file: installed, calendar: calendar("UTC"),
+        let fresh = Store(document: StoreDocument(), file: installed, calendar: calendar("UTC"),
                           saveWindow: .seconds(60))
         try await fresh.importData(exported, mode: .replace)
 

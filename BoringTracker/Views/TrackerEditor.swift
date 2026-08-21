@@ -297,7 +297,7 @@ struct TrackerEditor: View {
 
 #Preview {
     let store = Store(
-        document: StoreDocument(trackers: Tracker.starterSet),
+        document: StoreDocument(trackers: StarterTracker.defaultTrackers()),
         file: StoreFile(directory: URL.temporaryDirectory.appending(path: "preview-tracker"))
     )
     return TrackerEditor(tracker: store.trackers[0]).environment(store)

@@ -129,15 +129,4 @@ extension Tracker {
         }
         return result
     }
-
-    static var starterSet: [Tracker] {
-        [
-            Tracker(name: "Calories", unit: "kcal", kind: .dailyTotal, sortIndex: 0,
-                    group: "Food"),
-            Tracker(name: "Protein", unit: "g", kind: .dailyTotal, sortIndex: 1,
-                    group: "Food"),
-            Tracker(name: "Weight", unit: "kg", kind: .measurement, decimals: 1, sortIndex: 2,
-                    group: "Weight"),
-        ]
-    }
 }
