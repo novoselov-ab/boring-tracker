@@ -51,6 +51,11 @@ struct AboutView: View {
             }
 
             Section {
+                Link(destination: Self.review) {
+                    Label("Leave a Review", systemImage: "star")
+                }
+                .formRowAccent()
+
                 Button {
                     offeringSupport = true
                 } label: {
@@ -81,6 +86,7 @@ struct AboutView: View {
     static let philosophy = URL(string: "https://github.com/novoselov-ab/boring-tracker/blob/main/docs/PHILOSOPHY.md")!
     static let email = URL(string: "mailto:novoselov.ab@gmail.com")!
     static let giveWell = URL(string: "https://www.givewell.org")!
+    static let review = URL(string: "https://apps.apple.com/app/id6803768789?action=write-review")!
 
     /// Read from the bundle rather than written here, so it cannot disagree with
     /// what was actually built. The build number is shown beside it because a bug
