@@ -207,13 +207,18 @@ derives every smaller size. `.gitignore` refuses `*.png` but makes
 Field `#1C1C1E`, mark `#00DAC3`. Both are the app's own values: the field is
 the card colour, the surface the `+` buttons sit on, and the mark is
 `AccentFill` in dark, the colour the app draws the card `+` in — so the icon
-matches the thing it depicts in shape *and* in colour. The mark shipped as
-`#00E8D8` until 2026-08-20, a second mint that was close enough to read as a
-mistake. Contrast against the field measures **9.57:1**, sampled as the two
-modal colours of the 1024 itself rather than computed from these hex values. The
-mark was measured off the chosen artwork and redrawn with Core Graphics rather
-than repaired — ring outer radius 350.5px with a 47px stroke, plus bar 49px
-thick with round caps, centred on 512 — because the artwork arrived
+matches the thing it depicts in shape *and* in colour. **In dark.** One file
+ships for both appearances, so in light the app's `+` goes `#009888` and the
+icon does not follow; matching there was never on the table.
+
+The mark shipped as `#00E8D8` until 2026-08-20, a second mint close enough to
+the accent to read as a mistake. Contrast against the field measures
+**9.57:1**, sampled as the 1024's own two modal colours rather than computed
+from these hex values.
+
+The mark was measured off the chosen artwork and redrawn with Core Graphics
+rather than repaired — ring outer radius 350.5px with a 47px stroke, plus bar
+49px thick with round caps, centred on 512 — because the artwork arrived
 pre-masked and slightly lopsided.
 
 It replaced `ledger`, rows of label and number on a deep teal, which shipped

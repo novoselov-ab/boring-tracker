@@ -2159,8 +2159,9 @@ reader:
 
 The field is a flat `#1C1C1E` and the mint a flat `#00DAC3` — single values,
 no gradient. The mint read `#00E8D8` when these ratios were sampled; the
-geometry they describe did not change with the recolour. The arms (50) and the stroke (48) are within 4% of each other, and
-**reading as one weight is the property being copied**.
+geometry they describe did not change with the recolour. The arms (50) and
+the stroke (48) are within 4% of each other, and **reading as one weight is
+the property being copied**.
 
 **The icon's mint was not the app's** when this was built. The ring is drawn in
 `Color.accentFill` — `#00DAC3` dark, `#009888` light — and the icon was
