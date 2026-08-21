@@ -85,8 +85,8 @@ is precisely the friction this app exists to delete. If groups ever add a step
 to the common path, they have failed and should be removed.
 
 Ordering and membership are deliberately separate. Dragging in settings changes
-only order; a tracker's group changes only in its editor, using **None**, an
-existing group, or **New Group…**. Position never implies membership.
+only order; a tracker's group changes only in its editor. Position never implies
+membership.
 
 But settings **draws the same shape home does** — headings above runs, bare
 rows for loose trackers — because a settings screen showing an order home won't
@@ -122,12 +122,8 @@ identical headings would be claiming a grouping the sheet then contradicts.
 Only a group's stragglers move, up to where that group already is; nothing
 is gathered at the bottom.
 
-**Arranging that list happens in settings, not here.** Settings draws the same
-shape as this screen — a heading above each run of trackers sharing a group,
-bare rows for loose ones — so what you arrange there is what you get here.
-Dragging within a run reorders that group's members; a group moves as a unit.
-Membership still changes only in the tracker editor, so no drop gesture ever
-has to mean "remove from group."
+Arranging that list happens in settings, not here — see *Group* above, which is
+also why no drop gesture ever has to mean "remove from group".
 
 Nor does the code: **the log sheet always takes a set of trackers.** A group
 is a named set; a lone tracker is a set of one. Same sheet, same one-log-one-
@@ -277,17 +273,15 @@ So, in order of importance:
    its own beside home's Log button — see **Log again** under Screens — and the
    log sheet keeps none of it.
 
-   Call these **presets** if they need a name at all, and never *recipes*. A
-   recipe is ingredients, and ingredients are permanently out of scope — see
-   PHILOSOPHY.md. The word matters because it's the direction this would drift
-   if allowed to.
-3. **One food, one sheet, one log.** Calories and protein come from the same
+   Call these **presets** if they need a name at all, and never *recipes* — see
+   *Vocabulary* for why that word is the direction this would drift in.
+2. **One food, one sheet, one log.** Calories and protein come from the same
    meal. Typing them in two separate flows is the single most annoying thing
    this app could do — so the sheet takes the whole group at once, plus a
    name, and writes it as one batch.
-4. **The keypad is already up.** Tapping + goes straight to a numeric field
+3. **The keypad is already up.** Tapping + goes straight to a numeric field
    with focus. No intermediate screen, no picker, no "choose a category".
-5. **Outside the app entirely.** Home screen widget with your top trackers →
+4. **Outside the app entirely.** Home screen widget with your top trackers →
    tap → logged. Lock Screen widget. App Shortcuts / Siri ("log 500
    calories"). Control Center control. The fastest tap is the one that never
    opened the app.
@@ -550,12 +544,11 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
   anything that takes a file, with Files among them. It carries a dated name,
   `boring-tracker-2026-08-17.json`.
 
-  There was a second door for a while: a *Save to Files* row apiece, going
-  straight to the document picker, on the reasoning that repeating an export to
-  the same folder should not cost the tap the share sheet charges to get there.
-  Both rows and the whole `.fileExporter` path were **removed** once the share
-  sheet worked (TODO item 18c) — two doors to the same bytes is two things to
-  keep in step, and Files is one tap inside the sheet.
+  There was a *Save to Files* row apiece for a while, and both were **removed**
+  once the share sheet worked: two doors to the same bytes are two things to
+  keep in step, and Files is one tap inside the sheet. TECH.md has the rest of
+  that story, because the bug behind it constrains how the settings screen may
+  be arranged.
 - **Import** restores from an export file. Merge or replace, stated clearly
   before it happens, because this is the one destructive action in the app.
   Either way the document it replaces is kept as a one-step recoverable backup:
@@ -567,21 +560,19 @@ No tour, no signup, no permission prompts (notifications aren't used at all).
 
 ## Scope
 
-**v1 ships:** trackers (all three kinds), logging by typing a number, logging a
-last-time tracker with one tap, backdating,
-editing and deleting, history list, graphs, the Log again sheet, JSON + CSV
-export, JSON import, dark mode.
+**v1 shipped** with: trackers (all three kinds), logging by typing a number,
+logging a last-time tracker with one tap, backdating, editing and deleting,
+history list, graphs, the Log again sheet, JSON + CSV export, JSON import, dark
+mode.
 
-This line used to say *recents* and to put *presets* in the paragraph below,
-"once we've used the basics enough to know what shape they should take". Both
-have since been answered and neither arrived in the shape the words expected.
-The log sheet's row of recent **values** was built and then removed (TODO item
-11): people do not log the same number twice, they log the same food. And
-presets are not a v1.1 feature to design — they are the **Log again** sheet,
-which shipped inside v1 and delivered them by *removing* a model type rather
-than adding one. What is left for "right after v1" is the home screen widget,
-App Shortcuts / Siri and the Lock Screen widget — these matter a lot for the
-"minimum taps" promise, but the app has to exist first.
+Two things this list used to promise arrived in a different shape than the words
+expected. The log sheet's row of recent **values** was built and then removed
+(TODO item 11): people do not log the same number twice, they log the same food.
+And presets were never a later feature to design — they are the **Log again**
+sheet, which delivered them by *removing* a model type rather than adding one.
+
+**Next**, and in this order for the "minimum taps" promise: the home screen
+widget, App Shortcuts / Siri, the Lock Screen widget.
 
 ### Decided against
 
@@ -600,7 +591,10 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
 - **Apple Health.** Useful and first-party, but it's a permission prompt and a
   pile of unit and edge-case handling for something most users won't turn on.
 - **Apple Watch, iPad, Mac.** A Watch app is the best possible fit for this
-  philosophy and still real, ongoing work. Not while there's no iPhone app.
+  philosophy and still real, ongoing work — it is not the next thing, and the
+  widgets above are. iPad was settled the other way for 1.0 deliberately: see
+  SHIPPING.md, which records why an iPhone-only build was the safer first
+  submission and why adding iPad later is an ordinary update.
 - **Reminders, intervals and due dates on a last-time tracker.** The obvious
   next feature, and permanently out: it is the half of a maintenance app that
   PHILOSOPHY.md rule 9 forbids, and adding it would make every other card in the
@@ -611,16 +605,8 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
 
 ## Technical direction
 
-- Swift + SwiftUI, current iOS minus one major version — iOS 18, built with
-  Xcode 26.
-- **One JSON file, decoded into plain structs at launch**, as both the store
-  and the export format. This line used to read "SwiftData (or plain Core Data
-  / SQLite if it fights us)"; that was written before the storage question was
-  benchmarked, and the benchmark went the other way. There is no SwiftData, no
-  Core Data and no SQLite in this app — see "Storage: a JSON file" in
-  [TECH.md](TECH.md) for the numbers and for why the export format being the
-  storage format is what decided it.
-- Zero third-party packages. No package manager entries at all, ideally.
-- Tests on the parts that would silently ruin data: day-boundary math,
-  aggregation, export/import round-trip.
-- MIT license.
+Swift and SwiftUI on iOS 18, zero third-party packages, MIT licensed, with
+**one JSON file decoded into plain structs at launch** as both the store and the
+export format. [TECH.md](TECH.md) is the whole of it — including the benchmark
+that chose a file over SwiftData, which is worth reading before proposing a
+database, and what the tests deliberately do and do not cover.
