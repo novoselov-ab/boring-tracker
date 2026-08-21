@@ -2157,13 +2157,17 @@ reader:
 | plus overall width | 330 | 0.470 | 14.10 |
 | plus arm thickness | 50 | 0.0712 | 2.14 |
 
-The field is a flat `#1C1C1E` and the mint a flat `#00E8D8` — single values,
-no gradient. The arms (50) and the stroke (48) are within 4% of each other, and
+The field is a flat `#1C1C1E` and the mint a flat `#00DAC3` — single values,
+no gradient. The mint read `#00E8D8` when these ratios were sampled; the
+geometry they describe did not change with the recolour. The arms (50) and the stroke (48) are within 4% of each other, and
 **reading as one weight is the property being copied**.
 
-**The icon's mint is not the app's.** The ring is drawn in `Color.accentFill` —
-`#00DAC3` dark, `#009888` light — and the icon is `#00E8D8`. What is being
-matched is the geometry; neither value is being "fixed".
+**The icon's mint was not the app's** when this was built. The ring is drawn in
+`Color.accentFill` — `#00DAC3` dark, `#009888` light — and the icon was
+`#00E8D8`; what was matched here is the geometry alone. The icon has since been
+recoloured to `#00DAC3`, so in dark the two are now one value. In light they
+still differ: the app's ring goes `#009888` and the icon, being one file, does
+not follow the appearance.
 
 **The glyph is `.font(.system(size: 17, weight: .semibold))`.** The disc's
 `size: 15, weight: .bold` was chosen against a fill, not against these ratios,
