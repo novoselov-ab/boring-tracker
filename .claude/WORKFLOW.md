@@ -270,6 +270,24 @@ So check two things, not one:
 
 The tell is a session that never goes `active` and commits nothing.
 
+### A multi-line `session type` arrives as a paste and never submits
+
+`agtermctl session type --select` submits a **single line**. Anything longer
+lands in the input as a paste block (`[Pasted text #1 +4 lines]`) that sits at
+the prompt unsent, and **nothing you send afterwards will submit it** — not an
+empty string, not appending a short line. Tried both on 2026-08-20; the text
+just grows at the prompt while the session sits idle.
+
+The failure is silent and looks like being ignored: the session finishes
+whatever it was doing, goes quiet, and your instruction is visible in
+`session text` but never acted on. It cost two rounds of "why did it skip
+that?" before the buffer was read closely enough to see `[Pasted text]`.
+
+So: **redirect a running session with one short line, or not at all.**
+Anything with structure goes in a brief file and a fresh session. That is more
+reliable than steering a session mid-flight anyway, and a brief survives being
+re-read.
+
 ### Talking to a running session
 
 `agtermctl session type` **types, it does not submit.** A payload containing
