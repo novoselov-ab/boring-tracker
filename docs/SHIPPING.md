@@ -713,6 +713,8 @@ they are not lost the moment there is one.
       without one: the URL needs the numeric App Store id — see `017267c`.
       **The id exists: `6803768789`**, read off the API on 2026-08-20, and it
       arrived with the app record rather than with the release. So this is no
-      longer blocked and no longer belongs in "after the first release"; it can
-      go into 1.0 if it is wanted there. What was never checked is whether the
-      review sheet does anything useful before the app is actually on sale.
+      longer blocked and no longer belongs in "after the first release".
+      **Tracked as TODO item 43**, which settles the shape of it: a passive link
+      on About, never a `requestReview` prompt. It missed 1.0 — 1.0 was already
+      in review by the time this was decided. What is still unchecked is whether
+      the write-review URL resolves before the app is actually on sale.

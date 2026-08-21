@@ -20,6 +20,9 @@ as a plan. **What is actually left:**
 - [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
   a decision the user makes, not on work. Why the light value is where it is is
   in [TECH.md](TECH.md).
+- [43. A rate link on About, now that there is an
+  id](#43-a-rate-link-on-about-now-that-there-is-an-id) — decided, unbuilt; the
+  App Store id exists earlier than expected.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -2261,6 +2264,38 @@ before `.buttonStyle` — nothing inside the 30pt footprint reaches them. And th
 accessibility tree, read from the simulator for both builds against the same
 fixture, returns identical rects for all six card buttons: `Log Calories` at
 `1196,301 44×44` in each, and so on down the screen.
+
+## 43. A rate link on About, now that there is an id
+
+About deliberately shipped without one — `017267c` — because the URL needs the
+numeric App Store id and there was no app. **There is now: `6803768789`**, and
+it turned up with the *app record* on 2026-08-20 rather than with the release,
+which is earlier than SHIPPING.md assumed when it filed this under "after the
+first release".
+
+```
+https://apps.apple.com/app/id6803768789?action=write-review
+```
+
+**Decided: a link, not a prompt.** `SKStoreReviewController` / SwiftUI's
+`requestReview` puts a rating dialog in front of somebody who did not ask for
+one, which is the same category as streaks, badges and notifications — the
+things rule 4 of PHILOSOPHY.md refuses. A row on About that says so and does
+nothing until it is tapped is the opposite: inert until somebody goes looking
+for it. That distinction is the whole item; if it ever turns into a prompt it
+should be closed instead.
+
+**Why have one at all**, given the app asks for nothing else. App Store ranking
+is heavily rating-weighted, and an app with no ratings ranks badly however good
+it is. This app has no marketing budget, no ads and no launch — the listing is
+the entire distribution strategy. A passive link is the cheapest honest lever on
+that, and it costs one row.
+
+**Unverified, and worth checking before it ships:** whether
+`?action=write-review` resolves at all before the app is actually on sale. A
+dead link on About is worse than no link. Check it once the app is live rather
+than assuming, which is also why this is 1.1 work and not a change to a build
+already in review.
 
 ## Noted, not scheduled
 
