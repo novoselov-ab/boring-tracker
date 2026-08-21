@@ -254,9 +254,21 @@ agtermctl session new --no-select --wait --name work \
   closing it. That is the difference between diagnosing this in a minute and
   not noticing at all.
 
-**A returned session id is not proof it is running.** Check `tree --json` and
-confirm `foreground` shows your program with the brief as a *single*
-argument.
+**A returned session id is not proof it is running, and neither is
+`foreground`.** On 2026-08-20 a session sat for an hour at a first-run *"Claude
+in Chrome extension detected"* prompt. `tree --json` showed `foreground` as
+`claude` with the brief as one argument — the launch was perfect — but the
+brief was never read, and three instructions typed at it went into the
+prompt's buffer and were lost.
+
+So check two things, not one:
+
+1. `foreground` shows your program with the brief as a **single** argument.
+2. `session text` shows it **past any startup prompt and actually working** —
+   the brief echoed, a tool call underway. A menu waiting for a keypress looks
+   identical to progress from the outside.
+
+The tell is a session that never goes `active` and commits nothing.
 
 ### Talking to a running session
 
