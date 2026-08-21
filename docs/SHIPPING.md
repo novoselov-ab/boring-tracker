@@ -508,11 +508,17 @@ Store Connect, which needs the account.
 
 ### 4. The build
 
-- [ ] **(human)** **Archive with the paid team and upload.** Verified in this
-      repository on 2026-08-19: a Release build for `generic/platform=iOS`
-      succeeds both unsigned and signed, the latter on a free personal team's
-      provisioning profile. A **distribution** archive and the upload itself
-      are **unverified** — both need the paid account.
+- [x] **(human)** **Archive with the paid team and upload.** **Done
+      2026-08-21.** `xcodebuild archive` then `-exportArchive` with
+      `destination: upload`: **ARCHIVE SUCCEEDED**, **EXPORT SUCCEEDED**,
+      *Upload succeeded*. The archive reads `1.0` / `1`, bundle id
+      `com.novoselov.boringtracker`. **Build 1 is attached to version 1.0 and
+      reads `VALID`**, having gone `PROCESSING` → `VALID` in about 90 seconds.
+      The signing this needed is its own section — see *Signing, when the API
+      key cannot use cloud signing*; the automatic path fails on this account.
+      Note the archive itself is signed *Apple Development*; `-exportArchive`
+      re-signs it with the distribution certificate, so that is not a problem to
+      chase.
 
 ### 4b. Signing, when the API key cannot use cloud signing
 
@@ -642,9 +648,12 @@ the search list, keeping what was there.
       and its `customerPrice` is the string **`0.0`, not `0.00`** — filtering
       for the latter returns nothing and reads exactly like the app is not
       allowed to be free.
-- [ ] **Encryption, again.** The Info.plist key is what stops the question
-      being asked per upload. Whether the first submission still asks it once
-      in the web form is **unverified**.
+- [x] **Encryption, again.** **Settled 2026-08-21: it was never asked.** The
+      uploaded build reads `usesNonExemptEncryption: false` straight off the
+      API, taken from the Info.plist key rather than from a form — and
+      `ITSAppUsesNonExemptEncryption` reads `false` out of the archived bundle
+      too. So the key does the whole job, including on a first submission, and
+      the question does not appear once in the web form either.
 
 ### 5b. Two the checklist missed
 
