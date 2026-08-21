@@ -576,7 +576,30 @@ Store Connect, which needs the account.
       not. **Not writable over the API** — see *Filling the listing without the
       web UI*; it has to be answered in the browser and then **published**,
       which is a separate button from saving.
-- [ ] **(human)** **Age rating questionnaire.** Nothing here is contentious.
+- [x] **(human)** **Age rating questionnaire.** **Written 2026-08-21** over the
+      API in one PATCH of 26 attributes, and the resulting rating reads back
+      **`FOUR_PLUS`** — the 4+ APPSTORE.md predicted. Thirteen content enums at
+      `NONE`, eleven booleans at `false`, `kidsAgeBand` left null. Nothing here
+      was contentious except one field.
+
+      **`healthOrWellnessTopics` is `false`, and it is a boolean.** APPSTORE.md
+      treated it and `medicalOrTreatmentInformation` as one concern; they are
+      different types, which is easy to get backwards because App Store Connect
+      asks them as neighbouring questions. The judgement: *topics* means content
+      the app presents — articles, advice, interpretation — and this app
+      presents none. It stores numbers the user typed and draws them on a graph,
+      and having no opinion about them is the product. That a tracker is named
+      "Calories" is the user's label, not shipped content. The alternative was
+      cheap — `true` buys 9+ instead of 4+ and changes nothing else — and if
+      Apple disagrees it normally adjusts the rating rather than rejecting.
+      `medicalOrTreatmentInformation` is `NONE` on the same reasoning.
+
+      **The two override fields are mutually exclusive.** Setting
+      `ageRatingOverride` and `ageRatingOverrideV2` in one request is refused
+      with `STATE_ERROR.AGE_RATING_OVERRIDE_V1_AND_V2_NOT_ALLOWED`. They are the
+      pre- and post-overhaul versions of one field: V1 still offers
+      `SEVENTEEN_PLUS`, V2 offers `EIGHTEEN_PLUS` instead, which is the July 2025
+      change visible in the data. Write V2 only.
 - [x] **(human)** **Price: free**, with no in-app purchases. **Set 2026-08-21**
       over the API and read back: a price schedule with base territory USA and a
       manual price of **0.0**. Rule 1, and also what keeps the non-trader case
