@@ -2307,8 +2307,12 @@ things.** The App Store Connect API returns 200 for `apps/6803768789` with name
 *Boring Tracker* and bundle id `com.novoselov.boringtracker`, so the link points
 at this app. The public page 404s, and `itunes.apple.com/lookup` returns
 `resultCount: 0`, because the only version record is 1.0 in state
-`WAITING_FOR_REVIEW` — there is no listing to serve until it goes on sale,
-which necessarily happens before anything containing this row can be downloaded.
+`WAITING_FOR_REVIEW` — there is no listing to serve until it goes on sale, which
+happens before any **App Store** copy of this row exists. It does not cover
+TestFlight or a build side-loaded onto a phone: either can carry this row while
+the listing is still private, and tapping it then reaches a page for an app the
+store will not admit to having. That window is testers only, and it closes on
+release.
 
 **Still unverified: that the row lands on the store page.** The simulator has no
 App Store app, so the handoff fails there — Safari refuses the URL as
