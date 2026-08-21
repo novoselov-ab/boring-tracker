@@ -2444,14 +2444,13 @@ Real, small, and not worth a session each — the overhead of reading the docs,
 testing and reviewing dwarfs the work. **Do them in one pass**, whenever one of
 the numbered items is going near the same code.
 
-- [ ] **A tracker detail row is taller than the History row it now matches.**
-      Item 35 made the two read the same; they are still not the same height.
-      History sets `.listRowInsets(.listRow)` — 4pt top and bottom, measured in
-      item 11 for a row with a 44pt disc on its end — and tracker detail keeps
-      the platform's default insets, so the same two lines sit in a taller row
-      one tap away. Not obviously a bug: detail has no trailing control, and
-      `.listRow`'s trailing 12 is sized for one. Worth *deciding* rather than
-      leaving as an accident, the way item 28 decided it for settings.
+- [x] **A tracker detail row is taller than the History row it now matches.**
+      It was 74pt against History's 52, read off the accessibility tree on the
+      same five entries; both are 52 now. **Decided, not just fixed:** detail
+      takes `.listRow` whole, including the trailing 12 that was sized for a
+      repeat disc it does not have, because a private set of insets for the one
+      screen without a trailing control is exactly the drift this note was
+      about. It costs 4pt of air to the right of the time. `f2ce523`
 
 - [x] **Export through the share sheet.** Done in item 18b: export and import
       are two sections now, the confirmation dialog went with import, and a
@@ -2574,6 +2573,30 @@ the numbered items is going near the same code.
 
 - [x] **A "last time" kind, where the date is the data** — pulled into v1 and
       shipped. It is item 39 above.
+
+- [ ] **A graph for a "last time" tracker.** Anton: "for 'last time' tracker we
+      also need some graphs, but we can put it on later todo." The kind shipped
+      without one deliberately and the screen is bare because of it.
+
+      **It is not either of the graphs the app already draws.** Both of those
+      read a number off each entry — bars for a daily total, a line with a
+      moving average for a measurement — and a last-time entry has no number to
+      read. The series worth drawing is the **interval between events**: how
+      long the filter actually lasted each time, one value per gap. That
+      changes the shape as well as the source. There are n−1 points for n
+      events, nothing at all to draw until the second one, no day to aggregate
+      into, and the unit is days rather than whatever the tracker measures —
+      it measures nothing.
+
+      Worth deciding with it: whether the run in progress is on the chart. The
+      interesting number when you open the screen is usually "it has been 90
+      days and the last three were 60" — which is a bar that has not finished
+      yet, and every other graph in the app only draws what has happened.
+
+      `PRODUCT.md` and `TrackerDetailView` both say today that the interval is
+      "a different idea this kind deliberately does not have". That sentence is
+      what this item would be reopening, and it is why this is post-v1 rather
+      than a small thing.
 
 - [ ] Home screen widget, Lock Screen widget, App Shortcuts / Siri.
 - [ ] Sync transport — the document already merges; this is only plumbing.
