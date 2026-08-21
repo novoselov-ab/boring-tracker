@@ -347,10 +347,16 @@ back after release. Everything unmarked is ordinary work in this repository.
       2026-08-20 — declared non-trader in App Store Connect. See *The EU trader
       requirement*, which says why a free app with no ads and no purchases
       isn't a trade, and why the seller name is public regardless.
-- [ ] **(human)** **Claim the name.** `Boring Tracker`, unclaimed as of the
-      August 2026 check in *Naming and the competitive landscape*, and claimed
-      first-come. Re-check before getting attached to it. Trademarks were
-      never searched — the same section says so.
+- [x] **(human)** **Claim the name.** **Claimed 2026-08-20**: the app record
+      exists as `Boring Tracker`, bundle id `com.novoselov.boringtracker`, and
+      the name was accepted without a collision. Re-checked against the App
+      Store search API the same day before claiming — 17 results for the phrase
+      and none of them this name, the nearest being *Boring Expenses: Spend
+      Tracker* and *Boring Order Tracker*. That check only sees published apps,
+      never a reservation, so App Store Connect accepting it is the answer and
+      the search was only a warning system. Both runners-up were clear too.
+      Trademarks were never searched — *Naming and the competitive landscape*
+      says so.
 
 ### 2. What the app itself has to carry
 
