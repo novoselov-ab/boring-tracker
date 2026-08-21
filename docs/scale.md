@@ -171,9 +171,10 @@ the bench run. The document is about **5MB in memory** for 8.6MB on disk; the
 peak is what an import costs, two whole documents plus their union live at once.
 
 **The file's size is not where the problem is.** Of 9,044,537 bytes, 89,367 UUIDs
-are 35.6% as text and 56.3% once their keys and formatting count — but run
-against a `batchID`-free file, `Store()` took 137–142ms against 149–162ms. About
-11ms. The argument for shorter ids is a smaller export and a file that opens in a
+are 35.6% as text and 56.3% once their keys and formatting count; measured rather
+than implemented, the same document weighs **−19.1%** with `batchID` dropped and
+**−23.7%** with 12-character ids. But run against a `batchID`-free file,
+`Store()` took 137–142ms against 149–162ms. About 11ms. The argument for shorter ids is a smaller export and a file that opens in a
 text editor, not speed.
 
 ## The ceiling, honestly
