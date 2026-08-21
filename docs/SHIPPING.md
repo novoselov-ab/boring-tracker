@@ -356,6 +356,16 @@ call for an app that records calories — it now carries `ageAssurance`,
 `parentalControls`, `lootBox`, `socialMediaAgeRestricted`,
 `ageRatingOverrideV2` and `developerAgeRatingInfoUrl`.
 
+**A PATCH is atomic, and one bad attribute loses the whole call.** Writing the
+version localization with `whatsNew` in it returned **409 STATE_ERROR,
+*Attribute 'whatsNew' cannot be edited at this time*** — and the description,
+keywords, promotional text and both URLs in the same request were not written
+either. Nothing partial, nothing reported per field. Send a field the state
+machine will not take and everything beside it is lost, so the useful habit is
+to read every attribute back rather than trusting a 200. One of the four writes
+also died mid-flight on a `curl: (56) Connection reset by peer`; the API is not
+reliably one-shot, and the retry was clean.
+
 **Browser automation was considered and rejected.** Two-factor auth, session
 cookies that expire, and a JavaScript app that rearranges its own DOM, against
 a documented and stable REST API.
@@ -505,10 +515,16 @@ Store Connect, which needs the account.
 
 ### 5. The listing
 
-- [ ] **(human)** **Name, subtitle, keywords, description.** Drafts are in
-      *Listing strategy*, including why the subtitle and keywords carry the
-      search terms rather than the name. Lead the description with what is
-      absent, and link the repository.
+- [x] **(human)** **Name, subtitle, keywords, description.** **Written
+      2026-08-21 over the API** and read back field by field: **11 of 11 match
+      `docs/APPSTORE.md` exactly** — name, subtitle, privacy policy URL,
+      description, keywords, promotional text, support URL, marketing URL,
+      copyright, and both categories. Nothing was retyped: the payload is
+      parsed out of APPSTORE.md's own fenced blocks, so the listing and the
+      page cannot drift. Every length came out at the number that page states —
+      14, 26, 94, 123, 1,950. **Category is settled: Health & Fitness primary,
+      Utilities secondary**, the recommendation APPSTORE.md made and left open.
+      `whatsNew` is the one field that could not be written; see below.
 - [x] **(human)** **Screenshots.** Captured 2026-08-20: five 1320x2868 PNGs in
       `docs/screenshots/` — home, log, again, history, graph — which are the
       6.9-inch App Store set and the set the README shows, the same five files

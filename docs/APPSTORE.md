@@ -14,8 +14,12 @@ common knowledge says *unverified* instead.
 
 - [x] **Screenshots exist** at the size in *Assets* below — five of them, in
       `docs/screenshots/`, captured 2026-08-20.
-- [ ] **Re-check the name is still unclaimed.** `Boring Tracker` was free in
-      the August 2026 check in SHIPPING.md, and names are first-come.
+- [x] **Re-check the name is still unclaimed.** Re-checked 2026-08-20 against
+      the App Store search API, then **claimed** — the app record exists and
+      App Store Connect accepted the name.
+- [x] **The text fields are written.** Done 2026-08-21 over the API, read back
+      and matching this page exactly. What is left by hand is App Privacy, the
+      age rating, the price and the build.
 
 ## The fields
 
@@ -116,10 +120,15 @@ bullets reads as a feature grid, which is the thing this app is not.
 First release.
 ```
 
-**Unverified** whether App Store Connect requires this field at all for a
-first version — the field exists for updates, and 1.0 may not be asked for it.
-If it is asked for, the line above is the answer; there is no history to
-summarise.
+**Settled 2026-08-21, and the answer is that 1.0 cannot have one.** A PATCH
+carrying `whatsNew` is refused with **409 STATE_ERROR — *Attribute 'whatsNew'
+cannot be edited at this time***, and the field reads back `null` on the live
+1.0 record. So the question was not whether the field is required but whether
+it is writable: there is no previous release to describe, and App Store Connect
+will not take one. The line above is kept for the first update that does need
+it. Note the refusal takes the whole request with it — the same PATCH's
+description and keywords were not written either; see *Filling the listing
+without the web UI* in SHIPPING.md.
 
 ### URLs
 
@@ -140,9 +149,11 @@ what the privacy page already tells people to use.
 
 ### Category
 
-**Primary: Health & Fitness. Secondary: Utilities.**
+**Primary: Health & Fitness. Secondary: Utilities.** **Decided 2026-08-21**,
+and written to the app record — this was the recommendation and Anton took it.
 
-A recommendation, not a settled decision, and it is yours to make. Health &
+The reasoning it was chosen on, kept because the 4.2 risk below turns on it.
+Health &
 Fitness is where the apps this one is a reaction to live, and where somebody
 looking for a macro tracker searches. Utilities is the honest description of an
 app that writes down numbers and has no opinion about them, but almost nobody
