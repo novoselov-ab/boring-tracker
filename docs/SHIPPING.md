@@ -612,6 +612,39 @@ Store Connect, which needs the account.
       being asked per upload. Whether the first submission still asks it once
       in the web form is **unverified**.
 
+### 5b. Two the checklist missed
+
+Neither was in the list assembled 2026-08-19, and both are required before the
+submit button does anything. Found 2026-08-21 by reading the live record rather
+than the form.
+
+- [x] **Content rights declaration.** `contentRightsDeclaration` was `null` and
+      is now **`DOES_NOT_USE_THIRD_PARTY_CONTENT`** — the app is its own code
+      plus Apple's own frameworks and SF Symbols. It sits on **App Information**
+      in the web UI, not on the version page. The only other accepted value is
+      `USES_THIRD_PARTY_CONTENT`.
+- [x] **App review information.** The record did not exist at all — the
+      relationship returned `data: null` — and now carries a contact name, phone
+      and email, `demoAccountRequired: false` (there is no login to demo), and a
+      note. **The phone number is deliberately not written down here**, for the
+      same reason as the legal-entity address: this repository is public.
+
+      The note is the cheap half of the *Guideline 4.2* answer that
+      *One review risk to be aware of* argues for. It does not plead the
+      philosophy; it tells the reviewer where the functionality is — log with
+      the `+`, History behind the clock icon, a graph behind a tracker row, add
+      and export from Settings — and states that there is no sign-in, so nothing
+      is gated. Showing what exists is the whole strategy that section settles
+      on.
+
+**A 200 is not proof the value stuck, and neither is the read after it.** The
+content rights PATCH returned 200 and then read back `null` from an unfiltered
+`GET /v1/apps/{id}`, which looks exactly like a silent failure. It was not: the
+same field read with `?fields[apps]=contentRightsDeclaration` returned the value
+correctly. The unfiltered representation is served stale right after a write.
+So verify with a field-filtered read, and do not re-send a write on the strength
+of a null that a broad GET reported.
+
 ### 6. Submitting
 
 - [ ] **(human)** **Submit for review**, and expect *Guideline 4.2, Minimum
