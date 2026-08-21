@@ -498,6 +498,14 @@ settled from the accessibility tree.
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
 
+**One more thing to look at while the phone is in hand.** The card `+` is an
+outlined ring, chosen off simulator screenshots (item 42, decided). The filled
+disc it replaced is still in the code behind `CardPlus.outlined` for exactly
+this reason.
+
+- [ ] Look at the ring on a real screen. If it holds up, delete the disc; if it
+      does not, the constant is one line.
+
 **Two questions about a press that only a thumb can answer.** Neither is about
 whether a press draws — item 32 settled that at 60fps, on taps down to 40ms —
 and both are about how one *feels*.
@@ -2129,20 +2137,27 @@ user after their first tap does not.
 
 ## 42. The card `+` as an outlined ring — decided, done
 
-**The ring ships, and the filled disc is deleted.** Anton picked it on
-2026-08-20; `9f46446` removed the alternative. `CardPlus.outlined` was already
-`true`, so nothing that draws changed — what went is the `else` branch of
-`TrackerCard.plusMark`, the disc it drew, and the `CardPlus` enum that held the
-switch. `plusMark` went with them, since a chooser between one thing is not a
-chooser, and `logButton` names `CardPlusRing()` directly. Carrying both was
-right while the comparison was live and is dead weight the moment it is not:
-[PHILOSOPHY.md](PHILOSOPHY.md)'s test for code is performance and simplicity,
-and the smallest thing that works.
+**The ring ships, and the filled disc stays behind `CardPlus.outlined`.**
+Anton picked the ring on 2026-08-20 and that choice is settled. `9f46446` went
+further and deleted the loser, which is not what he asked for — *"dont delete
+for now, i dont care, we can do later"* — and `d1c1d38` put it back. The
+constant is `true`, so the ring is what draws; `false` is still the disc, one
+branch of `TrackerCard.plusMark`.
 
-**What the disc knew, since the code no longer does.** It started as a bare
-blue glyph, which was a different design language from the bottom Log button it
-is a smaller version of, and low enough contrast that it did not read as a
-control at all. A tinted `.bordered` fill was tried next, on the grounds that
+**Deleting the disc waits on the device pass, item 17.** The ring has only ever
+been seen in simulator screenshots, so the decision is not yet confirmed by
+anyone holding a phone; while that is true, going back is one line rather than
+unpicking a commit. Once the ring survives real use, what goes is that branch,
+the mark it names, `plusMark` itself — a chooser between one thing is not a
+chooser — and the `CardPlus` enum, leaving `logButton` naming `CardPlusRing()`
+directly. Carrying both is right while the comparison can still be lost and is
+dead weight the moment it cannot: [PHILOSOPHY.md](PHILOSOPHY.md)'s test for
+code is performance and simplicity, and the smallest thing that works.
+
+**What the disc knew, kept here because its comment goes when it does.** It
+started as a bare blue glyph, which was a different design language from the
+bottom Log button it is a smaller version of, and low enough contrast that it
+did not read as a control at all. A tinted `.bordered` fill was tried next, on the grounds that
 eight solid dots down one screen is loud — and rejected on the original
 complaint, because a blue glyph on a pale blue disc is that same low contrast
 again. The accent-filled disc is what came out of that. The ring was built to
@@ -2229,7 +2244,7 @@ plus. Nothing disables this button today, so that path is unexercised.
 | dark, AX3 | 30.00 | 2.00 | 14.00 | 2.146 |
 
 **At AX3 the stroke does not thin — nothing about the mark moves.** Both marks
-were fixed by design (`.system(size:)` and a 30pt frame), so what changes is
+are fixed by design (`.system(size:)` and a 30pt frame), so what changes is
 everything around them: the card goes from 52.0pt tall to 105.7
 (140.3 on the one carrying a caption) and the ring is still 30pt of 2.00pt
 stroke. It is quieter there in the sense that it is a smaller share of a much
@@ -2241,8 +2256,8 @@ against a card sampled as a true `#FFFFFF` — so it clears 3:1. Dark measures
 
 **The tap target is unchanged, checked twice.** The `.frame(width: 44,
 height: 44)` and `.contentShape(.rect)` moved out of the disc's chain and sit
-outside the mark, unchanged and still the last two modifiers before
-`.buttonStyle` — nothing inside the 30pt footprint reaches them. And the
+outside whichever mark is drawn, unchanged and still the last two modifiers
+before `.buttonStyle` — nothing inside the 30pt footprint reaches them. And the
 accessibility tree, read from the simulator for both builds against the same
 fixture, returns identical rects for all six card buttons: `Log Calories` at
 `1196,301 44×44` in each, and so on down the screen.
