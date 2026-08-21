@@ -94,7 +94,8 @@ honour is simply lying. Within a run, dragging reorders that group's members;
 a group moves as a unit. The two screens agree by construction, which is the
 only way they can be relied on to agree at all.
 
-First launch starts with **Food** and **Weight**.
+First launch offers a **Food** group and a **Weight** one, and creates them if
+you keep them — see *First launch* below.
 
 ### A tracker with no group
 
@@ -519,12 +520,33 @@ Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 
 ## First launch
 
-The app is useful immediately or the promise is broken. On first launch there
-are already trackers: **Calories** and **Protein** in a **Food** group, both
-daily totals, and **Weight** in its own, no goals set. You can log something
-before you've configured anything, and the two groups mean the group log
-sheet has something to be about on day one. Deleting any of them takes a few
-taps in settings if you're here for the cat.
+The app is useful immediately or the promise is broken. Up to 1.0 that meant
+creating **Calories**, **Protein** and **Weight** behind your back. Since 1.1 it
+means one screen, which can be answered by pressing the single button on it.
+
+**Units** — metric or imperial, preselected from the phone's region. It decides
+what the trackers below are created with, *Weight* in `kg` or in `lb`, and
+nothing else. A unit is a word on a tracker, editable afterwards like any other,
+so this is a starting point rather than a setting the app keeps.
+
+**Start with** — four trackers, the first three ticked: Calories and Protein in
+a **Food** group, both daily totals, Weight in its own, and **Water filter**,
+a *last time* tracker, offered unticked. That last row is why the list is worth
+having at all: the kind shipped in 1.0 and nothing in the app introduced it.
+
+**Start** creates what is ticked, and the screen is gone. Pressing it without
+reading anything gives exactly the three trackers every earlier install was
+given, in the region's units — so the fastest way past the screen is also the
+old default, and "skip" costs the same one tap it would have as a word.
+
+**It is the empty state, not a tour.** The app draws it whenever the document is
+completely empty, which is a fresh install and a *Delete All Data* and nothing
+else: deleting your last tracker by hand leaves a tombstone behind, so that is
+the ordinary "No trackers" screen instead. There is no "has been welcomed" flag
+to keep in step with the data, nothing to dismiss, and the navigation bar is
+home's own — Settings and History are reachable from it, so it gates nothing. A
+cleared install and a fresh one land on the same screen, which is the whole
+reason those two used to disagree.
 
 No tour, no signup, no permission prompts (notifications aren't used at all).
 
