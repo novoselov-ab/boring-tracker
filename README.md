@@ -111,6 +111,9 @@ open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/
 
 ## Docs
 
+- [Website](https://novoselov-ab.github.io/boring-tracker/) — the one web page:
+  what the app is, the rules it keeps, and the privacy policy. It is
+  [docs/index.html](docs/index.html).
 - [Philosophy](docs/PHILOSOPHY.md) — the spirit, and the rules that must not be
   broken.
 - [Product](docs/PRODUCT.md) — what the app actually is: the model, the
