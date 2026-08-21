@@ -2127,6 +2127,92 @@ user after their first tap does not.
       uninstalled. The screenshots behind this paragraph were taken with it
       gone.
 
+## 42. The card `+` as an outlined ring — built, awaiting a choice
+
+The new app icon is a mint `+` inside a mint ring on `#1C1C1E`. This builds the
+card's `+` the same way — a 2pt `AccentFill` ring at the disc's own 30pt
+diameter, with the plus at the icon's proportions — behind a constant, so
+either variant is one commit from being the only one. Filling the ring on press
+is the inverse of `AccentFillPressed`, which washes a fill and does nothing to a
+stroke. Photographed both ways in both appearances; the images are outside the
+repo. **Nothing is decided:** Anton picks, and the loser gets deleted.
+
+**The switch is `CardPlus.outlined` in `HomeView.swift`**, `true` for the ring.
+Flip it to `false` and the filled disc is back. Whichever loses, deleting it is
+one branch of `TrackerCard.plusMark` and the mark that branch names — one
+region of one file.
+
+**The ratios are the shipped icon's**, sampled out of
+`boring-tracker-1024.png`'s own IDAT bytes rather than through a colour-managed
+reader:
+
+| what | px at 1024 | ÷ ring outer Ø | at 30pt |
+|---|---|---|---|
+| ring outer Ø | 702 | 1.0 | 30 |
+| ring stroke | 48 | 0.0684 | 2.05 → **2** |
+| plus overall width | 330 | 0.470 | 14.10 |
+| plus arm thickness | 50 | 0.0712 | 2.14 |
+
+The field is a flat `#1C1C1E` and the mint a flat `#00E8D8` — single values,
+no gradient. The arms (50) and the stroke (48) are within 4% of each other, and
+**reading as one weight is the property being copied**.
+
+**The icon's mint is not the app's.** The ring is drawn in `Color.accentFill` —
+`#00DAC3` dark, `#009888` light — and the icon is `#00E8D8`. What is being
+matched is the geometry; neither value is being "fixed".
+
+**The glyph is `.font(.system(size: 17, weight: .semibold))`.** The disc's
+`size: 15, weight: .bold` was chosen against a fill, not against these ratios,
+so nine weights and then a ladder of sizes were rendered in the simulator and
+counted at 3× — no metric was read off a documentation page. Weight first,
+because the arm-to-width ratio belongs to the weight alone: `.semibold` renders
+**0.1528** against the icon's 0.1516, `.bold` 0.1769, `.medium` 0.1340. Then
+size, linearly: at 17pt the plus measures **14.00pt wide with 2.15pt arms**
+against the 14.10 / 2.14 wanted. For comparison the shipped `15:.bold` measures
+12.54pt wide with 2.22pt arms.
+
+**The press fills the ring** with `.accentFill` — the full accent, not
+`AccentFillPressed`, which is a fill that recedes toward its surface and does
+nothing visible to a 2pt stroke. The glyph flips to `Color.onAccent` with it,
+because a mint plus on a mint fill is not there. Both arrive instantly and
+scaled up, through the existing `\.accentFillPressed` and
+`AccentFillPress.scale(for:)`; nothing new was added for the press and nothing
+animates on the way in. So **a pressed ring is what today's resting disc is** —
+the honest inverse, not a coincidence to design around. Held down, the mark
+measures 34.00pt across against 30.00 at rest, which is
+`AccentFillPress.scale(for:)` on a 30pt fill exactly, and one screenshot carries
+both the fill and the scale, so they are on the same frame.
+
+The disabled state is carried too: `accentFillDisabled` for the stroke *and* the
+plus. Nothing disables this button today, so that path is unexercised.
+
+**Measured on the shipped build**, from screenshots of one fixture:
+
+| | outer Ø | stroke | plus width | arms |
+|---|---|---|---|---|
+| dark, default size | 30.00pt | 2.00pt | 14.00pt | 2.146pt |
+| light, default size | 30.00 | 2.00 | 14.00 | 2.146 |
+| dark, AX3 | 30.00 | 2.00 | 14.00 | 2.146 |
+
+**At AX3 the stroke does not thin — nothing about the mark moves.** Both marks
+are fixed by design (`.system(size:)` and a 30pt frame, like the disc), so what
+changes is everything around them: the card goes from 52.0pt tall to 105.7
+(140.3 on the one carrying a caption) and the ring is still 30pt of 2.00pt
+stroke. It is quieter there in the sense that it is a smaller share of a much
+bigger row, and a stroke shows that more than a fill does.
+
+**Light mode measures 3.59:1** — `#009888` sampled off the rendered ring
+against a card sampled as a true `#FFFFFF` — so it clears 3:1. Dark measures
+9.57:1. This is reported and not decisive; Anton is judging in dark.
+
+**The tap target is unchanged, checked twice.** The `.frame(width: 44,
+height: 44)` and `.contentShape(.rect)` moved out of the disc's chain and now
+sit outside whichever mark is drawn, unchanged and still the last two modifiers
+before `.buttonStyle` — nothing inside the 30pt footprint reaches them. And the
+accessibility tree, read from the simulator for both builds against the same
+fixture, returns identical rects for all six card buttons: `Log Calories` at
+`1196,301 44×44` in each, and so on down the screen.
+
 ## Noted, not scheduled
 
 Wanted, not yet queued. Written down with the part that isn't obvious, so

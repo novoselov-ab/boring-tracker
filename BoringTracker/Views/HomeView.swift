@@ -529,6 +529,23 @@ private struct TrackerCard: View {
     /// frame rather than the 30pt fill the thing your thumb has to hit.
     private var logButton: some View {
         Button(action: log) {
+            plusMark
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+        // `.accentFill` rather than `.plain`: the disc draws its own pressed
+        // colour instead of iOS's 75% composite of whatever is behind it.
+        .buttonStyle(.accentFill)
+        .accessibilityLabel("Log \(tracker.name)")
+    }
+
+    /// Whichever of the two marks `CardPlus.outlined` names — docs/TODO.md item
+    /// 42, which is open. Both draw at 30pt inside the 44pt target above.
+    @ViewBuilder
+    private var plusMark: some View {
+        if CardPlus.outlined {
+            CardPlusRing()
+        } else {
             Image(systemName: "plus")
                 // Fixed, not `.subheadline`: the disc and the 44pt target are
                 // fixed too, and a text style scales without them. At AX3 the
@@ -555,13 +572,7 @@ private struct TrackerCard: View {
                 // modifier is what puts the pressed colour and the press's scale
                 // on every accent fill at once.
                 .accentFilled(.circle)
-                .frame(width: 44, height: 44)
-                .contentShape(.rect)
         }
-        // `.accentFill` rather than `.plain`: the disc draws its own pressed
-        // colour instead of iOS's 75% composite of whatever is behind it.
-        .buttonStyle(.accentFill)
-        .accessibilityLabel("Log \(tracker.name)")
     }
 
     /// Both together because both come from the same linear scan of the entry
@@ -615,6 +626,80 @@ private struct TrackerCard: View {
         case .lastTime:
             nil
         }
+    }
+}
+
+/// Which `+` a card draws, and the whole of docs/TODO.md item 42's switch:
+/// `true` is the outlined ring, `false` the filled disc that shipped before it.
+/// Nothing is decided, so both are here — the loser is one branch of
+/// `TrackerCard.plusMark` and the mark it names.
+private enum CardPlus {
+    static let outlined = true
+
+    /// The disc's own footprint, so the two marks are photographable against
+    /// each other. The rest are the app icon's ring at that diameter; the
+    /// ratios and where they were sampled are in docs/TODO.md item 42.
+    static let diameter: CGFloat = 30
+    static let stroke: CGFloat = 2
+    static let glyphSize: CGFloat = 17
+    static let glyphWeight: Font.Weight = .semibold
+}
+
+/// The card `+` drawn the way the app icon draws it: a `Color.accentFill` ring
+/// with a plus at the icon's own proportions inside it.
+///
+/// **A press fills the ring rather than washing it.** `Color.accentFillPressed`
+/// recedes toward the surface it sits on, which reads on a filled disc and does
+/// nothing visible to a 2pt stroke; the inverse is what a stroke has. It reuses
+/// `AccentFillPress` rather than a second set of numbers, so the fill and the
+/// scale arrive on the same frame and neither animates on the way in.
+private struct CardPlusRing: View {
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accentFillPressed) private var isPressed
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        // Read out of the environment once, for the `@Sendable` closure below —
+        // see `AccentFilled`, which this deliberately mirrors.
+        let isPressed = isPressed
+        let reduceMotion = reduceMotion
+        return Image(systemName: "plus")
+            // Fixed rather than a text style, like the disc's: neither the ring
+            // nor the 44pt target scales, so a glyph that does outgrows both.
+            .font(.system(size: CardPlus.glyphSize, weight: CardPlus.glyphWeight))
+            .foregroundStyle(glyph)
+            .frame(width: CardPlus.diameter, height: CardPlus.diameter)
+            .background {
+                ZStack {
+                    // Drawn at zero rather than switched in, so that the press
+                    // does not change the ring's identity and the release can
+                    // animate it out with the scale.
+                    Circle().fill(Color.accentFill).opacity(isPressed ? 1 : 0)
+                    // `strokeBorder`, not `stroke`: a stroke straddles the path
+                    // and would draw a 31pt ring in a 30pt frame.
+                    Circle().strokeBorder(ink, lineWidth: CardPlus.stroke)
+                }
+            }
+            .visualEffect { effect, proxy in
+                effect.scaleEffect(
+                    isPressed
+                        ? AccentFillPress.scale(for: proxy.size, reduceMotion: reduceMotion)
+                        : 1
+                )
+            }
+            .animation(AccentFillPress.animation(pressed: isPressed), value: isPressed)
+    }
+
+    private var ink: Color {
+        isEnabled ? .accentFill : .accentFillDisabled
+    }
+
+    /// Mint on the card, dark on the fill a press puts behind it, and the same
+    /// grey as the ring when the control is off — a mint plus inside a grey ring
+    /// would be half a disabled control.
+    private var glyph: Color {
+        guard isEnabled else { return .accentFillDisabled }
+        return isPressed ? .onAccent : .accentFill
     }
 }
 
