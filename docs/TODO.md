@@ -17,9 +17,6 @@ as a plan. **What is actually left:**
   wrong](#27-the-bottom-bar-presses-you-cannot-see-and-a-pairing-that-looks-wrong)
 - [30. Confirm a log where the eye actually
   is](#30-confirm-a-log-where-the-eye-actually-is)
-- [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
-  a decision the user makes, not on work. Why the light value is where it is is
-  in [TECH.md](TECH.md).
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -1581,7 +1578,18 @@ is the screen that had no answer at all, and now has the same one History has.
 That trades a clear confirmation for a sheet that has to be dismissed by hand,
 which costs a tap on the most repeated action in the app.
 
-## 31. Light mode's accent is murky
+## 31. Light mode's accent is murky — deferred, no change
+
+**Closed on the user's own answer**, not on the analysis below: *"i only care
+about dark mode so far."* Light keeps `#009888`. Nothing here was rejected —
+four rounds of candidates were rendered and measured and the recommendations
+stand — but they were waiting on a preference between two appearances, and only
+one of those appearances is being judged. An item on the open list implying
+somebody owes a decision was the wrong thing for it to be.
+
+Reopen it by picking from the recommendations at the foot of this item. What
+the window is, and why the light value sits where it does, is in
+[TECH.md](TECH.md) and stays there.
 
 The mint reads badly in light — too dark, not aesthetic.
 
