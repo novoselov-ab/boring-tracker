@@ -33,10 +33,11 @@ struct RowButtonStyle: ButtonStyle {
             // **44pt, so the target is one iOS would accept**, and it buys two
             // rows one they did not have: a tracker detail row's label was 40pt
             // and home's *Add Tracker* about 22. What it costs is height on
-            // those two — measured against a build with this one line deleted,
-            // detail's entry rows go **68pt to 74** and *Add Tracker* **51 to
-            // 55**, while every row that already had a 44pt control in it stays
-            // at 52 to the point.
+            // *Add Tracker* — **51 to 55**, measured against a build with this
+            // one line deleted. Every row that already had a 44pt control in it
+            // stays at 52 to the point, and a tracker detail row is 52 *because*
+            // of this line: its two lines are 37pt, so this is what holds it to
+            // the height `.listRow` was measured for.
             .frame(minHeight: 44)
             .pressHaptic(configuration.isPressed)
             // **`onChange`, because a `ButtonStyle` cannot write state while it

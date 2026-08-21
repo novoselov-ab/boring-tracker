@@ -97,14 +97,19 @@ struct TrackerRowName: View {
 
 extension EdgeInsets {
 
-    /// A list row with a 44pt control at its trailing end — home's cards, a
-    /// History row, a Log again row, a settings tracker row.
+    /// One row height for every list in the app — home's cards, a History row,
+    /// a Log again row, a settings tracker row, a tracker detail row.
     ///
-    /// The default inset-grouped row adds 46pt of its own, which is most of a
-    /// second row; this cuts it to 4pt above and below a 44pt row. The trailing
-    /// 12 is smaller than the leading 16 because what sits there is a 44pt box
-    /// around a 30pt disc: 12 plus the box's own 7 is 19pt of air, against 16 at
-    /// the other end.
+    /// The platform's own inset-grouped row puts **15pt above and below**; this
+    /// cuts it to 4, which takes a 44pt row from 74 to 52. Read off the
+    /// accessibility tree on tracker detail's entry rows, before and after the
+    /// insets were added — the same 74 to 52 settings and home made in item 28.
+    ///
+    /// The trailing 12 is smaller than the leading 16 because on four of the
+    /// five what sits there is a 44pt box around a 30pt disc: 12 plus the box's
+    /// own 7 is 19pt of air, against 16 at the other end. **Tracker detail has
+    /// no trailing control** and takes the 12 anyway, because one constant is
+    /// what stops the two screens drawing the same row two heights again.
     ///
     /// **`.listRowInsets` has to be applied outside `.onGeometryChange`, and
     /// that is not a style choice.** Settings reads every row's frame for its

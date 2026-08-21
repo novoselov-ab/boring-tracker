@@ -148,6 +148,8 @@ struct TrackerDetailView: View {
             .contentShape(.rect)
         }
         .buttonStyle(.row)
+        .accessibilityHint("Edits this entry")
+        .listRowInsets(.listRow)
         .rowPress()
         .swipeActions(edge: .trailing) {
             Button("Delete", systemImage: "trash", role: .destructive) {
