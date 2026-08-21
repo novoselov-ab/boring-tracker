@@ -460,9 +460,14 @@ back after release. Everything unmarked is ordinary work in this repository.
       under the MIT license `LICENSE` carries. The support URL below is the
       repository, and rule 8 of PHILOSOPHY.md — open source, anyone can fork
       and ship it — is one of the promises the listing is built on.
-- [ ] **Green suite, and a project that matches its spec.** `xcodebuild test`
-      passes and `xcodegen generate` leaves `BoringTracker.xcodeproj`
-      unchanged.
+- [x] **Green suite, and a project that matches its spec.** Both re-checked
+      2026-08-20 after the item 42 changes landed: `xcodebuild test` on the
+      iPhone 17 Pro Max simulator reports **313 tests, 313 passed, 0 failed, 0
+      skipped**, and `xcodegen generate` rewrites `BoringTracker.xcodeproj` to
+      something byte-identical — `git status` sees nothing. Re-run both after
+      any further code change, since this is the state the archive is cut from.
+      Note `xcodegen` is not on the PATH the tools get; it is
+      `/opt/homebrew/bin/xcodegen`.
 
 ### 3. Two pages that have to exist on the web
 
