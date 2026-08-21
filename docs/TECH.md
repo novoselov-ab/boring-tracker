@@ -71,12 +71,10 @@ avoids.
 ### Why not SwiftData or Core Data
 
 Realistic worst case is a few thousand entries a year, so a heavy user reaches
-maybe 15,000 entries in five years — a couple of megabytes of JSON, tens of
-milliseconds to decode, trivially small in memory. (**That estimate was low by
-half**, and the measurement is in docs/scale.md: five years is 29,756 entries,
-8.6MB and 122ms to decode. Still tens of milliseconds, still small in memory,
-and the argument below is unaffected — but the figure to quote is the measured
-one.) Once it's in an array, "today's total" is a filter. There is no query
+maybe 15,000 entries in five years — low by half, as the section above says,
+and unaffected by it: at the measured 29,756 the file is 8.6MB and decodes in
+122ms, still tens of milliseconds and still small in memory. Once it's in an
+array, "today's total" is a filter. There is no query
 problem here, so a query engine is pure cost: a Core Data stack spun up during launch, a schema migration
 system to learn, and concurrency friction under Swift 6, all to manage data
 that fits in RAM with room to spare.
@@ -114,10 +112,10 @@ serialization format *and* the mapping between them, forever, for no benefit.
 ### Migrating an older file
 
 **This page used to say there was no migration step, deliberately, and that it
-would earn its keep at the first release. That is what changed here:** nothing
-has shipped yet, but the shape stops being ours alone the moment it does, so
-the step was written while it was still cheap rather than under the first
-version somebody else is holding. `StoreMigration` is the whole of it.
+would earn its keep at the first release. That is what changed here:** the step
+was written while it was still cheap, rather than under the first version
+somebody else is holding. `StoreMigration` is the whole of it, and since 1.0 the
+shape is no longer ours alone.
 
 **A step is a function over the file's own JSON**, `[String: Any]` in and out,
 not over `StoreDocument`. It has to be: `StoreDocument`, `Tracker` and `Entry`
@@ -412,12 +410,10 @@ main thread for 1.5 seconds; all 17,647 rows in a single section cost 185ms.
 Both screens now draw one section with the day heading as a row, and open in
 **321–327ms** and **363–586ms**, still showing every row (docs/scale.md).
 
-The paragraph that used to be here concluded that the fix was "fewer rows on
-screen at once — a windowed or paged history". That was wrong on both halves:
-the rows were not the cost, and hiding rows is the one thing History may not do.
-Left recorded because it is the more useful half of the lesson — **the honest
-move was to find what the list was being charged for, and the plausible move was
-to reduce the obvious quantity.**
+The plausible fix was "fewer rows on screen at once — a windowed or paged
+history", and it was wrong on both halves: the rows were not the cost, and hiding
+rows is the one thing History may not do. **The honest move was to find what the
+list was being charged for, not to reduce the obvious quantity.**
 
 So the ceiling is now the ordinary linear one: both screens grow with rows and no
 longer with days, the store is fine well past 100,000 entries, and **nothing on
@@ -434,10 +430,11 @@ spend caution on the wrong one.
 **Stored decisions** change the shape of the document: a new field, a removed
 type, a changed meaning. They are nearly free right now and expensive the day
 somebody else's history depends on them, because then every one needs a
-migration and a way to be wrong about their data. Be slow and deliberate here,
-and get them done before the **first App Store release** — that is the freeze
-point, not daily use on our own phone, where a schema change still costs only
-deleting the app or hand-editing the JSON.
+migration and a way to be wrong about their data. Be slow and deliberate here.
+**The freeze point was the first App Store release, and it has passed** — 1.0
+went for review on 2026-08-21 — so a stored decision now costs a migration step
+and a way to be wrong about somebody's data, where before it cost deleting the
+app off a simulator.
 
 **Displayed decisions** are everything computed from the document at read time:
 ranking, ordering, what an empty state shows, whether a tap logs immediately or
@@ -483,8 +480,8 @@ visible, and the fix is to rename again. The editor also offers existing group
 names rather than free text, so the common path never retypes one. A rare
 visible annoyance beats a permanent invisible tax.
 
-This is a *stored* decision (see below), so it wants settling before the first
-release. Until then, switching costs nothing.
+This is a *stored* decision, and it was settled before 1.0 shipped. Switching
+now costs a migration step.
 
 ## Mergeable by design
 
@@ -550,9 +547,8 @@ than only replace, so restoring an old backup or pulling in a second device's
 export doesn't destroy what you already have.
 
 Sync transport is deliberately left open and comes after v1 — CloudKit's API
-directly, an iCloud Drive file, or nothing. All of them need the paid developer
-account. The merge core needs none of it and is fully testable on a laptop,
-which is exactly why it gets built first.
+directly, an iCloud Drive file, or nothing. The merge core needs none of them
+and is fully testable on a laptop, which is exactly why it gets built first.
 
 ## Model
 
@@ -600,6 +596,18 @@ together, a single tracker when it isn't in one. It is an enum computed from
 free to rework. It exists because the alternative was to treat "no group" as a
 group, which puts unrelated trackers in one sheet and claims something untrue
 about them.
+
+**`batchID` is not derivable from the timestamps, in either direction**, which
+is what keeps it on the record despite costing 19% of the file (docs/scale.md).
+`Date.stamp()` rounds to whole seconds, so two logs inside one second — an apple
+and a biscuit, or two taps on Log again — share an instant, and deriving would
+fuse them into one row; the log sheet's date picker offers minutes, so anything
+backdated by hand lands on `:00` and collides the same way. In the other
+direction, editing one member in tracker detail saves that entry's date alone, so
+a real batch's timestamps come apart while the batch survives — `BatchEditor`
+already knows this and asks `Set(entries.map(\.date)).count > 1`. Dropping the
+field would merge unrelated logs *and* split real ones. If those bytes are ever
+wanted back, the honest version is a shorter id, not a derived one.
 
 `group` is a string and `name` is a label, both for the same reason: the
 alternative is a record to create, clean up and merge. PRODUCT.md says what
@@ -1129,6 +1137,12 @@ SwiftUI-free and unit-tested for this reason — has been wrong twice this way,
 both times silently rewriting stored order and stamping it as a decision, and
 neither time did it show in a screenshot of the list at rest.
 
+**`.accessibilityElement(children: .combine)` is not lazy the way a row body
+is.** On History's day heading it cost **180ms of 400** at five years of data,
+because all 1,733 headings resolve their children whether or not they are on
+screen — where the rows themselves build about one body per screenful. It was
+dropped, which is what the section header it replaced did anyway.
+
 **A `Button` hit-tests its label's drawn content unless it is given a
 `contentShape`.** A label that is two pieces of drawn content with a `Spacer`
 between them has a dead gap in the middle — most of a row's width. A row
@@ -1224,10 +1238,9 @@ docs/
 means moving the store file after people have data in it, so
 `StoreFile.appGroupIdentifier` is fixed now — `group.com.novoselov.boringtracker`
 — and `StoreFile.standard` prefers that container whenever the entitlement
-resolves. It does not resolve today: signing an App Group needs the paid
-developer account this project deliberately builds without (docs/SHIPPING.md),
-there is no entitlements file and no `DEVELOPMENT_TEAM` in `project.yml`, so the
-code falls back to the plain app container. The store is therefore at
+resolves. It does not resolve today: there is no entitlements file and no
+`DEVELOPMENT_TEAM` in `project.yml` — the project is deliberately buildable with
+no account at all — so the code falls back to the plain app container. The store is therefore at
 `Application Support/boring-tracker/store.json` inside the app's own container,
 which is what the README's `simctl get_app_container` line finds. Adding the
 entitlement later moves the file once, before anybody's data is in it — which is
