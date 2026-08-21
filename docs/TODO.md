@@ -2736,3 +2736,34 @@ the numbered items is going near the same code.
 - [ ] Home screen widget, Lock Screen widget, App Shortcuts / Siri.
 - [ ] Sync transport — the document already merges; this is only plumbing.
 - [ ] Apple Watch.
+
+### A welcome screen that sets units and picks the starting trackers
+
+One screen on first launch: pick the **unit system**, and pick which trackers
+to start with. **The same screen after "clear all data"**, which is the other
+moment the app has no trackers and no idea what you want.
+
+It replaces `Tracker.starterSet`, and it fixes three things that are each too
+small to schedule alone:
+
+- **The starter set has no `lastTime` tracker.** It is Calories, Protein and
+  Weight — the macro-tracking origin story. So the newest kind is invisible on
+  first run, while the App Store screenshot advertises it ("Water filter —
+  2 months ago") and the README names it. The feature most likely to be missed
+  is the one nothing introduces.
+- **The weight unit is `kg` regardless of locale.** The US is the largest App
+  Store market and gets kilograms. `Locale.current.measurementSystem` is the
+  obvious default to offer, not to impose.
+- **A fresh install and a cleared install disagree.** `StoreFile` seeds
+  `.starter` on a genuinely fresh launch; `Store.clearAll()` writes an empty
+  `StoreDocument()`, so clearing leaves the "No trackers" empty state instead.
+  Neither is wrong, but nothing decided they should differ.
+
+**The risk is that this becomes onboarding.** PHILOSOPHY.md rules out the
+tour, the carousel, the account, the permission pre-prompt and the "you're all
+set!" screen, and an app whose pitch is that it opens straight to a number pad
+cannot greet people with three slides. So: **one screen, skippable, no
+animation, and never seen again** unless data is cleared. If it cannot be one
+screen, it is not worth having — the hardcoded three are a fine fallback.
+
+Open: whether "skip" means the current three or nothing at all.
