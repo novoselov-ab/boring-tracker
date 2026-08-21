@@ -20,10 +20,6 @@ as a plan. **What is actually left:**
 - [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
   a decision the user makes, not on work. Why the light value is where it is is
   in [TECH.md](TECH.md).
-- [42. The card `+` as an outlined ring — built, awaiting a
-  choice](#42-the-card--as-an-outlined-ring--built-awaiting-a-choice) — both
-  marks are in the code behind `CardPlus.outlined`; like 31, it is open on a
-  decision the user makes, and the loser is then deleted.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -2131,20 +2127,49 @@ user after their first tap does not.
       uninstalled. The screenshots behind this paragraph were taken with it
       gone.
 
-## 42. The card `+` as an outlined ring — built, awaiting a choice
+## 42. The card `+` as an outlined ring — decided, done
 
-The new app icon is a mint `+` inside a mint ring on `#1C1C1E`. This builds the
+**The ring ships, and the filled disc is deleted.** Anton picked it on
+2026-08-20; `9f46446` removed the alternative. `CardPlus.outlined` was already
+`true`, so nothing that draws changed — what went is the `else` branch of
+`TrackerCard.plusMark`, the disc it drew, and the `CardPlus` enum that held the
+switch. `plusMark` went with them, since a chooser between one thing is not a
+chooser, and `logButton` names `CardPlusRing()` directly. Carrying both was
+right while the comparison was live and is dead weight the moment it is not:
+[PHILOSOPHY.md](PHILOSOPHY.md)'s test for code is performance and simplicity,
+and the smallest thing that works.
+
+**What the disc knew, since the code no longer does.** It started as a bare
+blue glyph, which was a different design language from the bottom Log button it
+is a smaller version of, and low enough contrast that it did not read as a
+control at all. A tinted `.bordered` fill was tried next, on the grounds that
+eight solid dots down one screen is loud — and rejected on the original
+complaint, because a blue glyph on a pale blue disc is that same low contrast
+again. The accent-filled disc is what came out of that. The ring was built to
+match the new icon rather than to answer any of this, but it is the first mark
+on this button that is not a solid dot.
+
+**Two of the five screenshots had to be reshot** — `1361702`. The set was
+captured at 15:04 and the ring landed at 19:08, so `home.png` was showing eight
+filled mint discs the app no longer draws, and it is the first image both on the
+App Store listing and in the README; `again.png` carries five more beside the
+Log again sheet, plus a sixth blurred through its top edge that the dimmed
+background makes easy to miss. The other three show no card `+` at all:
+`log.png` is the sheet over the whole screen, `history.png`'s discs are the row
+Repeat control, and `graph.png`'s toolbar `+` is a bare nav-bar glyph. Both were
+re-shot from the original seeded `store.json`, still in the simulator's
+container and byte-identical after the app read it — so the fixture the earlier
+review settled did not move. Measured against the old files: the new `home.png`
+differs in exactly eight 80x80 regions, at the eight marks and nowhere else.
+
+The rest of this item is how the ring was built and measured, and it stands.
+
+The app icon is a mint `+` inside a mint ring on `#1C1C1E`. This built the
 card's `+` the same way — a 2pt `AccentFill` ring at the disc's own 30pt
-diameter, with the plus at the icon's proportions — behind a constant, so
-either variant is one commit from being the only one. Filling the ring on press
-is the inverse of `AccentFillPressed`, which washes a fill and does nothing to a
+diameter, with the plus at the icon's proportions. Filling the ring on press is
+the inverse of `AccentFillPressed`, which washes a fill and does nothing to a
 stroke. Photographed both ways in both appearances; the images are outside the
-repo. **Nothing is decided:** Anton picks, and the loser gets deleted.
-
-**The switch is `CardPlus.outlined` in `HomeView.swift`**, `true` for the ring.
-Flip it to `false` and the filled disc is back. Whichever loses, deleting it is
-one branch of `TrackerCard.plusMark` and the mark that branch names — one
-region of one file.
+repo.
 
 **The ratios are the shipped icon's**, sampled out of
 `boring-tracker-1024.png`'s own IDAT bytes rather than through a colour-managed
@@ -2177,7 +2202,7 @@ counted at 3× — no metric was read off a documentation page. Weight first,
 because the arm-to-width ratio belongs to the weight alone: `.semibold` renders
 **0.1528** against the icon's 0.1516, `.bold` 0.1769, `.medium` 0.1340. Then
 size, linearly: at 17pt the plus measures **14.00pt wide with 2.15pt arms**
-against the 14.10 / 2.14 wanted. For comparison the shipped `15:.bold` measures
+against the 14.10 / 2.14 wanted. For comparison the disc's `15:.bold` measured
 12.54pt wide with 2.22pt arms.
 
 **The press fills the ring** with `.accentFill` — the full accent, not
@@ -2186,7 +2211,7 @@ nothing visible to a 2pt stroke. The glyph flips to `Color.onAccent` with it,
 because a mint plus on a mint fill is not there. Both arrive instantly and
 scaled up, through the existing `\.accentFillPressed` and
 `AccentFillPress.scale(for:)`; nothing new was added for the press and nothing
-animates on the way in. So **a pressed ring is what today's resting disc is** —
+animates on the way in. So **a pressed ring is what the resting disc was** —
 the honest inverse, not a coincidence to design around. Held down, the mark
 measures 34.00pt across against 30.00 at rest, which is
 `AccentFillPress.scale(for:)` on a 30pt fill exactly, and one screenshot carries
@@ -2204,8 +2229,8 @@ plus. Nothing disables this button today, so that path is unexercised.
 | dark, AX3 | 30.00 | 2.00 | 14.00 | 2.146 |
 
 **At AX3 the stroke does not thin — nothing about the mark moves.** Both marks
-are fixed by design (`.system(size:)` and a 30pt frame, like the disc), so what
-changes is everything around them: the card goes from 52.0pt tall to 105.7
+were fixed by design (`.system(size:)` and a 30pt frame), so what changes is
+everything around them: the card goes from 52.0pt tall to 105.7
 (140.3 on the one carrying a caption) and the ring is still 30pt of 2.00pt
 stroke. It is quieter there in the sense that it is a smaller share of a much
 bigger row, and a stroke shows that more than a fill does.
@@ -2215,9 +2240,9 @@ against a card sampled as a true `#FFFFFF` — so it clears 3:1. Dark measures
 9.57:1. This is reported and not decisive; Anton is judging in dark.
 
 **The tap target is unchanged, checked twice.** The `.frame(width: 44,
-height: 44)` and `.contentShape(.rect)` moved out of the disc's chain and now
-sit outside whichever mark is drawn, unchanged and still the last two modifiers
-before `.buttonStyle` — nothing inside the 30pt footprint reaches them. And the
+height: 44)` and `.contentShape(.rect)` moved out of the disc's chain and sit
+outside the mark, unchanged and still the last two modifiers before
+`.buttonStyle` — nothing inside the 30pt footprint reaches them. And the
 accessibility tree, read from the simulator for both builds against the same
 fixture, returns identical rects for all six card buttons: `Log Calories` at
 `1196,301 44×44` in each, and so on down the screen.
