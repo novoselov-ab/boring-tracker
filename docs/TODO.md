@@ -12,9 +12,9 @@ So read it as a decision log with a short to-do list on the front, rather than
 as a plan. **What is actually left:**
 
 - [17. One pass on a real device](#17-one-pass-on-a-real-device) — the whole app
-  on hardware, which no simulator answers.
-- [30. Confirm a log where the eye actually
-  is](#30-confirm-a-log-where-the-eye-actually-is)
+  on hardware, which no simulator answers. **The only numbered item left**, and
+  every question in it needs a thumb, an ear or a real screen: items 27 and 30
+  closed by handing it theirs.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
@@ -1542,9 +1542,20 @@ replaced — "for someone eating the same five things the two converge" — so f
 staples chronological approximates it. What chronological adds is
 predictability.
 
-## 30. Confirm a log where the eye actually is
+## 30. Confirm a log where the eye actually is — done
 
-Logging from Log again does not feel like anything happened.
+Logging from Log again did not feel like anything happened. It does now, and
+**nothing was added to close this item** — what answers it shipped in `86f4b5e`
+and three review rounds on top of it, and the last open box turned out to be
+answered by a bar that was already there.
+
+**If you are reading this because logging feels silent, read the next paragraph
+before building anything.** The complaint has been raised four times — twice for
+Log again, once for repeat-from-History, and once more in the brief that closed
+this item, which restated the original diagnosis as though the fix did not
+exist. It exists. The confirmation is home's Log again disc turning into a
+checkmark as the sheet leaves, plus the undo bar arriving with it, plus a
+`.success` haptic. Measured below.
 
 **The diagnosis is placement, not strength.** The number counts up on the home
 card and the undo bar appears on home — both *behind* the sheet you are looking
@@ -1557,7 +1568,8 @@ out, or both.
 
 Things to try, and judge by thumb rather than by argument:
 
-- [ ] **The row itself confirms** — built, recorded, and it **cannot work**.
+- [x] **The row itself confirms** — built, recorded, rejected. It **cannot
+      work**.
       `dismiss()` stops a presentation's content updating, so a checkmark set
       on the same tap as the dismissal is never drawn: the sheet slides away
       for about 300ms showing the state it had before the tap. Held for 0ms and
@@ -1585,18 +1597,60 @@ photographed here doing exactly that. So History gets the haptic and nothing
 else; a second mark on the tapped disc would be two marks for one write. Home
 is the screen that had no answer at all, and now has the same one History has.
 
-- [ ] **Except when the tapped row is a long way down**, which is the one gap
-      left and it is not new (found reviewing this item). The mark goes on the
-      row the repeat *wrote*, dated now, so it lands at the top of today and
-      nothing scrolls to it — repeat a row from last month with the list
-      scrolled there and the only signal that arrives is the haptic. Not
-      answered here: scrolling the list under the thumb that just tapped it
-      moves what you were reading, and marking the tapped row as well is two
-      marks for one write. Worth a decision, not a patch in a review round.
+- [x] **Except when the tapped row is a long way down** — checked, and the
+      premise was wrong. The mark does land at the top of today, so a repeat
+      made with the list four months back does mark a row hundreds above the
+      viewport. But it is not true that "only the haptic arrives": History
+      mounts `UndoBar` in a bottom `safeAreaInset`, so **"Logged again" and its
+      Undo button appear pinned to the bottom of the screen whatever the scroll
+      position**, and stand for ten seconds. Photographed with the list on
+      Fri, Apr 17 and today four months later, in
+      `~/dev/boring-tracker-pairing/30-history-scrolled-undo.png`; the bar is
+      drawn one frame after the tapped row's press wash, 92ms, off a recording
+      of the same tap. So the decision this box was waiting for does not need
+      making — neither scrolling the list under the thumb nor a second mark on
+      the tapped disc buys a signal that is not already on screen, and both
+      cost what the item says they cost.
 
 **Do not solve this by keeping the sheet open** so the user can see the card.
 That trades a clear confirmation for a sheet that has to be dismissed by hand,
 which costs a tap on the most repeated action in the app.
+
+### Re-measured before closing, because "it feels silent" is not a frame count
+
+Three recordings of one repeat from the Log again sheet, iPhone 17 Pro
+simulator on iOS 26.3, dark, Debug build, `simctl io recordVideo` decoded frame
+by frame with `AVAssetReader`. Zero is the first frame the recorder emits after
+a still screen, which is the frame the tapped row's press wash draws on.
+
+| | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| bar fully uncovered, disc already a checkmark | 293ms | 290ms | 290ms |
+| checkmark held on a fully uncovered bar | 828ms | 790ms | 840ms |
+
+The disc is **never seen as anything but a checkmark** on this path: it is
+behind the sheet until the sheet has moved off it, and it is already a
+checkmark in the frames where the sheet is still sliding — visible through the
+translucent sheet edge from 233ms in run 1. The undo bar clears the sheet's top
+edge before the disc does, so the two signals arrive together rather than one
+after the other. Strip of six frames at
+`~/dev/boring-tracker-pairing/30-dismissal-strip.png`.
+
+Two numbers this reproduces from `86f4b5e`, which is why they are quoted rather
+than re-argued: the dismissal is **about 300ms** — 290–293 here — and the mark
+holds **about 0.8s** of its one second, the rest being spent behind the sheet.
+
+**So "the undo bar already does the job" is half right and that is the useful
+half.** It does arrive, on both screens, and on History it is the whole answer.
+On home it is not sufficient on its own — it sits above the bar rather than in
+it, and says "Logged again" in secondary grey with a button beside it, which is
+a sentence to read rather than a mark to catch — and the checkmark lands under the
+thumb that just tapped. Neither was worth removing to prove a point.
+
+**Nothing further is worth building here.** The remaining candidates all cost
+something the item already rules out: keeping the sheet up costs a tap, marking
+the row inside it costs 500ms, scrolling History under the thumb moves what you
+were reading. What is left is the haptic question, and that is item 17's.
 
 ## 31. Light mode's accent is murky — deferred, no change
 
