@@ -20,6 +20,10 @@ as a plan. **What is actually left:**
 - [31. Light mode's accent is murky](#31-light-modes-accent-is-murky) — open on
   a decision the user makes, not on work. Why the light value is where it is is
   in [TECH.md](TECH.md).
+- [42. The card `+` as an outlined ring — built, awaiting a
+  choice](#42-the-card--as-an-outlined-ring--built-awaiting-a-choice) — both
+  marks are in the code behind `CardPlus.outlined`; like 31, it is open on a
+  decision the user makes, and the loser is then deleted.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass

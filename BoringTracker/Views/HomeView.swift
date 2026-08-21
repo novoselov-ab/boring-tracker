@@ -675,8 +675,9 @@ private struct CardPlusRing: View {
                     // does not change the ring's identity and the release can
                     // animate it out with the scale.
                     Circle().fill(Color.accentFill).opacity(isPressed ? 1 : 0)
-                    // `strokeBorder`, not `stroke`: a stroke straddles the path
-                    // and would draw a 31pt ring in a 30pt frame.
+                    // `strokeBorder`, not `stroke`: a stroke straddles the
+                    // path, and built that way it measured a 32pt ring in the
+                    // 30pt frame.
                     Circle().strokeBorder(ink, lineWidth: CardPlus.stroke)
                 }
             }
