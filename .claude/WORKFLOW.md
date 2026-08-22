@@ -283,10 +283,24 @@ whatever it was doing, goes quiet, and your instruction is visible in
 `session text` but never acted on. It cost two rounds of "why did it skip
 that?" before the buffer was read closely enough to see `[Pasted text]`.
 
-So: **redirect a running session with one short line, or not at all.**
-Anything with structure goes in a brief file and a fresh session. That is more
-reliable than steering a session mid-flight anyway, and a brief survives being
-re-read.
+**It is worse than that: on 2026-08-21 `session type` did not submit once, in
+four attempts** — a long instruction, a genuinely short one, an appended line,
+and an empty string against a session sitting idle at its prompt. The text
+always arrives and is always visible; the newline never lands. Treat
+`session type` as a way to *put text in front of a session*, not as a way to
+make it act.
+
+Two ways to actually deliver it:
+
+- **A fresh session with a brief file.** The default. A brief survives being
+  re-read and does not depend on a terminal.
+- **Type it, then ask Anton to press Enter.** He offered, and it is the right
+  tool when the *running session's context is the point* — the session holding
+  the App Review thread, a long investigation mid-flight. Spawning fresh there
+  throws away the thing that makes it useful.
+
+Use the second only when continuity matters. Otherwise a brief is cleaner, and
+it does not need a human in the loop to press a key.
 
 ### Talking to a running session
 
