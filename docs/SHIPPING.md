@@ -173,7 +173,7 @@ thick with round caps, centred on 512.
   ever listed as supporting iPad.
 - **Age rating** questionnaire. Nothing here is contentious; see APPSTORE.md.
 
-### One review risk to be aware of
+### Two review risks, and which one actually arrived
 
 Guideline 4.2, *Minimum Functionality*, lets Apple reject apps it considers too
 simple. This app is deliberately minimal, which is the point, but that's not a
@@ -182,6 +182,28 @@ functionality — multiple tracker types, history, graphs, export/import — rat
 than to add features. **Do not compromise the philosophy to pass review.** The
 cheap half of that answer is the app review note, which tells the reviewer where
 each thing is and that there is no sign-in gating any of it.
+
+**What 1.0 actually got was Guideline 2.1, *Information Needed*, the day after
+submission — not 4.2.** It is a form letter sent to new app submissions rather
+than a judgement about the app: nothing was wrong with the binary, the metadata
+or the listing. It asks for seven things, and the expensive one is **a screen
+recording made on a physical device running the latest OS**. The rest is prose —
+what the app does, who it is for, how to reach its features, what external
+services it uses, whether anything differs by region. For an app like this one
+five of the seven are *none*, which is a strong answer rather than a thin one.
+
+Answering it rebuilds nothing: no re-upload, no version bump, no code change.
+The build stays `VALID` and attached, and the reply goes in Resolution Center —
+the mechanism this page predicted for 4.2, reached by a different route. Two
+things matter in it. Answer in the reviewer's own numbering, and record the
+**submitted** build rather than whatever `main` has become since. Shoot the
+recording wide — both tracker kinds, history, a graph, export and import —
+because that is also the answer to 4.2 if it comes next.
+
+The letter carries a long *How to Prevent Common Issues* block about
+subscriptions, purpose strings and demo accounts. That is boilerplate on every
+2.1 letter, not a list of findings, and answering it as though it were is how a
+reply ends up addressing questions nobody asked.
 
 ## Licensing and the App Store
 
@@ -216,6 +238,13 @@ clone: the system `python3` is a **3.6 framework build with no CA bundle**, so
 out of `openssl dgst -sha256 -sign` as **DER** and has to be unpacked into the
 raw `r||s` pair a JWS wants.
 
+A third one bit on 2026-08-21, once `curl` is the transport: **it needs `-g`, or
+every `fields[...]` URL fails.** `curl` reads `[` and `]` as its own globbing
+syntax, so `?fields[apps]=name` dies as `curl: (3) URL malformed` before a
+request is made. Exit 3 with no output looks exactly like a signing failure, and
+that is where the time goes — the JWT is fine and the URL never left the
+machine.
+
 | Field | Route | Checked |
 |---|---|---|
 | Name, subtitle, privacy policy URL | `appInfoLocalizations` | written, read back |
@@ -240,11 +269,18 @@ publishing it; that is a separate button.
 version localization with `whatsNew` in it returned **409 STATE_ERROR,
 *Attribute 'whatsNew' cannot be edited at this time*** — and the description,
 keywords, promotional text and both URLs in the same request were not written
-either. Nothing partial, nothing reported per field. **A 200 is not proof the
-value stuck, and neither is the read after it:** the content rights PATCH
-returned 200 and then read back `null` from an unfiltered `GET /v1/apps/{id}`,
-while the same field read with `?fields[apps]=contentRightsDeclaration` returned
-it correctly — the unfiltered representation is served stale right after a write.
+either. Nothing partial, nothing reported per field. **That is about the
+attributes you send, not the ones you leave out:** a PATCH carrying only `notes`
+to `appStoreReviewDetails` returned the contact name, phone, email and
+`demoAccountRequired` unchanged, so a narrow write is the safe shape rather than
+a risky one. Send the field you mean to change and nothing else — every extra
+attribute is one more thing that can take the request down with it.
+
+**A 200 is not proof the value stuck, and neither is the read after it:** the
+content rights PATCH returned 200 and then read back `null` from an unfiltered
+`GET /v1/apps/{id}`, while the same field read with
+`?fields[apps]=contentRightsDeclaration` returned it correctly — the unfiltered
+representation is served stale right after a write.
 So verify with a field-filtered read, and do not re-send a write on the strength
 of a null a broad GET reported. The API is not reliably one-shot either; one
 write died on `curl: (56) Connection reset by peer` and the retry was clean.
@@ -258,6 +294,22 @@ an accepted asset — `assetDeliveryState: COMPLETE` is the state that answers.
 **Browser automation was considered and rejected.** Two-factor auth, session
 cookies that expire, and a JavaScript app that rearranges its own DOM, against a
 documented and stable REST API.
+
+### Getting a build onto a phone: internal TestFlight, over the API
+
+**`isInternalGroup: true` is accepted on `POST /v1/betaGroups`.** Apple's
+documented create-request attributes do not list it, so the reasonable
+assumption is that internal groups can only be made in the web UI. They can't
+be: the create returned 201 with the flag set. It is worth the probe, because an
+internal group needs **no Beta App Review** and an external one does. Set
+`hasAccessToAllBuilds: true` in the same call and the uploaded build is already
+in the group with nothing to attach by hand. Testers are `POST /v1/betaTesters`
+with an email and a `betaGroups` relationship.
+
+Read the *group's* builds, not the build's groups: `GET
+/v1/builds/{id}/betaGroups` is 403, allowing only `CREATE` and `DELETE`. **Test
+Information** and **What to Test** can both be empty — they gate external
+testing, not an internal install.
 
 ### Signing, when the API key cannot use cloud signing
 
@@ -359,6 +411,16 @@ judgement that cannot be walked back after release.
       **Build 1 is attached to version 1.0 and reads `VALID`**, having gone
       `PROCESSING` → `VALID` in about 90 seconds. The signing this needs is its
       own section above; the automatic path fails on this account.
+- [ ] **(human)** **Run that build on a real phone before submitting**, through
+      internal TestFlight — the section on setting that up is above.
+      **This step did not exist when 1.0 was submitted, and its absence cost a
+      review round.** Apple asks a new app submission for a screen recording
+      made on a physical device, and this app had only ever run in the
+      simulator, so the recording had to be produced after the rejection
+      instead of before it. It is also the only way to find a device-only bug,
+      and it is what makes the *what did you test on* question answerable
+      honestly. Simulator verification is good enough to develop against and
+      not good enough to submit on.
 
 ### 5. The listing
 
