@@ -62,6 +62,28 @@ struct WelcomeTests {
         #expect(StarterTracker.offered.contains { $0.kind == .lastTime })
     }
 
+    @Test("Six rows, in the order the screen lists them, ticked as agreed")
+    func offeredSetIsTheAgreedSix() {
+        #expect(StarterTracker.offered.map(\.name)
+                == ["Calories", "Protein", "Carbs", "Fats", "Weight", "Dentist"])
+        #expect(StarterTracker.offered.map(\.isPreselected)
+                == [true, true, false, false, true, false])
+    }
+
+    @Test("The macros are daily totals in grams, grouped with Calories")
+    func carbsAndFatsMatchProtein() {
+        let macros = StarterTracker.offered.filter { ["Carbs", "Fats"].contains($0.name) }
+
+        #expect(macros.count == 2)
+        for macro in macros {
+            #expect(macro.kind == .dailyTotal)
+            #expect(macro.group == "Food")
+            #expect(macro.decimals == 0)
+            // A gram is a gram: nothing here differs between the two systems.
+            #expect(UnitSystem.allCases.map(macro.unit) == ["g", "g"])
+        }
+    }
+
     @Test("Skipping — starting without touching anything — gives the pre-1.1 three")
     func defaultsAreTheOldStarterSet() {
         let trackers = StarterTracker.defaultTrackers()
@@ -74,18 +96,18 @@ struct WelcomeTests {
 
     @Test("Ticking one more keeps the list's order, not the order they were ticked in")
     func chosenTrackersKeepTheOfferedOrder() {
-        let chosen: Set<StarterTracker.ID> = ["Water filter", "Calories"]
+        let chosen: Set<StarterTracker.ID> = ["Dentist", "Calories"]
         let trackers = StarterTracker.trackers(chosen, units: .metric)
 
-        #expect(trackers.map(\.name) == ["Calories", "Water filter"])
+        #expect(trackers.map(\.name) == ["Calories", "Dentist"])
         #expect(trackers.map(\.sortIndex) == [0, 1])
     }
 
     @Test("A last-time tracker is created with no unit, in either system")
     func lastTimeHasNoUnit() {
         for system in UnitSystem.allCases {
-            let filter = StarterTracker.trackers(["Water filter"], units: system)
-            #expect(filter.map(\.unit) == [""])
+            let dentist = StarterTracker.trackers(["Dentist"], units: system)
+            #expect(dentist.map(\.unit) == [""])
         }
     }
 
@@ -100,6 +122,16 @@ struct WelcomeTests {
         #expect(imperial.first { $0.name == "Weight" }?.unit == "lb")
         // A kcal is a kcal: only what actually differs is switched.
         #expect(metric.map(\.unit).dropLast() == imperial.map(\.unit).dropLast())
+    }
+
+    @Test("Imperial reaches everything on offer, not just the ticked three")
+    func unitSystemReachesEveryOfferedTracker() {
+        let all = Set(StarterTracker.offered.map(\.id))
+
+        #expect(StarterTracker.trackers(all, units: .metric).map(\.unit)
+                == ["kcal", "g", "g", "g", "kg", ""])
+        #expect(StarterTracker.trackers(all, units: .imperial).map(\.unit)
+                == ["kcal", "g", "g", "g", "lb", ""])
     }
 
     @Test("Starting writes the chosen units through the store and onto disk")

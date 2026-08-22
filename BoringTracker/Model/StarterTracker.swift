@@ -66,19 +66,26 @@ extension StarterTracker {
 
     /// Everything on offer, in the order the screen lists it.
     ///
-    /// The first three are what every install before 1.1 was given. *Water
-    /// filter* is here because the `lastTime` kind is otherwise invisible on a
-    /// fresh install — the App Store screenshot advertises it and the README
-    /// names it, and until this screen nothing in the app introduced it.
+    /// The ticked three are what every install before 1.1 was given. *Dentist*
+    /// is here because the `lastTime` kind is otherwise invisible on a fresh
+    /// install — the App Store screenshot advertises it and the README names
+    /// it, and until this screen nothing in the app introduced it. Unticked,
+    /// because it has to be *intermittent* to read as anything but a date: a
+    /// daily habit under a last-time tracker always says "today". See
+    /// docs/PRODUCT.md.
     static let offered: [StarterTracker] = [
         StarterTracker(name: "Calories", kind: .dailyTotal, metricUnit: "kcal",
                        group: "Food", isPreselected: true),
         StarterTracker(name: "Protein", kind: .dailyTotal, metricUnit: "g",
                        group: "Food", isPreselected: true),
+        StarterTracker(name: "Carbs", kind: .dailyTotal, metricUnit: "g",
+                       group: "Food"),
+        StarterTracker(name: "Fats", kind: .dailyTotal, metricUnit: "g",
+                       group: "Food"),
         StarterTracker(name: "Weight", kind: .measurement, metricUnit: "kg",
                        imperialUnit: "lb", decimals: 1, group: "Weight",
                        isPreselected: true),
-        StarterTracker(name: "Water filter", kind: .lastTime),
+        StarterTracker(name: "Dentist", kind: .lastTime),
     ]
 
     static var preselected: Set<StarterTracker.ID> {
