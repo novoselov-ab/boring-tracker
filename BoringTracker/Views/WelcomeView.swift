@@ -6,9 +6,13 @@ import SwiftUI
 /// **It is the empty state, not an onboarding flow.** There is no flag saying it
 /// has been seen and no step after it — `HomeView` draws it whenever the document
 /// is completely empty, which is a fresh install and a "Delete All Data" and
-/// nothing else (`Store.isBlank`). That is what makes those two agree, and it is
-/// why the screen keeps home's own navigation bar: Settings and History are still
-/// there, so it gates nothing.
+/// nothing else (`Store.isBlank`). That is what makes those two agree.
+///
+/// It hides home's navigation bar and heads itself instead. Settings and History
+/// both lead somewhere empty before a tracker exists, and with them on screen
+/// this read as home with a different list. The one thing kept from home's
+/// chrome is `NoticeRow`: an unreadable store lands here, and the notice is the
+/// only thing that says so.
 struct WelcomeView: View {
     @Environment(Store.self) private var store
     @State private var units = UnitSystem.preferred()
@@ -19,6 +23,8 @@ struct WelcomeView: View {
             if let notice = LoadNotice(origin: store.origin, saveError: store.saveError) {
                 Section { NoticeRow(notice: notice) }
             }
+
+            Section { introduction }
 
             Section {
                 Picker("Units", selection: $units) {
@@ -31,7 +37,7 @@ struct WelcomeView: View {
                 // The segmented style drops the picker's own label, as in Settings.
                 Text("Units")
             } footer: {
-                Text("Only what the trackers below start with. Every unit is a word you can change later.")
+                Text("Only what the trackers below start with.")
             }
 
             Section {
@@ -40,13 +46,34 @@ struct WelcomeView: View {
                 }
             } header: {
                 Text("Start with")
-            } footer: {
-                Text("Nothing is set up yet. You can add, rename and delete trackers whenever you like.")
             }
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
+        .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) { startBar }
+    }
+
+    /// What the screen is, since it no longer borrows home's title.
+    ///
+    /// Two sentences and a heading is the whole budget: docs/PHILOSOPHY.md rules
+    /// out the tour, and this is the empty state, not a first step.
+    private var introduction: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Boring Tracker")
+                .font(.title.bold())
+            Text("Write down a number, get on with your day. "
+                 + "Pick what to start with — Start creates those trackers, "
+                 + "and you can change all of it later.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
     private func row(_ offer: StarterTracker) -> some View {
@@ -111,8 +138,6 @@ struct WelcomeView: View {
 #Preview {
     NavigationStack {
         WelcomeView()
-            .navigationTitle("Boring Tracker")
-            .navigationBarTitleDisplayMode(.inline)
     }
     .environment(Store(
         document: StoreDocument(),
