@@ -119,10 +119,41 @@ implying 0.57ms a section on that machine.
 **What the fix costs is the card per day.** `.insetGrouped` draws one rounded
 card per section, so one section is one card: the day heading is still a heading
 and still `.isHeader` to VoiceOver, and the gap between days survives, but the
-block behind each day no longer has rounded corners. History also gained **3.0%
-more list, about 17 points a day**, because the heading's `listRowInsets` is paid
-on top of the spacing a headerless `Section` already reserves rather than instead
-of it. Left as it is deliberately: spacing rather than structure.
+block behind each day no longer has rounded corners.
+
+**It also cost 35 points of empty screen at the top, and that part is now
+fixed.** An inset-grouped list reserves a band for a section heading, and the
+whole log is one `Section` with no heading, so the band sat above the first day
+as nothing at all. `.contentMargins(.top, 0, for: .scrollContent)` gives it
+back, which is what `RepeatView` already does for the same band.
+
+**History did not get 3.0% taller, and that claim is withdrawn.** Measured again
+on an iPhone 17 Pro at iOS 26.3 in Release, against a card-per-day build of
+*this* code with the section structure as the only variable, on fixtures of 60
+and 120 days at three logs a day — the per-day figure is the slope between the
+two, so the ends of the list cancel:
+
+| | card per day | one section | one section, margin given back |
+|---|---|---|---|
+| points per day | 213.83 | 208.00 | 208.00 |
+| 60 days, whole list | 12,844.7 | 12,587.0 | 12,552.0 |
+| first heading, points down the arrival screen | 129.67 | 176.67 | 141.67 |
+
+**One section is 5.83 points a day shorter than a card a day, not 17 taller.**
+The 17 came from reading `contentSize` on arrival, which is a different quantity
+for the two builds: the card-per-day build under-reports by **21–22 points a
+day** until every cell has been laid out — 21.16, 21.53 and 22.29 at three, six
+and ten logs a day, so it is per day and not per row — while the one-section
+build reports the same number before and after a full scroll. Read on arrival,
+one section looks 16.8 points a day taller, and at the ten-logs-a-day shape of
+the fixture above that dilutes to about 3%. Both recorded numbers fall out of
+that one error.
+
+The 47 points is real and was measured the same way twice: the first day
+heading's glyphs, off a screenshot. 35 of it was the reserved band and is gone;
+the remaining 12 is the heading being a 52-point row rather than a 40.33-point
+section header, which is the structure the fix bought and is already paid back
+after two days.
 
 Tracker detail gave up two smaller things on the way. Its `days` was a computed
 property asked **three** questions per redraw — the chart's guard, the empty

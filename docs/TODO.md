@@ -2484,23 +2484,34 @@ picking one up doesn't start with rediscovering why it's awkward.
       writing down because the *reason* it looks even is that one number is now
       answering for two different row shapes.
 
-- [ ] **What the gap between two days should be, now that there is no card.**
-      The section fix left the day heading's `listRowInsets(top: 18, …)` sitting
-      *on top of* the spacing a headerless `Section` already reserves rather
-      than instead of it, and the review measured what that costs: History is
-      **3.0% taller — about 17 points a day — and its first heading starts some
-      47 points further down** the screen you arrive on (docs/scale.md). The
-      commit's claim that the rounded corners were the only visible difference
-      was corrected there.
+- [x] **What the gap between two days should be, now that there is no card.**
+      Fixed at the top of the list and left alone between days, because that is
+      where the measurements put it. `.contentMargins(.top, 0, for:
+      .scrollContent)` on History's `List` gives back the band an inset-grouped
+      list reserves for a section heading — the whole log is one `Section` with
+      no heading, so the band was **35 points of empty screen** above the first
+      day. `RepeatView` gives back the same band and takes 8; History takes 0,
+      because the day heading under it already carries 18 points of its own top
+      inset, and stacking a second gap on the first is the thing being removed.
 
-      Not fixed on the spot, deliberately: it is spacing, the screens read
-      perfectly well as they are, and picking a number is a taste decision
-      nobody has made — the old spacing was the *card's*, and the card is gone.
-      What makes it worth writing down rather than shrugging at is the length
-      of this particular list: 17 points a day over five years is 29,000 points
-      of extra scrolling in the one screen whose whole problem was its length.
-      `.listSectionSpacing` on Home and `.contentMargins(.top, 8)` on Repeat are
-      where this app has tuned the same thing before.
+      **`listRowInsets(top: 18, bottom: 6)` costs nothing and stays.** The day
+      heading row has a floor of 52 points — the same height as a log row — and
+      it only grows once top + text + bottom passes it: measured on an iPhone 17
+      Pro, 18/6, 8/6 and 0/0 all draw a 52-point row and an identical list, and
+      30/6 is the first that moves anything. What the 18 buys is where the text
+      sits inside that row: 21.8 points above it and 9.8 below, so the heading
+      hugs the day under it. At 0/0 it centres, and the day heading floats
+      between two days instead of belonging to one.
+
+      **The 3.0% and the 17 points a day were a measurement artefact, and are
+      withdrawn** — the table and the reason are in docs/scale.md. `contentSize`
+      read on arrival under-reports a card-per-day list by 21–22 points a *day*
+      until every cell has been laid out, and does not under-report a
+      one-section list at all. Measured again against a card-per-day build of
+      this code, one section is **5.83 points a day shorter**, not 17 taller.
+      The 47 points is real: 35 of it was the band, and the remaining 12 is the
+      heading being a 52-point row rather than a 40.33-point section header,
+      which two days of the saving pays back.
 
 - [x] **Appearance switch in settings — light / dark / system.** Done as
       written: a segmented picker under an *Appearance* heading, between the

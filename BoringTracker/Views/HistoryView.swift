@@ -154,6 +154,17 @@ struct HistoryView: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    // Gives back the band an inset-grouped list reserves for a
+                    // section heading, the way `RepeatView` does. The whole log
+                    // is one headerless `Section`, so that band was **35 points
+                    // of empty screen** above the first day: measured on an
+                    // iPhone 17 Pro, the first row sits at y=35 in the list's
+                    // own coordinates without this and at y=0 with it, and the
+                    // first heading's glyphs move up the same 35. Zero rather
+                    // than Repeat's 8, because the heading below it already
+                    // carries 18 points of its own top inset and that band is
+                    // the double-count this is removing.
+                    .contentMargins(.top, 0, for: .scrollContent)
                     // The transaction is what stops the popover's own dismissal
                     // animation being inherited by the scroll; `scrollTo`
                     // outside `withAnimation` is already instant.
