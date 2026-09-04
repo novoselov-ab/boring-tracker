@@ -544,8 +544,8 @@ has no App Store app, so it cannot answer this: Safari there refuses the URL as
 invalid, and refuses a live app's identical link the same way.
 
 - [ ] Tap *Leave a Review* on the phone and confirm it opens the App Store on
-      **this** app, on the write-a-review sheet. If the listing is not public
-      yet, the check waits for it rather than being reported as passed.
+      **this** app, on the write-a-review sheet. No longer waiting on the
+      listing: it went public on 2026-09-04 and the URL returns 200.
 
 **Pressed states are otherwise done and are not waiting on a device.** They sat
 here across four sessions as uncapturable — pressing a control in the simulator
@@ -2384,24 +2384,21 @@ message rather than as a fourth button inside it: that message opens by talking
 the reader out of giving money, and a review link reached only through it is two
 taps behind a deflection.
 
-**The id is right and the URL is not reachable yet — those are different
-things.** The App Store Connect API returns 200 for `apps/6803768789` with name
-*Boring Tracker* and bundle id `com.novoselov.boringtracker`, so the link points
-at this app. The public page 404s, and `itunes.apple.com/lookup` returns
-`resultCount: 0`, because the only version record is 1.0 in state
-`WAITING_FOR_REVIEW` — there is no listing to serve until it goes on sale, which
-happens before any **App Store** copy of this row exists. It does not cover
-TestFlight or a build side-loaded onto a phone: either can carry this row while
-the listing is still private, and tapping it then reaches a page for an app the
-store will not admit to having. That window is testers only, and it closes on
-release.
+**The dead-link window is closed.** 1.0 went on sale on 2026-09-04, and the
+row's own URL now resolves — `curl -sSL` on
+`apps.apple.com/app/id6803768789?action=write-review` returns **200** after a
+301 to `apps.apple.com/us/app/boring-tracker/id6803768789`, a page that reads
+*Boring Tracker* at `"price":0`. The window this paragraph used to describe was
+real: while 1.0 sat unreleased the same URL 404'd, so a TestFlight or
+side-loaded build carried a row pointing at a page the store would not admit to
+having. It was testers only, it closed on release, and it needs no caveat now.
 
 **Still unverified: that the row lands on the store page.** The simulator has no
 App Store app, so the handoff fails there — Safari refuses the URL as
 invalid, and it refuses a *live* app's `?action=write-review` link the same way,
-which is what says the failure is the simulator and not the URL. Confirming it
-needs hardware or the live listing. [Item 17](#17-one-pass-on-a-real-device) is
-the device pass; check it there, or the first time the listing is public.
+which is what says the failure is the simulator and not the URL. The listing is
+public now, so the only thing still missing is a phone.
+[Item 17](#17-one-pass-on-a-real-device) is the device pass; it is checked there.
 
 ## Noted, not scheduled
 
