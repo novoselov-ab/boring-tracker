@@ -2476,20 +2476,28 @@ picking one up doesn't start with rediscovering why it's awkward.
       *group*. Three tests, `@MainActor` like `HistoryTests` because a `View`'s
       statics are isolated with it.
 
-- [ ] **What the gap between two halves of a stacked row should be.**
-      `StackingRow`'s stacked branch uses `spacing: 2`, which was measured for
-      home's card, whose stacked form is two lines. The three list rows put a
-      two-line `VStack` in the leading half, so at `.xxxLarge` and above a
-      History row is three lines at three equal 2pt gaps — the boundary between
-      *what it was* and *when it happened* reads exactly like the boundary
-      inside the identity block.
+- [x] **What the gap between two halves of a stacked row should be.** Two, and
+      it stays. Looked at again on an iPhone 17 Pro at `.xxxLarge`, AX1 and AX5,
+      light and dark, and closed unchanged.
 
-      Not fixed: it is spacing, the rows read fine (photographed at all twelve
-      content sizes), and any number here is a taste call — and a second number
-      means either a parameter on `StackingRow` or the card and the lists
-      disagreeing again, which is the thing that file exists to stop. Worth
-      writing down because the *reason* it looks even is that one number is now
-      answering for two different row shapes.
+      The gaps are equal and the lines are not, which is the whole answer: a
+      stacked History row is a grey footnote, a large primary value and a grey
+      footnote, so the value is bracketed by the two quiet lines and the
+      hierarchy is carried by size and colour exactly as it is on the
+      side-by-side branch. **All four callers have that shape** — the leading
+      half always ends on the loud line and the trailing half is always the
+      quiet one — so there is no row where the 2pt gap joins two things that
+      look alike. Between *rows* the gap is 8pt of `.listRow` insets and a
+      separator, so nothing runs together either.
+
+      **What a second number would cost, since the note asked.** A parameter on
+      `StackingRow` hands the arrangement to the caller, and the arrangement is
+      the one thing that file exists to keep identical across home's card and
+      the three lists — its own comment says the alignment is not a parameter
+      for that reason. Changing the constant instead changes home's card, where
+      the 2 was measured. And it would only apply from `.xxxLarge` up, which is
+      six of the twelve sizes and exactly the six where vertical room is
+      scarcest: 4pt a row, to make a distinction the colour already makes.
 
 - [x] **What the gap between two days should be, now that there is no card.**
       Fixed at the top of the list and left alone between days, because that is
