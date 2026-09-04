@@ -2452,22 +2452,29 @@ picking one up doesn't start with rediscovering why it's awkward.
       adds it should measure a press on it rather than trusting a rule
       extrapolated from a pill twenty times its length.
 
-- [ ] **What the reorder footer should say when there is only one section.**
-      `canReorder` (`activeTrackers.count > 1`) gates both the drag handle and
-      the footer under it, and the handle's threshold is exactly right. The
-      footer's middle sentence is not: "Between sections, its whole group moves
-      with it" describes a drop that needs two *runs*, and two trackers sharing
-      one group are one run — so a two-tracker list is told about sections it
-      does not have, which is the smaller version of the complaint 22bc672 was
-      fixing.
+- [x] **What the reorder footer should say when there is only one section.**
+      The sentence is worth a branch, and the string is split rather than the
+      footer gated: `SettingsView.reorderHint(runs:)` keeps "Drag a tracker's
+      handle to reorder." under `canReorder`, which is unchanged and right, and
+      adds the second sentence only where the drop it describes can happen.
 
-      Not fixed, deliberately, and the obvious fix is wrong: gating the whole
-      footer on `runs.count > 1` would draw a handle with nothing explaining it,
-      which is worse than one sentence too many. The honest fix splits the
-      string, and a conditional sentence is a concept this screen does not have
-      for a case no fixture reaches. Raised reviewing pass 2 and left; whoever
-      picks it up should decide whether the sentence is worth a branch at all
-      before writing one.
+      **Two conditions, not one, because there are two ways for it to be
+      untrue.** It needs somewhere to cross to — `runs.count > 1` — *and* a
+      block holding more than the row you grabbed, or "its whole group" names
+      the tracker already under your finger and says nothing the first sentence
+      did not. The welcome screen reaches both misses: the two preselected
+      starters are both in *Food*, so they are one run, and Calories beside
+      Weight is two runs of one. Photographed on an iPhone 17 Pro in all three
+      shapes plus the one-tracker list, which still has no handle and no footer.
+
+      Dropping the sentence outright was the other legitimate answer and is not
+      taken: a drag that moves four rows when you grabbed one is the surprising
+      half of this control, and the only other sentence does not cover it.
+
+      **"Groups", not "sections"** — this string was the last user-facing
+      survivor of the rename in `0862976`, and its own second half already said
+      *group*. Three tests, `@MainActor` like `HistoryTests` because a `View`'s
+      statics are isolated with it.
 
 - [ ] **What the gap between two halves of a stacked row should be.**
       `StackingRow`'s stacked branch uses `spacing: 2`, which was measured for

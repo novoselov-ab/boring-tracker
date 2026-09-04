@@ -127,3 +127,48 @@ struct DropTargetTests {
         #expect(dropTarget(at: 300, rows: [], visible: visible) == nil)
     }
 }
+
+/// What the footer under the drag handles says.
+///
+/// The sentence about groups describes a drop that crosses runs and carries the
+/// whole source block, and the two shapes the welcome screen hands a new user
+/// reach both ways of that being untrue — one run with nowhere to cross to, and
+/// two runs of one where the "whole group" is the row already being dragged.
+/// `@MainActor` because `SettingsView` is a `View` and its statics are isolated
+/// with it — off the main actor the closure inside `reorderHint` traps in
+/// `swift_task_checkIsolated` rather than failing to compile. `HistoryTests` is
+/// annotated for the same reason.
+@MainActor
+@Suite("Reorder hint")
+struct ReorderHintTests {
+
+    private func tracker(_ name: String, in group: String = "") -> Tracker {
+        Tracker(name: name, group: group, modified: time(0), orderModified: time(0))
+    }
+
+    private let dragging = "Drag a tracker's handle to reorder."
+
+    @Test("Two trackers sharing one group are told how to drag and nothing else")
+    func oneRunLosesTheGroupSentence() {
+        let food = [tracker("Calories", in: "Food"), tracker("Protein", in: "Food")]
+        #expect(SettingsView.reorderHint(runs: [food]) == dragging)
+    }
+
+    @Test("Two ungrouped trackers have somewhere to cross to and no group to carry")
+    func runsOfOneLoseTheGroupSentence() {
+        let runs = [[tracker("Calories")], [tracker("Weight")]]
+        #expect(SettingsView.reorderHint(runs: runs) == dragging)
+    }
+
+    @Test("A group beside anything else is told what a drag across it carries")
+    func aGroupWithSomewhereToGoKeepsTheSentence() {
+        let runs = [
+            [tracker("Calories", in: "Food"), tracker("Protein", in: "Food")],
+            [tracker("Weight")],
+        ]
+        #expect(
+            SettingsView.reorderHint(runs: runs)
+                == "\(dragging) Between groups, its whole group moves with it."
+        )
+    }
+}

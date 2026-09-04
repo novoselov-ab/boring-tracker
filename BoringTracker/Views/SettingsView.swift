@@ -52,7 +52,7 @@ struct SettingsView: View {
                 Section {
                     EmptyView()
                 } footer: {
-                    Text("Drag a tracker's handle to reorder. Between sections, its whole group moves with it.")
+                    Text(Self.reorderHint(runs: runs))
                 }
             }
 
@@ -142,6 +142,23 @@ struct SettingsView: View {
 
     private var runs: [[Tracker]] {
         store.activeTrackerRuns
+    }
+
+    /// What the footer under the handles says. Internal so the tests can ask
+    /// it; this suite has no UI target.
+    ///
+    /// The second sentence describes `Store.move`'s cross-block rule, so it
+    /// needs both halves of that to exist — somewhere to cross to, and a block
+    /// holding more than the row itself. The welcome screen reaches both misses:
+    /// the two preselected starters are one *Food* run, and Calories beside
+    /// Weight is two runs of one. Split rather than gated whole, because taking
+    /// the footer away would leave a handle with nothing explaining it.
+    ///
+    /// "Groups", not "sections" — the last user-facing survivor of `0862976`.
+    static func reorderHint(runs: [[Tracker]]) -> String {
+        let dragging = "Drag a tracker's handle to reorder."
+        guard runs.count > 1, runs.contains(where: { $0.count > 1 }) else { return dragging }
+        return "\(dragging) Between groups, its whole group moves with it."
     }
 
     private func row(_ tracker: Tracker) -> some View {
