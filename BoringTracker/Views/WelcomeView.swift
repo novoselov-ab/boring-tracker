@@ -37,7 +37,7 @@ struct WelcomeView: View {
                 // The segmented style drops the picker's own label, as in Settings.
                 Text("Units")
             } footer: {
-                Text("Only what the trackers below start with.")
+                Text("A starting point.")
             }
 
             Section {
@@ -56,15 +56,15 @@ struct WelcomeView: View {
 
     /// What the screen is, since it no longer borrows home's title.
     ///
-    /// Two sentences and a heading is the whole budget: docs/PHILOSOPHY.md rules
-    /// out the tour, and this is the empty state, not a first step.
+    /// Two short sentences and a heading is the whole budget: docs/PHILOSOPHY.md
+    /// rules out the tour, and every line here costs the first tracker row its
+    /// place above the Start bar at the accessibility text sizes.
     private var introduction: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Boring Tracker")
                 .font(.title.bold())
-            Text("Write down a number, get on with your day. "
-                 + "Pick what to start with — Start creates those trackers, "
-                 + "and you can change all of it later.")
+            Text("Write down a number, done. "
+                 + "Start creates the trackers you tick.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
