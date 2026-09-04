@@ -2908,3 +2908,38 @@ animation, and never seen again** unless data is cleared. If it cannot be one
 screen, it is not worth having — the hardcoded three are a fine fallback.
 
 Open: whether "skip" means the current three or nothing at all.
+
+### iPad
+
+Deferred deliberately for 1.0 — `TARGETED_DEVICE_FAMILY` is `1`, and the
+decision is recorded in `SHIPPING.md` as *Decide whether this is an iPhone app
+or a universal one*. Anton wants it queued now that 1.0 has shipped.
+
+**The build change is one line and it is the least of it.** What actually has
+to be answered:
+
+- **The bottom bar.** Home's Log pill and Log again disc are sized and placed
+  for a thumb at the bottom of a phone. On a 13-inch iPad that corner is
+  nowhere near a hand. Where the primary action lives is the whole design
+  question, and getting it wrong makes the app worse on iPad than on iPhone.
+- **The number pad.** The fastest path on a phone is a keypad under the thumb.
+  An iPad has a hardware keyboard half the time, and a soft keyboard that is
+  enormous. Whether the sheet stays a keypad is open.
+- **Width.** A single column of cards across a 1024pt-wide screen looks broken.
+  `NavigationSplitView` is the native answer — trackers on the left, history or
+  a tracker on the right — but that is a second navigation model to keep true,
+  and every screen has to work in both.
+- **Size classes and multitasking.** Split View and Slide Over mean the app
+  gets phone-shaped widths on an iPad and has to switch between layouts while
+  running, not just at launch.
+
+**The rule that keeps it honest: iPad gets no feature iPhone does not have.**
+The moment the two diverge there are two apps to keep true, and `PHILOSOPHY.md`
+is written for one. iPad is the same app at a different size.
+
+Also required before it can ship: **iPad screenshots** for the listing, in
+whatever sizes Apple demands at the time — the 1.0 set is iPhone-only and
+`APPSTORE.md` says so.
+
+Not scheduled against a version. It is the largest open piece of work in this
+file and it should not start while 1.1 is unfinished.
