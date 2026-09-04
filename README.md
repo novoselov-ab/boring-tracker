@@ -2,6 +2,9 @@
 
 iPhone app for tracking whatever you want — macros, habits, or any other data.
 
+**[Download on the App Store](https://apps.apple.com/app/id6803768789)** — free,
+iPhone, iOS 18 or later.
+
 [![Build and test](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml)
 
 Free, open source, no ads, no accounts, no subscription, no server, no feature
@@ -20,8 +23,9 @@ export all your data as json/csv, or import it back. It is absolutely free, has
 no ads, and never will have any. My goal with it is to behave like a built-in
 iOS app (e.g. the calculator). It is boring, but does its job, hence the name.
 
-It is early: the design is settled and written down, the app is being built,
-and it is not on the App Store yet.
+1.0 is on the App Store, as of 2026-09-04. It is still early — the design is
+settled and written down, and [docs/TODO.md](docs/TODO.md) is the short list of
+what is left.
 
 ## Screenshots
 
@@ -70,7 +74,7 @@ recommend. Other things that help:
 
 - Email me at [novoselov.ab@gmail.com](mailto:novoselov.ab@gmail.com). I would
   be glad to hear it is useful.
-- Leave a review on the App Store.
+- [Leave a review on the App Store](https://apps.apple.com/app/id6803768789?action=write-review).
 - Share it with someone who would use it.
 
 ## Building it
