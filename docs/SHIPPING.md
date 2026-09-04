@@ -5,8 +5,8 @@ whoever ships their own build of this — rule 8 says you can.
 
 Apple changes these rules regularly. Treat this as a map, not a contract, and
 re-check anything consequential at the time you do it. Boring Tracker 1.0 went
-for review on 2026-08-21, and the checklist at the bottom records what each
-answer actually was.
+for review on 2026-08-21 and reached the App Store on 2026-09-04, and the
+checklist at the bottom records what each answer actually was.
 
 ## What costs money, and when
 
@@ -493,3 +493,31 @@ judgement that cannot be walked back after release.
       Apple until that last PATCH**, so the first two steps are safe to run and
       inspect. If it is rejected on Guideline 4.2 it arrives in Resolution Center
       against the same build; replying is the move, not rebuilding.
+
+- [x] **Approved, and released with nothing to press.** The review submission
+      reads `COMPLETE` with its one item `APPROVED`, and the version carries
+      `releaseType: AFTER_APPROVAL` with `earliestReleaseDate: null` and no
+      phased release — so Apple released it itself. On that setting there is no
+      *Release this version* button, which means **an approved app that is not
+      public is not waiting on you.**
+- [x] **On the App Store 2026-09-04**:
+      <https://apps.apple.com/app/id6803768789>.
+
+      **`READY_FOR_SALE` is not the same as being on sale anywhere.** The version
+      read `READY_FOR_SALE` with `downloadable: true` while the public page 404'd
+      and `itunes.apple.com/lookup` returned `resultCount: 0`, which reads
+      exactly like propagation and was not. `GET
+      /v1/apps/{id}/appAvailabilityV2` returned **404 NOT_FOUND** — no
+      availability record existed at all, so the app was approved and on sale in
+      zero territories. Setting availability created it: the same URL then
+      returned 200, and all 175 `territoryAvailabilities` read `available: true`,
+      `CANNOT_SELL, PROCESSING_TO_AVAILABLE` clearing to `AVAILABLE` within two
+      minutes. **Read that route before waiting** — no territories and
+      mid-propagation look identical from outside, and only one of them ends on
+      its own.
+
+      Propagation after that was minutes: the page 404'd at 18:07:51Z and served
+      200 at 18:08:52Z, against the **up to 24 hours** Apple's own guidance says
+      to allow. **The search index lags the page** — the lookup API still
+      returned `resultCount: 0` once the listing was serving, so a zero there is
+      not evidence the app is missing.
