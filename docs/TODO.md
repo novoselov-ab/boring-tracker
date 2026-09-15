@@ -2966,3 +2966,70 @@ whatever sizes Apple demands at the time — the 1.0 set is iPhone-only and
 
 Not scheduled against a version. It is the largest open piece of work in this
 file and it should not start while 1.1 is unfinished.
+
+### The welcome screen's introduction sounds alien
+
+Anton, after using it: *"the only thing is the text 'start creates a tracker,
+you tick' all sounds alien. You basically need to ask user to choose default
+trackers and say that later you can always change that. In some normal english
+way I dunno."*
+
+Current: `Write down a number, done. Start creates the trackers you tick.`
+The second sentence describes what the button does internally. Nobody says
+that. It should ask the person to choose what they want to track and say they
+can change it later, plainly.
+
+**It cannot simply gain words.** `111c023` shortened this intro specifically so
+the first tracker row clears AX4, and one of the phrases cut for space was
+"you can change all of it later" — exactly what is now wanted back. The budget
+has to come from somewhere, and it exists: *"Write down a number, done."* is a
+pitch line for somebody deciding whether to install. They have installed it.
+
+The reassurance may also already be there and failing: the Units footer reads
+`A starting point.`, which was the justification for cutting the longer phrase.
+He did not notice it, which is evidence it is not working where it sits.
+
+**Re-run the text-size sweep after any change** — method in `111c023`. AX4 must
+pass with margin. A copy change is exactly how that fix gets quietly undone.
+
+### The welcome screen is a one-way door
+
+Raised by the review of `af31f2b`…`111c023` and deliberately not fixed.
+
+Start is the only exit and it creates trackers. With home's chrome hidden,
+**Settings — and so Import and Restore Previous Data — is behind it.** Every
+non-fresh way of arriving here is a recovery situation: an unreadable store,
+Delete All Data, a replace-import of an empty document (`validateImport`
+permits one).
+
+Nothing is lost — the recovery slot survives, so it costs one tap and then
+deleting trackers nobody wanted. But **somebody whose data just failed to load
+is offered a setup list rather than a way back to it.**
+
+Not fixed because hiding the chrome was an explicit instruction, and the
+obvious fix — showing the gear when `store.origin` is `.unreadable`, or when an
+import backup exists — is a design call on a screen already iterated twice.
+
+### iPad: the scope, decided
+
+`TARGETED_DEVICE_FAMILY` is `1`. The four open questions are in the *iPad*
+entry under *After v1*. **Anton's constraint, which decides most of them:**
+
+> "lets do ipad, i have ipad to test if we need. It doesnt have to be well
+> done, just good enough to work. Iphone is primary device."
+
+So: **small and correct, not a great iPad app.** The bar is that it runs, does
+not look broken, nothing is unreachable, and it is defensible in App Review.
+
+- **Default to not adopting `NavigationSplitView`.** It is a second navigation
+  model every screen has to stay true in, and that cost is what is being
+  declined. Say what it would buy before recommending against it.
+- The cheap honest answer is probably one layout, a readable max width so a
+  column of cards does not stretch across 1024pt, and the bottom bar where it
+  is. **Check that on a 13-inch rather than assuming.**
+- The number pad almost certainly stays. It works; replacing it is a redesign.
+- **Split View and size classes still have to not break** — that is
+  correctness, not polish. The layout changes while running, not at launch.
+- iPad gets no feature iPhone does not have.
+- **iPad screenshots become required** for the listing; the 1.0 set is
+  iPhone-only.
