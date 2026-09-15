@@ -55,6 +55,21 @@ struct WelcomeTests {
         #expect(!store.isBlank)
     }
 
+    @Test("An emptied store comes back once its tombstones age out")
+    func expiredTombstonesMakeAnOldInstallBlankAgain() {
+        // `Store.init` compacts tombstones older than `tombstoneLifetime`, so
+        // "deleted your last tracker" stops being distinguishable from "fresh
+        // install" 180 days after the deletion. Pinned here because it is the one
+        // way the welcome screen can reach somebody who has used the app: it is not
+        // data loss — there is nothing left to lose — but it is not "a fresh install
+        // and a clear and nowhere else" either.
+        let old = Date().addingTimeInterval(-StoreDocument.tombstoneLifetime - 60)
+        let recent = Date().addingTimeInterval(-60)
+
+        #expect(!makeStore(StoreDocument(tombstones: [Tombstone(id: UUID(), deleted: recent)])).isBlank)
+        #expect(makeStore(StoreDocument(tombstones: [Tombstone(id: UUID(), deleted: old)])).isBlank)
+    }
+
     // MARK: - What it offers
 
     @Test("The offered set introduces the last-time kind")

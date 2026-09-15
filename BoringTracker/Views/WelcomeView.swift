@@ -5,8 +5,8 @@ import SwiftUI
 ///
 /// **It is the empty state, not an onboarding flow.** There is no flag saying it
 /// has been seen and no step after it — `HomeView` draws it whenever the document
-/// is completely empty, which is a fresh install and a "Delete All Data" and
-/// nothing else (`Store.isBlank`). That is what makes those two agree.
+/// is completely empty (`Store.isBlank`), which is a fresh install and a "Delete
+/// All Data". That is what makes those two agree.
 ///
 /// It hides home's navigation bar and heads itself instead. Settings and History
 /// both lead somewhere empty before a tracker exists, and with them on screen

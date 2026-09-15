@@ -230,11 +230,16 @@ final class Store {
     /// Nothing at all: no trackers, no entries, and no record of anything ever
     /// having been deleted.
     ///
-    /// **True on a fresh install and after `clearAll()`, and nowhere else** — which
-    /// is what makes those two land on the same screen (`WelcomeView`) without a
-    /// "has been welcomed" flag to keep in step with the document. Deleting your
-    /// last tracker by hand leaves a tombstone, so it is the ordinary empty state
-    /// that follows, not the welcome.
+    /// **True on a fresh install and after `clearAll()`** — which is what makes
+    /// those two land on the same screen (`WelcomeView`) without a "has been
+    /// welcomed" flag to keep in step with the document. Deleting your last tracker
+    /// by hand leaves a tombstone, so it is the ordinary empty state that follows,
+    /// not the welcome.
+    ///
+    /// Not *only* those two, and the exception is `tombstoneLifetime`: a store
+    /// emptied by hand becomes blank again 180 days later, when `init` compacts the
+    /// last tombstone away. Nothing is lost — there is nothing left by then — but
+    /// the welcome screen does reach that install. See `WelcomeTests`.
     var isBlank: Bool {
         trackers.isEmpty && entries.isEmpty && tombstones.isEmpty
     }
