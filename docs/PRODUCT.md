@@ -529,10 +529,14 @@ what the trackers below are created with, *Weight* in `kg` or in `lb`, and
 nothing else. A unit is a word on a tracker, editable afterwards like any other,
 so this is a starting point rather than a setting the app keeps.
 
-**Start with** — four trackers, the first three ticked: Calories and Protein in
-a **Food** group, both daily totals, Weight in its own, and **Water filter**,
-a *last time* tracker, offered unticked. That last row is why the list is worth
-having at all: the kind shipped in 1.0 and nothing in the app introduced it.
+**Start with** — six trackers, three of them ticked: Calories and Protein in a
+**Food** group, both daily totals, Weight in its own, and unticked beside them
+**Carbs** and **Fats** for anyone who counts all four macros, and **Dentist**,
+a *last time* tracker. That last row is why the list is worth having at all: the
+kind shipped in 1.0 and nothing in the app introduced it. It is a dentist rather
+than a water filter because a filter assumes you own one, and because the App
+Store screenshot already shows a dentist — the listing and first launch now
+teach the kind with the same example.
 
 **Start** creates what is ticked, and the screen is gone. Pressing it without
 reading anything gives exactly the three trackers every earlier install was
@@ -540,13 +544,22 @@ given, in the region's units — so the fastest way past the screen is also the
 old default, and "skip" costs the same one tap it would have as a word.
 
 **It is the empty state, not a tour.** The app draws it whenever the document is
-completely empty, which is a fresh install and a *Delete All Data* and nothing
-else: deleting your last tracker by hand leaves a tombstone behind, so that is
-the ordinary "No trackers" screen instead. There is no "has been welcomed" flag
-to keep in step with the data, nothing to dismiss, and the navigation bar is
-home's own — Settings and History are reachable from it, so it gates nothing. A
-cleared install and a fresh one land on the same screen, which is the whole
-reason those two used to disagree.
+completely empty, which is a fresh install and a *Delete All Data*: deleting your
+last tracker by hand leaves a tombstone behind, so that is the ordinary "No
+trackers" screen instead — until the tombstone expires at 180 days, which is the
+one way this screen reaches an install that has been used. There is no "has been
+welcomed" flag to keep in step with the data and nothing to dismiss. A cleared
+install and a fresh one land on the same screen, which is the whole reason those
+two used to disagree.
+
+**It heads itself, and home's navigation bar is hidden on it.** The gear and the
+clock both led somewhere empty before a tracker exists, and with them on screen
+this read as home with a different list. The cost is that Settings — and so
+Import and *Restore Previous Data* — is behind pressing Start: one tap, and the
+recovery slot survives it, but somebody who arrived here because their data
+would not load is offered trackers rather than a way back to it. The quarantine
+notice still appears at the top of the screen, which is the only thing that says
+the old files were kept.
 
 No tour, no signup, no permission prompts (notifications aren't used at all).
 
