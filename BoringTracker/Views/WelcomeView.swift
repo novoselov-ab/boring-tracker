@@ -36,8 +36,6 @@ struct WelcomeView: View {
             } header: {
                 // The segmented style drops the picker's own label, as in Settings.
                 Text("Units")
-            } footer: {
-                Text("A starting point.")
             }
 
             Section {
@@ -64,8 +62,8 @@ struct WelcomeView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Boring Tracker")
                 .font(.title.bold())
-            Text("Write down a number, done. "
-                 + "Start creates the trackers you tick.")
+            Text("Choose what you want to track. "
+                 + "You can change all of it later.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
