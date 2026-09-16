@@ -254,7 +254,8 @@ specifications* page in the App Store Connect help:
 - **1.0 had no iPad sizes**, because that build was iPhone-only. **1.1 enables
   iPad**, so an iPad listing set is now required before submission. Capture it
   from the final build and check Apple's current accepted dimensions then.
-  Development evidence is not a listing set; none has been prepared here.
+  A five-image dark-mode draft is in `docs/screenshots/ipad/`; its README
+  records the source and why a clean recapture is still needed before upload.
 
 Apple changes these. Read them off App Store Connect on the day rather than
 trusting this list, and note that the parser is exact: a screenshot one pixel
