@@ -3016,10 +3016,11 @@ import backup exists — is a design call on a screen already iterated twice.
 
 For 1.1 the single-stack, centered-column design above is implemented. The
 iPad simulator pass covered portrait, landscape, a resized 375pt-wide window,
-native sheets and software input, long lists, and AX5 text. The independent
-review and real-iPad pass remain, including a hardware keyboard and live
-resizing by hand. iPad listing screenshots have not been prepared. The original
-decision below is kept as the scope that led to this implementation.
+native sheets and software input, long lists, and AX5 text. Independent review
+found no actionable issue. The real-iPad pass remains, including a hardware
+keyboard and live resizing by hand. iPad listing screenshots have not been
+prepared. The original decision below is kept as the scope that led to this
+implementation.
 
 At this decision point, `TARGETED_DEVICE_FAMILY` was `1`. The four questions
 were in the *iPad* entry under *After v1*. **Anton's constraint, which decided
