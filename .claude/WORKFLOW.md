@@ -171,27 +171,29 @@ further.
 
 ## Sessions
 
-Each step runs in its own agterm session with a written brief, so context
-stays scoped and the work is inspectable. A brief says what to build, what is
-explicitly out of scope, how to verify, and that pushing needs no permission.
-The out-of-scope list matters as much as the task: it is what stops one step
-quietly turning into three.
+Each step runs as its own agent in its own pane with a written brief, so
+context stays scoped and the work is inspectable. A brief says what to build,
+what is explicitly out of scope, how to verify, and that pushing needs no
+permission. The out-of-scope list matters as much as the task: it is what stops
+one step quietly turning into three.
 
-Permission mode is **not inherited** — every spawned session is a fresh
-`claude` process — so it is passed explicitly:
+Permission mode is **not inherited** — every spawned agent is a fresh `claude`
+process — so it is passed explicitly, after `--`:
 
 ```sh
-agtermctl session new --cwd "$(git rev-parse --show-toplevel)" \
-  --name "<step>" --after "$AGTERM_SESSION_ID" \
-  --command 'zsh -lc "claude --permission-mode auto '\''Read <brief-path> and carry out the task it describes.'\''"'
+herdr pane split --current --direction right \
+  --cwd "$(git rev-parse --show-toplevel)" --no-focus
+herdr agent start <step> --kind claude --pane <returned-pane-id> \
+  -- --permission-mode auto
+herdr agent prompt <step> "Read <brief-path> and carry out the task it describes." --wait
 ```
 
-The brief is passed **by path, not by value** — a long brief inlined into a
-nested shell quote is where the quoting breaks.
+The brief is passed **by path, not by value.** That was originally because a
+long brief broke nested shell quoting; it survives for a better reason — a
+brief on disk can be re-read by the agent, quoted in review, and corrected
+without re-sending.
 
-After spawning, check `agtermctl tree --json` and confirm the new session's
-`foreground` is `claude`. A malformed `--command` fails silently into a bare
-shell, and the session looks perfectly fine in the sidebar.
+The mechanics are in *Spawning a session* below.
 
 ### Leave the repo on `main`
 
@@ -225,113 +227,128 @@ the end.
 It is the *lock* that matters, not the display sleeping. `caffeinate -dimsu`
 keeps the machine awake; the lock itself is a Settings choice.
 
-### Spawning a session: `--command` is argv, not a shell line
+### Spawning a session: a pane, then an agent in it
 
-`agtermctl session new --command` execs argv directly. It does **not** go
-through a shell, so quotes in it are never interpreted. This:
+Work runs in **herdr** (0.9.0, `brew install herdr`), not agterm. The agterm
+equivalents of everything below are in this file's history at `fe36b89` if the
+reasoning is ever wanted; the commands are dead but several of the lessons are
+not, and they are carried forward here.
 
-```sh
---command "claude --permission-mode auto 'Read brief.md and do it.'"
-```
+Check you are actually inside herdr before issuing any control command —
+`test "${HERDR_ENV:-}" = 1`. Herdr injects `$HERDR_WORKSPACE_ID`,
+`$HERDR_TAB_ID` and `$HERDR_PANE_ID` into every managed pane.
 
-hands `claude` the arguments `'Read`, `brief.md`, `and`, `do`, `it.'` — it
-errors, exits, and **the session closes instantly**, leaving nothing in the
-sidebar. Four sessions were spawned this way on 2026-08-19 and all four
-vanished; `session new` had already printed four ids, so the failure looked
-like success.
-
-Wrap it:
+Two steps, because a pane and an agent are separate things. `agent start`
+needs an existing shell pane at its prompt and never creates layout:
 
 ```sh
-agtermctl session new --no-select --wait --name work \
-  --cwd /Users/ananas/dev/whatever-tracker \
-  --command "zsh -lc 'claude --permission-mode auto \"Read brief.md and do it.\"'"
+herdr pane split --current --direction right --cwd "$PWD" --no-focus
+# read .result.pane.pane_id from the JSON
+herdr agent start work --kind claude --pane w3:p2
 ```
 
-- **`zsh -lc`** gives a real shell, and a login shell fixes PATH — the GUI PATH
-  is not the terminal's.
-- **`--wait`** holds a failed session open with its error on screen instead of
-  closing it. That is the difference between diagnosing this in a minute and
-  not noticing at all.
+- **`--no-focus`** keeps the user where they are. Use it for anything the user
+  did not ask to be taken to.
+- **Split a wide pane right, a tall or narrow one down.** Check first with
+  `herdr pane layout --pane "$HERDR_PANE_ID"`; repeated same-direction splits
+  make unusable columns.
+- **Name the agent.** `[a-z][a-z0-9_-]{0,31}`, unique among live agents. The
+  name is how you address it afterwards, and it is cleared when that agent
+  exits or is replaced.
+- Pass native agent arguments after `--`.
 
-**A returned session id is not proof it is running, and neither is
-`foreground`.** On 2026-08-20 a session sat for an hour at a first-run *"Claude
-in Chrome extension detected"* prompt. `tree --json` showed `foreground` as
-`claude` with the brief as one argument — the launch was perfect — but the
-brief was never read, and three instructions typed at it went into the
-prompt's buffer and were lost.
+**`agent start` blocks until the agent is ready for input** — it returns with
+`interactive_ready: true` and a real `agent_status`, or `agent_not_ready` if
+the agent is blocked during startup. That is worth saying plainly because the
+old tooling could not do it: under agterm a session that launched perfectly and
+then sat at a first-run prompt was indistinguishable from one that was working,
+and an hour was lost to exactly that on 2026-08-20. Herdr answers it in the
+return value.
 
-So check two things, not one:
+The lesson that survives the tooling change: **a process that started is not a
+process that is working.** Herdr now checks that for you — but when something
+looks stalled, `herdr agent get <name>` and `herdr agent read <name>` are the
+two commands that tell you which it is.
 
-1. `foreground` shows your program with the brief as a **single** argument.
-2. `session text` shows it **past any startup prompt and actually working** —
-   the brief echoed, a tool call underway. A menu waiting for a keypress looks
-   identical to progress from the outside.
-
-The tell is a session that never goes `active` and commits nothing.
-
-### A multi-line `session type` arrives as a paste and never submits
-
-`agtermctl session type --select` submits a **single line**. Anything longer
-lands in the input as a paste block (`[Pasted text #1 +4 lines]`) that sits at
-the prompt unsent, and **nothing you send afterwards will submit it** — not an
-empty string, not appending a short line. Tried both on 2026-08-20; the text
-just grows at the prompt while the session sits idle.
-
-The failure is silent and looks like being ignored: the session finishes
-whatever it was doing, goes quiet, and your instruction is visible in
-`session text` but never acted on. It cost two rounds of "why did it skip
-that?" before the buffer was read closely enough to see `[Pasted text]`.
-
-**It is worse than that: on 2026-08-21 `session type` did not submit once, in
-four attempts** — a long instruction, a genuinely short one, an appended line,
-and an empty string against a session sitting idle at its prompt. The text
-always arrives and is always visible; the newline never lands. Treat
-`session type` as a way to *put text in front of a session*, not as a way to
-make it act.
-
-Two ways to actually deliver it:
-
-- **A fresh session with a brief file.** The default. A brief survives being
-  re-read and does not depend on a terminal.
-- **Type it, then ask Anton to press Enter.** He offered, and it is the right
-  tool when the *running session's context is the point* — the session holding
-  the App Review thread, a long investigation mid-flight. Spawning fresh there
-  throws away the thing that makes it useful.
-
-Use the second only when continuity matters. Otherwise a brief is cleaner, and
-it does not need a human in the loop to press a key.
-
-### Talking to a running session
-
-`agtermctl session type` **types, it does not submit.** A payload containing
-newlines does not get sent at all — it sits in the input unsubmitted, and the
-session carries on with whatever it was doing while you assume it was
-redirected. That has already cost one wrong-direction session here.
-
-Send the message as **one line, with no trailing newline**, then send a lone
-newline as a **separate call**:
+### Redirecting a running agent: `agent prompt` actually submits
 
 ```sh
-agtermctl session type --target "$ID" 'one line, no newline at the end'
-agtermctl session type --target "$ID" '
-'
+herdr agent prompt work "Also update the README." --wait --timeout 120000
 ```
 
-Then confirm: the footer reads *"Press up to edit queued messages"* if it
-landed, and an empty input with the session still working means it did not.
-Grep the session text for a distinctive word from the message before trusting
-that a redirect arrived.
+**This works, and it is the single biggest practical gain over agterm.**
+`agent prompt` sends the text and an encoded Enter as one ordered submission,
+honouring the pane's bracketed-paste mode, and reports success only after both
+are written. Verified on 2026-09-16 with a token round-trip: prompt in, the
+agent ran the turn, the token came back out of `agent read`.
 
-**Pass `--select`, or the text lands in a session you cannot submit to.** Every
-call above needs it. Without it the payload reaches the input buffer of a
-session whose surface is not the active one and simply sits there — the grep
-for your distinctive word *succeeds*, because the text is on screen, so the
-confirmation above passes while nothing has been sent. A following newline does
-nothing either, by `session type` or by `--stdin`. Four calls went into
-convincing one session to read a brief before `--select` was the answer.
+Under agterm this was impossible. `session type` put text in front of a session
+and the newline never landed — long instructions arrived as a paste block that
+nothing could submit, and short ones did not submit either. Every redirect had
+to become a fresh session with a brief file, and three instructions were
+silently lost before anyone noticed the text sitting at a prompt.
+
+So the old rule — *never steer a running session* — is retired. Steer them.
+
+Still true, and worth keeping:
+
+- **A brief file beats a long prompt for anything with structure.** Not because
+  prompting fails now, but because a brief survives being re-read, and a
+  session that has to be told its job twice usually needed a better brief.
+- **`--wait` is enough for normal work.** It waits for the first settled
+  `idle`, `done` or `blocked`. Do not restate those with `--until`; use
+  `--until` only for a state-specific wait, such as
+  `herdr agent wait work --until blocked`.
+- **`--wait` tracks lifecycle state, not your turn.** If the agent was already
+  working, the completion of *that* turn can satisfy the wait. Check
+  `agent read` rather than assuming the reply you got is the one you asked for.
+- **It refuses a blocked agent** with `agent_blocked` before sending anything.
+  Inspect the dialog and ask the user rather than answering it blind.
+- A timeout or `agent_prompt_stalled` **does not prove the prompt was never
+  delivered.** Read before resending.
+
+### Watching an agent, and reading what it did
+
+**The polling watchers are gone.** Under agterm there was no state to ask for,
+so progress meant a background script polling `tree --json` every 60 seconds
+with a four-consecutive-idle heuristic — which produced false completions every
+time a session delegated to a child and sat idle while the child worked. Herdr
+has real states: `idle`, `working`, `blocked`, `done`, `unknown`. Wait on them
+instead:
+
+```sh
+herdr agent wait work --timeout 600000
+```
+
+`blocked` is the one worth knowing about: herdr recognises an approval or
+question UI natively. That is the failure the old tooling could not see at all.
+
+Reading output:
+
+```sh
+herdr agent read work --source recent-unwrapped --lines 120
+```
+
+- **`agent read` returns plain text, not JSON**, unlike almost every other
+  command. Do not pipe it into a JSON parser.
+- Sources: `visible` (viewport), `recent`, `recent-unwrapped` (soft wraps
+  joined — prefer it for transcripts), `detection` (what herdr classifies on).
+- `--format ansi` only when colour is evidence.
+- **If raising `--lines` reveals nothing more**, the agent is on the terminal's
+  alternate screen and those rows are unrecoverable. Fallback: ask it to write
+  its full response to a file and reply with the path. Only as a fallback.
+
+Not verified here, and stated as documentation rather than fact: `blocked`
+detection on a real approval dialog, the alternate-screen limit, and
+`agent_prompt_stalled`. Confirm them the first time each matters.
+
+**Clean up what you created and nothing else.** `herdr pane close <id>` for
+your own panes. Never `herdr server stop` from an active session, and never
+kill the main herdr process — use a named test session for experiments that
+need an isolated server.
 
 `.claude/settings.local.json` carries the allowlist for what these sessions
-routinely run — xcodegen, xcodebuild, the git subcommands, agtermctl, read-only
-inspection. It is machine-local and gitignored. Destructive git (`reset --hard`,
-`clean -fd`) is deliberately absent, so it still stops and asks.
+routinely run — xcodegen, xcodebuild, the git subcommands, `herdr`, read-only
+inspection. It is machine-local and gitignored. Destructive git
+(`reset --hard`, `clean -fd`) is deliberately absent, so it still stops and
+asks.
