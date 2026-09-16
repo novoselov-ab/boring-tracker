@@ -77,6 +77,7 @@ struct AboutView: View {
                 Text("I really appreciate it, but I would rather you gave the money to a charity — GiveWell is the one I recommend. Emailing me, leaving a review, or sharing the app with someone helps too.")
             }
         }
+        .readableContent()
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
     }

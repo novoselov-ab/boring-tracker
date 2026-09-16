@@ -324,6 +324,7 @@ struct HomeView: View {
 
             addTrackerRow
         }
+        .readableContent()
         .listStyle(.insetGrouped)
         // Every loose tracker is its own section (see `runs`), so the gap
         // between sections is paid once per card rather than once per group —

@@ -20,6 +20,8 @@ as a plan. **What is actually left:**
 - [Small things, unscheduled](#small-things-unscheduled) — done in one pass
   whenever something goes near the same code.
 - [After v1](#after-v1)
+- [iPad 1.1 scope](#ipad-the-scope-decided) — universal layout implemented;
+  hardware pass and iPad listing screenshots remain before submission.
 
 Everything else below is finished, reverted, or closed without a change, and
 says so in its heading.
@@ -2932,7 +2934,7 @@ screen, it is not worth having — the hardcoded three are a fine fallback.
 
 Open: whether "skip" means the current three or nothing at all.
 
-### iPad
+### iPad — original deferred brief
 
 Deferred deliberately for 1.0 — `TARGETED_DEVICE_FAMILY` is `1`, and the
 decision is recorded in `SHIPPING.md` as *Decide whether this is an iPhone app
@@ -3012,8 +3014,16 @@ import backup exists — is a design call on a screen already iterated twice.
 
 ### iPad: the scope, decided
 
-`TARGETED_DEVICE_FAMILY` is `1`. The four open questions are in the *iPad*
-entry under *After v1*. **Anton's constraint, which decides most of them:**
+For 1.1 the single-stack, centered-column design above is implemented. The
+iPad simulator pass covered portrait, landscape, a resized 375pt-wide window,
+native sheets and software input, long lists, and AX5 text. The independent
+review and real-iPad pass remain, including a hardware keyboard and live
+resizing by hand. iPad listing screenshots have not been prepared. The original
+decision below is kept as the scope that led to this implementation.
+
+At this decision point, `TARGETED_DEVICE_FAMILY` was `1`. The four questions
+were in the *iPad* entry under *After v1*. **Anton's constraint, which decided
+most of them:**
 
 > "lets do ipad, i have ipad to test if we need. It doesnt have to be well
 > done, just good enough to work. Iphone is primary device."

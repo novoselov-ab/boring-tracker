@@ -518,6 +518,13 @@ again row, where the whole row really is one button.
 
 Notably absent: no dashboard, no home feed, no onboarding carousel, no profile.
 
+## iPad (1.1)
+
+The same app in a readable centered column, with the existing bottom actions,
+native sheets and system number input. Narrow windows adapt to their available
+width. iPhone remains primary and its UI is unchanged; iPad gains no separate
+features or navigation model. Log and Log again have a Close control on iPad.
+
 ## First launch
 
 The app is useful immediately or the promise is broken. Up to 1.0 that meant
@@ -625,11 +632,10 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
   data between devices, and ordinary iPhone backups protect it.
 - **Apple Health.** Useful and first-party, but it's a permission prompt and a
   pile of unit and edge-case handling for something most users won't turn on.
-- **Apple Watch, iPad, Mac.** A Watch app is the best possible fit for this
+- **Apple Watch, Mac.** A Watch app is the best possible fit for this
   philosophy and still real, ongoing work — it is not the next thing, and the
-  widgets above are. iPad was settled the other way for 1.0 deliberately: see
-  SHIPPING.md, which records why an iPhone-only build was the safer first
-  submission and why adding iPad later is an ordinary update.
+  widgets above are. iPad was deliberately deferred for 1.0 and is included
+  in 1.1 at the scope above; SHIPPING.md keeps the first-release decision.
 - **Reminders, intervals and due dates on a last-time tracker.** The obvious
   next feature, and permanently out: it is the half of a maintenance app that
   PHILOSOPHY.md rule 9 forbids, and adding it would make every other card in the

@@ -78,6 +78,7 @@ struct TrackerDetailView: View {
                 }
             }
         }
+        .readableContent()
         .navigationTitle(tracker.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

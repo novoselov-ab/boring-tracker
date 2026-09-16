@@ -50,6 +50,7 @@ struct WelcomeView: View {
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)
+        .readableContent()
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .bottom, spacing: 0) { startBar }
     }
@@ -128,6 +129,7 @@ struct WelcomeView: View {
         .buttonStyle(.accentPill)
         .controlSize(.large)
         .disabled(chosen.isEmpty)
+        .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 440 : .infinity)
         .padding(.horizontal)
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity)

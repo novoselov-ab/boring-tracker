@@ -87,9 +87,15 @@ struct LogSheet: View {
                         + "The time defaults to now — change it to log something you forgot.")
                 }
             }
+            .readableContent()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) { title }
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close", action: dismiss.callAsFunction).navBarAccent()
+                    }
+                }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 // A native `.keyboard` toolbar did not render an accessory in
@@ -117,8 +123,8 @@ struct LogSheet: View {
                 .background(.bar)
             }
         }
-        // The only thing on this sheet that says how to leave it without
-        // logging: Cancel was removed to keep the nav bar for the common case,
+        // On iPhone this is the only advertised exit without logging:
+        // Cancel was removed to keep the nav bar for the common case,
         // which left the swipe-down exit real and unadvertised. On the
         // `NavigationStack` rather than the `Form`, because it is a property of
         // the presentation and the stack is what the sheet presents.

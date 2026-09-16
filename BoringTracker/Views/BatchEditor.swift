@@ -56,6 +56,7 @@ struct BatchEditor: View {
                            systemImage: "trash", role: .destructive, action: delete)
                 }
             }
+            .readableContent()
             .navigationTitle(item.entries.count == 1 ? "Edit Entry" : "Edit Batch")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

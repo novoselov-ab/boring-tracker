@@ -19,6 +19,19 @@ iOS 26 would reach. This app needs nothing that only exists in iOS 26, and
 building with Xcode 26 means it still picks up the current system look on
 current devices.
 
+## iPad layout (1.1)
+
+The same `NavigationStack` serves iPhone and iPad. On iPad, lists and forms
+have a centered 640pt maximum width; narrower windows use the space available.
+The width modifier branches only on device idiom, which does not change during
+resizing, so a size-class change does not replace navigation or form state.
+Backgrounds and bottom safe-area bars span the window; home's existing 440pt
+regular-width action row stays in place, and Welcome's Start gets the same cap.
+
+Sheets and decimal input remain native. Log and Log again offer an iPad-only
+Close button; iPhone keeps its existing sheet chrome and portrait orientation.
+The iPad family supports all four orientations. No document or store change.
+
 ## Storage: a JSON file
 
 **The store is one JSON file. It is decoded into plain Swift structs at launch

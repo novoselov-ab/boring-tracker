@@ -35,6 +35,7 @@ struct TrackerEditor: View {
                     if !isNew { deletion }
                 }
             }
+            .readableContent()
             .navigationTitle(isNew ? "New Tracker" : "Tracker")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -75,6 +75,14 @@ struct RepeatView: View {
                 }
             }
         }
+        .readableContent()
+        .toolbar {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close", action: dismiss.callAsFunction).navBarAccent()
+                }
+            }
+        }
         .navigationTitle("Log again")
         .navigationBarTitleDisplayMode(.inline)
         // **`!= true`, so the unbuilt snapshot counts as "something to

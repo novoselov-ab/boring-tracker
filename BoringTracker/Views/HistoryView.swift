@@ -183,6 +183,7 @@ struct HistoryView: View {
                 }
             }
         }
+        .readableContent()
         .toolbar {
             if Self.canJump(days: days),
                let newest = days.first?.day, let oldest = days.last?.day {

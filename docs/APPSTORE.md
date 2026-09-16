@@ -251,8 +251,10 @@ specifications* page in the App Store Connect help:
   given.
 - **1 to 10 per display size**, `.png`, `.jpg` or `.jpeg`, and **no alpha
   channel or transparency**.
-- **No iPad sizes.** The app is iPhone-only — `TARGETED_DEVICE_FAMILY` is `1`
-  in `project.yml` — so the iPad set is not asked for.
+- **1.0 had no iPad sizes**, because that build was iPhone-only. **1.1 enables
+  iPad**, so an iPad listing set is now required before submission. Capture it
+  from the final build and check Apple's current accepted dimensions then.
+  Development evidence is not a listing set; none has been prepared here.
 
 Apple changes these. Read them off App Store Connect on the day rather than
 trusting this list, and note that the parser is exact: a screenshot one pixel

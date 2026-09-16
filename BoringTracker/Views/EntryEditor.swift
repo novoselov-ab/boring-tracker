@@ -49,6 +49,7 @@ struct EntryEditor: View {
                     }
                 }
             }
+            .readableContent()
             .navigationTitle("Edit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

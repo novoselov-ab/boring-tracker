@@ -125,6 +125,7 @@ struct SettingsView: View {
         } action: {
             visibleBounds = $0
         }
+        .readableContent()
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $editing) { tracker in

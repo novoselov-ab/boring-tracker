@@ -40,6 +40,7 @@
 		737420A5E684C8E7BD91B083 /* StarterTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6622039E72BC93640340B741 /* StarterTracker.swift */; };
 		77B806464D7C20CCA40A15D6 /* CSVExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E0A0DE3F96DEB301CDEB86 /* CSVExport.swift */; };
 		89E8D750F3D2ED2586B5E816 /* NumberInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F34ADAEE0EB8F446DDF5A80 /* NumberInputTests.swift */; };
+		8FA255923F28B29CD6E4C298 /* ReadableContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 233A035349CAACA06983FBD4 /* ReadableContent.swift */; };
 		9029759421C7D1EE21A41347 /* DataTransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9A4618A2A9716EAAD9D24 /* DataTransferView.swift */; };
 		90F6373A0190CF5CB7D6A78E /* BoringTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3DF3ADA3E291FA72134943 /* BoringTrackerApp.swift */; };
 		949CC7AB41FE6C6546BCBD70 /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C0ADCD149B1C513DBDA3274 /* PersistenceTests.swift */; };
@@ -83,6 +84,7 @@
 		0EF6FBDAD4DF699E915B4725 /* ExportNameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportNameTests.swift; sourceTree = "<group>"; };
 		1DCAFC737D806B272A234023 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 		1F07BBECEEE911AD640084EA /* BatchEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchEditor.swift; sourceTree = "<group>"; };
+		233A035349CAACA06983FBD4 /* ReadableContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadableContent.swift; sourceTree = "<group>"; };
 		2C687D77ED317A5CABC3FA2D /* OnAccent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnAccent.swift; sourceTree = "<group>"; };
 		2D3DF3ADA3E291FA72134943 /* BoringTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringTrackerApp.swift; sourceTree = "<group>"; };
 		4010498F64E2147438126D2C /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
@@ -228,6 +230,7 @@
 				CECB67213A9E9B62A18C2139 /* HomeView.swift */,
 				5CBB67A5AA5DFE1E407645CC /* LogSheet.swift */,
 				2C687D77ED317A5CABC3FA2D /* OnAccent.swift */,
+				233A035349CAACA06983FBD4 /* ReadableContent.swift */,
 				BB3DF2D06C5E4CCDF594F527 /* RepeatView.swift */,
 				7D5375428E1D1FF14CE2FBCE /* RowPress.swift */,
 				585298500CA78CE08A1AEDAC /* SearchNames.swift */,
@@ -392,6 +395,7 @@
 				6B57D79A245A869FCD38FA05 /* LogSheet.swift in Sources */,
 				54E0DE5065D25C74BD831D6F /* NumberInput.swift in Sources */,
 				47C76B6F592E98941C6192D3 /* OnAccent.swift in Sources */,
+				8FA255923F28B29CD6E4C298 /* ReadableContent.swift in Sources */,
 				F3CA641D45F0D2640F1FF9ED /* RepeatView.swift in Sources */,
 				32245FC6C0435A51268621ED /* RowPress.swift in Sources */,
 				B2ED7C0DB7EA781867162036 /* SearchNames.swift in Sources */,
@@ -476,6 +480,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -483,7 +488,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.boringtracker;
 				PRODUCT_NAME = BoringTracker;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -560,6 +565,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -567,7 +573,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.novoselov.boringtracker;
 				PRODUCT_NAME = BoringTracker;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};

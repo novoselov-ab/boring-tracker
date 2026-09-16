@@ -8,6 +8,15 @@ re-check anything consequential at the time you do it. Boring Tracker 1.0 went
 for review on 2026-08-21 and reached the App Store on 2026-09-04, and the
 checklist at the bottom records what each answer actually was.
 
+## 1.1 iPad release gates
+
+The development project is now universal; the iPhone-only checklist below
+records the 1.0 decision. Before submitting 1.1, complete the iPad hardware
+pass (including keyboard and window resizing), prepare the iPad listing
+screenshots at Apple's then-current sizes, and update listing copy that calls
+the app iPhone-only. Development simulator evidence does not complete these
+release gates. No 1.1 upload or submission is part of the layout work.
+
 ## What costs money, and when
 
 - **Simulator builds need no account at all.** This covers nearly all
