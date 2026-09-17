@@ -249,9 +249,29 @@ herdr agent start work --kind claude --pane w3:p2
 
 - **`--no-focus`** keeps the user where they are. Use it for anything the user
   did not ask to be taken to.
-- **Split a wide pane right, a tall or narrow one down.** Check first with
-  `herdr pane layout --pane "$HERDR_PANE_ID"`; repeated same-direction splits
-  make unusable columns.
+- **Layout is fixed: coordinator left, agents in a right-hand column.**
+  Anton asked for this on 2026-09-16 and it is not a per-spawn judgement call.
+  The coordinator pane keeps the full height of the left side; every spawned
+  agent stacks down the right.
+
+  **First agent** — split the coordinator to the right:
+
+  ```sh
+  herdr pane split --current --direction right --cwd "$PWD" --no-focus
+  ```
+
+  **Every agent after that** — split *down* from the bottom pane of the right
+  column, never from `--current`, or the coordinator loses its height:
+
+  ```sh
+  herdr pane layout --pane "$HERDR_PANE_ID"   # panes with x > 0 are the right column
+  herdr pane split <bottom-right-pane-id> --direction down --cwd "$PWD" --no-focus
+  ```
+
+  **Get this right at spawn time — it cannot be fixed afterwards.** `pane move`
+  within the same tab is a no-op, and the root split's direction is set by the
+  first split, so a tree that started vertical stays vertical. The only repair
+  is closing panes, which kills the agents in them.
 - **Name the agent.** `[a-z][a-z0-9_-]{0,31}`, unique among live agents. The
   name is how you address it afterwards, and it is cleared when that agent
   exits or is replaced.
