@@ -741,9 +741,15 @@ tested hard.
   difference shows are `Australia/Lord_Howe` (the clock moves 30 minutes),
   `Antarctica/Troll` (two hours at once), `Pacific/Chatham` (02:45 to 03:45) and
   Greenland, whose date simply ends at 23:00.
+- **The roll is re-armed whenever its moment moves**, and the date changing is
+  only one of the ways: the cut is a wall-clock hour, so a new time zone moves
+  the moment while leaving the date alone. `Store.dayRollAt` is the moment
+  currently armed, and a pinned clock records it while arming no live timer,
+  which is what lets the scheduling be tested at all.
 - Tests cover: DST forward and back, year boundaries, time zone travel,
-  entries logged at 23:59:59 and 00:00:00, and every one of those again with
-  the day cut somewhere other than midnight.
+  entries logged at 23:59:59 and 00:00:00, every one of those again with the day
+  cut somewhere other than midnight, and where the roll is aimed after the zone
+  or the cut moves.
 
 ## Performance budget
 

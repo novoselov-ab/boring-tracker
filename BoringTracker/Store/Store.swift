@@ -126,7 +126,10 @@ final class Store {
     private(set) var revision: UInt64 = 0
     private var timeObserver: (any NSObjectProtocol)?
     private var dayRollTask: Task<Void, Never>?
-    private var dayRollAt: Date?
+    /// The moment `scheduleDayRoll` is currently arranged for. Internal because a
+    /// pinned clock arms no timer, so this is the only thing a test can hold that
+    /// scheduling to.
+    private(set) var dayRollAt: Date?
 
     // MARK: - Life cycle
 
@@ -376,11 +379,9 @@ final class Store {
         // Both, and in this order: the totals index is keyed by day, so it is
         // stale the instant the offset moves, and `today` may now be yesterday.
         rebuildTotals()
+        // `refreshToday` re-arms the day roll, which moving the boundary from 4am to
+        // 6am on an afternoon changes without changing today.
         refreshToday()
-        // `refreshToday` only reschedules when the day actually changed, and moving
-        // the boundary from 4am to 6am on an afternoon changes the next roll without
-        // changing today.
-        scheduleDayRoll()
         // No `revision += 1`. Nothing in the document changed, and that counter is
         // what tells the saver a late write is stale. What it was reached for — the
         // graph noticing its buckets moved — belongs in `TrackerChart.Key`.
@@ -1340,10 +1341,19 @@ final class Store {
             }
         }
         let day = dayKey(now)
-        if day != today {
-            today = day
-            scheduleDayRoll()
-        }
+        if day != today { today = day }
+        // Not only when the day changed: the roll is a wall-clock hour, so a new
+        // time zone moves the moment while leaving the date alone.
+        scheduleDayRoll()
+    }
+
+    /// The wall-clock moment the day next rolls over, and `nil` at midnight, where
+    /// `significantTimeChangeNotification` announces it instead.
+    private var nextDayRoll: Date? {
+        guard dayStartHour != DayStart.midnight else { return nil }
+        return today
+            .adding(days: 1, calendar: calendar)
+            .startOfDay(calendar: calendar, dayStartHour: dayStartHour)
     }
 
     /// Wakes the app when the day rolls at an hour the system says nothing about.
@@ -1353,24 +1363,24 @@ final class Store {
     /// nothing announces the roll any more. Left open overnight with a 4am start, the
     /// home screen went on showing yesterday's total under today's heading.
     ///
-    /// One sleeping task, replaced only when the moment it is waiting for moves:
-    /// `refreshToday` runs on every mutation, so rescheduling unconditionally would
-    /// spawn a task per logged number. Nothing at midnight, where the notification
-    /// already does this, and nothing under a pinned clock, where a live timer would
-    /// be a test holding a task open against a `now` that never advances.
+    /// One sleeping task, replaced only when the moment it is waiting for moves —
+    /// which is what lets `refreshToday` call this on every logged number. Nothing at
+    /// midnight, where the notification already does this, and no live timer under a
+    /// pinned clock, where one would be a test holding a task open against a `now`
+    /// that never advances — `dayRollAt` still moves there, so the arithmetic above
+    /// it is testable.
     private func scheduleDayRoll() {
-        guard dayStartHour != DayStart.midnight, pinnedNow == nil else {
+        guard let next = nextDayRoll else {
             dayRollTask?.cancel()
             dayRollTask = nil
             dayRollAt = nil
             return
         }
-        let next = today
-            .adding(days: 1, calendar: calendar)
-            .startOfDay(calendar: calendar, dayStartHour: dayStartHour)
         guard next != dayRollAt else { return }
         dayRollAt = next
         dayRollTask?.cancel()
+        dayRollTask = nil
+        guard pinnedNow == nil else { return }
         let delay = next.timeIntervalSince(now)
         dayRollTask = Task { [weak self] in
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
@@ -1385,11 +1395,12 @@ final class Store {
     func travel(to calendar: Calendar) {
         self.calendar = calendar
         rebuildTotals()
-        // The boundary is a wall-clock hour, so stepping off a plane moves it.
-        dayRollAt = nil
-        scheduleDayRoll()
         let day = dayKey(now)
         if day != today { today = day }
+        // After `today` and not before: the roll is derived from it, so arming
+        // first pinned the moment to the day the traveller had left.
+        dayRollAt = nil
+        scheduleDayRoll()
     }
 
     private func watchForTimeChanges() {
