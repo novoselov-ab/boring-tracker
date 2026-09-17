@@ -329,6 +329,24 @@ clear irreversible under a dialog that had just said it was not.
 confirmation words itself, and both say the other thing when the answer is no.
 No document this app can produce fails it.
 
+**Two validations that exist because the value can only arrive from outside.**
+A tracker whose `name` is empty after trimming is **refused** at the import
+boundary, naming the id so the file can be fixed — refused rather than repaired,
+because falling back to "Untitled" rewrites a record the user never edited,
+stamps it as an edit, and carries that invented name to every other device,
+where a blank row is at least honest about being blank. `TrackerEditor` trims
+and will not save an empty name, so no document this app has written can fail
+it. That check sits *beside* `validateImport` rather than inside it, because
+`restoreImportBackup` runs `validateImport` too: the recovery slot holds a
+document this app wrote out of its own memory, and refusing it on the way back
+over a merely blank row would disable the one action that undoes a destructive
+import. And a `sortIndex` of `Int.max` used to trap on `(max ?? -1) + 1`:
+`Store.add` renumbers the whole list when the largest index is within one of
+`Int.max`, and `validateImport` rejects the value outright. The tests cover it
+arriving the way import cannot stop — in the store file this device wrote — and
+with the guard removed the first of them kills the test process rather than
+failing an expectation, which is what a Swift overflow does.
+
 The copy is **staged beside the slot and committed only once the imported
 document is safely on disk.** The slot holds one document, so overwriting it is
 itself destructive: writing straight into it and only then writing the import
@@ -549,6 +567,19 @@ Two cheap additions make it work:
   drawn from it either way.
 - **Tombstones.** Deleting records the id and time of deletion instead of
   dropping the row. Tombstones older than a generous window get compacted away.
+- **Ids are `UUID`s, and the 36 characters are load-bearing.** Two devices
+  generate ids independently with no coordination and must never collide; that
+  is the whole of what a UUID buys, in the one part of this app where being
+  wrong is silent. A shorter id means writing a generator and owning a
+  collision argument forever. Asked once whether they could be shortened, and
+  measured rather than argued: the ids really are 35.6% of the file, and a
+  build against a `batchID`-free document loads in 137–142ms against 149–162ms
+  (docs/scale.md) — about 11ms, against the 1.5s that opening History used to
+  cost. The file is also pretty-printed with sorted keys on purpose, which
+  costs more than the id length does, so shrinking ids would be optimising the
+  smaller half of a cost we chose. The honest argument the other way is
+  readability, and it does not survive either: you read names and values, and
+  ids are noise at any length.
 
 Merging two documents is then a union by id: keep the newer version of anything
 edited on both sides, and let a tombstone beat a resurrection. Entries are
@@ -762,6 +793,19 @@ a real device, and that is TODO item 17.
   against 32.2–32.8 undeduplicated. Deduplicating makes the *keystroke*
   cheaper rather than dearer — 0.08–0.16ms against 5.3 and 9.9 for the plain
   list — because there are far fewer rows left to filter.
+- **A pressing row draws into its own layer, and that does not cost the
+  scroll.** `.buttonStyle(.row)` puts a `visualEffect` on every row of five
+  screens, which is the kind of thing that shows up as dropped frames on a long
+  list, so it was measured rather than assumed: a `CADisplayLink` probe, eight
+  scripted flings over a 3,200-row History (8,000 entries) on an iPhone 17 Pro
+  simulator, 960 frame intervals a run, against a build with only the
+  `visualEffect` line deleted. **Median and p95 are a full 60fps frame — 16.67ms
+  — in every run of both builds**, in Debug and in Release, and the tails do not
+  separate: Debug leans against the scale by about five frames in 960 and
+  Release leans the other way by about the same. What it does cost is 14,485 of
+  home's 3,162,132 pixels at rest — 0.46% — because text rasterised inside a
+  `visualEffect` lands fractionally differently; deleting the line makes home
+  byte-identical to the build before it, which is how that was pinned.
 
 ## Smaller decisions, settled
 
@@ -812,6 +856,26 @@ So they don't get re-argued mid-build:
   accessory in an iOS 26 sheet. The inset sits directly above the keypad, drops
   to the bottom of the sheet when the keypad goes down, and lands in the same
   place on the smallest supported phone.
+- **Settings' reorder drag is hand-rolled, and a native `.onMove` has been
+  declined once already.** A `List` confines a drag to the `ForEach` it starts
+  in, so a section per run of grouped trackers gives within-run reordering for
+  free and leaves a *loose* tracker — the common case — unable to move at all.
+  So it is an explicit handle, a `DragGesture` in `.global` and a nearest-row
+  drop, with the moving rows faded and the target tinted while the finger is
+  down. The alternative on the table was one flat `ForEach` with `.onMove` and
+  group names drawn inside each run's first row instead of as headers; it was
+  turned down because settings drawing literally the same shape as home is the
+  point, not a side effect. Known cost, accepted: no edge autoscroll, so on a
+  list longer than the screen a tracker moves a long way in more than one drag.
+  Do not quietly convert it while working in a neighbouring file.
+- **A store file holding two trackers with one id has to stay survivable.**
+  `Dictionary(uniqueKeysWithValues:)` *traps* on a duplicate key, so any
+  lookup table built from `trackers` or `entries` uses `uniquingKeysWith`
+  instead — the form `Store.reorderAll` already used. Seeding such a file and
+  opening the log sheet killed the app on the Log button once, from one
+  `uniqueKeysWithValues` in a snapshot. `StoreFile.load` validates nothing on
+  purpose (see the recovery promise above), so bad data reaching a view is the
+  designed behaviour rather than the impossible case.
 
 ## The accent, and what may be painted with it
 
@@ -821,10 +885,11 @@ the floor with it. The measurements live beside the code in
 `BoringTracker/Views/OnAccent.swift`; what is here is the shape of the decision.
 
 **The contrast ratios are reproducible on paper, and were reproduced on
-2026-08-19.** Every ratio quoted in this section and in TODO items 13e and 18 was
-recomputed from the hex values with the WCAG 2.x formula — some fifty numbers,
-counting the four candidate tables the accent explorations left in git history —
-and every one matches to the second decimal. The *hex values* are the part that had to be
+2026-08-19.** Every ratio quoted in this section was recomputed from the hex
+values with the WCAG 2.x formula — some fifty numbers, counting the four
+candidate tables the accent explorations left in git history and the two TODO
+items that have since collapsed into this one — and every one matches to the
+second decimal. The *hex values* are the part that had to be
 sampled off a screen and cannot be re-derived; the two that ship are pinned by
 `AccentTests` instead, which asserts `AccentFill` resolves to `#009888` light
 and `#00DAC3` dark and that nothing claims the magic `AccentColor` name.
@@ -838,8 +903,26 @@ for the same colour in dark (TODO item 18). The dark value *is* the system
 mint's own byte, so the appearance this app is used in did not move; the light
 value is that mint at the same hue and saturation, darkened until it measures
 what the system blue Apple ships measures on those two surfaces. It is not a hex
-picked to taste — the numbers and the two rejected neighbours are in
-`OnAccent.swift`.
+picked to taste. iPhone 17 Pro / iOS 26.3, `simctl io screenshot`, sRGB PNGs
+read through their own IDAT bytes, each candidate rendered on the real screens
+by a probe build that reports the argv it received so a stale install fails
+loudly:
+
+| | fill | nav-bar glyph on `#FBFBFF` | `Form` row fg on `#FFFFFF` | black label on the fill |
+|---|---|---|---|---|
+| **mint, light** — `Color(.systemMint)` | `#00C8B3` | **2.05** | **2.12** | 9.91 |
+| **blue, light** — the control Apple ships | `#0088FF` | 3.41 | 3.52 | 5.97 |
+| **the shipping light value** | `#009888` | 3.48 | 3.59 | 5.85 |
+| *mint, dark — unchanged, for reference* | `#00DAC3` | 9.89 (on `#191919`) | 9.57 (on `#1C1C1E`) | 11.82 |
+
+Same hue (173.7°) and the same full saturation as the system mint, and the
+window around it is narrower than it looks: the two neighbours rendered before
+this one was picked were `#00A493`, which clears the bar circle by 0.02, and
+`#009081`, which is deeper than the mint has to be. **Dark did not move** — the
+dark value is the byte the system mint already rendered, checked as a pixel
+diff rather than asserted: the settings screen before and after is a
+byte-identical PNG, and home differs in six near-black anti-aliasing pixels,
+each off by one.
 
 The colour set is named `AccentFill` rather than `AccentColor` on purpose. A
 colour set under the magic name becomes `Color.accentColor` and the app's global
@@ -939,6 +1022,13 @@ as murk about once a pass. It is not a mistake in the arithmetic — it is the t
 of a short window, and the window is what this note exists to stop being
 reopened.
 
+**Light is also deliberately deferred rather than owed.** Four rounds of
+candidates were rendered and measured and the recommendations below stand, but
+they were waiting on a preference between two appearances and only one of those
+is being judged: *"i only care about dark mode so far."* Nothing here was
+rejected and light keeps `#009888`; a screen that is not being looked at does
+not get to hold an open decision.
+
 **The window has a floor and a ceiling, and both are contrast running out.**
 Walking the hue line one unit at a time: the last value that still clears 3:1 as
 a nav-bar glyph is `#00A493`, at 3.02, and `#00A594` is the first that does not,
@@ -975,6 +1065,24 @@ little less colour at once. **Today's dark is the better dark**, which is why
 the pair did not move. A plain blue (`#2693FF` light) was the other candidate
 and is the one to drop: no dark blue of that hue is both bright and colourful,
 and the pair reads as two relatives rather than one app.
+
+**If light is ever reopened, these are the four values it would be reopened
+with**, so that the passes above do not have to be re-run to get back to a
+shortlist. *Deeper*: `#00796B` with a **white** label, or `#00857A` if the
+black label has to stay — the second is the compromise, being the same hue with
+less light in it again. *Lighter*: keep `#009888`, because the ceiling is four
+`L*` points away and nothing inside that gap shows in the photographs, so a
+lighter mint costs contrast margin for a colour change nobody can see. *A
+different hue at this luminance*: `#00A3A3`, which reads cleaner rather than
+lighter. *A different app*: `#009DD2` light with `#04BFFF` dark, which is
+crisp, is genuinely one app in both appearances, and makes the app blue in
+light and mint in dark — which reopens the icon with it. The deep direction is
+chosen by the **label** rather than by the 3:1 floor every candidate clears:
+white on a deep light fill measures 5.3–5.5 against today's black on `#009888`
+at 5.85, and black on that deep fill about 3.9, which clears the 3:1 a UI
+element needs and misses the 4.5 a word that size wants. It would also make
+`Color.onAccent` a colour set and give the app one control whose word changes
+colour with the appearance, which that property's own doc argues against.
 
 These come from four rendering passes — twelve dark candidates, then light
 deeper, light lighter, and light at constant luminance around the hue wheel —
@@ -1029,7 +1137,11 @@ arithmetic changed, and was still quoting a pill that no longer existed. What is
 worth keeping is the guard: while the press *shrank*, `1 - 2 * travel / longest`
 was zero at 4pt and negative below it, so a 3pt fill was mirrored through its
 own centre. Growing cannot invert anything, so the same constant now guards a
-milder rule — below it, a press at least doubles the fill.
+milder rule — below it, a press at least doubles the fill. Growing has a
+ceiling of its own, and it is the opposite failure: **a grown fill is drawn
+about 2pt past its own tap target**, since the target is the frame and the
+scale is not. Harmless at 2pt — the press was tested at the pill's edge and
+held — and it is what any increase in the travel runs into.
 
 ### Sampling a colour off the screen
 

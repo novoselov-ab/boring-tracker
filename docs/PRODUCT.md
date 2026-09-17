@@ -35,6 +35,20 @@ number: no unit and no decimal places are offered, there is no graph, and it
 does not appear in the Log again sheet, which is a way to save you retyping
 numbers you never typed.
 
+Three things about the kind that are easy to get wrong the other way round.
+**The reading is the whole card, and the date is not repeated underneath it** —
+the reading *is* the date, so a caption would be the same fact twice, "today"
+over "Today", on a card cut to one line on purpose. The exact date is one tap
+away on the detail screen. **The ladder is days, months and years, never
+weeks**: with weeks allowed it reads `last week` at 7 days and `2 weeks ago` at
+13, which is vaguer than the day count it replaces. And **the one-tap log has
+no undo bar**, exactly like a log through the sheet — undo on home belongs to a
+repeat, whose bar says "Logged again" and whose slot the store keeps one of, so
+a second meaning in it would need a second wording and a second way for the
+repeat's invariants to go wrong. The entry is one tap away on the tracker's own
+screen, where a swipe deletes it: the same route every other mistyped log
+takes.
+
 **It never reminds you.** No notifications, no intervals, no due dates, no
 "overdue", no colour that turns amber at ninety days. "Change the filter every
 90 days" is a different app and PHILOSOPHY.md rules out both halves of it:
@@ -304,6 +318,22 @@ Small enough to list completely.
   fit without scrolling** on a current iPhone, which is the density to hold a
   change to: four trackers must never fill a screen.
 
+  **The primary Log button is in the thumb's arc, and that is measured rather
+  than eyeballed.** It was in the navigation bar first, at roughly 63pt from the
+  top — the least reachable point on the screen, holding the most frequent
+  action in the app, on a screen whose own philosophy already said where a tap
+  lands matters as much as how many. It is now a labelled bottom button filling
+  the available width, with its vertical centre at **95.28%** of the screen on
+  the smallest supported phone (iPhone SE 3rd gen, 635.5 of 667pt), **93.17%**
+  on the largest (17 Pro Max, 890.7 of 956) and **95.89%** on iPad Pro 13-inch,
+  where it is constrained and centred. All three are inside the bottom third.
+  The clearance below it is what a 95% position actually risks and it is fine:
+  40pt on 17 Pro Max and 31pt on iPad Pro, both clear of the home indicator's
+  swipe region, and the SE's 6pt is the tightest and the safest because it has a
+  Home button and no bottom gesture region at all. Settings stays high because
+  it is touched weekly; tracker detail's `+` stays in its nav bar because detail
+  is an occasional alternate path, not the home → log common path.
+
   **The card's number is the one thing in this app that animates**, counting up
   to its new value over 0.8s when it changes. It is the single deliberate
   exception to "nothing animates that you have to wait for" (PHILOSOPHY.md),
@@ -328,7 +358,9 @@ Small enough to list completely.
   down to do it. Backdating is first-class: you *will* forget dinner until
   the next morning. There is no row of recent *values* — people do not log
   the same number twice, they log the same food, which is what the Log again
-  sheet is for.
+  sheet is for. There is no *Cancel*: the way out is the swipe every sheet has,
+  and the standard drag indicator is what advertises it — one line, and against
+  a build without it the only pixels that move are the grabber's own.
 - **History** — everything you've logged, newest first, grouped by day, and
   searchable by name through the same matcher the Log again sheet uses. Today
   is simply the top of it. A batch is **one row**: "chicken rice — 100 kcal,
@@ -347,6 +379,25 @@ Small enough to list completely.
   lands among rows dated a few minutes ago, and without it you are comparing
   timestamps to find the one your tap made. It fades because a mark that stays
   is a second state to reason about.
+
+  **Undo exists where a single tap writes data without confirmation**, which is
+  why logging again offers it and logging through the sheet does not. Tapping a
+  row is easy to do by accident; typing a number and pressing Log is not, and a
+  mistyped number is already fixable by editing the entry you are looking at.
+  Adding undo to a deliberate action buys a control nobody needs and makes the
+  one that matters less distinct.
+
+  **The repeat undo expires after ten seconds and the delete undo never does**,
+  on both screens, and the asymmetry is deliberate. An offer that stays stops
+  meaning *just now*, which is the only thing it was ever saying — but the two
+  undos are not the same kind of thing. Undoing a repeat *removes* entries by
+  id, so an offer that outlives its write destroys data. Undoing a delete only
+  puts records back, and it is the only way back from the app's one destructive
+  gesture, since a swipe takes a row with no confirmation and nothing else
+  restores it. Expiring it would trade a stale but harmless offer for data gone
+  for good eleven seconds after a wrong swipe. The screen answers only *whose*
+  write it is; the bar answers *how old*, which is the only way two screens
+  showing one bar can be relied on to agree.
 
   **A row leads with what identifies it** — your name for it, or the tracker or
   group when you typed none — and the numbers follow. Reading order is what
@@ -401,6 +452,23 @@ Small enough to list completely.
 
   The undo lives on home, where the sheet leaves you — a bar that appears only
   after a repeat and goes when there is nothing left to take back.
+
+  **The confirmation happens on the screen the sheet uncovers, not on the row
+  you tapped.** Home's Log again disc — the control the sheet came *out* of —
+  becomes a checkmark for a second, under the thumb that just tapped and with
+  nothing in front of it, and it is already a checkmark in the frames where the
+  sheet is still sliding away; the undo bar arrives with it, and a `.success`
+  haptic distinguishes "written" from the press's "touched". Nothing waits on
+  any of it. **If logging ever feels silent again, this is the answer, and the
+  three obvious alternatives were each built or costed and each lose.** Marking
+  the row inside the sheet cannot work — `dismiss()` freezes a presentation's
+  content, so a mark set on the same tap is never drawn until you delay the
+  dismissal by 500ms, which is a wait on the most repeated action in the app.
+  Keeping the sheet up so you can see the card costs a tap to close it. And
+  History needs none of this: the row a repeat writes already arrives marked,
+  and the undo bar is a bottom safe-area inset, so it is pinned to the bottom of
+  the screen whatever the scroll position — a repeat made with the list four
+  months back still says so on screen.
 
   **A row is what a tap writes, not everything the batch held.** A weigh-in
   breakfast is listed as its calories, and a lunch logged beside a tracker you
@@ -487,7 +555,13 @@ that has one — settings, History, the Log again sheet, tracker detail, home's
 cards. The whole row is the target, not the words drawn in it: a row you can hit
 on its text and on its chevron and nowhere in between is worse than one that is
 plainly not tappable, because a miss teaches you the tap failed rather than that
-you aimed wrong. And it responds to the press — the whole row fills with the
+you aimed wrong. **Every one of them is at least 44pt tall**, which does two
+things: it makes the press wash the same height on every screen — before it, one
+press painted 26pt on a home card, 38 on a History row and 44 on a settings row,
+so one screen showed a pill around the words and another a whole pressed row —
+and it gives a target to the two rows that never had one, a tracker detail row's
+40pt label and home's 22pt *Add Tracker*, both under Apple's floor. It costs
+height only where the row was short. And it responds to the press — the whole row fills with the
 same grey iOS presses its own rows to, edge to edge and clipped to the card the
 way the platform does it, and **grows** by the same 2pt every accent fill in the
 app grows by. One direction everywhere, and it is out rather than in: iOS
@@ -496,6 +570,24 @@ and item 37 turned it around because a control coming toward the thumb is what
 the ask has meant by "make it feel nice" throughout. Under Reduce Motion it
 takes the colour and not the movement, which is the rule every press in this app
 follows.
+
+**A row says it can be tapped by speaking, and a footer is the fallback when it
+cannot.** Neither of a row's two gestures announces itself — swipe-to-delete is
+invisible by design in iOS, and tapping a row to edit is invisible too, so both
+are discoverable only by someone who already knows the platform. One rule with
+a stated exception covers it. A settings row *speaks*: under the name, in the
+caption slot, it says what tapping it would edit — `Daily total · kcal`,
+`Measurement · kg` — and it keeps its chevron. History and tracker detail
+cannot do that: no chevron, and the trailing half of the row is already a
+value. They get the footer instead — "Tap a row to edit it, or swipe to
+delete.", one sentence in the plain secondary footer style, no icon and no
+colour, under the **first** day's section rather than at the bottom of a list
+that may be a year long. Not "swipe left": the gesture is on the trailing edge,
+which is the other side in a right-to-left layout. The Log again sheet needs
+neither — its rows have one gesture and it is drawn, since every row carries
+the repeat disc and the whole row is that button. Three explanations of one
+gesture is what this rule exists to stop: a caption, a chevron *and* a
+paragraph was what settings had for a while.
 
 **A press applies on the frame the touch lands.** Nothing about a pressed state
 fades in, anywhere: only the release is drawn. Two earlier attempts at "a press
@@ -630,6 +722,19 @@ Not "never" in every case, but not now, and not to be quietly reintroduced:
   a database to get it. The document is built mergeable from the start (see
   TECH.md) and the transport is chosen later. Until then, export/import moves
   data between devices, and ordinary iPhone backups protect it.
+- **A rating prompt.** About carries a *Leave a Review* row that opens the App
+  Store on this app's write-a-review sheet, and it is a **link, not a prompt**.
+  `requestReview` puts a rating dialog in front of somebody who did not ask for
+  one, which is the same category as streaks, badges and notifications that rule
+  4 refuses; a row that is inert until somebody goes looking for it is the
+  opposite. The distinction is the whole reason the row exists, and if it ever
+  turns into a prompt the row should be removed instead. Why have one at all,
+  given the app asks for nothing else: App Store ranking is heavily
+  rating-weighted, there is no marketing budget and no launch, the listing is
+  the entire distribution strategy, and a passive link is the cheapest honest
+  lever on that. It sits *above* the Support message rather than inside it,
+  because that message opens by talking the reader out of giving money and a
+  review link reached through it is two taps behind a deflection.
 - **Apple Health.** Useful and first-party, but it's a permission prompt and a
   pile of unit and edge-case handling for something most users won't turn on.
 - **Apple Watch, Mac.** A Watch app is the best possible fit for this
