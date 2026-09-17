@@ -338,9 +338,25 @@ herdr agent read work --source recent-unwrapped --lines 120
   alternate screen and those rows are unrecoverable. Fallback: ask it to write
   its full response to a file and reply with the path. Only as a fallback.
 
-Not verified here, and stated as documentation rather than fact: `blocked`
-detection on a real approval dialog, the alternate-screen limit, and
+**`blocked` detection is confirmed.** On 2026-09-16 an agent writing scratch
+outside the working directory hit a permission dialog; herdr reported
+`blocked`, `agent read` showed the exact modal, `herdr agent send-keys <name>
+esc` dismissed it, and `agent prompt` redirected the agent mid-task. Under
+agterm the same situation was invisible — the session simply went quiet, and an
+hour was lost to one on 2026-08-20.
+
+**Cancel a permission dialog rather than answering it.** Both answers on that
+one wrote a persistent user setting affecting every project, which is not
+something a pruning task gets to decide. `esc`, then tell the agent to route
+around the cause — in that case, keep scratch inside the repo.
+
+Still documentation rather than fact: the alternate-screen read limit and
 `agent_prompt_stalled`. Confirm them the first time each matters.
+
+**One hazard carried over from agterm:** `agent prompt` appends to whatever is
+already in the pane's input. If a human has half a line typed there, your
+prompt concatenates onto it. Read the pane before prompting a session someone
+else may be using.
 
 **Clean up what you created and nothing else.** `herdr pane close <id>` for
 your own panes. Never `herdr server stop` from an active session, and never
