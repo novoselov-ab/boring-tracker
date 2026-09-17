@@ -1758,12 +1758,39 @@ import backup exists — is a design call on a screen already iterated twice.
 ### iPad: the scope, decided
 
 For 1.1 the single-stack, centered-column design above is implemented. The
-iPad simulator pass covered portrait, landscape, a resized 375pt-wide window,
-native sheets and software input, long lists, and AX5 text. Independent review
-found no actionable issue. The real-iPad pass remains, including a hardware
-keyboard and live resizing by hand. iPad listing screenshots have not been
-prepared. The original decision below is kept as the scope that led to this
-implementation.
+iPad simulator pass covered portrait, a resized 375pt-wide window, native
+sheets and software input, long lists, and AX5 text. Independent review
+found no actionable issue.
+
+**Landscape is photographed and closed** (2026-09-16). The 1.0→1.1 review had
+flagged it as reasoned about rather than measured — every iPad screenshot in
+`docs/screenshots/ipad/` is portrait — so it was shot: home with the bottom
+bar, the log sheet with the floating keypad and again with the docked
+keyboard, History, a tracker detail with its graph, and the welcome screen at
+default, AX4 and AX5, on an 11-inch and a 13-inch iPad Pro under iOS 26.3 —
+dark throughout, with home and History shot in light as well. Nothing is
+clipped and nothing is unreachable: the Log pill sits where it does in
+portrait, the 640pt column is unchanged by the wider screen, and where the
+shorter window cuts a list off — the welcome screen at AX4 and AX5 — the
+first tracker row still clears the Start bar and the rest scroll.
+
+Two findings are worth knowing rather than fixing. **A rotation dismisses the
+floating iPad keypad**, leaving the field focused and the keypad one tap away;
+the docked keyboard survives the same rotation. It reproduced on both iPads
+and in both appearances; whether any `.decimalPad` app behaves this way was
+not tested against a control app, so the attribution to iOS is unverified.
+And **iPadOS 26 has no Split View or Slide Over** — Settings offers Full
+Screen Apps, Windowed Apps and Stage Manager — so that question is now window
+resizing. Under Windowed Apps the app was resized while running from a
+phone-shaped window to nearly the whole screen (374pt to 1117pt wide, read
+from the simulator's accessibility geometry), once with the log sheet open
+across the resize, and redrew correctly at both ends: `readableContent()`
+branching on the idiom rather than the size class costs nothing, because below
+640pt the cap is simply inert.
+
+The real-iPad pass remains, including a hardware keyboard and live resizing by
+hand. iPad listing screenshots have not been prepared. The original decision
+below is kept as the scope that led to this implementation.
 
 At this decision point, `TARGETED_DEVICE_FAMILY` was `1`. The four questions
 were in the *iPad* entry under *After v1*. **Anton's constraint, which decided
