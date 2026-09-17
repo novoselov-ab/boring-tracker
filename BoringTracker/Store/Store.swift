@@ -1385,8 +1385,20 @@ final class Store {
         dayRollTask = Task { [weak self] in
             if delay > 0 { try? await Task.sleep(for: .seconds(delay)) }
             guard !Task.isCancelled else { return }
-            self?.refreshToday()
+            self?.dayRollFired()
         }
+    }
+
+    /// An arming is spent once its task has run, whether or not the day moved with
+    /// it, so the moment is given up before `refreshToday` asks for another.
+    ///
+    /// `Task.sleep` counts on a monotonic clock while the roll is a wall-clock
+    /// reading, so a clock corrected *backwards* wakes this early. Without the line
+    /// below `refreshToday` would then find the same moment already in `dayRollAt`,
+    /// decline to arm anything, and leave nothing at all waiting for the roll.
+    private func dayRollFired() {
+        dayRollAt = nil
+        refreshToday()
     }
 
     /// Moves the store to another calendar, as if the device had been carried
