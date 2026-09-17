@@ -11,6 +11,13 @@ struct DayBoundaryTests {
     let newYork = calendar("America/New_York")
     let santiago = calendar("America/Santiago")
     let tokyo = calendar("Asia/Tokyo")
+    /// The three zones whose spring forward is not the ordinary one-hour kind, and
+    /// the only ones a sweep of every zone the system knows found `startOfDay`
+    /// answering outside the day it names. See the comment there.
+    let lordHowe = calendar("Australia/Lord_Howe")
+    let troll = calendar("Antarctica/Troll")
+    let nuuk = calendar("America/Nuuk")
+    let chatham = calendar("Pacific/Chatham")
 
     // MARK: - Midnight
 
@@ -120,6 +127,56 @@ struct DayBoundaryTests {
         #expect(store.total(for: tracker.id, on: DayKey(year: 2026, month: 3, day: 15)) == 800)
     }
 
+    @Test("Travelling re-aims the day roll at the new zone's boundary")
+    @MainActor
+    func travellingMovesTheDayRoll() {
+        // Nothing announces a roll at an hour other than midnight, so the store
+        // arms a timer for it. The moment is a wall clock reading, so carrying
+        // the phone somewhere else moves it — including, as here, past the
+        // moment already armed.
+        let store = Store(
+            document: StoreDocument(trackers: [Tracker(name: "Calories")]),
+            file: temporaryStoreFile(),
+            calendar: newYork,
+            now: date(2026, 6, 10, 22, in: newYork),
+            dayStartHour: 4
+        )
+
+        #expect(store.today == DayKey(year: 2026, month: 6, day: 10))
+        #expect(store.dayRollAt == date(2026, 6, 11, 4, in: newYork))
+
+        store.travel(to: tokyo)
+
+        // 22:00 in New York is already 11:00 the next morning in Tokyo, which is
+        // past a 4am cut — so the roll to watch for is the *following* one. Armed
+        // before `today` caught up, this was the 11th at 4am, a moment thirteen
+        // hours in the past that fires once and never rearms.
+        #expect(store.today == DayKey(year: 2026, month: 6, day: 11))
+        #expect(store.dayRollAt == date(2026, 6, 12, 4, in: tokyo))
+    }
+
+    @Test("Moving the day start moves the roll, and midnight takes it away")
+    @MainActor
+    func theDayStartMovesTheRoll() {
+        let store = Store(
+            document: StoreDocument(trackers: [Tracker(name: "Calories")]),
+            file: temporaryStoreFile(),
+            calendar: newYork,
+            now: date(2026, 6, 10, 12, in: newYork),
+            dayStartHour: 4
+        )
+
+        #expect(store.dayRollAt == date(2026, 6, 11, 4, in: newYork))
+
+        store.setDayStartHour(6)
+        #expect(store.dayRollAt == date(2026, 6, 11, 6, in: newYork))
+
+        // At midnight `significantTimeChangeNotification` does the waking, so
+        // there is nothing to arm.
+        store.setDayStartHour(DayStart.midnight)
+        #expect(store.dayRollAt == nil)
+    }
+
     @Test("Totals for a 25-hour day include every hour of it")
     @MainActor
     func totalsCoverTheLongDay() {
@@ -183,6 +240,91 @@ struct DayBoundaryTests {
         // And the moment the day starts is inside the day it starts, which is
         // what a seconds-based offset gets wrong here.
         #expect(DayKey(start, calendar: newYork, dayStartHour: 2) == day)
+    }
+
+    @Test("A 2am start survives a spring forward of only half an hour")
+    func offsetOnTheHalfHourSpringForward() {
+        // Lord Howe Island goes +10:30 to +11:00 at 2am on the first Sunday in
+        // October, so 02:00 to 02:29 never happen and the day starts at 02:30.
+        for day in [DayKey(year: 2024, month: 10, day: 6),
+                    DayKey(year: 2025, month: 10, day: 5),
+                    DayKey(year: 2026, month: 10, day: 4)] {
+            let start = day.startOfDay(calendar: lordHowe, dayStartHour: 2)
+            let parts = lordHowe.dateComponents([.hour, .minute], from: start)
+
+            #expect(parts.hour == 2)
+            #expect(parts.minute == 30)
+            // The failure this rules out: asking for `02:00` exactly finds none
+            // that morning and answers the *next* day's, so the day began after
+            // it had ended.
+            #expect(DayKey(start, calendar: lordHowe, dayStartHour: 2) == day)
+        }
+    }
+
+    @Test("A start inside a two-hour spring forward waits for the clock to come back")
+    func offsetInsideATwoHourGap() {
+        // Troll station goes UTC+0 to UTC+2 at 1am, so neither 1am nor 2am
+        // happens and both cuts land on the same 3am.
+        let day = DayKey(year: 2027, month: 3, day: 28)
+        for hour in [1, 2] {
+            let start = day.startOfDay(calendar: troll, dayStartHour: hour)
+
+            #expect(troll.dateComponents([.hour], from: start).hour == 3)
+            #expect(DayKey(start, calendar: troll, dayStartHour: hour) == day)
+        }
+    }
+
+    @Test("A cut inside a quarter-hour jump begins when the clock comes back, not at the hour")
+    func offsetInsideAQuarterHourGap() {
+        // Chatham moves 02:45 to 03:45, so 3am never reads 3 o'clock — the day
+        // begins on the transition itself, fifteen minutes before the 4am the
+        // hour search alone answers.
+        let day = DayKey(year: 2026, month: 9, day: 27)
+        let start = day.startOfDay(calendar: chatham, dayStartHour: 3)
+
+        #expect(start == chatham.timeZone.nextDaylightSavingTimeTransition(
+            after: day.startOfDay(calendar: chatham)))
+        #expect(DayKey(start, calendar: chatham, dayStartHour: 3) == day)
+        // The hour either side is untouched: 2am is before the jump and 4am after.
+        #expect(chatham.dateComponents([.hour, .minute],
+                                       from: day.startOfDay(calendar: chatham, dayStartHour: 2))
+            == DateComponents(hour: 2, minute: 0))
+        #expect(chatham.dateComponents([.hour, .minute],
+                                       from: day.startOfDay(calendar: chatham, dayStartHour: 4))
+            == DateComponents(hour: 4, minute: 0))
+    }
+
+    @Test("A day with no moment at all past the cut begins at the next date's midnight")
+    func offsetOnADayThatEndsAtTheCut() {
+        // Greenland's clocks go forward at 23:00, so 28 March 2026 has no 11pm
+        // and nothing at all after it: an 11pm cut has to start the day on the
+        // 29th, which is where the hours before the cut already belong.
+        let day = DayKey(year: 2026, month: 3, day: 28)
+        let start = day.startOfDay(calendar: nuuk, dayStartHour: 23)
+
+        #expect(start == date(2026, 3, 29, 0, 0, in: nuuk))
+        #expect(DayKey(start, calendar: nuuk, dayStartHour: 23) == day)
+    }
+
+    @Test("A day's start is the first moment in it, in every zone and at every cut",
+          arguments: 0...23)
+    func everyStartIsTheFirstMomentOfItsDay(hour: Int) {
+        // The two invariants `startOfDay` exists for: the moment is inside the day
+        // it names, and nothing before it is. Chatham is here for the second one on
+        // its own — the clock moves 02:45 to 03:45, so a 3am cut used to begin the
+        // day a quarter of an hour after it had.
+        for zone in [lordHowe, troll, nuuk, chatham, newYork, santiago] {
+            for day in [DayKey(year: 2026, month: 3, day: 28), DayKey(year: 2026, month: 3, day: 29),
+                        DayKey(year: 2026, month: 10, day: 4), DayKey(year: 2026, month: 4, day: 5),
+                        DayKey(year: 2026, month: 9, day: 6), DayKey(year: 2026, month: 9, day: 27),
+                        DayKey(year: 2026, month: 6, day: 15), DayKey(year: 2027, month: 3, day: 28),
+                        DayKey(year: 2026, month: 11, day: 1)] {
+                let start = day.startOfDay(calendar: zone, dayStartHour: hour)
+                #expect(DayKey(start, calendar: zone, dayStartHour: hour) == day)
+                #expect(DayKey(start.addingTimeInterval(-1), calendar: zone, dayStartHour: hour)
+                    == day.adding(days: -1, calendar: zone))
+            }
+        }
     }
 
     @Test("Subtracting hours instead of reading the clock would lose the morning")

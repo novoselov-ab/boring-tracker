@@ -53,9 +53,17 @@ struct DayKey: Codable, Hashable, Comparable, Sendable {
     /// this does too. Spring forward is fine either way, which is why only a
     /// fall-back test catches it.
     ///
-    /// `.nextTime` answers an hour that does not exist — a 2am start on the
-    /// morning that has no 2am begins at 3am — and on the morning that has two
-    /// 1ams the search from midnight forward finds the first.
+    /// **What it wants is this date's first moment at or after the hour**, which is
+    /// not the same as "this date at `hour:00`": on a spring-forward morning that
+    /// time can fail to happen at all. `date(bySettingHour:)` was here and answered
+    /// the *following* date's — swept over every zone the system knows, every cut
+    /// hour, 2024–2027, it landed outside the day it names in twelve places and a
+    /// quarter of an hour inside it in three more.
+    ///
+    /// Asking each hour from the cut upward covers the first and the transition check
+    /// below the second. A 2am cut on the morning whose whole 2am hour goes still
+    /// begins at 3am, and where two 1ams happen the forward search still finds the
+    /// first.
     func startOfDay(calendar: Calendar = .current, dayStartHour: Int = 0) -> Date {
         var parts = DateComponents()
         parts.year = year
@@ -64,10 +72,28 @@ struct DayKey: Codable, Hashable, Comparable, Sendable {
         guard let date = calendar.date(from: parts) else { return .distantPast }
         let midnight = calendar.startOfDay(for: date)
         guard dayStartHour != 0 else { return midnight }
-        return calendar.date(
-            bySettingHour: dayStartHour, minute: 0, second: 0, of: midnight,
-            matchingPolicy: .nextTime, direction: .forward
-        ) ?? midnight
+        // Chile's 8 September 2019 has no midnight, so the date's first moment is
+        // already 01:00 — past a 1am cut, and the answer. The search below starts
+        // strictly after `midnight` and would step over it.
+        guard calendar.component(.hour, from: midnight) < dayStartHour else { return midnight }
+        for hour in dayStartHour...23 {
+            guard let start = calendar.nextDate(
+                after: midnight, matching: DateComponents(hour: hour),
+                matchingPolicy: .nextTime, direction: .forward
+            ), calendar.isDate(start, inSameDayAs: midnight) else { continue }
+            // A clock that jumps forward by part of an hour leaves a sliver of the
+            // cut hour standing, and the search above can only answer o'clock:
+            // Chatham moves 02:45 to 03:45, so a 3am day begins at 03:45 and it
+            // said 4.
+            if let jump = calendar.timeZone.nextDaylightSavingTimeTransition(after: midnight),
+               jump < start, calendar.component(.hour, from: jump) >= dayStartHour {
+                return jump
+            }
+            return start
+        }
+        return calendar.startOfDay(
+            for: calendar.date(byAdding: .day, value: 1, to: midnight) ?? midnight
+        )
     }
 
     /// Shared by History's section headings and the Repeat screen's rows, which

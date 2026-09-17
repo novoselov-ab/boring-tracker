@@ -731,6 +731,16 @@ tested hard.
   `hour × 3600` off the date first is the obvious version and it is wrong
   across DST — on a spring-forward morning it walks back through the hour that
   never happened and files 04:30 under yesterday.
+- **An offset day starts at the first moment its date has at or after the cut**,
+  which is not the same as "that date at `hour:00`". On some spring-forward
+  mornings there is no such o'clock at all, and asking a calendar to set one
+  answers the *following* date's — so the day began after it had ended. Swept
+  over every zone the system knows, every cut hour and every date from 2024 to
+  2027, 14,289,408 combinations: `DayKey.startOfDay` now lands inside the day it
+  names every time, and on that day's first moment. The zones where the
+  difference shows are `Australia/Lord_Howe` (the clock moves 30 minutes),
+  `Antarctica/Troll` (two hours at once), `Pacific/Chatham` (02:45 to 03:45) and
+  Greenland, whose date simply ends at 23:00.
 - Tests cover: DST forward and back, year boundaries, time zone travel,
   entries logged at 23:59:59 and 00:00:00, and every one of those again with
   the day cut somewhere other than midnight.
