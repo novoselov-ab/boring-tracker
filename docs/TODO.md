@@ -17,8 +17,9 @@ as a plan. **What is actually left:**
   closed by handing it theirs.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
-- [Small things, unscheduled](#small-things-unscheduled) — done in one pass
-  whenever something goes near the same code.
+- [Small things, unscheduled](#small-things-unscheduled) — the standing queue
+  for things not worth a session each, done in one pass whenever something goes
+  near the same code. **Currently empty**; what it has held is collapsed there.
 - [After v1](#after-v1)
 - [iPad 1.1 scope](#ipad-the-scope-decided) — universal layout implemented;
   hardware pass and iPad listing screenshots remain before submission.
@@ -50,11 +51,21 @@ exist somewhere else.
 
 Item 12 is deliberately not collapsed, and it is not the only one. The rule
 above is about *duplication* going stale, not about hiding the reasoning: where
-an item's argument is the only place a rule is written down — item 21's
-kind-based repeatability and its three edge cases, item 25's rejected scrubber
-and month index, the geometry in 33b — it stays where it is at full length. A
-done item collapses when what it decided has genuinely moved to PRODUCT.md or
-TECH.md, not merely because it is finished.
+an item's argument is the only place a rule is written down it stays where it
+is, at full length. A done item collapses when what it decided has genuinely
+moved to PRODUCT.md or TECH.md, not merely because it is finished.
+
+**What stays long, and what points at it**, so the next pass does not have to
+work it out again. Item 12, the number pad built and reverted, because the only
+thing stopping somebody spending a week rediscovering it is this item saying so.
+Item 21's kind-based repeatability and its three edge cases. Item 25's rejected
+scrubber and month index. The geometry in 33b. Item 29's frequency order,
+because [PRODUCT.md](PRODUCT.md) names this file as where it is written up.
+Item 40's measurements, because three comments in `BoringTracker/` name this
+item as where they are. And item 42's ratio table, for the same reason —
+`CardPlus` points here. **The last three are held from outside this file**, so
+moving one of those passages means fixing what points at it in the same
+commit.
 
 **Screenshots are not in the repository.** Several items name a directory like
 `~/dev/boring-tracker-pairing/` and a file in it. Those renders and contact
@@ -68,12 +79,12 @@ those pictures is written next to them.
 reason done items keep their SHAs — the device, the build config and the method
 are stated where the number is, and `git log` says when. The 2026-08-19
 documentation pass re-ran none of the timing or screenshot measurements here;
-what it did re-run is every WCAG contrast ratio in items 13e and 18, all of
-which reproduce exactly from their hex values, and the test suite. **That pass
-recorded 281 tests and the suite is 277**, re-run on 2026-08-19 at `cb2e60e`
-before item 32 touched it; 278 after. The count is corrected here rather than
-argued about, and it is the kind of number this file now asks people to stop
-writing down.
+what it did re-run is every WCAG contrast ratio the accent items carried — they
+are in [TECH.md](TECH.md) now, and all of them reproduce exactly from their hex
+values — and the test suite. **That pass recorded 281 tests and the suite is
+277**, re-run on 2026-08-19 at `cb2e60e` before item 32 touched it; 278 after.
+The count is corrected here rather than argued about, and it is the kind of
+number this file now asks people to stop writing down.
 
 ## 1. Settings screen and tracker editing — done
 
@@ -101,138 +112,36 @@ from the nav bar to directly above the keypad. `8cbbe54`
 
 ## 6. Make settings and home agree — done
 
-Found by the item 4 review. Settings and home can disagree about where a
-grouped tracker sits, and a settings drag can be a **visible no-op**: with the
-starter set, drag Weight between Calories and Protein and settings shows
-Calories, Weight, Protein while home still draws Food(Calories, Protein) then
-Weight — identical to before you dragged. Drag Calories to the bottom and it
-returns second from top, because home gathers a group at its first member.
+Settings draws home's shape — a heading above each run of trackers sharing a
+group, bare rows for loose ones — so the two cannot disagree about an order.
+Dragging within a run reorders that group's members, a group moves as a unit,
+and membership still changes only in the tracker editor. `decae37`, `5076729`,
+`7086673`, `394b82a`
 
-A settings screen showing an order home will not honour is lying, and no amount
-of care in one screen fixes a disagreement between two.
-
-- [x] **Settings draws the same shape as home** — a heading above each run of
-      trackers sharing a group, bare rows for loose ones. The two agree by
-      construction, which is the only way they can be relied on to agree.
-- [x] **Dragging within a run reorders that group's members; a group moves as a
-      unit.**
-- [x] **Membership still changes only in the tracker editor.** The *No group*
-      heading and drop-target semantics stay gone — that part of item 4 was
-      right and is not being reversed.
-
-The two rejected alternatives, so they don't get re-proposed: letting home
-follow the flat order means a group can be drawn split under two identical
-headings, which one commit already fixed; and accepting the disagreement means
-a control that visibly does nothing.
-
-**Settings' drag is hand-rolled, and that is a decision.** A `List` confines a
-drag to the `ForEach` it starts in, so a section per run gives within-run
-reordering for free but leaves a loose tracker — the common case — unable to
-move at all. Reordering therefore uses an explicit handle, a `DragGesture` in
-`.global`, and a nearest-row drop, with the moving rows faded and the target
-tinted while the finger is down. The review offered a native `.onMove` over one
-flat `ForEach`, with group names drawn inside each run's first row instead of
-as section headers; it was **declined**, because settings drawing literally the
-same shape as home is the whole point of this item. Don't re-propose it, and
-don't quietly convert it while working in a neighbouring file.
-
-The feedback is not decoration. The first version drew nothing at all while
-dragging, and compared row frames against touch locations resolved in two
-different coordinate spaces — so every drop landed on the first row, and the
-reproduction that was supposed to prove it worked passed by coincidence,
-because in the starter order the wrong target gives the right answer. A drag
-that shows what it will do is what makes that class of bug visible in one
-screenshot. Known cost, accepted: there is no edge autoscroll, so on a list
-longer than the screen a tracker moves a long way in more than one drag.
-
-**A drop candidate is filtered against the list's plain frame, and nothing is
-added to it.** The second version of this drag narrowed that band by
-`safeAreaInsets.top`, on the reasoning that a `List` runs full height under the
-navigation bar and rows behind the bar must not win a drop. Measured on an
-iPhone 17, the proxy reports `(0, 116, 402, 724)` with insets of 116 and 34:
-the frame is *already* the safe area, so the inset was being counted twice and
-the first row — 166 to 210 — fell outside a band starting at 232. Letting go
-squarely on the first row dropped the tracker below it instead, and an
-accidental nudge that should have moved nothing moved a row and stamped the
-whole list's `orderModified`. `DropTargetTests` pins the row-picking rule
-against the geometry the device actually reports; the band is one expression in
-the view and is still held only by that measurement, so change it by measuring
-again rather than by reasoning about where a `List` is laid out.
-
-Not on the common path, so it is judged by correctness rather than taps.
+Why that drag is hand-rolled and why a native `.onMove` was declined is in
+[TECH.md](TECH.md), with the two measurements that cost a session each: a
+`List`'s `frame(in: .global)` is already the safe area, and a named coordinate
+space declared on a `List` is not reachable from inside its rows. Both silently
+rewrote stored order and stamped it as a decision.
 
 ## 7. Put home's + in the thumb — done
 
-Found by the item 5 review, and it is the same mistake that item caught one
-screen earlier. Item 5 moved the log sheet's confirm into the thumb zone, but
-**the tap that opens the common path — home's + — is still in the nav bar**, at
-roughly 63pt from the top: the least reachable point on the screen, holding the
-single most frequent action in the app.
+The primary **+** left the navigation bar — roughly 63pt from the top, the least
+reachable point on the screen holding the most frequent action in the app — for
+a labelled bottom button in the thumb's arc. `34b2a16`, `59dbe11`
 
-PHILOSOPHY.md's "Where a tap lands matters as much as how many" argues against
-exactly this, so the principle was already written down before the button was
-built. Worth remembering that stating a rule doesn't apply it.
+The three measured positions and the clearance under them are in
+[PRODUCT.md](PRODUCT.md).
 
-- [x] Move the primary **+** into the bottom third, in the thumb's arc.
-- [x] Check the same question for every other frequent control while there —
-      settings is fine in the nav bar (touched weekly), but anything on the
-      common path is not.
-- [x] Measure it the way item 5 was measured, and record the real method.
-
-The primary action is now a labelled, prominent bottom button whose target
-fills the available phone width. A card's small `+` is still attached to that
-card and opens its group; the bottom **Log** still opens the last-used group.
-Settings stays high because it is rare. Tracker detail's `+` also stays in its
-nav bar: detail is an occasional, context-specific alternate path, not the
-home → log common path. The sheet's frequent confirm remains directly above
-the keypad, where item 5 put it. Home's list, grouping and order did not move.
-
-Measured on clean iOS 26.3 simulators from `xcrun simctl io screenshot`, using
-an AppKit pixel scan to find the rendered blue button bounds and divide their
-vertical centre by the screenshot height. On the smallest supported phone,
-iPhone SE (3rd generation), the centre is **635.5 / 667 pt = 95.28%** from the
-top. On the largest phone, iPhone 17 Pro Max, it is **890.7 / 956 pt = 93.17%**.
-The project currently also targets iPad; on the largest advertised device,
-iPad Pro 13-inch (M5), the regular-width button is constrained and centred at
-**1319.5 / 1376 pt = 95.89%**. All three are inside the bottom third.
-
-The dismissal reflow was folded in too. A visible recents row and its values
-are snapshotted while saving, so losing focus or inserting the first recent
-value cannot reflow the form before it leaves. Verified on the
-first-log case with a temporary local UI-test target (created for the run and
-removed afterward): it tapped home's **Log**, confirmed the keypad and first
-numeric field, typed `123`, and tapped the sheet's **Log** while
-`xcrun simctl io recordVideo` recorded the iPhone 17 simulator. Exact 60 Hz
-frames extracted with AVAssetImageGenerator show the settled form unchanged
-through 13.083 s and the sheet/keyboard dismissal beginning together at
-13.100 s. The repository still has no UI-test target.
-
-Review reproduced all three positions from simulators created for the run —
-95.31%, 93.18%, 95.91%, against the 95.28 / 93.17 / 95.89 above — and measured
-the snapshot against its own counterfactual, which is the more durable number
-than a single run's clock. Building the parent revision's `LogSheet` and
-driving the identical flow gives **two frames of form motion, a coarse-grid
-mean pixel difference of 7.74 then 7.85 over the form region, before the sheet
-begins to leave**. With the snapshot in place the same two frames read 0.28 and
-0.00. That is the "~2-frame content jump" this item set out to remove, and it
-is what earns the two pieces of frozen state their place.
-
-Clearance below the button, which is the thing a 95% position actually risks:
-40pt on iPhone 17 Pro Max and 31pt on iPad Pro 13, both clear of the home
-indicator and its swipe region. The SE's 6pt is the tightest and the safest —
-it has a Home button, so no bottom gesture region exists to collide with.
-
-Two defects in the new code came out of the review and are fixed here. The
-`.bar` material was drawn behind only the width-constrained button, so on a
-regular-width screen the list scrolled through untinted gutters either side of
-it with rows sitting half-clipped at the screen edge; the background now spans
-the inset while the button keeps its 440pt cap. And the recents snapshot built
-its dictionary with `uniqueKeysWithValues`, which traps: a store file holding
-two trackers with the same id loads, draws home and opens the sheet, then
-killed the app on the Log button — confirmed by seeding such a file and reading
-the crash report. It now uses `uniquingKeysWith`, the form `Store.reorderAll`
-already uses, so bad data stays survivable the way the rest of the store layer
-intends.
+**Half of what this item did is gone, and the collapse is what noticed.** It
+also folded in a fix for the log sheet's dismissal reflow, by snapshotting the
+visible **recents row** and its values while saving — and item 11, the day
+after, removed that row altogether — and this item has gone on describing the
+fix in the present tense ever since. What survives it is the trap the snapshot
+fell into: a `Dictionary` built with `uniqueKeysWithValues` traps on a store
+file holding two trackers with one id, and it killed the app on the Log button.
+That rule is in [TECH.md](TECH.md), and the two lookup tables that still exist
+carry it as a comment.
 
 ## 9. History screen — done
 
@@ -308,109 +217,16 @@ inherited. `5aa96bf`
 
 ## 13e. Form buttons lost the only thing that said they were buttons — done
 
-Found by the 13d review, and left for a decision rather than folded into 13d,
-whose brief says to leave every other 13c change alone.
+A `Button` in a `Form` has no disclosure chevron, so item 13c's label colour
+made the settings action rows pixel-identical to static ones — and the same bug
+was one screen further out, on About's `Link`. They are `formRowAccent()` now,
+at six call sites. `9d68102`, `24aff43`
 
-13c converted *Export JSON*, *Export CSV*, *Import JSON*, *Restore Data Before
-Last Import…* and *Add Tracker* to the label colour, and recorded it as a win —
-2.16:1 to 21:1. It is a win on contrast and a loss on affordance. Measured on
-the settings screen in light mode, the same screen built two ways: the accent
-build draws 12,196 teal pixels there, and every one of them is black in the
-shipping build. A `Button` in a `Form` has **no** disclosure chevron, so with
-its label and its icon in the label colour it is pixel-identical to a static
-row. The tracker row above it still reads as tappable, because a
-`NavigationLink` keeps its chevron.
-
-So this is the same argument 13d just accepted for the nav bar — a tint on a
-standard control is the OS saying "tappable", not the app writing in colour —
-arriving at the other place the app relies on it. The options are the 13d
-carve-out extended to `Form` action rows, or leaving them plain and giving them
-some other affordance.
-
-It reaches further than the Data section: `.alert` and `.confirmationDialog`
-buttons take the tint too, so the import's *Merge Documents* / *Replace
-Everything…* sheet is drawn the same way.
-
-- [x] Measure mint as a `Form` button foreground, in dark and light.
-- [x] Decide whether a form action row is chrome, like a bar button, or writing,
-      like a chart bar. **Chrome** — it is the case the nav bar already settled,
-      arriving at the one other control the app has that cannot say "tappable"
-      any other way. Unblocked by item 18, which gave light a value that clears
-      the floor as a foreground: **3.59:1** on the row's `#FFFFFF`, against the
-      system blue control's 3.52 and the system mint's failing 2.12.
-- [x] It is `formRowAccent()`, at **six** call sites — *Share JSON…*, *Share
-      CSV…*, *Import JSON*, *Restore Previous Data…*, *Add Tracker*, and
-      *Source on GitHub*, which this item's list of five had missed. **Not
-      `navBarAccent()` under a better name**, which is what this item expected:
-      the two carve-outs are one idea with two mechanisms, and sharing a
-      modifier would have shipped a defect either way round. See below.
-- [x] **The About screen was the same bug one screen further out**, found by the
-      review of this change. `Link("Source on GitHub")` draws its label in the
-      environment tint, which is `.primary`, so it was the label colour with no
-      chevron — pixel-identical to the static *Version* row above it, on the one
-      row of that screen that goes anywhere.
-
-**The mint was measured as a form button foreground, and it splits the same way
-the nav bar does.** Built with `.tint(Color.accentFill)` on the settings action
-rows — *Share JSON…*, *Share CSV…*, *Save …to Files…*, *Import JSON*, *Add
-Tracker* — on an iPhone 17 / iOS 26.3, reading the screenshot's own IDAT bytes:
-
-    dark   text #00DAC3 on the row's #1C1C1E   9.57:1
-    light  text #00C8B3 on the row's #FFFFFF   2.12:1
-
-Against a 3:1 floor that is a pass in the appearance this app is used in and a
-clear fail in the other, so the tint is **not** restored here. It is the same
-shape of failure as the light-mode nav bar (2.05:1, item 13f) and it has the
-same fix: **item 18's colour set, a deliberate darker value for light mode.**
-One hue cannot be both a legible fill and a legible foreground on white.
-
-The light number is not a coincidence — 2.12:1 is exactly what 13b measured for
-*white on the light mint fill*, because contrast is symmetric and it is the same
-pair of colours. That is worth knowing: **the accent's foreground problem in
-light mode is the white-label problem read backwards**, and one colour set fixes
-both.
-
-**A tint would also only recolour half of each row, which nothing has said
-before.** Under iOS 26 the tinted rows draw their *text* mint and leave the SF
-Symbol at the label colour — measured on the same screenshots, the glyph is
-`#FFFFFF` in dark and `#000000` in light, both at their full 17:1 and 21:1
-against the row. So "restore the tint" does not undo 13c's change; it produces a
-two-colour row, mint word beside a label-coloured glyph. Whatever item 18
-settles has to say what the icon does too.
-
-**Two things this item asserted did not survive being checked.** The tracker
-rows above *Add Tracker* do not keep a chevron because they are
-`NavigationLink`s — `SettingsView.rowButton` is a `.plain` `Button` drawing
-`Image(systemName: "chevron.right")` itself, in `.tertiary`. The affordance
-argument is unchanged; the mechanism named for it was wrong, and it matters
-because "the platform draws that chevron" is a belief under which somebody
-deletes the image. And the list of affected rows was five, not six.
-
-**Resolved by item 18's colour set, and the `.tint` this item kept assuming
-turned out to be the wrong mechanism.** Both halves measured on an iPhone 17 Pro
-/ iOS 26.3, reading the screenshots' own IDAT bytes:
-
-| | `.tint` | `.foregroundStyle` |
-|---|---|---|
-| the row's SF Symbol | label colour — `#000000` light, `#FFFFFF` dark | the accent, with the text |
-| the row when disabled | plain black, indistinguishable from a static row | `#7FCBC3`, a 50% blend that reads as off |
-
-So `.foregroundStyle` at each row, which answers the icon question this item
-raised — the glyph goes with the word, and there is no two-colour row.
-
-**And that is why it is not one shared modifier.** The same test run the other
-way says the opposite for a bar button: `TrackerEditor`'s *Save*, disabled with
-an empty name, draws `#B0B0B2` grey under `.tint` and the full `#009888` under
-`.foregroundStyle` — a dead button that reads as live. `navBarAccent()` keeps
-`.tint` and keeps its name; `formRowAccent()` is `.foregroundStyle`. One name
-over both would have taken a defect with it whichever mechanism won.
-
-**`.alert` and `.confirmationDialog` did not need deciding after all.** This
-item expected a section-level tint to reach them; the accent is stated per row
-instead, so nothing is applied to those buttons and they are unchanged. That
-was not re-tested — there was nothing left to test — and a button in a dialog is
-already unmistakably a button. Naming each row is also what keeps *Delete All
-Data…* red rather than accented.
+**It is `.foregroundStyle` and not `.tint`, and that is why there are two
+carve-outs rather than one modifier under a better name.** Both halves were
+measured and they say opposite things for a bar button and a form row; the table
+is in [TECH.md](TECH.md), with the rest of the accent rules and the colour set
+item 18 built to unblock this.
 
 ## 13f. The accent is a mint — done
 
@@ -561,74 +377,15 @@ numbers are in `bb14a4f` and in `Color.accentFillPressed`.
 
 ## 18. The app icon — done
 
-Both halves are in: the colour set below, and the icon itself — the `ledger`
-candidate `docs/SHIPPING.md` recommended, chosen by the user and installed from
-`~/dev/boring-tracker-icon/final/` without a pixel changed.
+Both halves are in: the accent became a colour set — `AccentFill`, `#009888`
+light and `#00DAC3` dark — and the icon itself is the `ledger` candidate
+`docs/SHIPPING.md` recommended, chosen by the user and installed without a pixel
+changed. `24aff43`, `ec01bd7`
 
-The item originally argued that the accent had to become a colour set with light
-and dark variants, because one system hue could not serve both appearances: the
-teal measured 2.13:1 on a light-mode nav bar where the system blue Apple ships
-measures 3.41:1. Item 13f then replaced that teal with a mint chosen from twelve
-candidates measured on the real screens — **but that comparison was dark-mode
-only**, at the user's direction, because dark is what this app is used in, so
-the question reopened as a smaller one: does the mint need the colour set too?
-
-It does.
-
-- [x] **Measure mint in light mode**: as a nav bar tint, as a `Form` button
-      foreground, and as a fill behind a dark label. **It fails, on both
-      foreground uses**, and the constraint binds after all.
-- [x] **Build the colour set.** `AccentFill` in a new asset catalog: `#009888`
-      light, `#00DAC3` dark.
-- [x] 13e resolves with it — the `Form` action rows have their colour back.
-- [x] **Then the app icon.** `AppIcon.appiconset` holds one image — the 1024
-      square, byte-identical to the source — because Xcode has derived every
-      smaller size from it since Xcode 14, and a hand-cut ladder would be the
-      same artwork to keep in sync in four places. The source is flat RGB with
-      no alpha channel (PNG colour type 2, no `tRNS`) and its four corners are
-      all `#00786C`, so nothing is pre-rounded and iOS applies its own mask
-      once. `ASSETCATALOG_COMPILER_APPICON_NAME` is `AppIcon` in `project.yml`,
-      which was deliberately empty until there was something to point it at.
-      Seen on the simulator home screen, in Spotlight and in Settings › Apps,
-      light and dark.
-
-**The numbers.** iPhone 17 Pro / iOS 26.3, `simctl io screenshot`, sRGB-tagged
-PNGs read through their own IDAT bytes rather than `NSBitmapImageRep` — black
-reads `#000000` and white `#FFFFFF`, and so does every value between, which is
-the part the old sanity check could not tell you. Each candidate rendered on the
-real screens by a probe build that reports the argv it received, so a stale
-install fails loudly. Contrast is the WCAG 2.x ratio against a 3:1 floor.
-
-| | fill | nav-bar glyph on `#FBFBFF` | `Form` row fg on `#FFFFFF` | black label on the fill |
-|---|---|---|---|---|
-| **mint, light** — `Color(.systemMint)` | `#00C8B3` | **2.05** | **2.12** | 9.91 |
-| **blue, light** — the control Apple ships | `#0088FF` | 3.41 | 3.52 | 5.97 |
-| **the new light value** | `#009888` | 3.48 | 3.59 | 5.85 |
-| *mint, dark — unchanged, for reference* | `#00DAC3` | 9.89 (on `#191919`) | 9.57 (on `#1C1C1E`) | 11.82 |
-
-**`#009888` is the mint darkened, not a new colour.** Same hue (173.7°) and the
-same full saturation as `Color(.systemMint)`, brightness taken down until it
-measures what the system blue measures on those two surfaces — which is the
-honest reference, since it is the one Apple tuned that bar for. The window is
-narrower than it looks: `#00A493` clears the bar circle by 0.02 and `#009081` is
-deeper than the mint has to be. Both were rendered before this one was picked.
-
-**Dark did not move.** The dark value is the byte the system mint already
-rendered, and the check is a pixel diff rather than an assurance: the settings
-screen before and after is a **byte-identical** PNG, and home differs in six
-near-black anti-aliasing pixels, each off by one.
-
-**What did not need building.** `Color.onAccent` stays black. The new light
-value would carry iOS's white label at 3.59:1, so for the first time a label
-that flipped with the appearance would be legal in both — it stays black because
-the dark value has no such choice at 1.78:1, and one control should not be two
-designs. The colour set is called `AccentFill` and not `AccentColor` for the
-reason in `OnAccent.swift`: the magic name would restore the inherited tint item
-13c removed, by filename.
-
-The reasoning that survived from the old version was right: a single hue serving
-two appearances is a real constraint, and where it binds, a colour set is the
-answer rather than abandoning system colours. It binds here.
+The candidate table that chose the light value, the two neighbours rendered
+beside it and the pixel diff that says dark did not move are in
+[TECH.md](TECH.md). What the icon is, and what any icon here has to be, is in
+[SHIPPING.md](SHIPPING.md). The mark has since been redrawn — see item 42.
 
 ## 18b. Get the export into the share sheet — done
 
@@ -675,51 +432,13 @@ it).
 
 ## 20b. Make the undo offers agree — done
 
-Item 20 gave home's undo offer a ten-second life. History's still never
-expires, so the same bar behaves differently depending on which screen wrote
-it — and a bar that never leaves stops meaning *just now*, which is the only
-thing it was ever saying.
+Both screens' undo offers now expire from one place. The fix was not to give
+History a copy of home's timer but to stop home owning one: home answers only
+*whose* write it is, `UndoBar` answers *how old*, and it is a net deletion on
+home. `27e7859`, `072cc01`, `66836e6`, `c8d5a5a`
 
-- [x] History's undo offer expires like home's.
-- [x] Both read their expiry from one place. Two screens with the same ten
-      hard-coded twice is how they drifted in the first place.
-
-      The place is `UndoBar.repeatOffer`, and the expiry moved into `UndoBar`
-      with it — the predicate and the sleep both, since the bar is already the
-      one view both screens draw. Home kept the ten and History kept none, so
-      the fix was not to give History a copy of home's timer but to stop home
-      owning one: home now answers only *whose* write it is, which is a question
-      about the screen, and `UndoBar` answers *how old*, which is a question
-      about the write. It is a net deletion on home — a constant, a `.task` and
-      half a predicate.
-
-      **The deletion offer is not expired, deliberately, and that is the one
-      asymmetry left.** The two undos are not the same kind of thing: undoing a
-      repeat *removes* entries by id, so an offer that outlives its write
-      destroys data, which is why it expires. Undoing a deletion only puts
-      records back — and it is the only way back from the app's one destructive
-      gesture, since a swipe takes a row with no confirmation and nothing else
-      restores it. Expiring it would trade a stale but harmless offer for data
-      gone for good eleven seconds after a wrong swipe. `Store.forgetRepeatUndo`
-      already recorded half of this reasoning at the model layer.
-
-      Verified in the simulator, dark mode, the way item 20 verified home's:
-      screenshots of History at +2s (bar reading "Logged again", the new row
-      still marked), +7s (bar there) and +15s (bar gone, mark faded), and of
-      home at +3s and +15s — the bar goes and the Log pill sits exactly where it
-      does with no bar, so the safe-area inset collapses cleanly rather than
-      leaving a gap. A deletion at +15s still offers its Undo, which is the
-      asymmetry above holding. The screen was locked, so this was driven by a
-      launch-argument probe root built in a throwaway worktree rather than by
-      tapping; the write and the delete were made from the probe's `task`.
-
-**Not doing: undo on the Log sheet.** Item 20 noticed the asymmetry — logging
-again offers undo, logging does not — and it is deliberate rather than an
-oversight. **Undo exists where a single tap writes data without confirmation.**
-Tapping a row is easy to do by accident; typing a number and pressing Log is
-not, and a mistyped number is already fixable by editing the entry you are
-looking at. Adding undo to a deliberate action buys a control nobody needs and
-makes the one that matters less distinct.
+The deletion offer is deliberately not expired, and undo is deliberately absent
+from the log sheet; both arguments are in [PRODUCT.md](PRODUCT.md).
 
 Left alone, recorded rather than fixed: a long tracker name re-truncates
 mid-count when the total crosses a grouping boundary (950 → 1,050). `minWidth`
@@ -815,225 +534,57 @@ a screen is not.
 
 ## 22. Say that a History row can be tapped and swiped — done
 
-Neither affordance announces itself. Swipe-to-delete is invisible by design in
-iOS, and tapping a row to edit is invisible too — both are discoverable only if
-you already know the platform, and one of us wondered aloud whether they were
-findable, which is the evidence.
+A quiet footer under History's first day section, saying both gestures out loud:
+"Tap a row to edit it, or swipe to delete." Under the first section only, not
+under all 365 — repeating it every day would be the app nagging. `7b33703`
 
-- [x] A quiet footer saying both: a row can be **tapped to edit** and **swiped
-      to delete**. One line, label-secondary, no icon.
-
-      "Tap a row to edit it, or swipe to delete." One sentence, in the plain
-      footer style, which is already secondary — no icon and no colour, because
-      anything louder competes with the rows for the same glance. "Swipe", not
-      "swipe left": the gesture is on the trailing edge, which is the other side
-      in a right-to-left layout, and the word buys nothing the gesture does not
-      already teach on the first try.
-- [x] Put it where it is actually seen — under the first day's section, not at
-      the bottom of a list that may be a year long.
-
-      Under the first section only, not under all 365 — repeating it every day
-      would be the app nagging.
-- [x] Same question for the Log again sheet: check whether anything there is
-      similarly silent, and say so rather than assuming History is the only
-      screen with this problem.
-
-      **Checked, and it does not have this problem.** Its rows have one gesture
-      and it is drawn: every row carries the repeat disc, which is the same
-      glyph home's bar and History's rows use, and the whole row is that button.
-      A footer would explain what the disc already says, in a sheet that opens
-      at half height where a line of text costs a row of list. The drag
-      indicator says how to leave.
-
-      **What is silent there is not a gesture but the search.** Since item 21
-      the list carries unnamed rows, and the field matches names only, so typing
-      anything empties them out of it. The prompt says "Search names" and that
-      is the honest reading of it, but a row you can see and cannot search for
-      is a real edge — recorded here rather than fixed, because a fallback to
-      tracker names would return every unnamed calorie row for "calories" and
-      answer a different question from the one the field asks.
-
-It costs no tap and it is the ordinary iOS idiom — the app already uses footers
-this way on the log sheet. A hint that never moves is cheaper than a gesture
-nobody finds.
+The rule it turned into is in [PRODUCT.md](PRODUCT.md), with item 38. The Log
+again sheet was checked rather than assumed and needs neither: its rows have one
+gesture and the repeat disc draws it.
 
 ## 23. History's disc still repeats a weight — done
 
-Item 21 settled that repeating a measurement is meaningless — you would take a
-new reading, and a copy writes one nobody took — and it enforced that in exactly
-one place: `Store.repeatItems`, which is the Log again list. **The action itself
-never learned the rule.**
+Item 21 settled that repeating a measurement writes a reading nobody took, and
+enforced it in exactly one place — the Log again list. The disc on a History row
+never learned the rule, so one tap wrote a weight entry dated now and home's
+card showed it as today's reading. Found by review, not by use. `8045e91`
 
-So on History, the disc beside "morning / 79.2 kg" is live, and one tap writes a
-weight entry dated now. Home's Weight card reads `latestEntry`, so it shows the
-copied number as today's reading with a "just now" caption, and the chart gains
-a point that never happened. Found by review, not by use.
+**Closed at the choke point, not at the control.** `Store.repeatTargets` drops
+measurement trackers beside the deleted and archived ones it already dropped, so
+`logAgain` writes only what may be written and every caller inherits that
+without knowing the rule exists — including the ones not written yet, which is
+the trap disabling the control would have left. `isRepeatable` became
+`belongsInRepeatList` in the same change, because after it the old name asserted
+something false: a live weigh-in batch is rejected by it while `logAgain` writes
+the batch's calories all the same.
 
-The mixed-kind batch is the sharper case, because it is the one item 21 refuses
-to list *for this reason*: a "weigh-in" of 200 kcal and 79.2 kg is hidden from
-Log again because one tap would write a false weight, while the disc on that
-same row in History writes both. One rule, two answers, in the same app.
-
-- [x] **Closed at the choke point, not at the control.** `Store.repeatTargets`
-      — the set `repeatableEntries` filters a row against — drops measurement
-      trackers now, beside the deleted and archived ones it already dropped. So
-      `logAgain` writes only what may be written, and every caller of it
-      inherits that without knowing the rule exists.
-
-      **Why not the control.** Disabling the disc on any row
-      `HistoryItem.belongsInRepeatList` rejects reads more simply, but it
-      refuses the whole weigh-in row rather than only its weight, and it leaves
-      `logAgain` willing to write a measurement for whatever calls it next. At
-      the choke point the rule lives beside the kind, in one place, and the
-      weight-only row still greys its disc — because `repeatableEntries` comes
-      back empty, which is the same call that decides the write. The greying is
-      a consequence of the rule rather than a second copy of it.
-
-      **`isRepeatable` is now `belongsInRepeatList`**, because after this the
-      name asserted something false: a live weigh-in batch is rejected by it and
-      `logAgain` writes the batch's calories all the same. The trap the old name
-      set is the next control to be wired up — a swipe action, a Shortcuts
-      intent — guarding on it and refusing the whole row, which is the "at the
-      control" shape this item turned down. What a control asks is
-      `repeatableEntries`.
-
-      A weigh-in of 200 kcal and 79.2 kg writes the 200 kcal and says **"Logged
-      1 of 2 again"** — the wording archived and deleted members already had,
-      reused rather than a second phrasing invented for this. Home's Weight card
-      and the chart are clean afterwards: the scale still holds exactly the
-      reading it had, at the time it was taken, so nothing shows as today's
-      reading and no point is drawn that never happened. Undo takes back what
-      the tap wrote, which is now sometimes fewer entries than the row displays.
-
-- [x] **The mixed row is still hidden from Log again, and item 21's reason for
-      hiding it has gone.** It was that one tap would write a false weight to
-      save retyping the calories; the tap now writes the calories alone, so that
-      objection is spent. What keeps the row out is no longer the write but the
-      list.
-
-      **Measured before deciding**, by listing them and counting: a row on that
-      screen is `repeatKey`, and the key holds every value the row carries —
-      including the weight, which is different every morning. Thirty daily
-      weigh-ins of the identical 200 kcal breakfast list as **thirty rows**,
-      each drawing a weight it would not write, and a plain 200 kcal logged
-      without the scale makes a thirty-first rather than joining one of them.
-      That is History with a search field, which is the one thing this screen
-      must not become (see "Why History and Log again stay separate" above).
-
-      So the honest answer is that the two screens still differ, and the
-      difference is now only about *listing*: what a tap writes is one rule with
-      one answer everywhere, which is what this item existed to fix.
-
-      **The design problem underneath, for whoever picks it up:** a Log again row
-      is built from what the batch *holds*, and the screen promises what a tap
-      *writes*. Those were the same thing until this item, and the fix is to
-      build the row from the writable members — which collapses the weigh-in
-      breakfast onto the plain one, gives the row a value line it will actually
-      write, and makes the "1 of 2" wording differ by screen (from History the
-      tap skipped a member you could see; from Log again it did not). That is a
-      change to what a row on that screen *is*, and it wants its own item rather
-      than a rider on this one — queued in "Noted, not scheduled" below so that
-      closing item 23 does not close it too.
-
-      **Two things review raised and this item deliberately did not change**,
-      because the brief settled both and they are questions about what a screen
-      *says* rather than what a tap *writes*. Recorded rather than argued:
-      a weight row's disc is now permanently greyed with nothing on the row
-      saying why — and unlike the deleted case, which prints "Deleted tracker",
-      the tracker is live and on home; and "Logged 1 of 2 again" is now most
-      often produced by a weigh-in whose trackers are both live, which is a
-      cause the sentence cannot express. Both are in the noted list below.
+What a tap writes, and what a row therefore says on each screen, are in
+[PRODUCT.md](PRODUCT.md). The design problem this left — a Log again row was
+built from what the batch *holds* while the screen promises what a tap *writes*
+— went to "Noted, not scheduled" rather than riding in on this item, and has
+since been built: `9583319`, `fc9fed8`.
 
 ## 24. Delete everything, recoverably — done
 
-There is no way to start over without deleting the app. Settings should offer
-it, beside export and import where the other whole-document actions live.
+*Delete All Data* in settings, beside export and import, with **one**
+confirmation naming what goes — *"Delete 5 trackers and 1,247 entries?"* — and
+the document it destroys kept in the same recovery slot an import uses. A
+number is what makes someone stop; a stack of confirmations is what people learn
+to tap through. `1a55ac6`, `3f54a55`
 
-**Make it recoverable rather than ceremonious.** The instinct is a stack of
-confirmations, and confirmations are a poor defence: people learn to tap
-through them, and the third one protects nothing the first did not. Import's
-`replace` already solves this properly — it writes the current document to a
-restorable copy *before* destroying anything, and offers *Restore Data Before
-Last Import*. Clearing everything is the same action with a smaller argument.
-
-- [x] Write the same pre-clear copy first, through the mechanism replace
-      already uses, and let the existing restore path cover it.
-- [x] **One confirmation, naming what goes.** Not "are you sure" — say the
-      count: *"Delete 5 trackers and 1,247 entries?"* A number is what makes
-      someone stop; a generic warning is what they tap through.
-- [x] Destructive styling, and it is not the default button.
-- [x] Say in the dialog that it can be undone from Restore, because that is
-      the fact that makes the decision safe to make.
-- [x] Export offers to run first if there is anything to lose — a suggestion,
-      not a gate.
-
-`Store.clearAll` is `applyIncoming(StoreDocument(), mode: .replace)` — the
-import transaction with a smaller argument, not a second copy of it. So the
-drained save queue, the staged copy committed only once the empty document is
-durable, and the restore row all arrive for free, and the confirmation is the
-only thing that had to be written.
-
-**Five things this turned up that the item did not say**, three from building
-it and two from the review.
-
-The restore row was called *Restore Data Before Last Import…*, and a clear
-fills the same slot — so after clearing, the one action that undoes it offered
-to undo an import instead. Renamed to **Restore Previous Data…**, which is what
-the alert it raises has always called itself.
-
-**No tombstones for what goes**, inherited from `replace` rather than decided
-again, and now held by a test. A tombstone per record would have made "start
-over" leave a file as long as the history it removed — 29,756 of them after
-five years (docs/scale.md) — for the six months `tombstoneLifetime` keeps a
-deletion. The cost is `replace`'s cost: merge an older export afterwards and
-the data comes back.
-
-**Export is offered in words, not as a button.** A `ShareLink` cannot be an
-alert action, and presenting the share sheet from code would be this app's
-first UIKit bridge — turned down for the same reason in item 18b. The Export
-rows are two sections up on the same screen, so the sentence points at
-something that is actually there. If that ever reads as a shrug, the fix is a
-share row *inside* the clear section, not a second dialog.
-
-**The button is called *Delete All Data*.** *Delete Everything* was the obvious
-name and it was already taken: the tracker editor's second deletion says
-exactly that, means one tracker with its history, and tells you — correctly —
-that it cannot be undone. Two buttons with one name and opposite promises, both
-two taps apart on the Settings screen, is how somebody learns the wrong thing
-here and acts on it there.
-
-**The promise is conditional, because restoring is stricter than loading.**
-`StoreFile.load` validates nothing and `restoreImportBackup` runs
-`validateImport`, so a hand-edited `store.json` — a duplicate id, `decimals`
-outside 0…3 — opens fine and can then be refused on the way back. The dialog
-would have promised an undo that was not there, in the one case where the
-sentence is doing all the work. `Store.currentDocumentIsRestorable` is asked
-before the wording is chosen, and the replacing import says the same thing for
-the same reason. The gap itself is older than this item; the unconditional
-promise was new.
+`Store.clearAll` is the replacing import with a smaller argument, there are no
+tombstones for what a clear removes, and the promise is conditional because
+restoring is stricter than loading — all three are in [TECH.md](TECH.md). Why
+the button is *Delete All Data* and not *Delete Everything*, which the tracker
+editor already had and which genuinely cannot be undone, is in
+[PRODUCT.md](PRODUCT.md).
 
 ## The ids stay UUIDs — decided
 
-Asked whether the 36-character ids in `store.json` need to be that long.
-
-**They do.** They are load-bearing for the merge design: two devices generate
-ids independently, with no coordination, and must never collide. That is what a
-UUID buys. A shorter id means writing a generator and owning a collision
-argument forever, in the one part of this app where being wrong is silent.
-
-Size is not the problem it appears to be. **The two numbers first written here
-were the pre-measurement estimate and they were both low** — five years of heavy
-use is 8.6 MB and decodes in 122 ms, not 2 MB and 41 ms (docs/scale.md). The
-conclusion survives the correction and is now measured rather than reasoned:
-the ids really are 35.6% of the file, and a build against a `batchID`-free
-document loads in 137–142 ms against 149–162 ms. That is about 11 ms, against
-the 1.5 s that opening History used to cost — so the file's size is not where
-this app's problem was. The file is also deliberately pretty-printed with sorted
-keys, which costs more than the id length does; shrinking ids while keeping that
-would be optimising the smaller half of a cost we chose on purpose.
-
-The honest argument the other way is readability, since the file is meant to be
-opened and read. But you read names and values; ids are noise at any length.
+Asked whether the 36-character ids in `store.json` need to be that long. They
+do: they are load-bearing for the merge design, and the size argument does not
+survive being measured. The reasoning and the numbers are in
+[TECH.md](TECH.md). `8a81d9f`, `567cff3`
 
 ## 25. Jump to a date in History — done
 
@@ -1200,297 +751,77 @@ greyed below that; the reasoning is with item 25. `5aed442`
 
 ## 27. The bottom bar: presses you cannot see, and a pairing that looks wrong — done
 
-Both from real use, both on the pair of controls at the bottom of home. Both
-halves are built and photographed: the press scale in `71a1925`, gated for
-Reduce Motion in `8ecdbfd`, and the pairing in `4c93cc7` and item 33.
+Two complaints about the pair of controls at the bottom of home, both from real
+use. **The pressed state changed mechanism rather than number** — item 26 had
+already measured a pressed colour and satisfied the measurement without reaching
+the goal, so the fill now moves as well: 2pt off each end of its longest edge,
+in one modifier, `accentFilled(_:)`, replacing four hand-written backgrounds.
+Reduce Motion takes the movement and keeps the colour. **And the pairing was
+decided from photographs** — five alternatives rendered by a throwaway
+`-pairing <n>` probe, the user picked one, and it landed in item 33.
+`71a1925`, `8ecdbfd`, `9b21d82`, `4c93cc7`, `15ce8ac`, `4d79720`
 
-**Closed with nothing left to build here.** The two boxes below that never got
-ticked are not work this item can do — one asks whether a haptic helps and the
-other whether 2pt of scale feels like a press, and a simulator answers neither:
-UIKit logs "Haptics: unsupported" and a synthesized click has no thumb behind
-it. Both are now questions in [item 17](#17-one-pass-on-a-real-device), where
-the rest of the app's hold-a-phone checks live, and they are struck through
-below rather than deleted so the reasoning that put them there stays next to
-the work they came from.
+Item 37 has since reversed the direction of that scale, so the six-control table
+this item recorded measures a build that no longer exists. How the travel is
+derived, why it is a constant and not a ratio, and what iOS's own prominent
+button actually does on press — it does *not* scale, which this item asserted
+the opposite of before rebuilding it and checking — are in [TECH.md](TECH.md)
+and pinned by `AccentTests`.
 
-### The pressed state still is not visible
+The standing constraint from the pairing half is in [PRODUCT.md](PRODUCT.md): a
+peer beside Log competes with it, and prominence is carried by size and shape
+rather than by hue. Swapping sides did not license making them equals, and
+neither does resizing.
 
-Item 26 gave every accent fill one pressed colour and measured it — and it is
-still hard to notice on Log and Log again. **The measurement was satisfied and
-the goal was not**, which means the target was wrong, not the work.
-
-So change the mechanism, not the number. **A scale on press is the primary
-fix** — the button should physically respond under the thumb, the way iOS's own
-prominent buttons do. Colour is secondary and already measured; it was not
-enough on its own and more of it will not become enough.
-
-`PHILOSOPHY.md` rules out bounce, confetti and celebration, and animations you
-have to wait for. **A press-down scale is none of those** — it is instantaneous
-feedback under a thumb, and it is what iOS itself does. Earlier guidance to
-prefer colour over motion was mine and it was wrong in practice.
-
-- [x] **Make it feel like a button.** Done in `71a1925`: the fill goes down 2pt
-      at each end of its longest edge, whatever size it is, in 66ms and back in
-      82ms. A ratio was rejected — 0.97 moves the pill 4.4pt and a disc 0.45,
-      and the disc is half of what this was reported for.
-- [x] Whatever it is, it applies to **every** accent fill. One modifier,
-      `accentFilled(_:)`, replaces four hand-written backgrounds; all five
-      controls were photographed held down and all five move 2pt.
-
-      Re-photographed in review on an iPhone 17 in dark, six controls this
-      time, in points off 3x screenshots of a synthesized press held down:
-
-      | control | rest | held | each end |
-      |---|---|---|---|
-      | Log, home bar | 292.0x50.0 at 16.0,784.0 | 288.0x49.3 at 18.0,784.3 | 2.0pt |
-      | Log, log sheet | 52.7x34.0 at 333.3,525.0 | 48.7x31.3 at 335.3,526.3 | 2.0pt |
-      | Undo capsule | 65.3x32.0 at 320.7,750.0 | 61.3x30.0 at 322.7,751.0 | 2.0pt |
-      | a card's + | 30.0x30.0 at 337.0,167.3 | 26.0x26.0 at 339.0,169.3 | 2.0pt |
-      | Log again, home bar | 30.0x30.0 at 336.0,794.0 | 26.0x26.0 at 338.0,796.0 | 2.0pt |
-      | History's repeat disc | 30.0x30.0 at 337.0,370.0 | 26.0x26.0 at 339.0,372.0 | 2.0pt |
-
-      Every one of them `#00DAC3` at rest and `#07AA9A` held. The disabled
-      disc on History's measurement row is `#636366` and does not move or
-      recolour when held, so the state item `1947688` restored is intact.
-
-- [x] **Reduce Motion took none of it, and does now.** Found in review: the
-      scale shipped ungated, so a phone with the setting on rendered the held
-      Log pill at the identical 288.0x49.3pt as one without it. The gate is on
-      the scale only — the fill still crosses to `Color.accentFillPressed`
-      over 0.12s, recorded at 60fps as a seven-frame, 100ms ramp — so a press
-      under Reduce Motion is the app as item 26 left it rather than a control
-      with no pressed state at all.
-
-      The comment two lines from the gap said "the app has exactly one
-      animation, and this is it — so this is the only place that has to ask",
-      and this item is what made that false. Both places ask now.
-- [x] ~~**The haptic is in and unfelt.**~~ Moved to item 17.
-      `.impact(.light)` on the press edge. The
-      one thing that could be checked was that a scroll did not fire it, and at
-      the time it did not: a flick that started on a Log again row never entered
-      the pressed state. **Item 40 changed that** — with the list's delay off, a
-      flick that starts on a row does press it, and the impact goes with the
-      wash. Whether either *helps* cannot be answered in a simulator — UIKit
-      logs "Haptics: unsupported" there and nothing reaches CoreHaptics.
-      **Item 17's device pass keeps it or deletes it.**
-- [x] ~~**The scale was judged by a synthesized press, not a thumb**~~, which is
-      the same gap. Screenshots of a held control and a 60fps capture of the
-      motion say it renders; they cannot say it feels like a press. Also moved
-      to item 17.
-
-**What was checked and was not true:** iOS's own prominent button does *not*
-scale on press. Rebuilt with `.borderedProminent` and held down on an iPhone 17
-Pro in dark, it renders 876×151 device pixels at the same origin as at rest —
-identical to the pixel — and changes only its fill, `#00DAC3` to `#33E1CF`. The
-paragraph above said the opposite. The decision stands on its own legs: colour
-alone was tried and missed.
-
-### The pairing looks wrong
-
-The Log again control beside Log does not align and reads as poor taste — wrong
-size, wrong relationship. It is currently a 70×51 glyph square against a 292×50
-pill.
-
-- [x] **Five alternatives rendered and photographed**, dark mode, iPhone 17 Pro,
-      by a throwaway `-pairing <n>` probe in a worktree — the argv discriminator
-      from the accent explorations, all five confirmed. The
-      images are outside the repo in **`~/dev/boring-tracker-pairing/`**:
-      `pairing-0.png` … `pairing-4.png` are whole screens and
-      `pairing-strip.png` stacks the five bars for comparison.
-
-      | # | what it is | what it is trying to do | pill |
-      |---|---|---|---|
-      | 0 | today: 30pt disc in a 70pt slot | the thing being complained about | 292 |
-      | 1 | 50×50 accent circle | agree with the pill's height and its fully-round corner, and stop the control floating | 312 |
-      | 2 | 50×50 rounded square, 16pt radius | the same, but echoing the *cards* rather than the pill | 312 |
-      | 3 | 40×50 capsule | height and corner radius of the pill, at clearly less optical weight | 322 |
-      | 4 | 30pt disc, gaps evened | keep today's weight and fix only the spacing: 16pt to the pill, 16pt to the margin | 324 |
-
-      **Recommendation: 3.** It is the only one that agrees with the pill on all
-      four of alignment, height, corner radius and weight — a shorter member of
-      the same shape family, unmistakably the smaller of the two. 1 aligns just
-      as well but is the heaviest, which is the peer problem arriving by size
-      instead of by colour; 2 disagrees with the pill's radius and reads as an
-      app icon parked in the bar; 4 is the tidy minimum and leaves the height
-      mismatch that started this. Every alternative also gives the Log pill
-      20–32pt back, because a 70pt slot around a 30pt disc is mostly air.
-- [x] **Log again moves to the right, Log to the left.** Done in `4c93cc7`.
-      It reverses the original placement, whose reasoning was that a right
-      thumb rests bottom-right so the primary action should sit there — but the
-      pill spans most of the bar either way, so it stays under the thumb
-      wherever the small control goes. That argument was weaker than it looked.
-- [x] **The user picks one.** Pairing 1, applied in item 33. The standing
-      constraint still holds — a peer beside Log competes with it; two equal
-      buttons were tried early on and read as a choice to make on arrival,
-      which is a decision placed in front of logging. Swapping sides did not
-      license making them equals, and neither does resizing.
-- [x] Alignment, height, corner radius and optical weight should agree with the
-      pill, whatever shape it ends up. All four do: 50pt against the pill's 50,
-      a fully round corner against its capsule, and a sixth of its width.
-
-The user picks from the photographs. Do not merge a favourite and call it
-settled.
+**Closed with nothing left to build here.** The two things it could not settle
+are whether the haptic helps and whether 2pt reads as a press under a thumb, and
+a simulator answers neither — UIKit logs "Haptics: unsupported" and a
+synthesized click has no thumb behind it. Both are questions in
+[item 17](#17-one-pass-on-a-real-device) now.
 
 ## 28. Rows should behave like controls — done
 
-One problem wearing three faces, all three answered. `3cbf54a`, and four
-review rounds' worth of corrections on top of it: `bd71d51`, `bb640b7`,
-`ae12dd1`, `7be85d3`.
+One problem wearing three faces, all three answered. Settings drew trackers at
+**74pt against home's 52**; a row's middle was dead, because a `Button`
+hit-tests its label's drawn content and settings' row was a name and a chevron
+with a `Spacer` between them; and a press looked different on every screen.
+`EdgeInsets.listRow`, `contentShape(.rect)` and `RowButtonStyle` —
+`.buttonStyle(.row)`, on settings, History, the Log again sheet, tracker detail
+and home's cards — answered all three. `3cbf54a`, `bd71d51`, `bb640b7`,
+`ae12dd1`, `7be85d3`
 
-- [x] **Settings draws trackers at home's size now.** It drew them at **74pt
-      against home's 52**, read off the accessibility tree on an iPhone 17 Pro,
-      with the name at `.body` where home's is `.subheadline`. Home's numbers
-      were settled in item 11, so they moved rather than a third size being
-      chosen: `TrackerRowName` is the card's name block extracted, and the row
-      metrics are `EdgeInsets.listRow`, one constant that home, History, the
-      Log again sheet and settings all name. Both lists report 52 now, archived
-      rows included — those carry the group as the caption, in the same
-      `.caption2` home dates a reading in.
+**The press colour is iOS's own, measured rather than picked**: settings has one
+row the platform draws itself, the `NavigationLink` to *About*, and it presses
+`#FFFFFF` → `#D1D1D6` in light and `#1C1C1E` → `#3A3A3C` in dark — both
+`UIColor.systemGray4` exactly. The movement is item 27's, reused.
 
-      **`.listRowInsets` has to be applied outside `.onGeometryChange`.** Under
-      the reader settings uses for its drop target, it is silently dropped — the
-      build compiles, the row draws, and it keeps the platform's 74pt. Two
-      builds looked identical before the tree said why.
+The 44pt floor, and what a row that is really two controls does with the wash,
+are in [PRODUCT.md](PRODUCT.md). The `.onGeometryChange` trap that silently ate
+the insets, and the scroll measurement that says the extra layer costs nothing,
+are in [TECH.md](TECH.md).
 
-      **The first diagnosis blamed `.swipeActions` and was wrong**, because the
-      fix moved the modifier past both at once and nothing isolated them. The
-      third review round caught it by noticing that `HistoryRow` does the thing
-      the comment forbade: insets inside the row, swipe outside, and it measures
-      52pt. A probe build settled the rest — settings' archived rows in that same
-      order measure 52, while the active rows under the geometry reader stay at
-      74. One binary, both answers, read off the accessibility tree. Exactly the
-      failure WORKFLOW.md's "always check, not just read" describes: the number
-      was right and the mechanism beside it was invented.
-- [x] **The whole row is the target.** A `Button` hit-tests its label's drawn
-      content unless it is given a shape, and settings' row was a name and a
-      chevron with a `Spacer` between them, so the middle — most of the width —
-      was dead. `contentShape(.rect)` plus a 44pt `minHeight`. Tracker detail's
-      rows had exactly the same hole between the value and the time and got the
-      same fix. Checked by tapping the dead middle of a settings row and of a
-      detail row: the tracker editor and the entry editor open.
-- [x] **A row presses, and presses the same everywhere.** `RowButtonStyle`,
-      `.buttonStyle(.row)`, on settings, History, the Log again sheet, tracker
-      detail and home's cards. Two halves:
-
-      - **The colour is iOS's own, measured rather than picked.** Settings has
-        one row the platform draws itself — the `NavigationLink` to *About* —
-        and it presses `#FFFFFF` → `#D1D1D6` in light and `#1C1C1E` → `#3A3A3C`
-        in dark. Both are `UIColor.systemGray4` exactly, so that is the colour.
-        The app's rows now read the same two values on the same surfaces; on
-        the Log again sheet, whose rows are `#2C2C2C`, the press lands at
-        `#48484A` — the same step, through the presentation's own compositing.
-      - **The movement is item 27's, reused.** `AccentFillPress` — 2pt off each
-        end of the longest edge, 0.12s easeOut. Measured on a home card by the
-        total's trailing edge: **961 device pixels at rest, 955 held**, which
-        is exactly 2pt at 3x.
-- [x] **Reduce Motion gets the colour and not the movement**, through item 27's
-      gate rather than a second one: `AccentFillPress.scale(for:reduceMotion:)`
-      already answers 1 for the setting. Proved as a counterfactual on one
-      binary — with the setting on, the same press leaves that trailing edge at
-      **961** and still paints `#3A3A3C` behind the row.
-- [ ] **Judged by a synthesized press, not a thumb.** Item 26's lesson is that
-      a perceptual goal is not a number, and what is above is screenshots of a
-      held row, not a hand. It reads as unmistakable in the images and it is the
-      platform's own colour, which is the best a simulator can say. **Item 17's
-      device pass is what settles it**, with the haptic and item 27's scale.
-
-**A row wearing this draws into its own layer, and it costs 14,485 pixels at
-rest.** Text rasterised inside a `visualEffect` lands fractionally differently,
-so home at rest differs from the build before this in 14,485 of 3,162,132 pixels
-— 0.46%, the widest single move being a card's total one point narrower on its
-leading edge with its trailing edge unmoved. Deleting the `visualEffect` line
-makes home byte-identical to before, which is how the cause was pinned. Kept:
-the alternative is a row press with no movement in it.
-
-**It does not cost the scroll**, which is the question a per-row layer actually
-raises now that the style is on History. A `CADisplayLink` probe, eight scripted
-flings over a 3,200-row History (8,000 entries) on an iPhone 17 Pro simulator,
-960 frame intervals a run, against a build with only the `visualEffect` line
-deleted:
-
-| build | median | p95 | frames >20ms | frames >33ms |
-|---|---|---|---|---|
-| Debug, with | 16.67 | 16.67 | 25, 27, 24 | 18, 18, 17 |
-| Debug, without | 16.67 | 16.67 | 20, 21, 24 | 12, 13, 14 |
-| Release, with | 16.67 | 16.67 | 20, 19 | 14, 12 |
-| Release, without | 16.67 | 16.67 | 20, 26 | 16, 16 |
-
-Median and p95 are a full 60fps frame in every run of both builds. The tails do
-not separate — Debug leans against the scale by about five frames in 960 and
-Release leans the other way by about the same — so that is noise, not a cost.
-The 250–280ms frame both builds show is History's first build on that fixture,
-with the line and without it.
-
-**What a Log again row gives up.** It was `.buttonStyle(.accentFill)` so that
-the disc inside it recoloured on press; it is `.row` now, so the whole row goes
-down and greys and the disc only moves with it. Handing the accent's pressed
-state down as well would scale the disc twice. On History and home the disc is
-its own button inside a row that does something else, so those two keep
-`.accentFill` and are unchanged.
-
-**The wash stops short of the trailing edge on three of the five screens**,
-and that is a design call rather than an oversight. A History row, a home card
-and an *active* settings row each pair the button with something that is not
-part of it — a repeat disc, a `+`, a drag handle — so the highlight ends where
-that 44pt box begins: measured on a pressed settings row, 282pt of the card's
-366, stopping 66pt short. iOS's own `NavigationLink`, the row this colour was
-sampled from, fills the whole cell. What does span is an archived settings row,
-which has no handle, and a Log again row. Kept, on the argument that a row with
-a second control in it is two controls and washing the half you hit says which
-one you got. Filling the row instead means lifting the press state into a
-`@State` on every row of five screens, two of which build their rows in methods
-on the enclosing view. (Written as "two of five" first, which missed settings'
-own handle — the fourth review round counted it.)
-
-**Every `.row` button is at least 44pt tall**, which is one line in the style
-and does two things. It makes the wash the same height on every screen — before
-it, the same press painted 26pt on a home card, 38 on a History row and 44 on a
-settings row, all inside 52pt rows, so one screen showed a pill around the words
-and another a pressed row. And it gives two rows a target they never had: a
-tracker detail row's label was 40pt and home's *Add Tracker* about 22, both under
-Apple's 44. Measured against a build with that one line deleted, it costs height
-only where the row was short — detail's entries **68pt to 74**, *Add Tracker*
-**51 to 55** — and every row that already held a 44pt control stays at 52 to the
-point.
-
-**The haptic now covers most of the app's touch area, and item 17 should weigh
-that.** `pressHaptic` was on three small deliberate targets and is now on every
-row as well. A flick does not fire it — with no pause a drag leaves a settings
-row at `#1C1C1E` for the whole gesture — but a finger that rests does, and the
-row is at `#3A3A3C` within 0.3s, so dragging away after that cancels the tap and
-not the impact. That is item 27's "press called off" on a much bigger surface,
-and it is the strongest argument yet for deleting the haptic outright.
+Still judged by a synthesized press rather than a thumb —
+[item 17](#17-one-pass-on-a-real-device) settles that, with the haptic and item
+27's scale.
 
 ## 29. Sort Log again chronologically — done
 
-Most recently logged first. `703894a`
+Most recently logged first, and nothing else: `canRepeat`, then the row's date
+descending, then `sortID` — three comparisons where there were five.
+Deduplication is untouched, and rows that cannot be repeated still sort below
+everything that can, because that rule is about what a tap can do rather than
+about order. `703894a`
 
-- [x] Most recently logged first. The list is `canRepeat`, then the row's date
-      descending, then `sortID` — three comparisons where there were five.
-- [x] Rows that cannot be repeated still sort below everything that can. It was
-      already the first comparison and it stays the first comparison: the rule
-      is about what a tap can do, not about order.
-- [x] Deduplication is untouched. One row per distinct name-and-values, dated
-      by the last time it was logged, projected onto what a tap writes before
-      it is collapsed.
-- [x] **It did not get slower.** Ten runs each, the frequency order rebuilt in a
-      temporary test and **alternating with this one in a single binary**, Debug
-      on the iPhone 17 simulator, over fixtures of four named meal batches, two
-      unnamed totals, a water and a weight a day, ending on the store's today.
-      Medians with ranges, in ms:
+**It did not get slower.** The frequency order was rebuilt in a temporary test
+and alternated with this one in a single binary, ten runs each over four
+fixture shapes: chronological is the faster column in all four by 0.3–1.0ms of
+median, and every range overlaps — so the honest reading is that the difference
+does not register, not that dropping the counts bought anything.
 
-      | shape | entries | rows | chronological | frequency |
-      |---|---|---|---|---|
-      | collapsing | 7,644 | 7 | 21.3 (20.3–22.7) | 21.6 (20.8–22.9) |
-      | collapsing | 15,288 | 7 | 41.6 (41.0–42.2) | 41.9 (41.3–42.5) |
-      | nothing collapses | 7,644 | 4,459 | 25.9 (25.1–26.4) | 26.4 (26.2–27.0) |
-      | nothing collapses | 15,288 | 8,918 | 52.3 (51.7–54.3) | 53.3 (52.5–55.3) |
-
-      Chronological is the faster column in all four, by 0.3–1.0ms of median,
-      and every range overlaps — so the honest reading is that the difference
-      does not register, not that dropping the counts bought anything. A second
-      run reproduced every figure within 0.5ms. Still built once when the sheet
-      opens, and a search keystroke still filters the snapshot.
+What the screen now promises is in [PRODUCT.md](PRODUCT.md). The order it
+replaced is below at full length, because PRODUCT.md names this file as where it
+is written up and because it is the first thing to try if chronological ever
+feels wrong in use.
 
 ### The frequency order, kept because it worked
 
@@ -1549,217 +880,35 @@ predictability.
 Logging from Log again did not feel like anything happened. It does now, and
 **nothing was added to close this item** — what answers it shipped in `86f4b5e`
 and three review rounds on top of it, and the last open box turned out to be
-answered by a bar that was already there.
+answered by a bar that was already there. `cc13790`, `8680d6b`, `956483e`,
+`0eb4fc4`
 
-**If you are reading this because logging feels silent, read the next paragraph
-before building anything.** The complaint has been raised three times — this
-item, the earlier session that said the same thing about repeat-from-History and
-is quoted below, and the brief that closed this item, which restated the
-original diagnosis as though the fix did not exist. It exists. The confirmation
-is home's Log again disc turning into a checkmark as the sheet leaves, plus the
-undo bar arriving with it, plus a `.success` haptic. Measured below.
-
-**The diagnosis is placement, not strength.** The number counts up on the home
+**The diagnosis was placement, not strength.** The number counts up on the home
 card and the undo bar appears on home — both *behind* the sheet you are looking
-at. Item 15's animation is real and correct and you cannot see it from here. A
-session already noticed the same thing about repeating from History: "a repeat
-from History animates a card nobody is looking at", and left it.
+at. Item 15's animation is real and correct and you cannot see it from there.
 
-So the acknowledgement has to happen **on the row you tapped**, or on the way
-out, or both.
-
-Things to try, and judge by thumb rather than by argument:
-
-- [x] **The row itself confirms** — built, recorded, and rejected, because it
-      **cannot work**. `dismiss()` stops a presentation's content updating, so a
-      checkmark set on the same tap as the dismissal is never drawn: the sheet
-      slides away for about 300ms showing the state it had before the tap —
-      290–293ms when it was re-timed below. Held for 0ms and for 50ms the mark
-      still never appeared; at 500ms it did. That is a delay
-      on the most repeated action in the app and the rule below forbids it, so
-      the row is not where this goes. Recorded at 60fps on an iPhone 17 Pro
-      with a synthesized tap.
-- [x] **A success haptic**, distinct from item 27's press haptic. `.success`
-      against the press's `.impact(.light)`, so the two say "touched" and
-      "written" rather than "touched" twice. One modifier, `logHaptic(_:)`,
-      on home and on History. Unfelt in a simulator like every haptic here —
-      item 17's device pass keeps it or deletes it.
-- [x] **The dismissal carries the information.** Home's Log again disc — the
-      control the sheet came *out* of — becomes a checkmark for a second, and
-      it is already a checkmark in the frames where the sheet is still sliding
-      away. Under the thumb that just tapped, with nothing in front of it.
-- [x] Whatever it is, **it delays nothing.** Nothing waits: the write and the
-      dismissal are unchanged, and what was added draws on the screen
-      underneath.
-
-**History already had the visual half and nobody noticed.** Item 20's
-`highlighted` marks the row a repeat *wrote*, for two seconds, and it marks it
-whether the write happened on that screen or arrived from the sheet. It was
-photographed here doing exactly that. So History gets the haptic and nothing
-else; a second mark on the tapped disc would be two marks for one write. Home
-is the screen that had no answer at all, and now has the same one History has.
-
-- [x] **Except when the tapped row is a long way down** — checked, and the
-      premise was wrong. The mark does land at the top of today, so a repeat
-      made with the list four months back does mark a row hundreds above the
-      viewport. But it is not true that "only the haptic arrives": History
-      mounts `UndoBar` in a bottom `safeAreaInset`, so **"Logged again" and its
-      Undo button appear pinned to the bottom of the screen whatever the scroll
-      position**, and stand for ten seconds. Photographed with the list on
-      Fri, Apr 17 and today four months later, in
-      `~/dev/boring-tracker-pairing/30-history-scrolled-undo.png`; the bar is
-      drawn one frame after the tapped row's press wash, 92ms, off a recording
-      of the same tap. So the decision this box was waiting for does not need
-      making — neither scrolling the list under the thumb nor a second mark on
-      the tapped disc buys a signal that is not already on screen, and both
-      cost what the item says they cost.
-
-**Do not solve this by keeping the sheet open** so the user can see the card.
-That trades a clear confirmation for a sheet that has to be dismissed by hand,
-which costs a tap on the most repeated action in the app.
-
-### Re-measured before closing, because "it feels silent" is not a frame count
-
-Three recordings of one repeat from the Log again sheet, iPhone 17 Pro
-simulator on iOS 26.3, dark, Debug build, `simctl io recordVideo` decoded frame
-by frame with `AVAssetReader`. Zero is the first frame the recorder emits after
-a still screen, which is the frame the tapped row's press wash draws on.
-
-| | run 1 | run 2 | run 3 |
-|---|---|---|---|
-| bar fully uncovered, disc already a checkmark | 293ms | 290ms | 290ms |
-| checkmark held on a fully uncovered bar | 828ms | 790ms | 840ms |
-
-The disc is **never seen as anything but a checkmark** on this path: it is
-behind the sheet until the sheet has moved off it, and it is already a
-checkmark in the frames where the sheet is still sliding — visible through the
-translucent sheet edge from 233ms in run 1. The undo bar clears the sheet's top
-edge before the disc does, so the two signals arrive together rather than one
-after the other. Strip of six frames at
-`~/dev/boring-tracker-pairing/30-dismissal-strip.png`.
-
-Two numbers this reproduces from `86f4b5e`, which is why they are quoted rather
-than re-argued: the dismissal is **about 300ms** — 290–293 here — and the mark
-holds **about 0.8s** of its one second, the rest being spent behind the sheet.
-
-**So "the undo bar already does the job" is half right and that is the useful
-half.** It does arrive, on both screens, and on History it is the whole answer.
-On home it is not sufficient on its own — it sits above the bar rather than in
-it, and says "Logged again" in secondary grey with a button beside it, which is
-a sentence to read rather than a mark to catch — and the checkmark lands under
-the thumb that just tapped. Neither was worth removing to prove a point.
-
-**Nothing further is worth building here.** The remaining candidates all cost
-something the item already rules out: keeping the sheet up costs a tap, marking
-the row inside it costs 500ms, scrolling History under the thumb moves what you
-were reading. What is left is the haptic question, and that is item 17's.
+**If you are reading this because logging feels silent, read
+[PRODUCT.md](PRODUCT.md) before building anything.** The complaint has been
+raised three times — this item, an earlier session that said the same thing
+about repeating from History, and the brief that closed this item, which
+restated the original diagnosis as though the fix did not exist. It exists, it
+is described where the screen is described, and the three obvious alternatives
+are each costed there.
 
 ## 31. Light mode's accent is murky — deferred, no change
 
-**Closed on the user's own answer**, not on the analysis below: *"i only care
-about dark mode so far."* Light keeps `#009888`. Nothing here was rejected —
-four rounds of candidates were rendered and measured and the recommendations
-stand — but they were waiting on a preference between two appearances, and only
-one of those appearances is being judged. An item on the open list implying
-somebody owes a decision was the wrong thing for it to be.
+**Closed on the user's own answer**, not on the analysis: *"i only care about
+dark mode so far."* Light keeps `#009888`. Nothing here was rejected — four
+rounds of candidates were rendered and measured, deeper, lighter, right around
+the hue wheel, and then in both appearances for azure — but they were waiting on
+a preference between two appearances and only one of those is being judged. An
+item on the open list implying somebody owes a decision was the wrong thing for
+it to be. `87b0711`, `930c322`, `c5eacea`, `c8c2552`, `f0337a4`
 
-Reopen it by picking from the recommendations at the foot of this item. What
-the window is, and why the light value sits where it does, is in
-[TECH.md](TECH.md) and stays there.
-
-The mint reads badly in light — too dark, not aesthetic.
-
-**That is a consequence of how it was made.** Mint failed light-mode contrast
-as a tint and as a form-button foreground (2.05:1 and 2.12:1), so item 18 built
-a colour set by *darkening the same hue* until it passed. A dimmed pastel is
-not a colour anyone would choose on purpose; it is a bright colour with its
-brightness taken away.
-
-**A colour set's two values do not have to be one hue at two brightnesses.**
-They are two deliberate choices, one per appearance — that was the argument for
-having a set at all, and it got applied as arithmetic instead of as a decision.
-
-- [x] **Six candidates rendered and photographed**, light, iPhone 17 Pro, home
-      and settings, by the same launch-argument probe item 27 used. Outside the
-      repo in `~/dev/boring-tracker-pairing/` as `31-light-*.png`, with strips
-      for the bar, the cards, the `Form` row, and black label against white.
-      Every shot's fill was sampled back out of the PNG and matches the hex it
-      was asked for. The numbers, the surfaces they were measured against and
-      the recommendation were the last section of `docs/accent-options.md`,
-      which is now in git history; the conclusion that outlived it is in
-      [TECH.md](TECH.md).
-- [ ] **The 3:1 constraint is not what is choosing here.** Every candidate
-      clears it as a tint and as a form-row foreground, today's included, so it
-      separates nothing. What separates them is the black `Log` on the fill:
-      today measures 5.85 and a genuinely deep light accent lands near 3.9,
-      which clears the 3:1 a UI element needs and misses the 4.5 that size of
-      text wants. Light has a **window**, and today's colour sits inside it near
-      the top — which is the murk this item reports, arriving as a ceiling
-      rather than as a mistake.
-- [ ] **So the real question is the label, and it was rendered too.** White on
-      a deep light fill measures 5.3–5.5 — a shade under today's black on
-      `#009888` at 5.85, and well over black on the deep fill itself at about
-      3.9. So the trade is a slightly quieter label for a much deeper colour,
-      not a free win; this item said "better than black on today's" and that
-      was the wrong comparison. It would also make `Color.onAccent` a colour
-      set and give the app one control whose word changes colour with the
-      appearance — which that property's own doc argues against, from a time
-      when the light fill was `#009888` and black worked.
-- [x] **Rendered again, upward**, because that finding says the deep
-      direction was chosen by the label rather than by the constraint the item
-      names. Six more candidates on today's own hue line, lighter than
-      `#009888` and past the point where the accent stops working, as
-      `31b-*.png` beside the first set with today's colour as the control in
-      every strip. **The window's ceiling is `#00A493`, at 3.02 as a nav-bar
-      glyph** — twelve units of green above today, `L*` 60.7 against today's
-      56.3. A mint that actually reads as lighter, `#00B3A0`, measures 2.56
-      and fails. Numbers and surfaces were in `docs/accent-options.md`, now in
-      git history; the window they describe is in [TECH.md](TECH.md).
-- [x] **Rendered a third time, across the hue wheel**, because a ceiling on
-      one hue line says nothing about the others. Ten candidates as
-      `31c-*.png`, every one of them the most chromatic colour of its hue that
-      still sits under the ceiling, so the set differs in hue and in nothing
-      else: bar glyph 3.01–3.04, `Form` row 3.10–3.13, black label 6.70–6.77,
-      `L*` 60.3–60.6. **Black on the fill is a function of the luminance
-      alone**, so the label opens by the same 0.9 over today at every hue and
-      hue buys none of it. What does change is apparent lightness — the blues
-      read lightest and the mint and cyan-teal heaviest — but the gain is
-      outside the family, the hue 15° from the mint reads no lighter than the
-      mint, and on the nav glyph the lightest-reading candidates read the
-      weakest. Numbers, the H-K model behind the ordering, and the same-app
-      comparison against dark's `#00DAC3` were in `docs/accent-options.md`, now
-      in git history; the finding is in [TECH.md](TECH.md).
-- [x] **Rendered a fourth time, in both appearances**, because the user likes
-      azure and that is a question about the app rather than about light mode:
-      a dark azure was derived for each of the two candidates and photographed
-      beside it as `31d-*.png` — home, settings and History, light and dark,
-      with today's `#009888` / `#00DAC3` as the control in every strip.
-      **No azure in sRGB is as colourful as dark's mint at any lightness**
-      (`C*` 45.9 against 49.3), so a dark azure gives up a little light and a
-      little colour at once: nav glyph 9.89 → 8.29, `Form` row 9.57 → 8.02,
-      black label 11.82 → 9.90, every one of them still two to three times its
-      floor. **The pairing holds**: `#009DD2` with `#04BFFF` reads as one app
-      the way today's pair does, which retires "blue in light, mint in dark" —
-      that was azure against *today's* dark, not against a dark azure.
-      `#2693FF` is the one to drop; its dark half is pale at 6.55 on the glyph.
-      Numbers, the gamut walk behind them and the pair strips were in
-      `docs/accent-options.md`, now in git history; what the azure pair would
-      cost is in [TECH.md](TECH.md).
-- [ ] Dark mode is settled and measured. **Not touched** — until item 31d,
-      which reopened it on purpose and left it unchanged.
-- [ ] **The user picks, and nothing was merged.** Deeper, the recommendation
-      is `#00796B` with a white label, or `#00857A` if the black label has to
-      stay — and the second one is the compromise, because it is the same hue
-      with less light in it again. Lighter, the recommendation is to keep
-      `#009888`: the ceiling is four `L*` points away and nothing inside that
-      gap is visible in the photographs, so a lighter mint costs contrast
-      margin for a colour change the strips do not show. There is no third
-      direction on this hue line; what is left is a different hue — and across
-      the hue wheel the recommendation is `#009888` again, because at this
-      luminance no hue that still belongs beside dark's mint reads lighter than
-      the mint. If hue is to answer the murk anyway it is `#00A3A3`, which reads
-      cleaner rather than lighter; `#009DD2` is lighter and crisp and makes the
-      app blue in light and mint in dark, which reopens item 18.
+The window, why the light value sits at the top of it, the azure pair that is
+the one real alternative, and the four values this would be reopened with are in
+[TECH.md](TECH.md). The contact sheets were never committed, deliberately; the
+candidate tables are in git history, in `docs/accent-options.md`.
 
 ## 32. A press you can see on a fast tap — done
 
@@ -1778,23 +927,8 @@ A 50pt accent circle, the pill's height and corner, and the 70pt slot handed
 back — pixel-identical to `pairing-1.png`. Log again stays right, Log left.
 `d579aff`
 
-- [ ] **A sixth shape is rendered and waiting on the user.** Asked for after
-      the session started: Log again as the Log button but smaller — a rounded
-      rectangle, wider than tall. The three constraints given cannot all hold
-      at once, because the pill is a capsule and its corner radius *is* half
-      its height, so a 50pt-tall shape carrying that radius is a capsule by
-      construction. Rendered at three radii to show the trade and photographed
-      beside pairing 1 in `~/dev/boring-tracker-pairing/`:
-      `pairing-5a-rounded-square.png` (62x50, r18),
-      `pairing-5b-pill-radius.png` (62x50, r25 — the pill's own, and therefore
-      a capsule), `pairing-5c-wide-rounded-square.png` (70x50, r14), and
-      `pairing-1-vs-5-strip.png` stacking all four bars.
-
-      The session's answer was to keep pairing 1, on the grounds that a 50pt
-      circle already *is* the pill's corner radius at width = height, so it is
-      the same shape family rather than a different kind of object — and that
-      widening it only moves it toward the peer the standing constraint rules
-      out. The user has the photographs.
+The sixth shape this item rendered and left waiting on the user is answered by
+item 33b: the bar stays as it is.
 
 ## 34. Does a settings row say it can be edited? — done
 
@@ -1802,53 +936,21 @@ The chevron stays and the footer says the tap out loud, in the idiom item 22
 already uses on two screens. Items 28 and 32 were checked as the alternative
 answer first and are not one: both happen after a finger has landed. `18416ce`
 
+**The footer half has since been replaced**: item 37 put the explanation on the
+row itself, as a caption under the name, and took the sentence away — a caption,
+a chevron and a paragraph is three explanations of one gesture. The rule that
+settles which of the two a screen gets is item 38's, and it is in
+[PRODUCT.md](PRODUCT.md).
+
 ## 35. Two rows, two reading orders — decided, done
 
-A History row leads with **what you called it** and puts the numbers under it
-— item 14b decided that, and the Log again sheet follows it. A tracker detail
-row does the opposite: `520 kcal` large and white on top, `chicken salad` grey
-underneath. The two screens are one tap apart and show the same two facts in
-opposite orders.
-
-**Both orders have a real argument and this pass is not going to pick.**
-Item 14b's reason was that "reading order is what makes a list scannable, and
-the numbers are not the part that tells two rows apart" — which is true on
-History, where every row is a different food against a different tracker. On a
-tracker's own screen the tracker is fixed, so the *number* is the thing that
-tells two rows apart, and leading with the name would put the same weight on
-the least distinguishing part of the row.
-
-So it is either a genuine inconsistency to fix, or a case where the same rule
-correctly produces two answers. The screens to compare are `HistoryRow` — a
-private view in `HistoryView.swift`, not a method on `HistoryView` — and
-`TrackerDetailView.row`.
-
-- [x] Decide, with both screens open, whether detail should lead with the name.
-      It should — see "35 (decided)" below, and PRODUCT.md for the rule and the
-      argument that lost.
-- [x] If it should not, say so in PRODUCT.md next to item 14b's rule, so the
-      next pass does not find this again and file it a third time. It should,
-      and PRODUCT.md says *that* instead, in the same place and for the same
-      reason.
+Superseded by "35 (decided)" below — tracker detail leads with the name, like
+History does. The rule, and the real argument that lost, are in
+[PRODUCT.md](PRODUCT.md). `897c8aa`
 
 ## 36. The entry editor confirms where the log sheet used to — closed, no change
 
-Item 5 moved the log sheet's confirm **out of the navigation bar** and put it
-directly above the keypad, because the keypad is up and the top-right corner of
-a modern iPhone is not in the thumb's arc. The entry and batch editors have the
-same shape — a number field, the keypad up — and still carry **Save** in the
-navigation bar.
-
-The counter-argument is the app's own: `PHILOSOPHY.md` says rare actions may
-live high and "the nav bar is a fine home for things you touch once a week",
-and fixing a mistyped entry is rarer than logging. It is also `Save` rather
-than `Log`, deliberately, so it is not literally the same button.
-
-Not changed here, because moving it is a taste call on a screen that is not on
-the common path, and item 5's measurement was about the screen that is.
-
-- [ ] Decide whether editing is close enough to logging to want the same
-      confirm placement.
+Superseded by "36 (closed)" below. `897c8aa`
 
 ## 33b. A rounded-square Log again — tried, keeping today's bar
 
@@ -1869,222 +971,110 @@ instead of the small one.
 
 ## 33b-old. The original note — superseded by 33b above
 
-Same corner radius as the Log pill — not a circle, not a capsule — and slightly
-wider than tall, so it reads as a rounded square at a smaller size.
+Seven bars rendered and photographed, dark, iPhone 17 Pro, by a throwaway
+launch-argument probe in a worktree — `33b-a-today.png` through
+`33b-g-62x50-r25-capsule.png` in `~/dev/boring-tracker-pairing/`, with
+`33b-strip.png` stacking all seven and `33b-corners-zoom.png`, which is the one
+that decided it. `0d17171`, `f3efd5a`, `284ef77`
 
-The two controls should look like one family at two sizes. Today the disc reads
-as a different kind of object beside a pill.
-
-- [ ] Clearly smaller than the pill; a peer beside Log competes with the most
-      frequent action in the app.
-- [x] **Seven bars rendered and photographed**, dark, iPhone 17 Pro, by a
-      throwaway launch-argument probe in a worktree — the same technique item
-      27 used, with `-la-width`, `-la-height`, `-la-corner` and `-pill-corner`
-      standing in for the shapes. Outside the repo in
-      `~/dev/boring-tracker-pairing/`: `33b-a-today.png` through
-      `33b-g-62x50-r25-capsule.png`, `33b-strip.png` stacking all seven bars,
-      and `33b-corners-zoom.png`, which is the one that decides it — a, c and d
-      at the 8pt gap between the two controls, where the pill's corner and the
-      small one's can be compared side by side.
-
-      | # | Log again | pill | what it shows |
-      |---|---|---|---|
-      | a | 50x50 circle | capsule | today |
-      | b | 62x50, r22 | capsule | the largest radius that still leaves flat edges |
-      | c | 62x50, r18 | capsule | a real rounded square beside an unchanged pill |
-      | d | 62x50, r18 | **r18** | both controls at one literal radius |
-      | e | 56x44, r14 | capsule | smaller in both dimensions |
-      | f | 56x44, r10 | capsule | the same, squarer |
-      | g | 62x50, r25 | capsule | the literal ask, and it renders as a capsule |
-
-- [ ] **The three constraints cannot hold at once while the pill is a capsule,
-      and d is the way out.** The Log pill is a `Capsule` at 50pt, so its corner
-      radius *is* 25 — half its height — and a rounded rectangle is a capsule
-      whenever its radius reaches half its shorter side. So "the pill's radius,
-      not a capsule, wider than tall" needs a shape more than 50pt tall, which
-      is the one thing ruled out. g is that fact photographed.
-
-      What item 33 did not try is the other end: **give the pill a radius
-      instead of a height-derived one.** d draws both at r18 and is the only
-      bar here where the two controls share a literal corner radius, which is
-      what "one family at two sizes" asks for.
-
-- [ ] **The recommendation, and nothing has been landed.** c — the literal ask
-      with the pill left alone — is worse than today, and `33b-corners-zoom.png`
-      is why: it puts an r18 corner 8pt from an r25 one, so the pairing goes
-      from two sizes of the same fully-round corner to two different corners.
-      That is the complaint sharpened rather than answered. e and f give up the
-      top-and-bottom alignment with the pill that item 27 was raised to get, and
-      b and g are capsules by eye.
-
-      That leaves a and d, and **it is a coin toss** — d is the more coherent
-      drawing and a is the shipped one, and the difference is taste, not an
-      argument. d also re-decides the shape of the most-used control in the app
-      on the strength of a change to the second-most-used one, which is a bigger
-      question than this item, so it goes to the user rather than being merged.
+The conclusion is item 33b above, kept at full length there: the variant asked
+for cannot exist while the pill is a capsule, and the escape that does exist is
+to give the **pill** a fixed radius rather than a height-derived one.
 
 ## 37. Three fixes before release — done
 
-**The press grows.** One line in `AccentFillPress.scale(for:reduceMotion:)`,
-which is the only place either a fill or a row works one out, so every accent
-fill and every row turned together and a mix of the two directions is not
-reachable. The travel stayed at 2pt and `9b21d82`'s guard kept its constant
-with a milder reason: below `2 * travel` a press at least doubles the control
-rather than turning it inside out. Judged by tapping fast, which is item 32's
-rule — three 40ms taps recorded frame by frame, and in all three the frame
-after the touch has the row's wash on and the disc already grown. `f97b671`
+- **The press grows instead of shrinking.** One line in
+  `AccentFillPress.scale(for:reduceMotion:)`, which is the only place either a
+  fill or a row works one out, so every accent fill and every row turned
+  together and a mix of the two directions is not reachable. Judged by tapping
+  fast, which is item 32's rule: three 40ms taps recorded frame by frame, and in
+  all three the frame after the touch has the row's wash on and the disc already
+  grown. `f97b671`
+- **A settings row says what tapping it would edit**, under the name, in the
+  caption slot — `Daily total · kcal`, `Measurement · kg` — and item 34's footer
+  sentence goes, because a caption, a chevron and a paragraph is three
+  explanations of one gesture. `f2d657a`
+- **A two-line label no longer knocks the number off centre.** `StackingRow`'s
+  side-by-side branch is `.center` rather than `.firstTextBaseline`, on all four
+  screens at once rather than one screen taking a parameter. `a9487bc`
 
-**A settings row says what tapping it would edit**, under the name, in the
-caption slot `TrackerRowName` has had since item 28 — `Daily total · kcal`,
-`Measurement · kg`. The chevron stays, and item 34's footer sentence goes: a
-caption, a chevron and a paragraph is three explanations of one gesture. Under
-the name rather than beside the chevron because a trailing value costs the
-name the width it has least of; the rows are 52.0pt before and after.
-`f2d657a`
-
-**A two-line label no longer knocks the number off centre.** `StackingRow`'s
-side-by-side branch is `.center` rather than `.firstTextBaseline`: home's
-number sat 5.83pt above the row's own centre and now sits 0.17pt off it, which
-is where a one-line row's number already was. All four screens took it
-together — a History row's time is level with the repeat disc now — rather
-than one screen taking a parameter. The cost is the baseline "Water" and
-"0 ml" used to share. `a9487bc`
+The direction of the press and the one rule for explaining a row are in
+[PRODUCT.md](PRODUCT.md). `4215726` recorded what each fix cost.
 
 ## 38. One rule for saying a row is tappable — decided
 
-Item 37 put the explanation **on** the settings row — `Daily total · kcal`
-under the name — and removed the footer sentence. History and tracker detail
-still explain the same gesture in a footer, so the app has two idioms for one
-thing.
+**The row speaks when it can, and the footer is the fallback when it cannot.**
+One rule with a stated exception, rather than two idioms competing — and it
+beats forcing every screen into a footer for the sake of symmetry. History and
+tracker detail genuinely cannot take the settings answer: no chevron, and their
+trailing half is already a value. `af657b8`
 
-Those rows genuinely cannot take the settings answer: no chevron, and their
-trailing half is already a value.
-
-**So the rule is: the row speaks when it can, and the footer is the fallback
-when it cannot.** That is one rule with a stated exception rather than two
-idioms competing, and it beats forcing every screen into a footer for the sake
-of symmetry.
-
-- [ ] Write the rule into `PRODUCT.md` beside the row descriptions, so the next
-      screen does not have to guess.
-- [ ] Leave History and tracker detail as they are — they are the exception,
+- [x] Write the rule into `PRODUCT.md` beside the row descriptions, so the next
+      screen does not have to guess. Done by this file's collapse pass.
+- [x] Leave History and tracker detail as they are — they are the exception,
       correctly applied.
 
-Left open by item 37, and worth knowing: **a grown fill is drawn about 2pt past
-its own tap target.** Harmless today — the press was tested at the pill's edge
-and held — but it is the ceiling on ever increasing the travel, and it is the
-opposite failure from the one shrinking had.
+The ceiling this item left open — a grown fill is drawn about 2pt past its own
+tap target, which is the limit on ever increasing the travel — is in
+[TECH.md](TECH.md).
 
 ## 35 (decided). Tracker detail follows History — done
 
-**Tracker detail leads with the name, like History does.** Consistency wins.
-
-Item 35 laid out a real argument for the other order: on a tracker's own screen
-the tracker is fixed, so the *number* is what tells two rows apart, and leading
-with the name gives weight to the least distinguishing part. That is true, and
-it loses anyway — two screens one tap apart showing the same two facts in
-opposite orders reads as an app that has not decided, and a person moving
-between them has to re-learn where to look.
-
-- [x] `TrackerDetailView.row` matches `HistoryRow`: the name leads, the numbers
-      follow, same weights and colours. Shared rather than matched by hand —
-      `LogRowLabel` in `StackingRow.swift` is the two lines, and History, tracker
-      detail and the Log again sheet all draw it. Three copies of one shape is
-      how these came apart, and the sheet is in because it was the third copy,
-      not because this item asked.
-
-      Two visible things came with the flip. The detail row's value loses
-      `.monospacedDigit()`, which is History's treatment: these lines are
-      leading-aligned and of different lengths, so tabular figures were not
-      lining a column up. And an entry with **no name** draws its value alone,
-      on one line, rather than falling back to the tracker the way History does
-      — that fallback exists because History mixes trackers, and here the
-      navigation title has already said which one it is. So the number leads on
-      exactly the rows that have nothing else to lead with.
-
-- [x] Say so in `PRODUCT.md` beside item 14b's reading-order rule, with the
-      argument that lost — so the next pass does not find this and file it a
-      third time.
-
-**Checked xSmall through AX5** on an iPhone 17 Pro simulator, twelve sizes, a
-launch-argument probe root in a throwaway worktree so no clicking was needed to
-reach the screen. Nothing clips and nothing splits mid-token: the row stacks at
-`.xxxLarge` like every other list row (`DynamicTypeSize.stacksRows`) and reads
-name / value / time down the left, and at AX5 a 48-character name wraps to three
-lines with the value under it. The frames are `StackingRow`'s, which is why
-there was nothing new to scale — this item moved two `Text`s inside a `VStack`.
-
-Still different, and deliberately left: a detail row is taller than a History
-row, because History sets `.listRowInsets(.listRow)` for the 44pt disc on its
-end and detail has no such control. That is a density question, not a reading
-order one — see "Small things".
+**Tracker detail leads with the name, like History does.** Consistency wins, and
+the argument that lost was a real one, so [PRODUCT.md](PRODUCT.md) carries both
+rather than this item. The two lines are `LogRowLabel`, drawn by History,
+tracker detail and the Log again sheet alike — shared rather than matched by
+hand, because three copies of one shape is how these came apart. `dac7619`,
+`897c8aa`
 
 ## 36 (closed). The editors keep Save in the navigation bar
 
 **No change.** Item 5 moved the *log sheet's* confirm above the keypad because
 logging is the common path and the top-right corner is not in a thumb's arc.
 Editing is rare, and `PHILOSOPHY.md` already says rare actions may live high.
-
-The asymmetry is the rule working, not a gap in it.
-
-- [ ] Close the item, and record the reasoning so it is not reopened.
+The asymmetry is the rule working, not a gap in it. `897c8aa`
 
 ## 39. A "last time" kind, where the date is the data — done
 
 **A third `Tracker.Kind`, and the other two are untouched.** Tyres, the water
 filter, the boiler service, the dentist — things whose age you want and whose
-number does not exist. What it is and what it must never become are in
-[PRODUCT.md](PRODUCT.md); why `Entry.value` stays non-optional is in
-[TECH.md](TECH.md). `dad286f` model, `a04e447` UI.
+number does not exist. `dad286f` model, `a04e447` UI.
 
-Four decisions the brief did not make, recorded because nothing else states
-them:
-
-- **The reading is the whole card, and the date is not repeated underneath
-  it.** The note that scheduled this said "142 days ago, with the date
-  underneath". Left out: the reading *is* the date, so the caption would be
-  the same fact twice — "today" over "Today" — on a card cut to one line on
-  purpose (item 11). The exact date is one tap away on the detail screen.
-- **Days, months and years; not weeks.** With weeks allowed the ladder reads
-  `last week` at 7 days and `2 weeks ago` at 13, which is vaguer than the day
-  count it replaces. `Elapsed` pins the whole ladder by test, because the
-  strings come from the system rather than from this repo.
-- **A one-tap log has no undo bar**, exactly like a log through the sheet. Undo
-  on home belongs to a repeat, whose bar says "Logged again" and whose slot the
-  store keeps one of; a second meaning in it would need a second wording, a
-  second gate on home, and a second way for the repeat's invariants to go
-  wrong. The entry is one tap away on the tracker's own screen, where a swipe
-  deletes it — the same route every other mistyped log takes.
-- **The row word is "Logged".** History and tracker detail draw an entry as a
-  name over a value, and the value line cannot be blank without leaving a row
-  that is a time and nothing else. It is one word, it is true, and it comes
-  from `Tracker.entryText` so no screen invents its own.
+What it is and what it must never become are in [PRODUCT.md](PRODUCT.md),
+including the three decisions this item made that its brief did not: the reading
+is the whole card and the date is not repeated under it, the ladder is days,
+months and years and never weeks, and a one-tap log has no undo bar. Why
+`Entry.value` stays non-optional is in [TECH.md](TECH.md).
 
 ## 40. A press you cannot see coming — done
 
 Anton, on a real device: pressing and holding *Add Tracker* in settings, the
 pressed highlight arrives late, and he suspected it was general rather than that
-one row. It is general, and it is the list.
+one row. It is general, and it is the list. **The fix is one line** in
+`BoringTrackerApp.init`: `UIScrollView.appearance().delaysContentTouches =
+false`. `220af79`, `14e6199`
 
-**Method.** `xcrun simctl io booted recordVideo --codec h264` on an iPhone 17 Pro
-simulator, iOS 26.3, dark, debug build; frames decoded with `AVAssetReader` and
-`kCVPixelFormatType_32BGRA`, and one rect's mean luminance printed per frame. The
-recorder emits only when the screen changes, so on a still screen the emitted
-frames *are* the change timeline; inside a press they average 16.0ms apart —
-mean of the 61 steps in one recording, ragged between 6.6 and 26.7 — which is a
-60fps grid with the encoder's jitter on it. Every number below therefore has a
+**The measurements stay here** rather than moving to TECH.md, because three
+comments in `BoringTracker/` name this item as where they are. What the app now
+promises because of them is in [PRODUCT.md](PRODUCT.md).
+
+**Method.** `xcrun simctl io booted recordVideo --codec h264` on an iPhone 17
+Pro simulator, iOS 26.3, dark, debug build; frames decoded with `AVAssetReader`
+and one rect's mean luminance printed per frame. The recorder emits only when
+the screen changes, so on a still screen the emitted frames *are* the change
+timeline; inside a press they average 16.0ms apart, so every number below has a
 resolution of one frame, about ±17ms.
 
-**Touch-down needs an anchor, and that is the part that makes the numbers mean
+**Touch-down needs an anchor, and that is what makes the numbers mean
 anything.** Nothing on screen changes when a finger lands — that is the thing
 being measured — so a throwaway build carried a `UIGestureRecognizer` on the
 app's `UIWindow` that recognises nothing and paints a strip of the left margin
 white from `touchesBegan`. A recogniser on the window is handed the touch
 immediately whatever the scroll view does with it, and the strip draws on the
 next frame, which is the same frame budget the control has. Both ends of every
-number are therefore "first frame after the state was set": the difference is
-app-side only, and whatever the simulator's own injection costs cancels out. The
-press itself is a `CGEvent` mouse down held 800ms, three runs each.
+number are therefore "first frame after the state was set", so whatever the
+simulator's own injection costs cancels out. The press is a `CGEvent` mouse down
+held 800ms, three runs each.
 
 **Before — touch-down to first changed pixel, in ms:**
 
@@ -2101,12 +1091,8 @@ The last two rows are the finding. The two probe buttons are one control with
 one style, applied instantly and with no animation to wait for; the only thing
 that differs is whether it sits inside a `List`. Inside costs ~150ms and outside
 costs nothing, so this is `UIScrollView.delaysContentTouches` holding the touch
-back while it decides whether the finger is scrolling — the brief's hypothesis,
-and the number is that delay.
-
-So it is not that row, it is every row on every screen. And the Log pill's zero
-is not item 37's doing: item 37 changed what a press draws once it arrives, and
-what makes the pill's press *arrive* at once is that it is not in a list.
+back while it decides whether the finger is scrolling. **After — same method,
+three runs each: all six controls 0.0ms.**
 
 **iOS's own settings list has the same delay**, and this is deliberately the
 weaker measurement of the set: Preferences carries no marker, so touch-down
@@ -2114,13 +1100,6 @@ cannot be anchored inside it. Driven by the identical script, the *Camera* row's
 highlight first appears 1990ms and 2005ms into two recordings, while the 53
 marker-anchored recordings taken here put touch-down between 1786.7ms and
 1846.7ms. Same delay, on an assumption rather than on an anchor.
-
-**The fix is one line**, in `BoringTrackerApp.init`:
-`UIScrollView.appearance().delaysContentTouches = false`.
-
-**After — same method, three runs each: all six controls 0.0ms.** The pressed
-state lands on the frame the touch does, for *Add Tracker*, the settings row,
-the History row and both probe buttons, and the Log pill has not moved.
 
 **What it costs, measured rather than assumed:**
 
@@ -2130,40 +1109,30 @@ the History row and both probe buttons, and the Log pill has not moved.
   **That 90ms is not `AccentFillPress.minimumHold` expiring, which is what this
   first said.** `RowPressState.set` cannot tell a cancellation from a release,
   so it holds the press for the rest of the floor — 100ms — and then fades it
-  out over `AccentFillPress.release`, 0.12s asked for and 82ms recorded as
-  visible. Nothing in that path can end a wash in 90ms. Likeliest is that the
-  row scrolled out of the fixed band being sampled while it was still washed;
-  that is reasoning, not a measurement, and a re-measure has to follow the row
-  rather than a rect. The direction is not in doubt either way: every flick that
-  starts on a row now washes it for at least the floor, where that used to be a
-  narrow case.
+  out over `AccentFillPress.release`, 82ms recorded as visible. Nothing in that
+  path can end a wash in 90ms. Likeliest is that the row scrolled out of the
+  fixed band being sampled while it was still washed; that is reasoning, not a
+  measurement, and a re-measure has to follow the row rather than a rect. The
+  direction is not in doubt either way.
 - **And the same flick fires the press haptic**, because `pressHaptic` triggers
   on the same boolean the wash does. That cannot be measured here — a simulator
   logs "Haptics: unsupported" — so it is recorded as a consequence rather than
-  as a number, and item 17's device pass now has it as its first question.
-  Deleting the press haptic is the fix already on that table.
+  as a number, and it is [item 17](#17-one-pass-on-a-real-device)'s first
+  question. Deleting the press haptic is the fix already on that table.
 - **Scrolling itself is unchanged.** Same synthesized 120pt drag starting on a
-  row, displacement read from the accent's y in a screenshot two seconds after
-  release, six runs per side — three flicked straight away and three after
-  resting 250ms first. With the delay on, 306–319pt; with it off, 298–316pt.
-  Same spread either way and the ranges overlap.
-- **Reorder, swipe-to-delete and the log path are unaffected.** The same
-  synthesized handle drag moved the *Food* group below *Weight* identically
-  either way; a swipe on a History row reveals the red delete action either way;
-  the log sheet opens, the keypad types and *Log* writes the entry.
+  row, displacement read two seconds after release, six runs per side: 306–319pt
+  with the delay on, 298–316pt with it off, ranges overlapping. Reorder,
+  swipe-to-delete and the log path are unaffected, each driven one at a time.
 - **Unchecked, and reasoning rather than measurement: a flick that starts on the
   reorder handle.** Settings' handle carries a `DragGesture(minimumDistance: 4)`
   as a `highPriorityGesture`, and it is fed by the delivery this one line
   changed — it used to see nothing until the scroll view had had its ~150ms to
   claim the touch, and now it sees the touch on the first frame and can win at
-  4pt. The drag measured above is the deliberate one, a finger that rests and
-  then moves, which behaves the same either way. The case nobody has run is a
-  fast vertical flick that begins on the 44pt handle, and `reorderGesture`'s
-  `onEnded` commits from wherever the finger lets go — so if the drag wins that
-  race, a scroll rewrites the stored order. Check it before the device pass: it
-  needs a synthesized flick, not a thumb. If it reproduces, the cheap answer is
-  a larger `minimumDistance`, since a reorder always starts from a finger that
-  has already stopped.
+  4pt. `reorderGesture`'s `onEnded` commits from wherever the finger lets go, so
+  if the drag wins that race a scroll rewrites the stored order. It needs a
+  synthesized flick, not a thumb. If it reproduces, the cheap answer is a larger
+  `minimumDistance`, since a reorder always starts from a finger that has
+  already stopped.
 
 **The second option was not built.** Driving the pressed state from a
 `DragGesture(minimumDistance: 0)` is more code, it fights the scroll gesture it
@@ -2180,108 +1149,41 @@ which is the only evidence either rule was ever going to get.
 
 ## 41. The home screen label is `Boring`, for a reason that is not true — done
 
-**Measured 2026-08-20** on an iPhone 17 and a 375pt SE simulator, in a
-throwaway worktree, because the reason had never been measured: `project.yml`
-and SHIPPING.md both said home screen labels "truncate around 12 characters",
-and iOS truncates on rendered *width*, not on characters.
+**Changed to `Boring Tracker`.** iOS truncates a home screen label on rendered
+*width* and not at some character count, the full name fits on both an iPhone 17
+and a 375pt SE, and the short label cost every Spotlight search for the word the
+app is named after. `0100a9e`, `82cf49c`, `2c19216`
 
-**`Boring Tracker` fits in full on both devices, with no ellipsis.** On the SE
-it fits by being condensed about 20% — 74.5pt against 89pt for the two words
-measured separately — which is iOS tightening a string before it will
-ellipsise it. So the 12-character rule is not the rule, and the tradeoff the
-short label was chosen to avoid does not exist in the form it was written down.
-
-The cost of the short label, on the other hand, is real, and it is Spotlight:
-
-| Label | home screen | Spotlight `tracker` | Spotlight `boring` |
-|---|---|---|---|
-| `Boring` (shipping) | fits, 35.3pt | **not found** | Top Hit |
-| `Boring Tracker` | fits, both devices | Top Hit | Top Hit |
-| `Tracker` | fits, 42.3pt | Top Hit | **not found** |
-
-Spotlight was exercised on the iPhone 17 only, twice, with a clean uninstall
-and a 25s settle, and with `boring` run as the control in the same minute — so
-the negative for `tracker` is a real negative and not an index that had not
-finished building. Widths came from a white-pixel extent scan of the label row,
-against ~86pt of available width read off a label that was genuinely truncated
-on the same screen.
-
-One thing that looks exactly like truncation and is not: **before the app has
-been opened once**, the new-app dot takes label width, and the label renders as
-`BoringTracker` with the space collapsed (iPhone 17) or `Boring T…` (SE). It
-goes away on first launch. A screenshot of a fresh install shows the squeeze; a
-user after their first tap does not.
-
-- [x] **Changed to `Boring Tracker`**, in `82cf49c`. The evidence above is the
-      whole argument: the full name is free on both devices, and the short one
-      cost every search for the word the app is named after. `project.yml`'s
-      comment and SHIPPING.md's bullet no longer cite 12 characters, and
-      APPSTORE.md no longer says the label is `Boring`.
-
-      Re-checked *after* the change rather than only before it. Both home
-      screens render `Boring Tracker` with no ellipsis once the app has been
-      opened once, and Spotlight on an iPhone 17 returns it as Top Hit for
-      `tracker` and for `boring`. One wrinkle worth knowing for the next
-      Spotlight check on this machine: a stale `boringtracker.uitests.xctrunner`
-      build was installed on the iPhone 17 from some earlier session, it matches
-      both queries itself, and it sat in the results beside the app until it was
-      uninstalled. The screenshots behind this paragraph were taken with it
-      gone.
+The widths, the Spotlight results either way, and the new-app dot that looks
+exactly like truncation and is not, are in [SHIPPING.md](SHIPPING.md).
 
 ## 42. The card `+` as an outlined ring — decided, done
 
-**The ring ships, and the filled disc stays behind `CardPlus.outlined`.**
-Anton picked the ring on 2026-08-20 and that choice is settled. `9f46446` went
-further and deleted the loser, which is not what he asked for — *"dont delete
-for now, i dont care, we can do later"* — and `d1c1d38` put it back. The
-constant is `true`, so the ring is what draws; `false` is still the disc, one
-branch of `TrackerCard.plusMark`.
+**The ring ships, and the filled disc stays behind `CardPlus.outlined`.** Anton
+picked the ring on 2026-08-20 and that choice is settled. `9f46446` went further
+and deleted the loser, which is not what he asked for — *"dont delete for now, i
+dont care, we can do later"* — and `d1c1d38` put it back. `68a6493`, `d0d6f55`,
+`2af7a24`, `1361702`
 
-**Deleting the disc waits on the device pass, item 17.** The ring has only ever
-been seen in simulator screenshots, so the decision is not yet confirmed by
-anyone holding a phone; while that is true, going back is one line rather than
-unpicking a commit. Once the ring survives real use, what goes is that branch,
-the mark it names, `plusMark` itself — a chooser between one thing is not a
-chooser — and the `CardPlus` enum, leaving `logButton` naming `CardPlusRing()`
-directly. Carrying both is right while the comparison can still be lost and is
-dead weight the moment it cannot: [PHILOSOPHY.md](PHILOSOPHY.md)'s test for
-code is performance and simplicity, and the smallest thing that works.
+**Deleting the disc waits on the device pass,
+[item 17](#17-one-pass-on-a-real-device).** The ring has only ever been seen in
+simulator screenshots, so while the comparison can still be lost, going back is
+one line rather than unpicking a commit. Once the ring survives real use, what
+goes is that branch, the mark it names, `plusMark` itself — a chooser between
+one thing is not a chooser — and the `CardPlus` enum, leaving `logButton` naming
+`CardPlusRing()` directly.
 
-**What the disc knew, kept here because its comment goes when it does.** It
-started as a bare blue glyph, which was a different design language from the
-bottom Log button it is a smaller version of, and low enough contrast that it
-did not read as a control at all. A tinted `.bordered` fill was tried next, on the grounds that
-eight solid dots down one screen is loud — and rejected on the original
+**What the disc knew, kept because its comment goes when it does.** It started
+as a bare blue glyph, which was a different design language from the bottom Log
+button it is a smaller version of, and low enough contrast that it did not read
+as a control at all. A tinted `.bordered` fill was tried next, on the grounds
+that eight solid dots down one screen is loud — and rejected on the original
 complaint, because a blue glyph on a pale blue disc is that same low contrast
-again. The accent-filled disc is what came out of that. The ring was built to
-match the new icon rather than to answer any of this, but it is the first mark
-on this button that is not a solid dot.
-
-**Two of the five screenshots had to be reshot** — `1361702`. The set was
-captured at 15:04 and the ring landed at 19:08, so `home.png` was showing eight
-filled mint discs the app no longer draws, and it is the first image both on the
-App Store listing and in the README; `again.png` carries five more beside the
-Log again sheet, plus a sixth blurred through its top edge that the dimmed
-background makes easy to miss. The other three show no card `+` at all:
-`log.png` is the sheet over the whole screen, `history.png`'s discs are the row
-Repeat control, and `graph.png`'s toolbar `+` is a bare nav-bar glyph. Both were
-re-shot from the original seeded `store.json`, still in the simulator's
-container and byte-identical after the app read it — so the fixture the earlier
-review settled did not move. Measured against the old files: the new `home.png`
-differs in exactly eight 80x80 regions, at the eight marks and nowhere else.
-
-The rest of this item is how the ring was built and measured, and it stands.
-
-The app icon is a mint `+` inside a mint ring on `#1C1C1E`. This built the
-card's `+` the same way — a 2pt `AccentFill` ring at the disc's own 30pt
-diameter, with the plus at the icon's proportions. Filling the ring on press is
-the inverse of `AccentFillPressed`, which washes a fill and does nothing to a
-stroke. Photographed both ways in both appearances; the images are outside the
-repo.
+again. The accent-filled disc is what came out of that.
 
 **The ratios are the shipped icon's**, sampled out of
 `boring-tracker-1024.png`'s own IDAT bytes rather than through a colour-managed
-reader:
+reader. `CardPlus` names this item as where they are, so they stay here:
 
 | what | px at 1024 | ÷ ring outer Ø | at 30pt |
 |---|---|---|---|
@@ -2290,117 +1192,44 @@ reader:
 | plus overall width | 330 | 0.470 | 14.10 |
 | plus arm thickness | 50 | 0.0712 | 2.14 |
 
-The field is a flat `#1C1C1E` and the mint a flat `#00DAC3` — single values,
-no gradient. The mint read `#00E8D8` when these ratios were sampled; the
-geometry they describe did not change with the recolour. The arms (50) and
-the stroke (48) are within 4% of each other, and **reading as one weight is
-the property being copied**.
+The arms (50) and the stroke (48) are within 4% of each other, and **reading as
+one weight is the property being copied**. The glyph is
+`.font(.system(size: 17, weight: .semibold))`, arrived at by rendering nine
+weights and then a ladder of sizes and counting pixels at 3× — no metric was
+read off a documentation page. Weight first, because the arm-to-width ratio
+belongs to the weight alone: `.semibold` renders **0.1528** against the icon's
+0.1516, `.bold` 0.1769, `.medium` 0.1340. Then size, linearly: at 17pt the plus
+measures **14.00pt wide with 2.15pt arms** against the 14.10 / 2.14 wanted.
+Nothing about the mark moves at AX3 — both marks are fixed by design, so what
+grows is the card around them.
 
-**The icon's mint was not the app's** when this was built. The ring is drawn in
-`Color.accentFill` — `#00DAC3` dark, `#009888` light — and the icon was
-`#00E8D8`; what was matched here is the geometry alone. The icon has since been
-recoloured to `#00DAC3`, so in dark the two are now one value. In light they
-still differ: the app's ring goes `#009888` and the icon, being one file, does
-not follow the appearance.
-
-**The glyph is `.font(.system(size: 17, weight: .semibold))`.** The disc's
-`size: 15, weight: .bold` was chosen against a fill, not against these ratios,
-so nine weights and then a ladder of sizes were rendered in the simulator and
-counted at 3× — no metric was read off a documentation page. Weight first,
-because the arm-to-width ratio belongs to the weight alone: `.semibold` renders
-**0.1528** against the icon's 0.1516, `.bold` 0.1769, `.medium` 0.1340. Then
-size, linearly: at 17pt the plus measures **14.00pt wide with 2.15pt arms**
-against the 14.10 / 2.14 wanted. For comparison the disc's `15:.bold` measured
-12.54pt wide with 2.22pt arms.
-
-**The press fills the ring** with `.accentFill` — the full accent, not
-`AccentFillPressed`, which is a fill that recedes toward its surface and does
-nothing visible to a 2pt stroke. The glyph flips to `Color.onAccent` with it,
-because a mint plus on a mint fill is not there. Both arrive instantly and
-scaled up, through the existing `\.accentFillPressed` and
-`AccentFillPress.scale(for:)`; nothing new was added for the press and nothing
-animates on the way in. So **a pressed ring is what the resting disc was** —
-the honest inverse, not a coincidence to design around. Held down, the mark
-measures 34.00pt across against 30.00 at rest, which is
-`AccentFillPress.scale(for:)` on a 30pt fill exactly, and one screenshot carries
-both the fill and the scale, so they are on the same frame.
-
-The disabled state is carried too: `accentFillDisabled` for the stroke *and* the
-plus. Nothing disables this button today, so that path is unexercised.
-
-**Measured on the shipped build**, from screenshots of one fixture:
-
-| | outer Ø | stroke | plus width | arms |
-|---|---|---|---|---|
-| dark, default size | 30.00pt | 2.00pt | 14.00pt | 2.146pt |
-| light, default size | 30.00 | 2.00 | 14.00 | 2.146 |
-| dark, AX3 | 30.00 | 2.00 | 14.00 | 2.146 |
-
-**At AX3 the stroke does not thin — nothing about the mark moves.** Both marks
-are fixed by design (`.system(size:)` and a 30pt frame), so what changes is
-everything around them: the card goes from 52.0pt tall to 105.7
-(140.3 on the one carrying a caption) and the ring is still 30pt of 2.00pt
-stroke. It is quieter there in the sense that it is a smaller share of a much
-bigger row, and a stroke shows that more than a fill does.
-
-**Light mode measures 3.59:1** — `#009888` sampled off the rendered ring
-against a card sampled as a true `#FFFFFF` — so it clears 3:1. Dark measures
-9.57:1. This is reported and not decisive; Anton is judging in dark.
-
-**The tap target is unchanged, checked twice.** The `.frame(width: 44,
-height: 44)` and `.contentShape(.rect)` moved out of the disc's chain and sit
-outside whichever mark is drawn, unchanged and still the last two modifiers
-before `.buttonStyle` — nothing inside the 30pt footprint reaches them. And the
-accessibility tree, read from the simulator for both builds against the same
-fixture, returns identical rects for all six card buttons: `Log Calories` at
-`1196,301 44×44` in each, and so on down the screen.
+**The press fills the ring** with the full accent rather than
+`AccentFillPressed`, which recedes toward its surface and does nothing visible
+to a 2pt stroke, and the glyph flips to `Color.onAccent` with it. Both arrive
+instantly and scaled up through the existing press machinery; nothing was added
+for it. So **a pressed ring is what the resting disc was** — the honest inverse,
+not a coincidence to design around.
 
 ## 43. A rate link on About, now that there is an id — done
 
-About deliberately shipped without one — `017267c` — because the URL needs the
-numeric App Store id and there was no app. **There is now: `6803768789`**, and
-it turned up with the *app record* on 2026-08-20 rather than with the release,
-which is earlier than SHIPPING.md assumed when it filed this under "after the
-first release".
+A `Link` row above *Support*, to
+`apps.apple.com/app/id6803768789?action=write-review`. About deliberately
+shipped without one — `017267c` — because the URL needs the numeric App Store
+id and there was no app; the id turned up with the *app record* on 2026-08-20
+rather than with the release, which is earlier than SHIPPING.md assumed when it
+filed this under "after the first release". `52567eb`, `c54da7e`, `5f18e9f`,
+`2ea154e`
 
-```
-https://apps.apple.com/app/id6803768789?action=write-review
-```
-
-**Decided: a link, not a prompt.** `SKStoreReviewController` / SwiftUI's
-`requestReview` puts a rating dialog in front of somebody who did not ask for
-one, which is the same category as streaks, badges and notifications — the
-things rule 4 of PHILOSOPHY.md refuses. A row on About that says so and does
-nothing until it is tapped is the opposite: inert until somebody goes looking
-for it. That distinction is the whole item; if it ever turns into a prompt it
-should be closed instead.
-
-**Why have one at all**, given the app asks for nothing else. App Store ranking
-is heavily rating-weighted, and an app with no ratings ranks badly however good
-it is. This app has no marketing budget, no ads and no launch — the listing is
-the entire distribution strategy. A passive link is the cheapest honest lever on
-that, and it costs one row.
-
-**Built as a `Link` row above *Support*.** `c54da7e`. Beside the Support
-message rather than as a fourth button inside it: that message opens by talking
-the reader out of giving money, and a review link reached only through it is two
-taps behind a deflection.
-
-**The dead-link window is closed.** 1.0 went on sale on 2026-09-04, and the
-row's own URL now resolves — `curl -sSL` on
-`apps.apple.com/app/id6803768789?action=write-review` returns **200** after a
-301 to `apps.apple.com/us/app/boring-tracker/id6803768789`, a page that reads
-*Boring Tracker* at `"price":0`. The window this paragraph used to describe was
-real: while 1.0 sat unreleased the same URL 404'd, so a TestFlight or
-side-loaded build carried a row pointing at a page the store would not admit to
-having. It was testers only, it closed on release, and it needs no caveat now.
+**A link, not a prompt** — and why, and why it sits above the Support message
+rather than inside it, is in [PRODUCT.md](PRODUCT.md). The dead-link window
+closed when 1.0 went on sale on 2026-09-04; the URL returns 200 after a 301 to
+the listing.
 
 **Still unverified: that the row lands on the store page.** The simulator has no
-App Store app, so the handoff fails there — Safari refuses the URL as
-invalid, and it refuses a *live* app's `?action=write-review` link the same way,
-which is what says the failure is the simulator and not the URL. The listing is
-public now, so the only thing still missing is a phone.
-[Item 17](#17-one-pass-on-a-real-device) is the device pass; it is checked there.
+App Store app, so the handoff fails there — Safari refuses the URL as invalid,
+and it refuses a *live* app's identical link the same way, which is what says
+the failure is the simulator and not the URL.
+[Item 17](#17-one-pass-on-a-real-device) is where it is checked.
 
 ## Noted, not scheduled
 
@@ -2745,130 +1574,44 @@ Real, small, and not worth a session each — the overhead of reading the docs,
 testing and reviewing dwarfs the work. **Do them in one pass**, whenever one of
 the numbered items is going near the same code.
 
-- [x] **A tracker detail row is taller than the History row it now matches.**
-      It was 74pt against History's 52, read off the accessibility tree on the
-      same five entries; both are 52 now. **Decided, not just fixed:** detail
-      takes `.listRow` whole, including the trailing 12 that was sized for a
-      repeat disc it does not have, because a private set of insets for the one
-      screen without a trailing control is exactly the drift this note was
-      about. It costs 4pt of air to the right of the time. `f2ce523`
+**Nothing is open here.** What it has held is below, collapsed like any other
+done item.
 
-- [x] **Export through the share sheet.** Done in item 18b: export and import
-      are two sections now, the confirmation dialog went with import, and a
-      plain `ShareLink` presents. No UIKit. The bisect below is what made that
-      one-line-of-structure fix findable, and it stays for the same reason the
-      wrong diagnosis above it does. Original note, unchanged:
-
-      A `ShareLink` gives AirDrop,
-      Messages, Mail and any app that takes a file, with Files still among
-      them. About three lines. **It is not three lines, and the three-line
-      version does not work at all** — see below. The *dated name* half is
-      done: both exports are offered as `boring-tracker-2026-08-16`, verified
-      by saving one into Files.
-
-      **`ShareLink` does not present from the Data section.** Tapping it does
-      nothing — no sheet, no log line, no error. A `Button` in the same section
-      works on the same synthesized tap, so it is the control and not the input
-      path.
-
-      **The cause is `.confirmationDialog`, not `.sheet(item:)`**, and the
-      first diagnosis had it wrong. Re-bisected on an iPhone 17 / iOS 26.3 by
-      putting a probe `ShareLink` into the real screen — not a model of it —
-      and building it eight ways:
-
-          Data section, as shipped                        silent
-          Data section, editor `.sheet(item:)` removed    silent
-          Data section, `.fileExporter` removed           silent
-          Data section, `.confirmationDialog` only        silent
-          Data section, every presentation stripped       presents
-          Data section, `.alert(item:)` only              presents
-          Data section, `.fileImporter` + `.alert`        presents
-          *Add Tracker* section, `.sheet` still attached  presents
-
-      So `.confirmationDialog` on the same container is enough on its own, and
-      that dialog is the import merge/replace chooser. The `.sheet(item:)`
-      reading is disproved three ways: removing the tracker editor's `.sheet`
-      does not bring the ShareLink back, a probe two sections up presents while
-      that `.sheet` is still attached, and a 40-line throwaway app pairing a
-      `Form`, a `.sheet(item:)` and a `ShareLink` — the shape the original
-      bisect describes — presents every time. **A minimal repro that does not
-      reproduce is evidence about the repro**, which is how the wrong modifier
-      got the blame.
-
-      What is left is a decision rather than a fix, and the corrected cause adds
-      an option that was not on the list when it was taken: **host the
-      confirmation dialog somewhere else** and see whether a plain `ShareLink`
-      then presents. Failing that, present `UIActivityViewController` directly
-      (about fifteen lines and the app's first UIKit, and it does work from that
-      screen — probed), move the export rows out of the settings list, or leave
-      the Files exporter alone. Not taken here, because a small-things pass is
-      the wrong place to add the first UIKit bridge. See item 18b.
-- [x] **XcodeGen churns `TEMP_…` UUIDs on every regenerate.** Fixed by moving
-      `Signing.xcconfig` into `Config/`. With `createIntermediateGroups` on, a
-      config file beside `project.yml` makes XcodeGen build a group for the
-      *containing directory* to hold it — a group named after whatever the
-      clone is called, and one nothing ever gives a deterministic id, so it and
-      the file reference came out as fresh `TEMP_<uuid>`s and five lines of the
-      committed `.xcodeproj` changed every run. Any subdirectory ends it; two
-      regenerates in a row are now byte-identical. See docs/TECH.md.
-- [x] **`validateImport` never looks at a tracker's name.** It checked ids,
-      `decimals` and `sortIndex`, so an imported or hand-edited file could carry
-      `"name": ""` — and a nameless tracker draws a blank card on home, a blank
-      row in settings, and a blank identity line in History, which the last of
-      those documents itself as the one thing it cannot promise. Now one check
-      beside the others: a name that is empty **after trimming whitespace** is
-      refused at the import boundary, naming the tracker's id so the file can be
-      fixed.
-
-      **Refused rather than repaired**, which was the choice. A repair — falling
-      back to "Untitled" — rewrites a record the user never edited and stamps it
-      as an edit, and the merge then carries that invented name to every other
-      device; the blank row is at least honest about being a blank row. Refusing
-      also matches what the app itself can produce: `TrackerEditor` trims and
-      will not save an empty name, so no document this app has ever written can
-      fail this check. Two tests, an empty name and a whitespace-only one.
-
-      **It sits beside `validateImport` rather than inside it, because
-      `restoreImportBackup` runs that one too.** The recovery slot holds a
-      document this app wrote out of its own memory, and loading a local file is
-      deliberately tolerant, so a hand-edited store file can put a blank name in
-      there — and refusing it on the way back would disable the one action that
-      undoes a destructive import, over a row that is only blank. The checks
-      around it earn their strictness on both paths, being about merges that
-      stop converging and formatting that crashes. A third test holds that line.
-- [x] **`(max ?? -1) + 1` traps on `Int.max`.** Already fixed, in `a1c42a5`
-      (item 10): `Store.add` renumbers the whole list when the largest index is
-      within one of `Int.max`, and `validateImport` rejects the value at the
-      import boundary outright. What was missing was a test for the value
-      arriving the way import cannot stop it — in the store file this device
-      wrote — so there are now two, and with the guard removed the first one
-      kills the test process rather than failing an expectation, which is what a
-      Swift overflow does.
-- [x] **The log sheet has no signposted exit** since Cancel was removed. Swiping
-      down works and nothing advertises it; `.presentationDragIndicator(.visible)`
-      bought it back for one line, on the `NavigationStack` rather than the
-      `Form` because it is a property of the presentation. Item 12 was the thing
-      it waited on and item 12 was reverted, so the standard sheet is what
-      ships. It costs nothing: against the same build without it, on an
-      iPhone 17, the only rows of the screenshot that differ are the grabber's
-      own 15px and the clock inside the *When* row, which moved because the two
-      runs were minutes apart. The title, the fields, the keypad and the Log
-      bar are pixel-identical.
+- [x] **A tracker detail row is taller than the History row it now matches** —
+      74pt against 52, both 52 now. Decided rather than just fixed: detail takes
+      `.listRow` whole, including the trailing 12 that was sized for a repeat
+      disc it does not have, because a private set of insets for the one screen
+      with no trailing control is exactly the drift this note was about.
+      `f2ce523`
+- [x] **Export through the share sheet** — done in item 18b. The platform bug
+      that made it hard, the eight-way bisect that found it, and the reason
+      those two settings sections must not be merged back together are in
+      [TECH.md](TECH.md). `dd25193`, `3028257`, `35a5fd0`
+- [x] **XcodeGen churns `TEMP_…` UUIDs on every regenerate** — fixed by moving
+      `Signing.xcconfig` into `Config/`. A config file has to live in a folder;
+      why is in [TECH.md](TECH.md). `cf6ea27`
+- [x] **`validateImport` never looks at a tracker's name** — an empty one is
+      refused at the import boundary now, naming the id, and **refused rather
+      than repaired**. It sits beside `validateImport` rather than inside it,
+      because `restoreImportBackup` runs that one too. [TECH.md](TECH.md).
+      `c31c0ff`
+- [x] **`(max ?? -1) + 1` traps on `Int.max`** — already guarded in `a1c42a5`;
+      what was missing was a test for the value arriving the way import cannot
+      stop it, in the store file this device wrote. With the guard removed the
+      first of those tests kills the test process rather than failing an
+      expectation, which is what a Swift overflow does. `66438a3`
+- [x] **The log sheet has no signposted exit** since Cancel was removed.
+      `.presentationDragIndicator(.visible)`, on the `NavigationStack` rather
+      than the `Form` because it is a property of the presentation. It costs
+      nothing: against the same build without it, the only rows of the
+      screenshot that differ are the grabber's own 15px. `820feac`
 - [x] **Releasing a settings drag outside the list commits it** rather than
-      cancelling. Deliberate, and now written down: a comment at the gesture and
-      a line under Screens in PRODUCT.md. Both halves were reproduced on an
-      iPhone 17 first, against the list's measured 116…840pt band: releasing at
-      866 moved the dragged block to the end, releasing at 54 (inside the
-      navigation bar) put it on top.
-
-      **The reason first recorded here was wrong and has been corrected.** It
-      said requiring the finger inside would break dragging to the top edge to
-      reach the first row. Measured from the frames the drop code reads, the
-      first row is 166…210 inside a 116…840 band, so 116…254 already picks it
-      without leaving the list — driven at 150, which landed on the first row.
-      The real reason is tolerance: `row(nearest:)` answers at every y, so a
-      refusal would disambiguate nothing, and it would throw away a drag
-      released a few points past an edge the finger cannot see.
+      cancelling — deliberate, and in [PRODUCT.md](PRODUCT.md). The reason first
+      recorded here was wrong and was corrected: it is not that requiring the
+      finger inside would break reaching the first row (116…254 already picks
+      it), it is tolerance — `row(nearest:)` answers at every y, so a refusal
+      would disambiguate nothing and would throw away a drag released a few
+      points past an edge the finger cannot see. `91217ab`, `4b7fa32`
 
 ## After v1
 

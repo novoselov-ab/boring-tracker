@@ -872,8 +872,10 @@ So they don't get re-argued mid-build:
   `Dictionary(uniqueKeysWithValues:)` *traps* on a duplicate key, so any
   lookup table built from `trackers` or `entries` uses `uniquingKeysWith`
   instead — the form `Store.reorderAll` already used. Seeding such a file and
-  opening the log sheet killed the app on the Log button once, from one
-  `uniqueKeysWithValues` in a snapshot. `StoreFile.load` validates nothing on
+  opening the log sheet killed the app on the Log button once, from a single
+  `uniqueKeysWithValues`, confirmed by reading the crash report rather than by
+  reasoning; `HistoryView` and `RepeatView` carry the reason at their own
+  tables. `StoreFile.load` validates nothing on
   purpose (see the recovery promise above), so bad data reaching a view is the
   designed behaviour rather than the impossible case.
 
