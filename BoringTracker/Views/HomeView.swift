@@ -519,64 +519,20 @@ private struct TrackerCard: View {
         .minimumScaleFactor(0.6)
     }
 
-    /// The bottom Log button, scaled down: same fill, same meaning.
-    ///
-    /// It used to be a bare blue glyph — a different design language from the
-    /// thing it is a smaller version of, and low enough contrast that people did
-    /// not read it as a control at all. A tinted `.bordered` fill was tried
-    /// instead, on the grounds that eight solid dots down one screen is loud,
-    /// and rejected on the original complaint: a blue glyph on a pale blue disc
-    /// is exactly that low contrast again.
+    /// The card's `+`: the app icon's accent ring (docs/TODO.md item 42).
     ///
     /// The 44pt frame is the tap target, and `contentShape` is what makes the
-    /// frame rather than the 30pt fill the thing your thumb has to hit.
+    /// frame rather than the 30pt ring the thing your thumb has to hit.
     private var logButton: some View {
         Button(action: log) {
-            plusMark
+            CardPlusRing()
                 .frame(width: 44, height: 44)
                 .contentShape(.rect)
         }
-        // `.accentFill` rather than `.plain`: the disc draws its own pressed
-        // colour instead of iOS's 75% composite of whatever is behind it.
+        // `.accentFill` rather than `.plain`: it hands the ring the press state
+        // it fills on, instead of iOS's 75% composite of whatever is behind it.
         .buttonStyle(.accentFill)
         .accessibilityLabel("Log \(tracker.name)")
-    }
-
-    /// Whichever of the two marks `CardPlus.outlined` names — docs/TODO.md item
-    /// 42, which is decided: the ring ships. Both draw at 30pt inside the 44pt
-    /// target above.
-    @ViewBuilder
-    private var plusMark: some View {
-        if CardPlus.outlined {
-            CardPlusRing()
-        } else {
-            Image(systemName: "plus")
-                // Fixed, not `.subheadline`: the disc and the 44pt target are
-                // fixed too, and a text style scales without them. At AX3 the
-                // glyph outgrew its circle and the + drew as a crosshair
-                // straddling the edge.
-                .font(.system(size: 15, weight: .bold))
-                // The same dark-on-accent the Log pill uses: this glyph sits
-                // on the identical fill six to ten times down the main screen,
-                // so on the old teal it was the identical 1.86:1 (docs/TODO.md
-                // item 13b).
-                //
-                // `.onAccentFill()` and not `Color.onAccent` written out: the
-                // background below carries all three states since item 26, and a
-                // foreground that names only the enabled one is half a control.
-                // The first `.disabled` put on this button would have painted
-                // black on `#636366` at 3.51:1 rather than the 5.99:1 the white
-                // glyph measures there, and nothing would have said so.
-                .onAccentFill()
-                .frame(width: 30, height: 30)
-                // `accentFilled`, not `.tint` and not `Color.accentColor`: the
-                // environment tint is the ordinary label colour now, and
-                // `Color.accentColor` is still the system blue — item 18's
-                // catalog deliberately does not claim that magic name. The
-                // modifier is what puts the pressed colour and the press's scale
-                // on every accent fill at once.
-                .accentFilled(.circle)
-        }
     }
 
     /// Both together because both come from the same linear scan of the entry
@@ -633,18 +589,12 @@ private struct TrackerCard: View {
     }
 }
 
-/// Which `+` a card draws, and the whole of docs/TODO.md item 42's switch:
-/// `true` is the outlined ring, `false` the filled disc that shipped before it.
-/// The ring is decided and is what `true` ships; the disc stays until the
-/// device pass (item 17) confirms the ring on a phone, because until then the
-/// only thing that has seen it is a simulator screenshot. Deleting it after
-/// that is one branch of `TrackerCard.plusMark` and the mark it names.
+/// The card `+`'s geometry. The ring replaced a filled disc (docs/TODO.md item
+/// 42) and was confirmed on a phone in item 17.
 private enum CardPlus {
-    static let outlined = true
-
-    /// The disc's own footprint, which the ring was built to match. The rest
-    /// are the app icon's ring at that diameter; the ratios and where they
-    /// were sampled are in docs/TODO.md item 42.
+    /// The footprint of the disc it replaced, which the ring was built to
+    /// match. The rest are the app icon's ring at that diameter; the ratios and
+    /// where they were sampled are in docs/TODO.md item 42.
     static let diameter: CGFloat = 30
     static let stroke: CGFloat = 2
     static let glyphSize: CGFloat = 17
@@ -670,8 +620,9 @@ private struct CardPlusRing: View {
         let isPressed = isPressed
         let reduceMotion = reduceMotion
         return Image(systemName: "plus")
-            // Fixed rather than a text style, like the disc's: neither the ring
-            // nor the 44pt target scales, so a glyph that does outgrows both.
+            // Fixed rather than a text style: neither the ring nor the 44pt
+            // target scales, so a glyph that does outgrows both. At AX3 a
+            // scaling glyph outgrew the old disc and drew as a crosshair.
             .font(.system(size: CardPlus.glyphSize, weight: CardPlus.glyphWeight))
             .foregroundStyle(glyph)
             .frame(width: CardPlus.diameter, height: CardPlus.diameter)
