@@ -277,6 +277,21 @@ herdr agent start work --kind claude --pane w3:p2
   exits or is replaced.
 - Pass native agent arguments after `--`.
 
+Three things that cost time on 2026-09-28, all of them silent:
+
+- **Wait for the new pane's shell to reach its prompt before `agent start`.**
+  Run back-to-back with `pane split`, the start fails and leaves a pane with
+  `agent: None` and status `unknown` — it looks like a spawned agent in the
+  sidebar and is not one. A second or two is enough; check
+  `pane list` for a real `agent_status` before prompting.
+- **Never pipe `agent start` or `agent prompt` to `/dev/null`.** That is how
+  the above went unnoticed: the command failed, the output was discarded, and
+  the next command reported a pane that existed with nothing in it.
+- **`agent start` takes focus and has no `--no-focus`**, unlike `pane split`.
+  Put the user back where they were with
+  `herdr pane focus --direction left --pane <new-pane-id>` — the direction is
+  relative to the pane named, and there is no "focus this pane by id" form.
+
 **`agent start` blocks until the agent is ready for input** — it returns with
 `interactive_ready: true` and a real `agent_status`, or `agent_not_ready` if
 the agent is blocked during startup. That is worth saying plainly because the
