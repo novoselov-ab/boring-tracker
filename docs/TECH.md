@@ -761,7 +761,8 @@ Pro. That environment is faster than any phone in absolute terms and still
 misses the 400ms launch budget at *both* two months and five years of data,
 which is why scale.md records the launch delta rather than a verdict and leaves
 "is the budget wrong, or is the launch genuinely slow?" open. Settling it needs
-a real device, and that is TODO item 17.
+a real device. TODO item 17 was that device pass, and it closed on 2026-09-28
+without measuring launch, so the question is still open.
 
 - **Cold launch to interactive: under 400ms.** No splash, no async gate before
   the UI draws. Loading the store is a synchronous decode of a small file

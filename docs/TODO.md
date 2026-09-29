@@ -11,10 +11,10 @@ which is knowledge the code no longer contains.
 So read it as a decision log with a short to-do list on the front, rather than
 as a plan. **What is actually left:**
 
-- [17. One pass on a real device](#17-one-pass-on-a-real-device) — the whole app
-  on hardware, which no simulator answers. **The only numbered item left**, and
-  every question in it needs a thumb, an ear or a real screen: items 27 and 30
-  closed by handing it theirs.
+- **No numbered item is open.** The last one,
+  [17. One pass on a real device](#17-one-pass-on-a-real-device--closed), closed
+  on 2026-09-28 — two of its questions answered on a phone, five closed by
+  decision without being tried. It says which were which.
 - [Noted, not scheduled](#noted-not-scheduled) — real, unranked, no session
   assigned.
 - [Small things, unscheduled](#small-things-unscheduled) — the standing queue
@@ -270,7 +270,18 @@ message.
 One `.searchable` over History, filtering through item 16's matcher rather than
 a second one. `38f6b85`
 
-## 17. One pass on a real device
+## 17. One pass on a real device — closed
+
+**Closed on 2026-09-28, and only partly answered.** Anton did the pass and
+answered the two questions that carried weight: *"1 ring reads as button"*, *"2
+it is fine"*, *"everything is fine"*. Two boxes below were settled on the
+phone — the ring, and the press haptic firing on a scroll that starts on a
+row. **The other five were not tried.** They are closed because they were
+judged not worth the time, not because a device answered them, and each says
+so. None of them is `[x]`; a later reader should treat each as an open
+question that nobody is going to spend a session on, not as a verified
+result. The launch budget that [TECH.md](TECH.md) sends here was not measured
+either.
 
 Three things that no agent can settle, because each needs a thumb, an ear, or
 a real phone rather than a simulator. **One errand, not three** — they were
@@ -310,15 +321,22 @@ makes that button a container and the hint has to move inside it. It cannot be
 settled from the accessibility tree.
 
 - [ ] Turn VoiceOver on and swipe through home, the log sheet and History.
+      **Closed unanswered** — no VoiceOver sweep was done on the device pass.
+      Judged not worth the time; nothing here has been heard through
+      VoiceOver on hardware.
 - [ ] Settle the + button's label and hint, and correct the comment either way.
+      **Closed unanswered**, for the same reason. The comment above the
+      card's `.accessibilityHint` in `HomeView.swift` still says
+      **unverified**, and that is still true.
 
 **One more thing to look at while the phone is in hand.** The card `+` is an
 outlined ring, chosen off simulator screenshots (item 42, decided). The filled
-disc it replaced is still in the code behind `CardPlus.outlined` for exactly
-this reason.
+disc it replaced was kept in the code behind `CardPlus.outlined` for exactly
+this reason, until the answer below.
 
-- [ ] Look at the ring on a real screen. If it holds up, delete the disc; if it
-      does not, the constant is one line.
+- [x] Look at the ring on a real screen. If it holds up, delete the disc; if it
+      does not, the constant is one line. **Answered on the phone: "ring reads
+      as button".** The disc and `CardPlus.outlined` are gone in `85ec8d2`.
 
 **Three questions about a press that only a thumb can answer.** None of them is
 about whether a press draws — item 32 settled that at 60fps, on taps down to
@@ -335,7 +353,9 @@ item 27 closed; the first was already shared with it.
       unsupported" and nothing reaches CoreHaptics, which is why this is the
       first thing to hold a phone for. **If it buzzes on every flick, deleting
       the press haptic is the fix already on the table**, and it costs nothing
-      that has ever been felt.
+      that has ever been felt. **Answered on the phone: "it is fine".** The
+      haptic firing on a flick that starts on a row is acceptable as it is, so
+      the press haptic stays and no change was made.
 - [ ] **Does the 2pt scale read as a press under a thumb?** Item 27 replaced
       colour with motion because colour alone had been measured and still was
       not noticed, and the motion was then judged the same way the colour was —
@@ -345,6 +365,9 @@ item 27 closed; the first was already shared with it.
       cannot answer, and it is the same gap item 26 fell into one step earlier.
       **If it is not enough, the number is one constant** — the mechanism is
       already right and `accentFilled(_:)` is the only place it lives.
+      **Closed unanswered** — not specifically tried under a thumb. Covered
+      only by "everything is fine", which is not an answer to this question.
+      The 2pt stays.
 - [ ] **What does a press called off look like?** SwiftUI reports a
       cancellation and a release identically, so a flick that starts on a row
       leaves that row washed while the list is already scrolling. Item 40 made
@@ -355,7 +378,8 @@ item 27 closed; the first was already shared with it.
       first reported is too short to be that; see the correction there. Still
       cosmetic, and the fix is still a second gesture watching for movement, which
       `RowPress.swift` has three times decided not to add. Look at it on a phone
-      before deciding it is worth machinery.
+      before deciding it is worth machinery. **Closed unanswered** — not
+      specifically looked at. No machinery was added, and none is planned.
 
 **Where the rate link actually lands.** Item 43 put a `Link` to
 `apps.apple.com/app/id6803768789?action=write-review` on About. The simulator
@@ -365,6 +389,8 @@ invalid, and refuses a live app's identical link the same way.
 - [ ] Tap *Leave a Review* on the phone and confirm it opens the App Store on
       **this** app, on the write-a-review sheet. No longer waiting on the
       listing: it went public on 2026-09-04 and the URL returns 200.
+      **Closed unanswered** — not tapped on the device pass. Where the link
+      lands on a phone is still unverified.
 
 **Pressed states are otherwise done and are not waiting on a device.** They sat
 here across four sessions as uncapturable — pressing a control in the simulator
@@ -777,8 +803,9 @@ neither does resizing.
 **Closed with nothing left to build here.** The two things it could not settle
 are whether the haptic helps and whether 2pt reads as a press under a thumb, and
 a simulator answers neither — UIKit logs "Haptics: unsupported" and a
-synthesized click has no thumb behind it. Both are questions in
-[item 17](#17-one-pass-on-a-real-device) now.
+synthesized click has no thumb behind it. Both went to
+[item 17](#17-one-pass-on-a-real-device--closed), which closed with the haptic
+answered on a phone and the 2pt scale not tried.
 
 ## 28. Rows should behave like controls — done
 
@@ -802,8 +829,8 @@ the insets, and the scroll measurement that says the extra layer costs nothing,
 are in [TECH.md](TECH.md).
 
 Still judged by a synthesized press rather than a thumb —
-[item 17](#17-one-pass-on-a-real-device) settles that, with the haptic and item
-27's scale.
+[item 17](#17-one-pass-on-a-real-device--closed) was to settle that, with the
+haptic and item 27's scale, and closed with only the haptic answered.
 
 ## 29. Sort Log again chronologically — done
 
@@ -1118,8 +1145,8 @@ marker-anchored recordings taken here put touch-down between 1786.7ms and
 - **And the same flick fires the press haptic**, because `pressHaptic` triggers
   on the same boolean the wash does. That cannot be measured here — a simulator
   logs "Haptics: unsupported" — so it is recorded as a consequence rather than
-  as a number, and it is [item 17](#17-one-pass-on-a-real-device)'s first
-  question. Deleting the press haptic is the fix already on that table.
+  as a number, and it was [item 17](#17-one-pass-on-a-real-device--closed)'s
+  first question. Answered on a phone: it is fine, and the press haptic stays.
 - **Scrolling itself is unchanged.** Same synthesized 120pt drag starting on a
   row, displacement read two seconds after release, six runs per side: 306–319pt
   with the delay on, 298–316pt with it off, ranges overlapping. Reorder,
@@ -1166,13 +1193,12 @@ and deleted the loser, which is not what he asked for — *"dont delete for now,
 dont care, we can do later"* — and `d1c1d38` put it back. `68a6493`, `d0d6f55`,
 `2af7a24`, `1361702`
 
-**Deleting the disc waits on the device pass,
-[item 17](#17-one-pass-on-a-real-device).** The ring has only ever been seen in
-simulator screenshots, so while the comparison can still be lost, going back is
-one line rather than unpicking a commit. Once the ring survives real use, what
-goes is that branch, the mark it names, `plusMark` itself — a chooser between
-one thing is not a chooser — and the `CardPlus` enum, leaving `logButton` naming
-`CardPlusRing()` directly.
+**The disc is deleted, after the device pass,
+[item 17](#17-one-pass-on-a-real-device--closed).** The ring read as a button
+on a phone, so `85ec8d2` removed the disc branch, `plusMark` and
+`CardPlus.outlined`, and `logButton` now names `CardPlusRing()` directly. The
+`CardPlus` enum stays, holding only the ring's geometry, so the ratios below
+still have one place in code that points here.
 
 **What the disc knew, kept because its comment goes when it does.** It started
 as a bare blue glyph, which was a different design language from the bottom Log
@@ -1230,7 +1256,8 @@ the listing.
 App Store app, so the handoff fails there — Safari refuses the URL as invalid,
 and it refuses a *live* app's identical link the same way, which is what says
 the failure is the simulator and not the URL.
-[Item 17](#17-one-pass-on-a-real-device) is where it is checked.
+[Item 17](#17-one-pass-on-a-real-device--closed) was where it would be checked,
+and it closed without the link being tapped, so this is still unverified.
 
 ## Noted, not scheduled
 
