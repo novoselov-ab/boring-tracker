@@ -22,7 +22,8 @@ as a plan. **What is actually left:**
   near the same code. **Currently empty**; what it has held is collapsed there.
 - [After v1](#after-v1)
 - [iPad 1.1 scope](#ipad-the-scope-decided) — universal layout implemented;
-  hardware pass and iPad listing screenshots remain before submission.
+  the hardware pass remains before submission; the iPad listing screenshots
+  are captured.
 
 Everything else below is finished, reverted, or closed without a change, and
 says so in its heading.

@@ -254,8 +254,9 @@ specifications* page in the App Store Connect help:
 - **1.0 had no iPad sizes**, because that build was iPhone-only. **1.1 enables
   iPad**, so an iPad listing set is now required before submission. Capture it
   from the final build and check Apple's current accepted dimensions then.
-  A five-image dark-mode draft is in `docs/screenshots/ipad/`; its README
-  records the source and why a clean recapture is still needed before upload.
+  The five-image dark-mode set in `docs/screenshots/ipad/` is ready to upload
+  to the 13-inch slot (2064 × 2752, checked 2026-09-28); its README records
+  how it was captured.
 
 Apple changes these. Read them off App Store Connect on the day rather than
 trusting this list, and note that the parser is exact: a screenshot one pixel
