@@ -8,14 +8,65 @@ re-check anything consequential at the time you do it. Boring Tracker 1.0 went
 for review on 2026-08-21 and reached the App Store on 2026-09-04, and the
 checklist at the bottom records what each answer actually was.
 
-## 1.1 iPad release gates
+## 1.1: the first update
 
-The development project is now universal; the iPhone-only checklist below
-records the 1.0 decision. Before submitting 1.1, complete the iPad hardware
-pass (including keyboard and window resizing), prepare the iPad listing
-screenshots at Apple's then-current sizes, and update listing copy that calls
-the app iPhone-only. Development simulator evidence does not complete these
-release gates. No 1.1 upload or submission is part of the layout work.
+**Submitted 2026-09-29 03:38:51 UTC** (the evening of the 28th, Pacific), version 1.1 with **build 2**, state
+`WAITING_FOR_REVIEW`. The first universal build: iPhone and iPad.
+
+**The iPad gates it had to clear.** Anton ran 1.1 on his own iPad on
+2026-09-28 and found nothing wrong, which is the hardware pass. The iPad
+listing set went up. The description stopped calling it "an iPhone app" and
+the review note stopped calling it "iPhone-only". Simulator evidence alone
+would not have cleared the first gate.
+
+**What went up.** Five iPad frames from `docs/screenshots/ipad/` into a new
+`APP_IPAD_PRO_3GEN_129` set (2064 × 2752). On iPhone, new `history.png` and
+`graph.png` replaced their inherited copies. `home`, `log` and `again` were
+**reused**: their MD5s on the 1.1 record matched the files in the repo, so they
+were not re-uploaded. All ten read `COMPLETE` with matching checksums.
+
+### What an update needs that a first release did not
+
+Creating a version copies most of the previous one, but not all of it, and
+some of what it copies is no longer true.
+
+- **Carried over, and still right:** categories, content rights, age rating
+  (all 30 attributes identical, `FOUR_PLUS`), name, subtitle, privacy URL,
+  price (0.0, no in-app purchases), availability, description, URLs and the
+  review contact. The age rating and categories sit on a **second `appInfos`
+  record** in `PREPARE_FOR_SUBMISSION`, next to the live one. Read both and
+  compare; do not assume the copy.
+- **Not carried over: promotional text.** It read `null` on the new version
+  and was set back to 1.0's exact string.
+- **Carried over, but wrong: the review note.** It is copied verbatim, so its
+  *TESTED ON* paragraph still said "iPhone-only, portrait-only" on a universal
+  build. A copied field is only as true as the release it was written for, so
+  read the note again for every version.
+- **Screenshots are copied as new objects.** The 1.1 set had its own ids for
+  the same five images, so deleting two of them left 1.0's live set untouched.
+  To replace one: upload the new image, delete the old one, then PATCH
+  `appScreenshotSets/{id}/relationships/appScreenshots` with the full order.
+  Compare `sourceFileChecksum` against a local `md5` first to see which
+  images actually changed.
+- **What's new** can be written on an update, unlike on 1.0.
+- **A new `reviewSubmissions` is needed.** 1.0's reads `COMPLETE` and cannot
+  be reused.
+- **The build number still counts up across versions.** 1.1 shipped as
+  build 2, one past 1.0's build 1, following the counter rule in the checklist.
+
+### The build, as it actually ran
+
+- `xcodebuild archive` needs **`DEVELOPMENT_TEAM` passed on the command
+  line**, because `project.yml` deliberately omits it.
+- `-exportArchive` failed with **`errSecInternalComponent`**. That meant the
+  signing keychain had re-locked since 1.0, not that anything was wrong with
+  signing. Unlock that keychain, not the login one, and export again.
+- `altool --upload-app` only finds the key in one of its conventional
+  directories. It was copied into `~/.appstoreconnect/private_keys/` (mode 600)
+  and now stays there.
+- The build read `VALID` at the first poll, a few minutes after the upload.
+  The poll ran after the screenshots, so this does not measure how long
+  processing takes.
 
 ## What costs money, and when
 

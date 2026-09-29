@@ -21,9 +21,9 @@ as a plan. **What is actually left:**
   for things not worth a session each, done in one pass whenever something goes
   near the same code. **Currently empty**; what it has held is collapsed there.
 - [After v1](#after-v1)
-- [iPad 1.1 scope](#ipad-the-scope-decided) — universal layout implemented;
-  the hardware pass remains before submission; the iPad listing screenshots
-  are captured.
+- [iPad 1.1 scope](#ipad-the-scope-decided) — done: universal layout, the
+  hardware pass on Anton's iPad, and the listing screenshots; 1.1 was submitted
+  on 2026-09-28.
 
 Everything else below is finished, reverted, or closed without a change, and
 says so in its heading.
@@ -1816,8 +1816,10 @@ across the resize, and redrew correctly at both ends: `readableContent()`
 branching on the idiom rather than the size class costs nothing, because below
 640pt the cap is simply inert.
 
-The real-iPad pass remains, including a hardware keyboard and live resizing by
-hand. iPad listing screenshots have not been prepared. The original decision
+**The real-iPad pass is done.** Anton ran 1.1 on his own iPad on 2026-09-28:
+*"i tested ipad version, it seems fine"*, and *"everything is fine"*. Which of
+the hardware keyboard and hand resizing he exercised was not itemised. The
+listing screenshots went up with the 1.1 submission the same day. The original decision
 below is kept as the scope that led to this implementation.
 
 At this decision point, `TARGETED_DEVICE_FAMILY` was `1`. The four questions

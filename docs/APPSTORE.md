@@ -84,7 +84,7 @@ the one to edit if something needs saying between releases.
 counted.
 
 ```
-Boring Tracker is an iPhone app for writing down numbers.
+Boring Tracker is an app for writing down numbers.
 
 Free, open source, no ads, no accounts, no subscription, no server, no feature bloat. Type a number, done.
 
@@ -275,9 +275,9 @@ specifications* page in the App Store Connect help:
 - **1.0 had no iPad sizes**, because that build was iPhone-only. **1.1 enables
   iPad**, so an iPad listing set is now required before submission. Capture it
   from the final build and check Apple's current accepted dimensions then.
-  The five-image dark-mode set in `docs/screenshots/ipad/` is ready to upload
-  to the 13-inch slot (2064 × 2752, checked 2026-09-28); its README records
-  how it was captured.
+  The five-image dark-mode set in `docs/screenshots/ipad/` went up to the
+  13-inch slot (`APP_IPAD_PRO_3GEN_129`, 2064 × 2752) with 1.1 on 2026-09-28;
+  its README records how it was captured.
 
 Apple changes these. Read them off App Store Connect on the day rather than
 trusting this list, and note that the parser is exact: a screenshot one pixel
