@@ -48,7 +48,7 @@ for "boring tracker". That is the strategy in SHIPPING.md, *Listing strategy*.
 ### Keywords
 
 ```
-macro,protein,carbs,food,diary,habit,water,log,counter,free,no ads,open source,offline,private
+macro,protein,carbs,food,diary,habit,water,log,counter,glucose,minimal,offline,private,open source
 ```
 
 100 characters, **unverified** — Apple's public help pages do not state the
@@ -112,6 +112,27 @@ The paragraph about what it does not do is one compact line rather than a
 screen of bullets on purpose. It is the part that is both true and rare — see
 *Listing strategy* in SHIPPING.md — and a list of nine absences set as nine
 bullets reads as a feature grid, which is the thing this app is not.
+
+### What's new in 1.1
+
+```
+Runs on iPad.
+
+When you first open the app it now asks which units you use and which trackers
+to start with, instead of guessing.
+
+Fixed: a day could begin at the wrong moment around a daylight saving change,
+and after changing time zone the home screen could go on showing the previous
+day's totals.
+```
+
+**Set on the 1.1 record 2026-09-28**, along with the keywords above.
+`whatsNew` is writable here where it was refused on 1.0 — there is a previous
+release to describe now.
+
+Three user-visible things, in the order somebody cares about them. The
+day-boundary fixes get a plain sentence rather than the detail in `TECH.md`:
+what a reader needs is that the symptom is gone, not how far the search walked.
 
 ### What's new in 1.0
 
