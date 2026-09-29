@@ -275,6 +275,37 @@ creates no conflict with App Store distribution, and linking the repository from
 the App Store description is worth doing: for the people who care about this
 app's promises, the source is the proof.
 
+## Nominating the app for featuring
+
+Apple's editorial team takes nominations, and **the API carries them** — it is
+not a web-only form. Established 2026-09-28 by probing the live endpoint, the
+way the listing routes were.
+
+`GET /v1/nominations` **requires `filter[state]`**, one of `DRAFT`,
+`SUBMITTED`, `ARCHIVED`. A `POST` with an empty body names every required
+field, which is the cheapest way to learn the shape:
+
+| field | notes |
+|---|---|
+| `name` | the nomination's own title, not the app's |
+| `description` | **1000 characters, hard limit** — over it is a 400 |
+| `type` | `APP_LAUNCH`, `APP_ENHANCEMENTS` or `NEW_CONTENT` |
+| `publishStartDate` | ISO 8601 **date-time**; a bare date is refused |
+| `submitted` | create `false`, then PATCH `true` |
+| `relatedApps` | a relationship, not an attribute |
+
+**Create as a draft and submit in a second call.** A 400 on the description
+length after a one-shot submit would be a worse place to discover the limit.
+
+One quirk: after the PATCH, `state` reads `SUBMITTED` while the `submitted`
+attribute itself reads back `null`. **Trust `state`.**
+
+**1.1 was nominated 2026-09-28** as `APP_ENHANCEMENTS`, publish date
+2026-10-15, 985 characters. What the pitch leads on is what cannot be claimed
+by a competitor: free with no monetisation of any kind, and a privacy claim
+that is *provable from public source* rather than asserted. The day-boundary
+fixes were cut — correct, but a bug fix is not what gets featured.
+
 ## Filling the listing without the web UI
 
 Nearly all of the listing can be written over the **App Store Connect API**
