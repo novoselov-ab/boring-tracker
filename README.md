@@ -1,31 +1,30 @@
 # <img src="BoringTracker/Resources/Assets.xcassets/AppIcon.appiconset/boring-tracker-1024.png" width="40" alt="Boring Tracker icon"> Boring Tracker
 
-iPhone app for tracking whatever you want — macros, habits, or any other data.
+iPhone and iPad app for tracking whatever you want — macros, habits, or any
+other data.
 
-**[Download on the App Store](https://apps.apple.com/app/id6803768789)** — free,
-iPhone, iOS 18 or later.
+**[Download on the App Store](https://apps.apple.com/app/id6803768789)** —
+free, iOS / iPadOS 18 or later.
 
 [![Build and test](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/novoselov-ab/boring-tracker/actions/workflows/ci.yml)
 
-Free, open source, no ads, no accounts, no subscription, no server, no feature
-bloat. Type a number, done.
+Free, open source, no ads, no accounts, no subscription, no server.
 
-Most other macro trackers want you to scan a barcode for every ingredient of a
-dish you cooked yourself. It takes a lot of time for no benefit. This one just
-lets you write down `600 calories, 40 protein` and done, as fast as possible,
-minimum clicks, minimum wait/lag.
+Most macro trackers want you to scan a barcode for every ingredient of a dish
+you cooked yourself. That takes a lot of time for no benefit. This app just
+lets you write down `600 calories, 40 protein`, with as few taps as possible
+and no waiting.
 
-You can also use it to track anything you want: your cat's weight, pushups,
-blood glucose, the last time you changed a filter.
+It works for more than food: weight, pushups, blood glucose, your cat's
+weight, or when you last changed a filter.
 
-The app is open source and stores everything on your own device. You can always
-export all your data as json/csv, or import it back. It is absolutely free, has
-no ads, and never will have any. My goal with it is to behave like a built-in
-iOS app (e.g. the calculator). It is boring, but does its job, hence the name.
+Everything is stored on your device, and you can export it all as JSON or CSV
+(and import it back) whenever you want. The goal is for the app to feel like a
+built-in iOS app, like the calculator: boring, but it does its job. Hence the
+name.
 
-1.0 is on the App Store, as of 2026-09-04. It is still early — the design is
-settled and written down, and [docs/TODO.md](docs/TODO.md) is the short list of
-what is left.
+Version 1.1 is on the App Store. The design is settled and written down, and
+[docs/TODO.md](docs/TODO.md) lists what is left.
 
 ## Screenshots
 
@@ -43,39 +42,40 @@ what is left.
 
 ## Features
 
-This is the minimum set that makes the app useful. Nothing is here because
-another tracker has it.
+The feature list is short on purpose:
 
-- **Daily totals** — calories, protein, water. Resets at your day boundary.
-- **Measurements** — weight, blood glucose. A standalone reading, no reset.
-- **Last time** — tyres, the water filter. One tap, no number: "2 months ago".
-- **Groups**, so trackers you log together take one sheet.
-- **Logging** — the + opens what you logged last, with the number pad up.
-- **Log again** — repeat anything you have logged, one tap, searchable.
-- **History**, grouped by day and searchable. Edit, delete, undo.
-- **Graphs** — bars, lines, moving average. Week, month, year, or all of it.
+- **Daily totals** — calories, protein, water. Entries add up and reset at
+  your day boundary.
+- **Measurements** — weight, blood glucose. Standalone readings with no reset.
+- **Last time** — tyres, the water filter. One tap records the date, and the
+  app shows how long it has been.
+- **Groups** — trackers you log together share one sheet.
+- **Logging** — the + button opens what you logged last, with the number pad
+  already up.
+- **Log again** — repeat any past entry with one tap; the list is searchable.
+- **History** — grouped by day and searchable, with edit, delete, and undo.
+- **Graphs** — bars or lines with a moving average, over a week, month, year,
+  or everything.
 - **Export and import** — JSON or CSV out, JSON back in.
-- **Archive** a tracker without losing its data.
+- **Archive** — retire a tracker without losing its data.
 - **Settings** — day boundary, light or dark, and the trackers themselves.
 
 Why each of these exists, and what was left out, is in
 [docs/PRODUCT.md](docs/PRODUCT.md).
 
-Issues and pull requests are welcome. Both get judged against
-[docs/PHILOSOPHY.md](docs/PHILOSOPHY.md), so read it first — a feature can be
-good and still be wrong for this app, and most of the rules there exist to say
-no to something.
+Issues and pull requests are welcome. Read
+[docs/PHILOSOPHY.md](docs/PHILOSOPHY.md) first: it is the list of rules the
+app follows, and features get judged against it, so a feature can be good and
+still not fit this app.
 
 ## Support
 
-If you want to support this, I really appreciate it — but I would rather you
-gave the money to a charity. [GiveWell](https://www.givewell.org) is the one I
-recommend. Other things that help:
-
-- Email me at [novoselov.ab@gmail.com](mailto:novoselov.ab@gmail.com). I would
-  be glad to hear it is useful.
-- [Leave a review on the App Store](https://apps.apple.com/app/id6803768789?action=write-review).
-- Share it with someone who would use it.
+If you want to support the app: leave
+[a review on the App Store](https://apps.apple.com/app/id6803768789?action=write-review),
+share it with someone who would use it, or email me at
+[novoselov.ab@gmail.com](mailto:novoselov.ab@gmail.com) — I am glad to hear it
+is useful. If you want to give money, give it to a charity instead;
+[GiveWell](https://www.givewell.org) is the one I recommend.
 
 ## Building it
 
@@ -115,27 +115,25 @@ open "$(xcrun simctl get_app_container booted com.novoselov.boringtracker data)/
 
 ## Docs
 
-- [Website](https://novoselov-ab.github.io/boring-tracker/) — what the app is
-  and the rules it keeps ([docs/index.html](docs/index.html)), with the
+- [Website](https://novoselov-ab.github.io/boring-tracker/) — the landing page
+  ([docs/index.html](docs/index.html)), with the
   [privacy policy](https://novoselov-ab.github.io/boring-tracker/privacy.html)
   on its own page ([docs/privacy.html](docs/privacy.html)).
-- [Philosophy](docs/PHILOSOPHY.md) — the spirit, and the rules that must not be
-  broken.
-- [Product](docs/PRODUCT.md) — what the app actually is: the model, the
-  screens, the scope.
-- [Tech](docs/TECH.md) — how it's built, and why, with the benchmarks behind
+- [Philosophy](docs/PHILOSOPHY.md) — the rules the app follows and the reasons
+  for them.
+- [Product](docs/PRODUCT.md) — the data model, the screens, and the scope.
+- [Tech](docs/TECH.md) — how it's built and why, with the benchmarks behind
   the storage decision.
-- [Scale](docs/scale.md) — what five years of use (29,756 entries) does to the
-  app, measured screen by screen.
+- [Scale](docs/scale.md) — how the app holds up after five years of data
+  (29,756 entries), measured screen by screen.
 - [Shipping](docs/SHIPPING.md) — Apple accounts, costs, and App Store
   submission.
 - [App Store](docs/APPSTORE.md) — the listing text and everything else the
   submission needs.
-- [TODO](docs/TODO.md) — the short list of what's left, on the front of a much
-  longer record of what was decided and why, including the things that were
-  built, measured and reverted.
+- [TODO](docs/TODO.md) — what is left to do, and the record of past decisions,
+  including things that were built, measured and reverted.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Fork it, build it, ship your own; rule 8 of the
-philosophy is that you can.
+MIT — see [LICENSE](LICENSE). You are free to fork it, build it, and ship your
+own version.
