@@ -3,8 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boring Tracker — privacy policy</title>
-<meta name="description" content="Boring Tracker is an iPhone app for writing down numbers. It collects nothing, has no servers, and keeps everything on your device.">
+<meta name="google-site-verification" content="mdgLkcp1irb2R_6XmxGi-SXC7eZ9e2hXrqK6Xf3aib8">
+<title>Boring Tracker — Free, private tracking for iPhone and iPad</title>
+<meta name="description" content="Log calories, protein, weight, or when you last changed a filter. Boring Tracker is free, open source, and offline. No ads, accounts, or subscriptions.">
+<link rel="canonical" href="https://novoselov-ab.github.io/boring-tracker/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Boring Tracker">
+<meta property="og:title" content="Boring Tracker — A number, a tracker, done.">
+<meta property="og:description" content="Log calories, protein, weight, and more. Free and open source for iPhone and iPad. No ads, accounts, or subscriptions.">
+<meta property="og:url" content="https://novoselov-ab.github.io/boring-tracker/">
+<meta property="og:image" content="https://novoselov-ab.github.io/boring-tracker/screenshots/home.png">
+<meta property="og:image:alt" content="Boring Tracker showing daily totals, measurements, and time since the last filter change.">
 <meta name="color-scheme" content="light dark">
 <!-- The icon, inline. A page that argues the app fetches nothing should not
      itself fetch an image from somewhere to put in the tab. -->
@@ -45,7 +54,7 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 main {
-  max-width: 36rem;
+  max-width: 48rem;
   margin: 0 auto;
   background: var(--panel);
   border-radius: 12px;
@@ -58,6 +67,33 @@ h1 {
   margin: 0 0 0.25rem;
 }
 .tagline { color: var(--label-secondary); margin: 0 0 1.75rem; }
+.download {
+  display: inline-block;
+  background: var(--accent);
+  color: #000;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+a:focus-visible { outline: 3px solid var(--accent-ink); outline-offset: 4px; }
+.availability, figcaption { color: var(--label-secondary); font-size: 0.9rem; }
+.screenshots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+figure { margin: 0; }
+figure a { display: block; }
+figure img { display: block; width: 100%; height: auto; border-radius: 12px; }
+figcaption { margin-top: 0.75rem; }
+@media (max-width: 480px) {
+  body { padding: 1rem 0.75rem 2rem; }
+  main { padding: 1.5rem 1rem; }
+  .screenshots { grid-template-columns: 1fr; gap: 1.5rem; }
+  figure { width: 100%; max-width: 16rem; margin: 0 auto; }
+}
 h2 {
   font-size: 1.2rem;
   letter-spacing: -0.01em;
@@ -80,7 +116,7 @@ code {
 }
 .updated { color: var(--label-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
 footer {
-  max-width: 36rem;
+  max-width: 48rem;
   margin: 1.25rem auto 0;
   padding: 0 1.5rem;
   color: var(--label-secondary);
@@ -92,27 +128,61 @@ footer {
 <main>
 
 <h1>Boring Tracker</h1>
-<p class="tagline">An iPhone app for writing down numbers.</p>
+<p class="tagline">A number, a tracker, done.</p>
 
-<p><strong><a href="https://apps.apple.com/app/id6803768789">Download on the App
-Store</a></strong> — free, iPhone, iOS 18 or later.</p>
+<p>Write down <strong>600 calories, 40 protein</strong> and get on with your day.
+Boring Tracker keeps the history, adds up your daily totals, and draws a plain
+graph. You enter the numbers you already know or want to record.</p>
 
-<p>For tracking whatever you want — macros, habits, or any other data. Free,
-open source, no ads, no accounts, no subscription, no server, no feature bloat.
-Type a number, done.</p>
+<p><a class="download" href="https://apps.apple.com/app/id6803768789">Download on the App Store</a></p>
+<p class="availability">Free, all of it. For iPhone and iPad, iOS / iPadOS 18 or later.</p>
+<p>No ads, accounts, subscriptions, or nagging. Works offline.
+<a href="https://github.com/novoselov-ab/boring-tracker">Open source on GitHub</a>.</p>
 
-<p>Most other macro trackers want you to scan a barcode for every ingredient of
-a dish you cooked yourself. It takes a lot of time for no benefit. This one just
-lets you write down <code>600 calories, 40 protein</code> and done, as fast as
-possible, minimum clicks, minimum wait/lag.</p>
+<h2>Open, log, done</h2>
+<p>The number pad is ready when you open the log sheet. Calories and protein
+can share one sheet; a meal you have logged before can be repeated with one tap.
+No food database to search, no barcode to scan.</p>
 
-<p>You can also use it to track anything you want: your cat's weight, pushups,
-blood glucose, the last time you changed a filter. It keeps the history, adds up
-your day, and draws a plain graph.</p>
+<div class="screenshots">
+  <figure>
+    <a href="screenshots/home.png" aria-label="View full-size home screen">
+      <img src="screenshots/home.png" width="1320" height="2868" alt="Daily calories and protein, latest weight, and time since a filter change on the home screen.">
+    </a>
+    <figcaption>Your numbers at a glance.</figcaption>
+  </figure>
+  <figure>
+    <a href="screenshots/log.png" aria-label="View full-size logging screen">
+      <img src="screenshots/log.png" width="1320" height="2868" loading="lazy" alt="Calories and protein in one log sheet, with the number pad open.">
+    </a>
+    <figcaption>Type the numbers. Done.</figcaption>
+  </figure>
+  <figure>
+    <a href="screenshots/graph.png" aria-label="View full-size weight graph">
+      <img src="screenshots/graph.png" width="1320" height="2868" loading="lazy" alt="Weight measurements over time, drawn as a line with a moving average.">
+    </a>
+    <figcaption>See your history over time.</figcaption>
+  </figure>
+</div>
 
-<p>Everything stays on your own device, and you can export all of it as json/csv
-or import it back. My goal with it is to behave like a built-in iOS app (e.g.
+<h2>Track what matters to you</h2>
+<ul>
+  <li><strong>Daily totals:</strong> calories, protein, water, pushups.
+      Entries add up over your day.</li>
+  <li><strong>Measurements:</strong> your weight, your cat's weight, or any
+      number you want to follow over time.</li>
+  <li><strong>Last time:</strong> a filter change, new tyres, a dentist visit.
+      One tap records the date. See how long it has been.</li>
+</ul>
+<p>Name your own trackers and choose their units. Edit an entry, log something
+for yesterday, or repeat a previous entry. There are no streaks, badges,
+reminders, or goals to keep up with. Missing a day is fine.</p>
+
+<p>Your logs stay on your own device. Export everything as JSON or CSV, and
+import JSON back. My goal with it is to behave like a built-in iOS app (e.g.
 the calculator). It is boring, but does its job, hence the name.</p>
+<p><a href="#privacy">Read the privacy policy</a>, or
+<a href="https://github.com/novoselov-ab/boring-tracker">read the source on GitHub</a>.</p>
 
 <h2>What it refuses to do</h2>
 
@@ -242,8 +312,8 @@ I would be glad to hear it is useful.</p>
 </main>
 
 <footer>
-<p>No cookies, no analytics, no fonts or images loaded from anywhere else.
-This page is one file.</p>
+<p>No cookies, no analytics, no third-party scripts or fonts.
+Screenshots are hosted here with the page.</p>
 </footer>
 </body>
 </html>
