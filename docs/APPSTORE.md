@@ -165,6 +165,22 @@ on record still lands on a true statement of the policy and a one-click path
 to the full text. **Open item:** update the privacy policy URL in App Store
 Connect to `/privacy.html` the next time the listing is edited.
 
+**It cannot be done before then, and that is not a mistake.** Tried on
+2026-10-02: `PATCH /v1/appInfoLocalizations/{id}` is refused with **409
+`ENTITY_ERROR.ATTRIBUTE.INVALID.INVALID_STATE` — "The field
+'privacyPolicyUrl' can not be modified in the current state"**. The field is
+locked while the app info is `READY_FOR_SALE`, and it only unlocks once a
+version sits in `PREPARE_FOR_SUBMISSION`. Creating an empty 1.2 record purely
+to move a URL was considered and rejected — it leaves a version in preparation
+with no build behind it.
+
+Nothing is broken in the meantime, which is why waiting is safe rather than
+merely tolerable. Checked against the live page the same day: the landing page
+carries a `privacy` section reading *"Boring Tracker collects no data. The app
+has no networking code, so nothing you enter can leave your device unless you
+export it yourself"*, and links the full policy. The failure mode to avoid is a
+recorded URL that 404s; this is not that.
+
 Support URL is the repository, with issues as the contact route — which is
 what the privacy page already tells people to use.
 
