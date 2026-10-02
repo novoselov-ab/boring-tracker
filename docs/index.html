@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="mdgLkcp1irb2R_6XmxGi-SXC7eZ9e2hXrqK6Xf3aib8">
 <title>Boring Tracker — Free, private tracking for iPhone and iPad</title>
-<meta name="description" content="Log calories, protein, weight, or when you last changed a filter. Boring Tracker is free, open source, and offline. No ads, accounts, or subscriptions.">
+<meta name="description" content="Log calories, protein, weight, or when you last changed a filter. Free, open source, offline. No ads, accounts, or subscriptions.">
 <link rel="canonical" href="https://novoselov-ab.github.io/boring-tracker/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Boring Tracker">
@@ -14,306 +14,295 @@
 <meta property="og:url" content="https://novoselov-ab.github.io/boring-tracker/">
 <meta property="og:image" content="https://novoselov-ab.github.io/boring-tracker/screenshots/home.png">
 <meta property="og:image:alt" content="Boring Tracker showing daily totals, measurements, and time since the last filter change.">
-<meta name="color-scheme" content="light dark">
-<!-- The icon, inline. A page that argues the app fetches nothing should not
-     itself fetch an image from somewhere to put in the tab. -->
+<meta name="color-scheme" content="dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231C1C1E'/%3E%3Cg fill='none' stroke='%2300DAC3' stroke-linecap='round'%3E%3Ccircle cx='32' cy='32' r='20.4' stroke-width='2.9'/%3E%3Cpath d='M23.2 32h17.6M32 23.2v17.6' stroke-width='3.1'/%3E%3C/g%3E%3C/svg%3E">
 <style>
-/* System colours and the system font, so the page looks like the app and
-   loads nothing from anywhere. No webfont, no stylesheet, no script, no
-   analytics — an analytics tag on this page would be the funniest possible
-   mistake. */
+/* No scripts, no analytics, no external fonts or images. The page uses the
+   app's own dark palette and the system font, so it looks like the app. */
 :root {
-  --bg: #f2f2f7;          /* iOS grouped background */
-  --panel: #ffffff;
-  --separator: #c6c6c8;
-  --label: #000000;
-  --label-secondary: #3c3c4399;
-  --accent: #009888;      /* AccentFill, light — the app's teal */
-  --accent-ink: #00695e;  /* darkened for text on white, for contrast */
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #000000;
-    --panel: #1c1c1e;
-    --separator: #38383a;
-    --label: #ffffff;
-    --label-secondary: #ebebf599;
-    --accent: #00dac3;    /* AccentFill, dark */
-    --accent-ink: #00dac3;
-  }
+  --bg: #000000;
+  --panel: #1c1c1e;
+  --panel-raised: #2c2c2e;
+  --separator: #38383a;
+  --label: #ffffff;
+  --label-secondary: #ebebf599;
+  --accent: #00dac3;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  padding: 2.5rem 1.25rem 4rem;
   background: var(--bg);
   color: var(--label);
-  font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Helvetica, Arial, sans-serif;
   -webkit-text-size-adjust: 100%;
 }
-main {
-  max-width: 48rem;
-  margin: 0 auto;
-  background: var(--panel);
-  border-radius: 12px;
-  padding: 1.75rem 1.5rem 2rem;
+a { color: var(--accent); text-underline-offset: 2px; }
+a:hover { text-decoration: none; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+section, header.hero, footer { padding: 0 1.25rem; }
+.inner { max-width: 62rem; margin: 0 auto; }
+
+/* Hero */
+header.hero { padding-top: 4rem; padding-bottom: 1rem; }
+.hero .inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 3rem;
+  align-items: center;
 }
+.app-icon { display: block; width: 72px; height: 72px; margin-bottom: 1.25rem; }
 h1 {
-  font-size: 1.75rem;
-  line-height: 1.2;
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  line-height: 1.1;
   letter-spacing: -0.02em;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
 }
-.tagline { color: var(--label-secondary); margin: 0 0 1.75rem; }
+.tagline {
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  color: var(--label-secondary);
+  margin: 0 0 1.25rem;
+}
+.lede { max-width: 32rem; margin: 0 0 1.75rem; }
 .download {
   display: inline-block;
   background: var(--accent);
   color: #000;
-  border-radius: 8px;
-  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.6rem;
+  font-size: 1.05rem;
   font-weight: 600;
   text-decoration: none;
 }
-a:focus-visible { outline: 3px solid var(--accent-ink); outline-offset: 4px; }
-.availability, figcaption { color: var(--label-secondary); font-size: 0.9rem; }
+.download:hover { filter: brightness(1.08); }
+.availability { color: var(--label-secondary); font-size: 0.95rem; margin: 1rem 0 0; }
+.availability a { color: var(--label-secondary); }
+.availability a:hover { color: var(--accent); }
+.hero-shot { margin: 0; }
+.hero-shot img, .screenshots img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+  border: 1px solid var(--separator);
+}
+.hero-shot img { max-width: 320px; margin: 0 auto; }
+
+/* Sections */
+h2 {
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
+  letter-spacing: -0.015em;
+  margin: 0 0 1rem;
+}
+section { padding-top: 3.5rem; }
+section:last-of-type { padding-bottom: 1rem; }
+section > .inner > p { max-width: 40rem; }
+
+/* Screenshot strip */
 .screenshots {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 1.75rem 0 0;
+}
+.screenshots figure { margin: 0; }
+.screenshots a { display: block; }
+.screenshots figcaption {
+  color: var(--label-secondary);
+  font-size: 0.95rem;
+  margin-top: 0.75rem;
+}
+
+/* Tracker-type cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  margin: 1.5rem 0;
+  margin: 1.5rem 0 0;
 }
-figure { margin: 0; }
-figure a { display: block; }
-figure img { display: block; width: 100%; height: auto; border-radius: 12px; }
-figcaption { margin-top: 0.75rem; }
-@media (max-width: 480px) {
-  body { padding: 1rem 0.75rem 2rem; }
-  main { padding: 1.5rem 1rem; }
-  .screenshots { grid-template-columns: 1fr; gap: 1.5rem; }
-  figure { width: 100%; max-width: 16rem; margin: 0 auto; }
+.card {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 1.25rem 1.25rem 1.4rem;
 }
-h2 {
-  font-size: 1.2rem;
-  letter-spacing: -0.01em;
-  margin: 2.25rem 0 0.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--separator);
+.card h3 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+.card .examples { color: var(--accent); font-size: 0.9rem; margin: 0 0 0.6rem; }
+.card p { margin: 0; color: var(--label-secondary); font-size: 0.95rem; }
+
+/* The "never" list */
+.nevers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
 }
-h3 { font-size: 1rem; margin: 1.5rem 0 0.4rem; }
-p { margin: 0.75rem 0; }
-ul { margin: 0.75rem 0; padding-left: 1.25rem; }
-li { margin: 0.4rem 0; }
-li::marker { color: var(--accent); }
-a { color: var(--accent-ink); text-underline-offset: 2px; }
-a:hover { text-decoration: none; }
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9em;
+.nevers li {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  font-size: 0.95rem;
   color: var(--label-secondary);
-  overflow-wrap: anywhere;
 }
-.updated { color: var(--label-secondary); font-size: 0.9rem; margin-top: 0.25rem; }
+.nevers strong { color: var(--label); display: block; margin-bottom: 0.15rem; }
+
+/* Footer */
 footer {
-  max-width: 48rem;
-  margin: 1.25rem auto 0;
-  padding: 0 1.5rem;
+  margin-top: 4rem;
+  border-top: 1px solid var(--separator);
+  padding-top: 2rem;
+  padding-bottom: 3rem;
   color: var(--label-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+}
+footer p { max-width: 40rem; margin: 0.6rem 0; }
+footer a { color: var(--label-secondary); }
+footer a:hover { color: var(--accent); }
+.footer-links { margin-top: 1.25rem; }
+.footer-links a { margin-right: 1.25rem; }
+
+@media (max-width: 760px) {
+  header.hero { padding-top: 2.5rem; }
+  .hero .inner { grid-template-columns: 1fr; gap: 2.5rem; }
+  .hero-shot img { max-width: 260px; }
+  .screenshots { grid-template-columns: 1fr; }
+  .screenshots figure { max-width: 260px; margin: 0 auto; }
+  .cards, .nevers { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
-<main>
 
-<h1>Boring Tracker</h1>
-<p class="tagline">A number, a tracker, done.</p>
+<header class="hero">
+<div class="inner">
+<div>
+  <svg class="app-icon" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1C1C1E" stroke="#38383a" stroke-width="1"/><g fill="none" stroke="#00DAC3" stroke-linecap="round"><circle cx="32" cy="32" r="20.4" stroke-width="2.9"/><path d="M23.2 32h17.6M32 23.2v17.6" stroke-width="3.1"/></g></svg>
+  <h1>Boring Tracker</h1>
+  <p class="tagline">A number, a tracker, done.</p>
+  <p class="lede">Write down <strong>600 calories, 40 protein</strong> and get
+  on with your day. No food database to search, no barcode to scan, no account
+  to make. Everything stays on your phone.</p>
+  <p><a class="download" href="https://apps.apple.com/app/id6803768789">Download on the App Store</a></p>
+  <p class="availability">Free · iPhone and iPad · iOS 18 or later ·
+  <a href="https://github.com/novoselov-ab/boring-tracker">Open source</a></p>
+</div>
+<figure class="hero-shot">
+  <img src="screenshots/home.png" width="1320" height="2868" alt="The home screen: daily calories and protein, latest weight, and how long since the last filter change.">
+</figure>
+</div>
+</header>
 
-<p>Write down <strong>600 calories, 40 protein</strong> and get on with your day.
-Boring Tracker keeps the history, adds up your daily totals, and draws a plain
-graph. You enter the numbers you already know or want to record.</p>
-
-<p><a class="download" href="https://apps.apple.com/app/id6803768789">Download on the App Store</a></p>
-<p class="availability">Free, all of it. For iPhone and iPad, iOS / iPadOS 18 or later.</p>
-<p>No ads, accounts, subscriptions, or nagging. Works offline.
-<a href="https://github.com/novoselov-ab/boring-tracker">Open source on GitHub</a>.</p>
-
-<h2>Open, log, done</h2>
-<p>The number pad is ready when you open the log sheet. Calories and protein
-can share one sheet; a meal you have logged before can be repeated with one tap.
-No food database to search, no barcode to scan.</p>
-
+<section>
+<div class="inner">
+<h2>Fast to log</h2>
+<p>The number pad is already up when the log sheet opens. Trackers you log
+together, like calories and protein, share one sheet. Anything you have
+logged before repeats with one tap.</p>
 <div class="screenshots">
   <figure>
-    <a href="screenshots/home.png" aria-label="View full-size home screen">
-      <img src="screenshots/home.png" width="1320" height="2868" alt="Daily calories and protein, latest weight, and time since a filter change on the home screen.">
+    <a href="screenshots/log.png" aria-label="View the log sheet full size">
+      <img src="screenshots/log.png" width="1320" height="2868" loading="lazy" alt="Calories and protein on one log sheet, with the number pad open.">
     </a>
-    <figcaption>Your numbers at a glance.</figcaption>
+    <figcaption>Open, type, done.</figcaption>
   </figure>
   <figure>
-    <a href="screenshots/log.png" aria-label="View full-size logging screen">
-      <img src="screenshots/log.png" width="1320" height="2868" loading="lazy" alt="Calories and protein in one log sheet, with the number pad open.">
+    <a href="screenshots/again.png" aria-label="View the log-again screen full size">
+      <img src="screenshots/again.png" width="1320" height="2868" loading="lazy" alt="A searchable list of past entries, each repeatable with one tap.">
     </a>
-    <figcaption>Type the numbers. Done.</figcaption>
+    <figcaption>Repeat a past entry with one tap.</figcaption>
   </figure>
   <figure>
-    <a href="screenshots/graph.png" aria-label="View full-size weight graph">
-      <img src="screenshots/graph.png" width="1320" height="2868" loading="lazy" alt="Weight measurements over time, drawn as a line with a moving average.">
+    <a href="screenshots/graph.png" aria-label="View the weight graph full size">
+      <img src="screenshots/graph.png" width="1320" height="2868" loading="lazy" alt="A year of weight measurements as a line graph with a moving average.">
     </a>
-    <figcaption>See your history over time.</figcaption>
+    <figcaption>Graphs with a moving average.</figcaption>
   </figure>
 </div>
+</div>
+</section>
 
-<h2>Track what matters to you</h2>
-<ul>
-  <li><strong>Daily totals:</strong> calories, protein, water, pushups.
-      Entries add up over your day.</li>
-  <li><strong>Measurements:</strong> your weight, your cat's weight, or any
-      number you want to follow over time.</li>
-  <li><strong>Last time:</strong> a filter change, new tyres, a dentist visit.
-      One tap records the date. See how long it has been.</li>
-</ul>
-<p>Name your own trackers and choose their units. Edit an entry, log something
-for yesterday, or repeat a previous entry. There are no streaks, badges,
-reminders, or goals to keep up with. Missing a day is fine.</p>
+<section>
+<div class="inner">
+<h2>Track anything</h2>
+<div class="cards">
+  <div class="card">
+    <h3>Daily totals</h3>
+    <p class="examples">Calories · protein · water · pushups</p>
+    <p>Entries add up through the day and reset at an hour you choose.</p>
+  </div>
+  <div class="card">
+    <h3>Measurements</h3>
+    <p class="examples">Weight · heart rate · your cat's weight</p>
+    <p>Single readings you follow over time on a graph.</p>
+  </div>
+  <div class="card">
+    <h3>Last time</h3>
+    <p class="examples">Water filter · dentist · tyres</p>
+    <p>One tap records the date. The app shows how long it has been.</p>
+  </div>
+</div>
+<p style="margin-top:1.5rem">Name your own trackers and pick their units. Edit
+entries, log something for yesterday, export everything as JSON or CSV. There
+are no streaks, badges, reminders, or goals. Missing a day is fine.</p>
+</div>
+</section>
 
-<p>Your logs stay on your own device. Export everything as JSON or CSV, and
-import JSON back. My goal with it is to behave like a built-in iOS app (e.g.
-the calculator). It is boring, but does its job, hence the name.</p>
-<p><a href="#privacy">Read the privacy policy</a>, or
-<a href="https://github.com/novoselov-ab/boring-tracker">read the source on GitHub</a>.</p>
-
-<h2>What it refuses to do</h2>
-
-<p>These are rules, not preferences. They are written down in the repository as
+<section>
+<div class="inner">
+<h2>What it will never have</h2>
+<p>These rules are written down in the repository as
 <a href="https://github.com/novoselov-ab/boring-tracker/blob/main/docs/PHILOSOPHY.md">PHILOSOPHY.md</a>,
-so anyone can hold the app to them.</p>
-
-<ul>
-  <li><strong>No ads.</strong> Ever, in any form, including recommended
-      products and affiliate links.</li>
-  <li><strong>No subscription.</strong> Free, all of it, with no pro tier, no
-      paid unlock and no tip jar that nags.</li>
-  <li><strong>No account.</strong> Nothing to sign up for and nothing to log
-      in to.</li>
-  <li><strong>No server.</strong> There is no backend, so there is nothing to
-      leak, nothing to pay for, and nothing that can switch the app off in
-      2029.</li>
-  <li><strong>No telemetry.</strong> No analytics, no crash reporting SDK, no
-      anonymous usage data.</li>
-  <li><strong>No third-party code.</strong> Apple's frameworks and nothing
-      else — third-party SDKs are how ads, telemetry and rot get in.</li>
-  <li><strong>No lock-in.</strong> Your data exports in one tap, to a plain
-      readable file, and imports back.</li>
+and the app is open source, so you can hold it to them.</p>
+<ul class="nevers">
+  <li><strong>No ads</strong> In any form, including recommended products and
+      affiliate links.</li>
+  <li><strong>No subscription</strong> Free, all of it. No pro tier, no paid
+      unlock.</li>
+  <li><strong>No accounts</strong> Nothing to sign up for, nothing to log in
+      to.</li>
+  <li><strong>No server</strong> Your data lives on your phone. There is no
+      backend to leak it or shut down.</li>
+  <li><strong>No analytics</strong> The App Store privacy label reads
+      <em>Data Not Collected</em>, truthfully.</li>
+  <li><strong>No third-party code</strong> Apple's frameworks and nothing
+      else.</li>
+  <li><strong>No nagging</strong> No streaks, badges, or notifications.</li>
+  <li><strong>No lock-in</strong> Export to JSON or CSV in one tap, import it
+      back.</li>
 </ul>
+</div>
+</section>
 
-<h2 id="privacy">Privacy policy</h2>
-<p class="updated">Last updated 19 August 2026.</p>
-
-<p><strong>Boring Tracker collects no data.</strong> Not anonymised data, not
-aggregated data, not diagnostics. There is no developer copy of anything you
-type into it.</p>
-
-<p>The app is open source under the MIT licence, so every sentence below can be
-checked against the code that this page is served from rather than taken on
-trust. Where a claim names a file, that file is in the same repository.</p>
-
-<h3>No servers, and no network</h3>
-
-<p>There is no backend service behind this app and no account system. The app
-contains no networking code at all — no request is made to the developer or to
-anyone else, so nothing you enter can leave the device by itself.</p>
-
-<p>The one link out is the <em>Source on GitHub</em> row on the About screen. If
-you tap it, your browser opens GitHub in the ordinary way; that is your browser
-talking to GitHub, and it carries nothing about your data with it.</p>
-
-<h3>What is stored, and where</h3>
-
-<p>Everything the app knows lives on your device, inside the app's own
-container, in two places:</p>
-
-<ul>
-  <li>Your trackers and every entry, as a single JSON file
-      (<code>Application&nbsp;Support/boring-tracker/store.json</code>), with a
-      backup copy kept beside it so a bad write cannot cost you your
-      history.</li>
-  <li>Three interface preferences: light or dark appearance, what hour your day
-      starts at, and which group of trackers you used last.</li>
-</ul>
-
-<p>The app asks for no system permissions. It does not use the camera, the
-photo library, contacts, location, your health data, or notifications, and iOS
-will never prompt you to allow any of them, because the app never asks.</p>
-
-<p>Deleting the app deletes all of it. There is no copy anywhere else to
-delete, and nothing to close down or request.</p>
-
-<h3>How data leaves, when you send it</h3>
-
-<p>Export writes your data to a JSON or CSV file and hands it to the standard
-iOS share sheet. <strong>You</strong> choose where it goes — AirDrop, Files,
-Mail, or anywhere else you have installed. The app never picks a destination
-and never sends anything on its own. Import is the same in reverse: it reads a
-file you pick.</p>
-
-<p>Once a file is somewhere else, whatever is there governs it. If you mail an
-export to yourself, it is in your mail provider's hands; that is outside this
-app and outside this policy.</p>
-
-<h3>Device backups</h3>
-
-<p>The store file sits in the app's Application Support directory and is not
-marked to be excluded from backups. So if you have iPhone backups turned on, to
-iCloud or to a computer, your Boring Tracker data is included in them, exactly
-as other apps' data is. That is iOS doing what you have asked it to do, under
-Apple's terms; the app takes no part in it, and cannot read anything back from
-a backup other than by iOS restoring your device.</p>
-
-<h3>Children</h3>
-
-<p>The app collects nothing from anyone, so it collects nothing from children.
-It has no accounts, no ads, no messaging and no content served from anywhere.</p>
-
-<h3>Changes to this policy</h3>
-
-<p>If the app ever changes in a way that makes a sentence here untrue, this page
-changes with it. The page is a file in the repository, so every version of it
-and the date it changed are in the public history.</p>
-
-<h3>Contact</h3>
-
-<p>Questions, or something on this page that looks wrong:
-<a href="https://github.com/novoselov-ab/boring-tracker/issues">open an issue
-on GitHub</a>.</p>
-
-<h2>Support</h2>
-
-<p>If you want to support this, I really appreciate it — but I would rather you
-gave the money to a charity, and <a href="https://www.givewell.org">GiveWell</a>
-is the one I recommend. Other things that help: email me at
-<a href="mailto:novoselov.ab@gmail.com">novoselov.ab@gmail.com</a>,
-<a href="https://apps.apple.com/app/id6803768789?action=write-review">leave a
-review on the App Store</a>, or share the app with someone who would use it.
-I would be glad to hear it is useful.</p>
-
-<h2>Links</h2>
-
-<ul>
-  <li><a href="https://github.com/novoselov-ab/boring-tracker">Source on
-      GitHub</a> — the whole app, and support.</li>
-  <li><a href="https://github.com/novoselov-ab/boring-tracker/blob/main/LICENSE">MIT
-      licence</a> — fork it, build it, ship your own.</li>
-  <li><a href="https://apps.apple.com/app/id6803768789">App Store</a> — the app
-      itself, free.</li>
-</ul>
-
-</main>
+<section id="privacy">
+<div class="inner">
+<h2>Privacy</h2>
+<p><strong>Boring Tracker collects no data.</strong> The app has no networking
+code, so nothing you enter can leave your device unless you export it
+yourself. The full policy is short and plainly written:
+<a href="privacy.html">read the privacy policy</a>.</p>
+</div>
+</section>
 
 <footer>
-<p>No cookies, no analytics, no third-party scripts or fonts.
-Screenshots are hosted here with the page.</p>
+<div class="inner">
+<p>Made by Anton Novoselov. If the app is useful to you,
+<a href="https://apps.apple.com/app/id6803768789?action=write-review">leave a
+review</a> or tell a friend. If you want to give money, give it to a charity
+instead — <a href="https://www.givewell.org">GiveWell</a> is a good one. Or
+just email me at
+<a href="mailto:novoselov.ab@gmail.com">novoselov.ab@gmail.com</a>; I am glad
+to hear it is useful.</p>
+<p class="footer-links">
+<a href="https://github.com/novoselov-ab/boring-tracker">Source on GitHub</a>
+<a href="https://github.com/novoselov-ab/boring-tracker/blob/main/LICENSE">MIT licence</a>
+<a href="privacy.html">Privacy policy</a>
+<a href="https://apps.apple.com/app/id6803768789">App Store</a>
+</p>
+<p>This page has no cookies, analytics, scripts, or third-party anything.</p>
+</div>
 </footer>
+
 </body>
 </html>
