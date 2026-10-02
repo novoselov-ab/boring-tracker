@@ -158,11 +158,12 @@ without the web UI* in SHIPPING.md.
 | Marketing URL | `https://novoselov-ab.github.io/boring-tracker/` | live |
 | Privacy policy URL | `https://novoselov-ab.github.io/boring-tracker/` | live |
 
-Marketing and privacy policy are the same page: `docs/index.html` is both the
-website and the policy, and the policy is the second half of it. The heading
-carries `id="privacy"`, so
-`https://novoselov-ab.github.io/boring-tracker/#privacy` lands on it directly
-if App Store Connect ever wants a URL that does.
+The policy lives at its own page since 2026-10-02: `docs/privacy.html`, at
+`https://novoselov-ab.github.io/boring-tracker/privacy.html`. The landing page
+keeps a short privacy section with `id="privacy"` that links to it, so the URL
+on record still lands on a true statement of the policy and a one-click path
+to the full text. **Open item:** update the privacy policy URL in App Store
+Connect to `/privacy.html` the next time the listing is edited.
 
 Support URL is the repository, with issues as the contact route — which is
 what the privacy page already tells people to use.

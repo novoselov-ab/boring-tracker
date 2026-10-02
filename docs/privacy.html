@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy — Boring Tracker</title>
+<meta name="description" content="Boring Tracker collects no data. Everything you log stays on your device. The full privacy policy.">
+<link rel="canonical" href="https://novoselov-ab.github.io/boring-tracker/privacy.html">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231C1C1E'/%3E%3Cg fill='none' stroke='%2300DAC3' stroke-linecap='round'%3E%3Ccircle cx='32' cy='32' r='20.4' stroke-width='2.9'/%3E%3Cpath d='M23.2 32h17.6M32 23.2v17.6' stroke-width='3.1'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* No scripts, no analytics, no external fonts. Same palette as the app. */
+:root {
+  --bg: #000000;
+  --panel: #1c1c1e;
+  --separator: #38383a;
+  --label: #ffffff;
+  --label-secondary: #ebebf599;
+  --accent: #00dac3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 2.5rem 1.25rem 4rem;
+  background: var(--bg);
+  color: var(--label);
+  font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+main { max-width: 42rem; margin: 0 auto; }
+.home { color: var(--label-secondary); font-size: 0.95rem; text-decoration: none; }
+.home:hover { color: var(--accent); }
+h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.02em; margin: 1rem 0 0.25rem; }
+.updated { color: var(--label-secondary); font-size: 0.9rem; margin: 0 0 2rem; }
+h2 {
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+  margin: 2.25rem 0 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--separator);
+}
+p { margin: 0.75rem 0; }
+ul { margin: 0.75rem 0; padding-left: 1.25rem; }
+li { margin: 0.4rem 0; }
+li::marker { color: var(--accent); }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:hover { text-decoration: none; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  color: var(--label-secondary);
+  overflow-wrap: anywhere;
+}
+</style>
+</head>
+<body>
+<main>
+
+<a class="home" href="./">&larr; Boring Tracker</a>
+
+<h1>Privacy policy</h1>
+<p class="updated">Last updated 2 October 2026.</p>
+
+<p><strong>Boring Tracker collects no data.</strong> There is no analytics, no
+crash reporting, and no copy of anything you type anywhere but on your own
+device.</p>
+
+<p>The app is open source under the MIT licence, so you can check this policy
+against the <a href="https://github.com/novoselov-ab/boring-tracker">code
+itself</a> instead of taking it on trust.</p>
+
+<h2>No servers, no network</h2>
+
+<p>The app has no backend and no account system. It contains no networking
+code at all, so nothing you enter can leave your device unless you export it
+yourself.</p>
+
+<p>The one link out is the <em>Source on GitHub</em> row on the About screen.
+Tapping it opens GitHub in your browser, which sends nothing from the app
+along with it.</p>
+
+<h2>What is stored, and where</h2>
+
+<p>Everything lives on your device, inside the app's own container:</p>
+
+<ul>
+  <li>Your trackers and entries, in a single JSON file
+      (<code>Application&nbsp;Support/boring-tracker/store.json</code>), with a
+      backup copy next to it in case a write goes wrong.</li>
+  <li>Three preferences: light or dark appearance, the hour your day starts,
+      and which group of trackers you used last.</li>
+</ul>
+
+<p>The app asks for no system permissions. It does not use the camera, photo
+library, contacts, location, health data, or notifications.</p>
+
+<p>Deleting the app deletes all of this. There is no copy anywhere else.</p>
+
+<h2>Export and import</h2>
+
+<p>Export writes your data to a JSON or CSV file and hands it to the standard
+iOS share sheet. You choose where it goes. The app never sends anything on its
+own. Import reads a file you pick.</p>
+
+<p>Once an exported file is somewhere else, the terms of that place apply. If
+you mail an export to yourself, it is in your mail provider's hands, outside
+this app and this policy.</p>
+
+<h2>Device backups</h2>
+
+<p>The store file is not excluded from device backups, so if you back up your
+iPhone to iCloud or to a computer, your Boring Tracker data is included, the
+same as other apps' data. That happens under Apple's terms, not the app's.</p>
+
+<h2>Children</h2>
+
+<p>The app collects nothing from anyone, including children. It has no
+accounts, no ads, no messaging, and no content served from a server.</p>
+
+<h2>Changes to this policy</h2>
+
+<p>If the app changes in a way that makes a sentence here untrue, this page
+changes with it. The page is a file in the public repository, so every version
+and its date are in the history.</p>
+
+<h2>Contact</h2>
+
+<p>Questions, or something here that looks wrong:
+<a href="https://github.com/novoselov-ab/boring-tracker/issues">open an issue
+on GitHub</a> or email
+<a href="mailto:novoselov.ab@gmail.com">novoselov.ab@gmail.com</a>.</p>
+
+</main>
+</body>
+</html>
