@@ -10,8 +10,18 @@ checklist at the bottom records what each answer actually was.
 
 ## 1.1: the first update
 
-**Submitted 2026-09-29 03:38:51 UTC** (the evening of the 28th, Pacific), version 1.1 with **build 2**, state
-`WAITING_FOR_REVIEW`. The first universal build: iPhone and iPad.
+**Submitted 2026-09-29 03:38:51 UTC** (the evening of the 28th, Pacific),
+version 1.1 with **build 2** — the first universal build, iPhone and iPad.
+
+**Approved and released 2026-09-29**, state `READY_FOR_SALE`. Confirmed two
+ways on 2026-10-01: the version record, and `itunes.apple.com/lookup`, which
+reports version 1.1 and now lists iPad models in `supportedDevices` — a
+listing can read approved before it is actually serving the new binary, so the
+public lookup is the one that settles it.
+
+**No Guideline 2.1 round trip**, unlike 1.0. The *Information Needed* request
+that cost a reply and a demo video on the first submission did not recur on the
+update, which is the expected shape: 2.1 is a new-app question.
 
 **The iPad gates it had to clear.** Anton ran 1.1 on his own iPad on
 2026-09-28 and found nothing wrong, which is the hardware pass. The iPad
