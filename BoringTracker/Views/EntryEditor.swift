@@ -25,7 +25,7 @@ struct EntryEditor: View {
                     // a keypad here would be offering to edit the 0 that the
                     // rest of the app works to keep off the screen.
                     if takesAmount {
-                        LabeledContent(tracker?.name ?? "Value") {
+                        LabeledContent(tracker?.name ?? String(localized: "Value")) {
                             HStack(spacing: 6) {
                                 TextField("0", text: $typed)
                                     .keyboardType(.decimalPad)

@@ -1,0 +1,2285 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    " A backup of the previous document was kept on this device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Une sauvegarde du document précédent a été conservée sur cet appareil."
+          }
+        }
+      }
+    },
+    " Nothing was changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Aucune modification n’a été effectuée."
+          }
+        }
+      }
+    },
+    " Restore Previous Data brings it back.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " L’option « Restaurer les données précédentes » permet de les récupérer."
+          }
+        }
+      }
+    },
+    "%@ Between groups, its whole group moves with it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Entre les groupes, tout son groupe se déplace avec lui."
+          }
+        }
+      }
+    },
+    "%@ The document you replaced is now the recoverable backup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Le document remplacé est maintenant la sauvegarde récupérable."
+          }
+        }
+      }
+    },
+    "%@ a day on %lld logged days": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ par jour sur %lld jours renseignés"
+          }
+        }
+      }
+    },
+    "%@ to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De %@ à %@"
+          }
+        }
+      }
+    },
+    "%lld entries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entry"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entries"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entrée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entrées"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld trackers": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld tracker"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld trackers"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld suivi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld suivis"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "About": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À propos"
+          }
+        }
+      }
+    },
+    "Add Tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un suivi"
+          }
+        }
+      }
+    },
+    "Add one to start counting whatever you like.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez un suivi pour commencer à compter ce que vous voulez."
+          }
+        }
+      }
+    },
+    "Added %@ and %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajout : %@ et %@."
+          }
+        }
+      }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout"
+          }
+        }
+      }
+    },
+    "Anything you log to a daily total turns up here, named or not, to log again in one tap. A measurement like weight does not: you would take a new reading rather than repeat the last one.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout ce que vous ajoutez à un total quotidien apparaît ici, avec ou sans nom, pour l’ajouter à nouveau en un geste. Les mesures comme le poids n’y figurent pas : il faut prendre une nouvelle mesure."
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apparence"
+          }
+        }
+      }
+    },
+    "Archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archiver"
+          }
+        }
+      }
+    },
+    "Archived": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivés"
+          }
+        }
+      }
+    },
+    "Average": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moyenne"
+          }
+        }
+      }
+    },
+    "Boring Tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boring Tracker"
+          }
+        }
+      }
+    },
+    "Boring Tracker writes down numbers: calories and protein, your weight, pushups, the last time you changed a filter. Type a number, done. My goal is for it to behave like a built-in iOS app — minimum clicks, minimum wait, and no barcode to scan for a dish you cooked yourself.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boring Tracker permet de noter des nombres : calories, protéines, poids, pompes ou dernière fois que vous avez changé un filtre. Saisissez un nombre, c’est fait. Mon objectif est de proposer une application aussi simple qu’une app iOS intégrée : un minimum de gestes et d’attente, sans code-barres à scanner pour un plat fait maison."
+          }
+        }
+      }
+    },
+    "Calories": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories"
+          }
+        }
+      }
+    },
+    "Calories in kcal, protein in g, weight in kg. A unit is optional.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calories en kcal, protéines en g, poids en kg. L’unité est facultative."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        }
+      }
+    },
+    "Carbs": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glucides"
+          }
+        }
+      }
+    },
+    "Choose what you want to track. You can change all of it later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez ce que vous voulez suivre. Vous pourrez tout modifier ensuite."
+          }
+        }
+      }
+    },
+    "Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        }
+      }
+    },
+    "Couldn't read your data": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture des données impossible"
+          }
+        }
+      }
+    },
+    "Couldn't save": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement impossible"
+          }
+        }
+      }
+    },
+    "Couldn’t delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suppression impossible"
+          }
+        }
+      }
+    },
+    "Couldn’t import": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importation impossible"
+          }
+        }
+      }
+    },
+    "Couldn’t open": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouverture impossible"
+          }
+        }
+      }
+    },
+    "Couldn’t restore": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restauration impossible"
+          }
+        }
+      }
+    },
+    "Daily total": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total quotidien"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sombre"
+          }
+        }
+      }
+    },
+    "Day": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour"
+          }
+        }
+      }
+    },
+    "Day starts at": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Début de journée"
+          }
+        }
+      }
+    },
+    "Decimals": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décimales"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer"
+          }
+        }
+      }
+    },
+    "Delete %@ and %@?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %@ et %@ ?"
+          }
+        }
+      }
+    },
+    "Delete %@ and its %@ entries?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %@ et ses %@ entrées ?"
+          }
+        }
+      }
+    },
+    "Delete %@?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %@ ?"
+          }
+        }
+      }
+    },
+    "Delete All Data": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer toutes les données"
+          }
+        }
+      }
+    },
+    "Delete All Data…": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer toutes les données…"
+          }
+        }
+      }
+    },
+    "Delete Batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le lot"
+          }
+        }
+      }
+    },
+    "Delete Entry": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l’entrée"
+          }
+        }
+      }
+    },
+    "Delete Everything": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout supprimer"
+          }
+        }
+      }
+    },
+    "Delete Tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le suivi"
+          }
+        }
+      }
+    },
+    "Delete Tracker and %lld entries": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Delete Tracker and %lld Entry"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Delete Tracker and %lld Entries"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Supprimer le suivi et %lld entrée"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Supprimer le suivi et %lld entrées"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Delete Tracker, Keep History": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le suivi, garder l’historique"
+          }
+        }
+      }
+    },
+    "Deleted batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lot supprimé"
+          }
+        }
+      }
+    },
+    "Deleted entry": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrée supprimée"
+          }
+        }
+      }
+    },
+    "Deleted tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivi supprimé"
+          }
+        }
+      }
+    },
+    "Deleted tracker: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivi supprimé : %@"
+          }
+        }
+      }
+    },
+    "Dentist": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dentiste"
+          }
+        }
+      }
+    },
+    "Donate to GiveWell": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faire un don à GiveWell"
+          }
+        }
+      }
+    },
+    "Drag a tracker's handle to reorder.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faites glisser la poignée d’un suivi pour le réordonner."
+          }
+        }
+      }
+    },
+    "Drag onto another tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faites glisser sur un autre suivi"
+          }
+        }
+      }
+    },
+    "Each entry is a reading on its own. Nothing resets.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque entrée est une mesure indépendante. Rien n’est remis à zéro."
+          }
+        }
+      }
+    },
+    "Edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier"
+          }
+        }
+      }
+    },
+    "Edit Batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le lot"
+          }
+        }
+      }
+    },
+    "Edit Entry": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier l’entrée"
+          }
+        }
+      }
+    },
+    "Edits this batch": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifie ce lot"
+          }
+        }
+      }
+    },
+    "Edits this entry": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifie cette entrée"
+          }
+        }
+      }
+    },
+    "Email Me": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "M’écrire"
+          }
+        }
+      }
+    },
+    "Entries add up over the day and start again at %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les entrées s’additionnent au fil de la journée et le total repart de zéro à %@."
+          }
+        }
+      }
+    },
+    "Every current tracker and entry will be removed and replaced by this file, and this one cannot be undone: the file on this device holds records that Restore would refuse. Share a copy from Export first if you want to keep anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les suivis et toutes les entrées seront remplacés par ce fichier. Cette action est irréversible : les données actuelles contiennent des enregistrements que la restauration refuserait. Exportez d’abord une copie si vous souhaitez conserver des données."
+          }
+        }
+      }
+    },
+    "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next import.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les suivis et toutes les entrées seront remplacés par ce fichier. Le document actuel restera récupérable jusqu’au prochain import."
+          }
+        }
+      }
+    },
+    "Every current tracker and entry will be replaced by the document saved before the last import. The current document will take its place as the recoverable backup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous les suivis et toutes les entrées seront remplacés par le document sauvegardé avant le dernier import. Le document actuel deviendra la sauvegarde récupérable."
+          }
+        }
+      }
+    },
+    "Everything deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toutes les données ont été supprimées"
+          }
+        }
+      }
+    },
+    "Everything logged on this device goes, and this one cannot be undone: the file on this device holds records that Restore would refuse, so no copy worth keeping can be made here. Share a copy from Export first if you want to keep anything.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toutes les données de cet appareil seront supprimées. Cette action est irréversible : le fichier contient des enregistrements que la restauration refuserait. Aucune copie récupérable ne peut être créée. Exportez d’abord une copie si vous souhaitez conserver des données."
+          }
+        }
+      }
+    },
+    "Everything logged on this device goes. What you have now is kept as a recoverable copy, so Restore Previous Data brings it all back — until the next import or clear takes its place. If you want a copy that outlives that, share one from Export first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toutes les données de cet appareil seront supprimées. Une copie récupérable sera conservée jusqu’au prochain import ou effacement. L’option « Restaurer les données précédentes » permettra de les récupérer. Pour conserver une copie plus longtemps, exportez-la d’abord."
+          }
+        }
+      }
+    },
+    "Everything you log stays on this device. No account, no server, no analytics, nothing to pay for. The whole app is open source under the MIT licence.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout ce que vous enregistrez reste sur cet appareil. Aucun compte, serveur, outil d’analyse ni paiement. L’application est entièrement open source sous licence MIT."
+          }
+        }
+      }
+    },
+    "Export": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportation"
+          }
+        }
+      }
+    },
+    "Fats": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lipides"
+          }
+        }
+      }
+    },
+    "Food": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentation"
+          }
+        }
+      }
+    },
+    "Group": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groupe"
+          }
+        }
+      }
+    },
+    "Group name": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom du groupe"
+          }
+        }
+      }
+    },
+    "Hidden from the home screen. Nothing logged against them is lost.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masqués sur l’écran d’accueil. Leur historique est conservé."
+          }
+        }
+      }
+    },
+    "History": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique"
+          }
+        }
+      }
+    },
+    "How should this file be imported?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment importer ce fichier ?"
+          }
+        }
+      }
+    },
+    "How the number is shown: %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affichage du nombre : %@."
+          }
+        }
+      }
+    },
+    "I really appreciate it, but I would rather you gave the money to a charity — GiveWell is the one I recommend. Emailing me, leaving a review, or sharing the app with someone helps too.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merci beaucoup, mais je préférerais que vous fassiez un don à une association. Je recommande GiveWell. Vous pouvez aussi m’écrire, laisser un avis ou partager l’application."
+          }
+        }
+      }
+    },
+    "I would be glad to hear the app is useful.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je serais heureux de savoir que l’application vous est utile."
+          }
+        }
+      }
+    },
+    "Imperial": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impérial"
+          }
+        }
+      }
+    },
+    "Import": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importation"
+          }
+        }
+      }
+    },
+    "Import JSON": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importer un fichier JSON"
+          }
+        }
+      }
+    },
+    "Import complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importation terminée"
+          }
+        }
+      }
+    },
+    "JSON contains the complete document and can be imported again. CSV is one row per entry for spreadsheets.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le JSON contient toutes les données et peut être réimporté. Le CSV fournit une ligne par entrée pour les tableurs."
+          }
+        }
+      }
+    },
+    "Jump to a date": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aller à une date"
+          }
+        }
+      }
+    },
+    "Keeping the history leaves the %@ entries in the file, so an export still has them and a later import can put them back. Deleting the history removes them for good.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver l’historique garde les %@ entrées dans le fichier : elles restent dans les exports et un import ultérieur peut les restaurer. Supprimer l’historique les efface définitivement."
+          }
+        }
+      }
+    },
+    "Kind": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        }
+      }
+    },
+    "Last time": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dernière fois"
+          }
+        }
+      }
+    },
+    "Leave a Review": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laisser un avis"
+          }
+        }
+      }
+    },
+    "Light": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clair"
+          }
+        }
+      }
+    },
+    "Log": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter"
+          }
+        }
+      }
+    },
+    "Log %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter : %@"
+          }
+        }
+      }
+    },
+    "Log again": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter à nouveau"
+          }
+        }
+      }
+    },
+    "Logged": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré"
+          }
+        }
+      }
+    },
+    "Logged %lld of %lld again": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld entrées sur %lld ajoutées à nouveau"
+          }
+        }
+      }
+    },
+    "Logged again": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouté à nouveau"
+          }
+        }
+      }
+    },
+    "Logging %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajout : %@"
+          }
+        }
+      }
+    },
+    "Logs this again": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute à nouveau cette entrée"
+          }
+        }
+      }
+    },
+    "Measurement": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesure"
+          }
+        }
+      }
+    },
+    "Merge Documents": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fusionner les documents"
+          }
+        }
+      }
+    },
+    "Merge combines records by ID. Deletions from either document stay deleted, newer edits win conflicts, and other distinct records are kept. Replace removes the current data and uses only the file. Either way, anything this changes is kept here as a recoverable backup.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fusion combine les enregistrements par identifiant. Les suppressions sont conservées, les modifications récentes l’emportent et les autres enregistrements sont gardés. Le remplacement utilise uniquement le fichier importé. Dans les deux cas, les données modifiées sont conservées dans une sauvegarde récupérable."
+          }
+        }
+      }
+    },
+    "Metric": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métrique"
+          }
+        }
+      }
+    },
+    "Midnight": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minuit"
+          }
+        }
+      }
+    },
+    "Mixed names": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noms différents"
+          }
+        }
+      }
+    },
+    "Month": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mois"
+          }
+        }
+      }
+    },
+    "Move %@ earlier": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer %@ avant"
+          }
+        }
+      }
+    },
+    "Move %@ later": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer %@ après"
+          }
+        }
+      }
+    },
+    "Move earlier": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer avant"
+          }
+        }
+      }
+    },
+    "Move later": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer après"
+          }
+        }
+      }
+    },
+    "Name": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom"
+          }
+        }
+      }
+    },
+    "New Group…": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau groupe…"
+          }
+        }
+      }
+    },
+    "New Tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau suivi"
+          }
+        }
+      }
+    },
+    "Next field": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Champ suivant"
+          }
+        }
+      }
+    },
+    "No trackers": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun suivi"
+          }
+        }
+      }
+    },
+    "None": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun"
+          }
+        }
+      }
+    },
+    "Nothing has ever been logged against this tracker.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune entrée n’a été enregistrée pour ce suivi."
+          }
+        }
+      }
+    },
+    "Nothing logged yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune entrée"
+          }
+        }
+      }
+    },
+    "Nothing to log again yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien à ajouter à nouveau"
+          }
+        }
+      }
+    },
+    "OK": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "One tap writes the date and nothing else. The card reads how long it has been.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un geste enregistre uniquement la date. La carte indique le temps écoulé."
+          }
+        }
+      }
+    },
+    "Philosophy": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Philosophie"
+          }
+        }
+      }
+    },
+    "Previous field": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Champ précédent"
+          }
+        }
+      }
+    },
+    "Privacy Policy": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Politique de confidentialité"
+          }
+        }
+      }
+    },
+    "Protein": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protéines"
+          }
+        }
+      }
+    },
+    "Range": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Période"
+          }
+        }
+      }
+    },
+    "Recovered from backup": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Données restaurées depuis la sauvegarde"
+          }
+        }
+      }
+    },
+    "Removed %@ and %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suppression : %@ et %@."
+          }
+        }
+      }
+    },
+    "Removes every tracker and entry from this device. The document you have now is normally kept as a recoverable copy, so this can be undone until the next import or clear replaces it — the confirmation says if it cannot be.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprime tous les suivis et toutes les entrées de cet appareil. Une copie récupérable est normalement conservée jusqu’au prochain import ou effacement. La confirmation indique si la récupération est impossible."
+          }
+        }
+      }
+    },
+    "Reorder %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réordonner %@"
+          }
+        }
+      }
+    },
+    "Replace Everything": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout remplacer"
+          }
+        }
+      }
+    },
+    "Replace Everything…": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout remplacer…"
+          }
+        }
+      }
+    },
+    "Replace all current data?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer toutes les données actuelles ?"
+          }
+        }
+      }
+    },
+    "Restore Previous Data": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer les données précédentes"
+          }
+        }
+      }
+    },
+    "Restore Previous Data…": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer les données précédentes…"
+          }
+        }
+      }
+    },
+    "Restore complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restauration terminée"
+          }
+        }
+      }
+    },
+    "Restore previous data?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer les données précédentes ?"
+          }
+        }
+      }
+    },
+    "Save": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        }
+      }
+    },
+    "Search names": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher un nom"
+          }
+        }
+      }
+    },
+    "Selected": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélection"
+          }
+        }
+      }
+    },
+    "Series": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Série"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages"
+          }
+        }
+      }
+    },
+    "Share CSV…": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager en CSV…"
+          }
+        }
+      }
+    },
+    "Share JSON…": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager en JSON…"
+          }
+        }
+      }
+    },
+    "Shows the history": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche l’historique"
+          }
+        }
+      }
+    },
+    "Source on GitHub": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code source sur GitHub"
+          }
+        }
+      }
+    },
+    "Start": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer"
+          }
+        }
+      }
+    },
+    "Start with": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer avec"
+          }
+        }
+      }
+    },
+    "Support": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soutenir"
+          }
+        }
+      }
+    },
+    "System": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Système"
+          }
+        }
+      }
+    },
+    "System follows the phone, including its own per-app setting. This is stored on this device only — it is not part of your data and does not export.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mode Système suit les réglages du téléphone, y compris ceux de cette application. Ce choix reste sur cet appareil et ne fait pas partie des données exportées."
+          }
+        }
+      }
+    },
+    "Tap + the first time you do it.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez + la première fois que vous le faites."
+          }
+        }
+      }
+    },
+    "Tap + to add the first %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez + pour ajouter une première entrée à « %@ »."
+          }
+        }
+      }
+    },
+    "Tap a row to edit it, or swipe to delete.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez une ligne pour la modifier, ou balayez-la pour la supprimer."
+          }
+        }
+      }
+    },
+    "The %@ are removed for good. This cannot be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les %@ sont supprimées définitivement. Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "The %@ stay in your data and in any export, but nothing in the app will show them once the tracker is gone. This cannot be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les %@ restent dans vos données et vos exports, mais l’application ne les affichera plus après la suppression du suivi. Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "The document saved before the last import could not be read.%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le document sauvegardé avant le dernier import est illisible.%@"
+          }
+        }
+      }
+    },
+    "The files that wouldn't open were kept at %@ and the app started fresh. Nothing was deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fichiers illisibles ont été conservés dans %@ et l’application est repartie à zéro. Rien n’a été supprimé."
+          }
+        }
+      }
+    },
+    "The name is what you ate, not what it counts towards. The time defaults to now — change it to log something you forgot.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le nom désigne ce que vous avez mangé. L’heure est celle du moment : modifiez-la pour ajouter un oubli."
+          }
+        }
+      }
+    },
+    "The selected file is not a valid Boring Tracker export or is damaged.%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier sélectionné est endommagé ou n’est pas un export Boring Tracker valide.%@"
+          }
+        }
+      }
+    },
+    "The store file couldn't be read, so the previous copy was used. Anything logged in the last moments before that may be missing.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier de données étant illisible, la copie précédente a été utilisée. Les toutes dernières entrées peuvent manquer."
+          }
+        }
+      }
+    },
+    "These entries have different names or times. Saving will use the name and time shown here for the whole batch.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ces entrées ont des noms ou des heures différents. L’enregistrement appliquera le nom et l’heure affichés à tout le lot."
+          }
+        }
+      }
+    },
+    "This export is internally inconsistent: %@ Nothing was changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet export est incohérent : %@ Aucune modification n’a été effectuée."
+          }
+        }
+      }
+    },
+    "This export uses schema version %lld, but this app supports version %lld and has no safe migration for it. Nothing was changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet export utilise la version %lld du format, mais l’application prend en charge la version %lld et ne peut pas le convertir de manière sûre. Aucune modification n’a été effectuée."
+          }
+        }
+      }
+    },
+    "This export uses schema version %lld. This app supports version %lld; update the app before importing it. Nothing was changed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet export utilise la version %lld du format. L’application prend en charge la version %lld. Mettez l’application à jour avant d’importer. Aucune modification n’a été effectuée."
+          }
+        }
+      }
+    },
+    "This file uses a schema this version cannot read.%@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette version ne peut pas lire le format de ce fichier.%@"
+          }
+        }
+      }
+    },
+    "Today": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd’hui"
+          }
+        }
+      }
+    },
+    "Tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivi"
+          }
+        }
+      }
+    },
+    "Tracker deleted": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivi supprimé"
+          }
+        }
+      }
+    },
+    "Trackers in a group are logged together, in one sheet — calories and protein come from the same meal.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les suivis d’un groupe se renseignent ensemble : les calories et les protéines proviennent du même repas."
+          }
+        }
+      }
+    },
+    "Unarchive": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désarchiver"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        }
+      }
+    },
+    "Unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unité"
+          }
+        }
+      }
+    },
+    "Units": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unités"
+          }
+        }
+      }
+    },
+    "Untitled": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans titre"
+          }
+        }
+      }
+    },
+    "Value": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valeur"
+          }
+        }
+      }
+    },
+    "Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "Week": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semaine"
+          }
+        }
+      }
+    },
+    "Weight": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poids"
+          }
+        }
+      }
+    },
+    "When": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date et heure"
+          }
+        }
+      }
+    },
+    "When a daily total starts again. Move it later if your day ends after midnight — a 2am snack then counts towards the day you have been awake for. Nothing is rewritten: your entries keep the time they were logged at, and putting this back gives you exactly the totals you had.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heure à laquelle le total quotidien repart de zéro. Décalez-la si votre journée se termine après minuit : une collation à 2 h du matin comptera alors pour la journée précédente. Les heures des entrées restent inchangées. Rétablir ce réglage permet de retrouver les mêmes totaux."
+          }
+        }
+      }
+    },
+    "Year": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Année"
+          }
+        }
+      }
+    },
+    "Yesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier"
+          }
+        }
+      }
+    },
+    "Your entries will appear here after you log them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos entrées apparaîtront ici après leur enregistrement."
+          }
+        }
+      }
+    },
+    "deletion id %@ appears more than once.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "l’identifiant de suppression %@ apparaît plusieurs fois."
+          }
+        }
+      }
+    },
+    "id %@ is both present and deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "l’identifiant %@ est à la fois présent et supprimé."
+          }
+        }
+      }
+    },
+    "in %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dans %@"
+          }
+        }
+      }
+    },
+    "midnight": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "minuit"
+          }
+        }
+      }
+    },
+    "record id %@ appears more than once.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "l’identifiant d’enregistrement %@ apparaît plusieurs fois."
+          }
+        }
+      }
+    },
+    "the file is not a JSON object.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le fichier n’est pas un objet JSON."
+          }
+        }
+      }
+    },
+    "the migration step from version %lld produced a value that is not JSON.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la migration depuis la version %lld a produit une valeur qui n’est pas du JSON."
+          }
+        }
+      }
+    },
+    "this tracker": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ce suivi"
+          }
+        }
+      }
+    },
+    "tracker %@ has an empty name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le suivi %@ a un nom vide."
+          }
+        }
+      }
+    },
+    "tracker %@ has an invalid sort index.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le suivi %@ a un indice de tri invalide."
+          }
+        }
+      }
+    },
+    "tracker %@ has decimals outside 0 through 3.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le suivi %@ a un nombre de décimales hors de l’intervalle de 0 à 3."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

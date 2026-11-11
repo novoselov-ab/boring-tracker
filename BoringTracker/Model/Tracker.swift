@@ -11,9 +11,9 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
 
         var label: String {
             switch self {
-            case .dailyTotal: "Daily total"
-            case .measurement: "Measurement"
-            case .lastTime: "Last time"
+            case .dailyTotal: String(localized: "Daily total")
+            case .measurement: String(localized: "Measurement")
+            case .lastTime: String(localized: "Last time")
             }
         }
     }
@@ -97,7 +97,7 @@ struct Tracker: Codable, Identifiable, Hashable, Sendable {
     /// an entry asks this rather than `format`, and none of them can print it
     /// (docs/TECH.md, "The value a `lastTime` entry does not have").
     func entryText(_ value: Double) -> String {
-        kind == .lastTime ? "Logged" : format(value)
+        kind == .lastTime ? String(localized: "Logged") : format(value)
     }
 
     /// The value as it would be typed into the number pad: it has to read back

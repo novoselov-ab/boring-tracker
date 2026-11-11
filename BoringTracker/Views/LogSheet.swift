@@ -83,8 +83,7 @@ struct LogSheet: View {
                     TextField("Name", text: $name)
                         .focused($focused, equals: .name)
                 } footer: {
-                    Text("The name is what you ate, not what it counts towards. "
-                        + "The time defaults to now — change it to log something you forgot.")
+                    Text("The name is what you ate, not what it counts towards. The time defaults to now — change it to log something you forgot.")
                 }
             }
             .readableContent()
@@ -102,8 +101,8 @@ struct LogSheet: View {
                 // this iOS 26 sheet. The keyboard-following safe-area inset
                 // keeps the action in the same thumb-reachable position.
                 HStack(spacing: 8) {
-                    fieldStep(-1, "chevron.up", "Previous field")
-                    fieldStep(1, "chevron.down", "Next field")
+                    fieldStep(-1, "chevron.up", String(localized: "Previous field"))
+                    fieldStep(1, "chevron.down", String(localized: "Next field"))
                     Spacer()
                     Button(action: log) {
                         // Inside the label rather than on the button: this is the
@@ -243,7 +242,7 @@ struct LogSheet: View {
     private func label(_ group: LogGroup) -> String {
         switch group {
         case .group(let name): name
-        case .tracker(let id): store.tracker(id)?.name ?? "Log"
+        case .tracker(let id): store.tracker(id)?.name ?? String(localized: "Log")
         }
     }
 

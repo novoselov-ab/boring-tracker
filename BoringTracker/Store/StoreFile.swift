@@ -11,11 +11,11 @@ extension StoreError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .futureSchema(let found, let supported):
-            "This export uses schema version \(found). This app supports version \(supported); update the app before importing it. Nothing was changed."
+            String(localized: "This export uses schema version \(found). This app supports version \(supported); update the app before importing it. Nothing was changed.")
         case .olderSchema(let found, let supported):
-            "This export uses schema version \(found), but this app supports version \(supported) and has no safe migration for it. Nothing was changed."
+            String(localized: "This export uses schema version \(found), but this app supports version \(supported) and has no safe migration for it. Nothing was changed.")
         case .invalidDocument(let reason):
-            "This export is internally inconsistent: \(reason) Nothing was changed."
+            String(localized: "This export is internally inconsistent: \(reason) Nothing was changed.")
         }
     }
 }

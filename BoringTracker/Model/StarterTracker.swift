@@ -13,8 +13,8 @@ enum UnitSystem: String, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .metric: "Metric"
-        case .imperial: "Imperial"
+        case .metric: String(localized: "Metric")
+        case .imperial: String(localized: "Imperial")
         }
     }
 
@@ -47,6 +47,10 @@ struct StarterTracker: Identifiable, Hashable, Sendable {
     /// The name, which is also what the screen shows and what a chosen set holds.
     var id: String { name }
 
+    // Catalogue keys are maintained manually; IDs and existing user data stay stable.
+    var localizedName: String { String(localized: String.LocalizationValue(name)) }
+    var localizedGroup: String { String(localized: String.LocalizationValue(group)) }
+
     func unit(_ system: UnitSystem) -> String {
         switch system {
         case .metric: metricUnit
@@ -56,8 +60,8 @@ struct StarterTracker: Identifiable, Hashable, Sendable {
 
     func tracker(units: UnitSystem, sortIndex: Int) -> Tracker {
         Tracker(
-            name: name, unit: unit(units), kind: kind, decimals: decimals,
-            sortIndex: sortIndex, group: group
+            name: localizedName, unit: unit(units), kind: kind, decimals: decimals,
+            sortIndex: sortIndex, group: localizedGroup
         )
     }
 }

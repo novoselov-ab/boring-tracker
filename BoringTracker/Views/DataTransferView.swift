@@ -163,9 +163,9 @@ struct DataTransferView: View {
                 // may be no copy at all — and a reassurance the Settings list
                 // then contradicts is worse than none.
                 let backup = summary.keptBackup
-                    ? " A backup of the previous document was kept on this device." : ""
+                    ? String(localized: " A backup of the previous document was kept on this device.") : ""
                 presentedAlert = .message(
-                    title: "Import complete",
+                    title: String(localized: "Import complete"),
                     detail: "\(describe(summary))\(backup)"
                 )
             } catch {
@@ -177,17 +177,17 @@ struct DataTransferView: View {
     /// Both directions, for both record types. A replace that removes trackers
     /// has to say so — see `Store.ImportSummary`.
     private func describe(_ summary: Store.ImportSummary) -> String {
-        let added = "Added \(count(summary.trackersAdded, "tracker", "trackers")) and "
-            + "\(count(summary.entriesAdded, "entry", "entries"))."
-        let removed = "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) and "
-            + "\(count(summary.entriesRemoved, "entry", "entries"))."
+        let added = String(localized: "Added \(count(summary.trackersAdded, "tracker", "trackers")) and \(count(summary.entriesAdded, "entry", "entries")).")
+        let removed = String(localized: "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) and \(count(summary.entriesRemoved, "entry", "entries")).")
         return "\(added) \(removed)"
     }
 
     /// Grouped, because the number is the whole point of the clear confirmation
     /// and `1247` is a number you skim past.
     private func count(_ value: Int, _ singular: String, _ plural: String) -> String {
-        "\(value.formatted()) \(value == 1 ? singular : plural)"
+        singular == "tracker"
+            ? String(localized: "\(value) trackers")
+            : String(localized: "\(value) entries")
     }
 
     private var hasAnything: Bool {
@@ -199,20 +199,19 @@ struct DataTransferView: View {
             do {
                 let summary = try await store.clearAll()
                 presentedAlert = .message(
-                    title: "Everything deleted",
+                    title: String(localized: "Everything deleted"),
                     // Not `describe(_:)`, which leads with what was added: a
                     // clear can never add anything, so that sentence would put
                     // "Added 0 trackers and 0 entries" in front of the only
                     // number on the screen that means anything.
-                    detail: "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) "
-                        + "and \(count(summary.entriesRemoved, "entry", "entries"))."
+                    detail: String(localized: "Removed \(count(summary.trackersRemoved, "tracker", "trackers")) and \(count(summary.entriesRemoved, "entry", "entries")).")
                         // `keptBackup` only says the copy was *written*. Whether
                         // it can be read back out again is the other question,
                         // and it is the one the confirmation just answered — so a
                         // document warned about as unrecoverable must not be
                         // told, one alert later, that Restore brings it back.
                         + (summary.keptBackup && isRecoverable
-                            ? " Restore Previous Data brings it back."
+                            ? String(localized: " Restore Previous Data brings it back.")
                             : "")
                 )
             } catch {
@@ -225,13 +224,13 @@ struct DataTransferView: View {
         switch alert {
         case .confirmReplace:
             Alert(
-                title: Text(isRestoringBackup ? "Restore previous data?" : "Replace all current data?"),
+                title: Text(isRestoringBackup ? String(localized: "Restore previous data?") : String(localized: "Replace all current data?")),
                 message: Text(isRestoringBackup
-                    ? "Every current tracker and entry will be replaced by the document saved before the last import. The current document will take its place as the recoverable backup."
+                    ? String(localized: "Every current tracker and entry will be replaced by the document saved before the last import. The current document will take its place as the recoverable backup.")
                     : isRecoverable
-                    ? "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next import."
-                    : "Every current tracker and entry will be removed and replaced by this file, and this one cannot be undone: the file on this device holds records that Restore would refuse. Share a copy from Export first if you want to keep anything."),
-                primaryButton: .destructive(Text(isRestoringBackup ? "Restore Previous Data" : "Replace Everything")) {
+                    ? String(localized: "Every current tracker and entry will be removed and replaced by this file. The current document will remain recoverable here until the next import.")
+                    : String(localized: "Every current tracker and entry will be removed and replaced by this file, and this one cannot be undone: the file on this device holds records that Restore would refuse. Share a copy from Export first if you want to keep anything.")),
+                primaryButton: .destructive(Text(isRestoringBackup ? String(localized: "Restore Previous Data") : String(localized: "Replace Everything"))) {
                     if isRestoringBackup {
                         restoreBackup()
                     } else {
@@ -251,8 +250,8 @@ struct DataTransferView: View {
             Alert(
                 title: Text("Delete \(count(store.trackers.count, "tracker", "trackers")) and \(count(store.entries.count, "entry", "entries"))?"),
                 message: Text(isRecoverable
-                    ? "Everything logged on this device goes. What you have now is kept as a recoverable copy, so Restore Previous Data brings it all back — until the next import or clear takes its place. If you want a copy that outlives that, share one from Export first."
-                    : "Everything logged on this device goes, and this one cannot be undone: the file on this device holds records that Restore would refuse, so no copy worth keeping can be made here. Share a copy from Export first if you want to keep anything."),
+                    ? String(localized: "Everything logged on this device goes. What you have now is kept as a recoverable copy, so Restore Previous Data brings it all back — until the next import or clear takes its place. If you want a copy that outlives that, share one from Export first.")
+                    : String(localized: "Everything logged on this device goes, and this one cannot be undone: the file on this device holds records that Restore would refuse, so no copy worth keeping can be made here. Share a copy from Export first if you want to keep anything.")),
                 primaryButton: .destructive(Text("Delete All Data")) { clearEverything() },
                 secondaryButton: .cancel()
             )
@@ -272,18 +271,25 @@ struct DataTransferView: View {
         // True of a clear for the same reason it is true of the other two: the
         // transaction is one `Store.applyIncoming`, and every way it can fail
         // throws before memory or the live file has moved.
-        let unchanged = ["import", "restore", "delete"].contains(action) ? " Nothing was changed." : ""
+        let unchanged = ["import", "restore", "delete"].contains(action) ? String(localized: " Nothing was changed.") : ""
         let detail: String
         if let storeError = error as? StoreError {
-            detail = storeError.errorDescription ?? "This file uses a schema this version cannot read.\(unchanged)"
+            detail = storeError.errorDescription ?? String(localized: "This file uses a schema this version cannot read.\(unchanged)")
         } else if error is DecodingError {
             detail = action == "restore"
-                ? "The document saved before the last import could not be read.\(unchanged)"
-                : "The selected file is not a valid Boring Tracker export or is damaged.\(unchanged)"
+                ? String(localized: "The document saved before the last import could not be read.\(unchanged)")
+                : String(localized: "The selected file is not a valid Boring Tracker export or is damaged.\(unchanged)")
         } else {
             detail = "\((error as NSError).localizedDescription)\(unchanged)"
         }
-        presentedAlert = .message(title: "Couldn’t \(action)", detail: detail)
+        let title: String
+        switch action {
+        case "open": title = String(localized: "Couldn’t open")
+        case "import": title = String(localized: "Couldn’t import")
+        case "restore": title = String(localized: "Couldn’t restore")
+        default: title = String(localized: "Couldn’t delete")
+        }
+        presentedAlert = .message(title: title, detail: detail)
     }
 
     private func restoreBackup() {
@@ -296,9 +302,8 @@ struct DataTransferView: View {
                 // trackers — which is exactly what a restore is most likely to
                 // remove, since it undoes an import that added them.
                 presentedAlert = .message(
-                    title: "Restore complete",
-                    detail: "\(describe(summary))"
-                        + " The document you replaced is now the recoverable backup."
+                    title: String(localized: "Restore complete"),
+                    detail: String(localized: "\(describe(summary)) The document you replaced is now the recoverable backup.")
                 )
             } catch is CancellationError {
                 isRestoringBackup = false

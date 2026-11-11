@@ -1226,7 +1226,7 @@ final class Store {
         for tracker in document.trackers {
             guard !tracker.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw StoreError.invalidDocument(
-                    "tracker \(tracker.id.uuidString) has an empty name."
+                    String(localized: "tracker \(tracker.id.uuidString) has an empty name.")
                 )
             }
         }
@@ -1244,31 +1244,31 @@ final class Store {
         var live = Set<UUID>()
         for id in document.trackers.map(\.id) + document.entries.map(\.id) {
             guard live.insert(id).inserted else {
-                throw StoreError.invalidDocument("record id \(id.uuidString) appears more than once.")
+                throw StoreError.invalidDocument(String(localized: "record id \(id.uuidString) appears more than once."))
             }
         }
         var deleted = Set<UUID>()
         for tombstone in document.tombstones {
             guard deleted.insert(tombstone.id).inserted else {
                 throw StoreError.invalidDocument(
-                    "deletion id \(tombstone.id.uuidString) appears more than once."
+                    String(localized: "deletion id \(tombstone.id.uuidString) appears more than once.")
                 )
             }
             guard !live.contains(tombstone.id) else {
                 throw StoreError.invalidDocument(
-                    "id \(tombstone.id.uuidString) is both present and deleted."
+                    String(localized: "id \(tombstone.id.uuidString) is both present and deleted.")
                 )
             }
         }
         for tracker in document.trackers {
             guard (0...3).contains(tracker.decimals) else {
                 throw StoreError.invalidDocument(
-                    "tracker \(tracker.id.uuidString) has decimals outside 0 through 3."
+                    String(localized: "tracker \(tracker.id.uuidString) has decimals outside 0 through 3.")
                 )
             }
             guard tracker.sortIndex >= 0, tracker.sortIndex < Int.max else {
                 throw StoreError.invalidDocument(
-                    "tracker \(tracker.id.uuidString) has an invalid sort index."
+                    String(localized: "tracker \(tracker.id.uuidString) has an invalid sort index.")
                 )
             }
         }

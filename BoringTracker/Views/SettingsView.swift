@@ -157,9 +157,9 @@ struct SettingsView: View {
     ///
     /// "Groups", not "sections" — the last user-facing survivor of `0862976`.
     static func reorderHint(runs: [[Tracker]]) -> String {
-        let dragging = "Drag a tracker's handle to reorder."
+        let dragging = String(localized: "Drag a tracker's handle to reorder.")
         guard runs.count > 1, runs.contains(where: { $0.count > 1 }) else { return dragging }
-        return "\(dragging) Between groups, its whole group moves with it."
+        return String(localized: "\(dragging) Between groups, its whole group moves with it.")
     }
 
     private func row(_ tracker: Tracker) -> some View {
@@ -205,7 +205,7 @@ struct SettingsView: View {
     }
 
     private func name(of tracker: Tracker) -> String {
-        tracker.name.isEmpty ? "Untitled" : tracker.name
+        tracker.name.isEmpty ? String(localized: "Untitled") : tracker.name
     }
 
     /// `contentShape` is load-bearing: a `Button` hit-tests its label's drawn
@@ -254,7 +254,7 @@ struct SettingsView: View {
         // left still printing it, beside a kind that has no numbers and with no
         // field on any screen that could clear it (found in review).
         if !tracker.unit.isEmpty, tracker.kind != .lastTime { parts.append(tracker.unit) }
-        if tracker.isArchived, !tracker.group.isEmpty { parts.append("in \(tracker.group)") }
+        if tracker.isArchived, !tracker.group.isEmpty { parts.append(String(localized: "in \(tracker.group)")) }
         return parts.joined(separator: "\u{00A0}· ")
     }
 
@@ -262,7 +262,7 @@ struct SettingsView: View {
         // Archiving is the reversible one, so it is the one a swipe does.
         // Deleting asks which of the two deletions you meant, and that question
         // needs more room than a swipe has — see `TrackerEditor`.
-        Button(tracker.isArchived ? "Unarchive" : "Archive",
+        Button(tracker.isArchived ? String(localized: "Unarchive") : String(localized: "Archive"),
                systemImage: tracker.isArchived ? "tray.and.arrow.up" : "archivebox") {
             var updated = tracker
             updated.isArchived.toggle()

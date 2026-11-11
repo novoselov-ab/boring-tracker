@@ -441,7 +441,7 @@ private struct HistoryRow: View {
             // what is behind it, which was not something anyone noticed
             // (docs/TODO.md item 28).
             .buttonStyle(.row)
-            .accessibilityHint(item.entries.count == 1 ? "Edits this entry" : "Edits this batch")
+            .accessibilityHint(item.entries.count == 1 ? String(localized: "Edits this entry") : String(localized: "Edits this batch"))
             repeatButton(canRepeat: canRepeat)
         }
         .listRowInsets(.listRow)

@@ -98,11 +98,11 @@ struct UndoBar: View {
                   Date().timeIntervalSince(at) < Self.repeatOffer
             else { return nil }
             return logged.skipped == 0
-                ? "Logged again"
-                : "Logged \(logged.count) of \(logged.count + logged.skipped) again"
+                ? String(localized: "Logged again")
+                : String(localized: "Logged \(logged.count) of \(logged.count + logged.skipped) again")
         }
         if offersDeletion, store.lastDeletion != nil {
-            return store.lastDeletionCount == 1 ? "Deleted entry" : "Deleted batch"
+            return store.lastDeletionCount == 1 ? String(localized: "Deleted entry") : String(localized: "Deleted batch")
         }
         return nil
     }
