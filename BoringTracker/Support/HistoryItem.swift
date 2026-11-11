@@ -39,7 +39,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
 
     var displayName: String? {
         let names = names
-        return names.count > 1 ? "Mixed names" : names.first
+        return names.count > 1 ? String(localized: "Mixed names") : names.first
     }
 
     /// The same row with only the members `isIncluded` keeps, or `nil` when that
@@ -79,7 +79,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     func repeatBlockedReason(trackers: [UUID: Tracker]) -> String? {
         let resolved = entries.compactMap { trackers[$0.trackerID] }
         guard !resolved.isEmpty else { return nil }
-        guard resolved.allSatisfy({ $0.kind != .dailyTotal }) else { return "Archived" }
+        guard resolved.allSatisfy({ $0.kind != .dailyTotal }) else { return String(localized: "Archived") }
         return resolved[0].kind.label
     }
 
@@ -177,7 +177,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
                 guard let tracker = trackers[entry.trackerID] else {
                     return alone || identitySaysDeleted
                         ? entry.value.formatted()
-                        : "Deleted tracker: \(entry.value.formatted())"
+                        : String(localized: "Deleted tracker: \(entry.value.formatted())")
                 }
                 // **A `lastTime` entry always takes the name once it is not
                 // alone**, whatever unit it is carrying. The editor hides that
@@ -204,7 +204,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     private func identity(of entries: [Entry], in trackers: [UUID: Tracker]) -> String {
         if let name = displayName { return name }
         let resolved = entries.compactMap { trackers[$0.trackerID] }
-        guard !resolved.isEmpty else { return "Deleted tracker" }
+        guard !resolved.isEmpty else { return String(localized: "Deleted tracker") }
         if Set(resolved.map(\.id)).count == 1 { return resolved[0].name }
         let groups = Set(resolved.map(\.group))
         if groups.count == 1, let group = groups.first, !group.isEmpty { return group }

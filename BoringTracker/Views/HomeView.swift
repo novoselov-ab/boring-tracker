@@ -696,19 +696,17 @@ struct LoadNotice {
 
     init?(origin: StoreOrigin, saveError: String?) {
         if let saveError {
-            self.title = "Couldn't save"
+            self.title = String(localized: "Couldn't save")
             self.detail = saveError
             return
         }
         switch origin {
         case .backup:
-            title = "Recovered from backup"
-            detail = "The store file couldn't be read, so the previous copy was used. "
-                + "Anything logged in the last moments before that may be missing."
+            title = String(localized: "Recovered from backup")
+            detail = String(localized: "The store file couldn't be read, so the previous copy was used. Anything logged in the last moments before that may be missing.")
         case .unreadable(let quarantine):
-            title = "Couldn't read your data"
-            detail = "The files that wouldn't open were kept at \(quarantine.lastPathComponent) "
-                + "and the app started fresh. Nothing was deleted."
+            title = String(localized: "Couldn't read your data")
+            detail = String(localized: "The files that wouldn't open were kept at \(quarantine.lastPathComponent) and the app started fresh. Nothing was deleted.")
         case .file, .fresh:
             return nil
         }

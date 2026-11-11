@@ -62,8 +62,7 @@ struct WelcomeView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Boring Tracker")
                 .font(.title.bold())
-            Text("Choose what you want to track. "
-                 + "You can change all of it later.")
+            Text("Choose what you want to track. You can change all of it later.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -82,7 +81,7 @@ struct WelcomeView: View {
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(offer.name)
+                    Text(offer.localizedName)
                         .foregroundStyle(.primary)
                     Text(describe(offer))
                         .font(.footnote)

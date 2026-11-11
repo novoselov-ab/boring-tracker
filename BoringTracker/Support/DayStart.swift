@@ -35,7 +35,7 @@ enum DayStart {
     /// that, because there the two zones are the same one; the test that pins a
     /// zone did, immediately.
     static func label(_ hour: Int, calendar: Calendar = .current) -> String {
-        guard hour != midnight else { return "Midnight" }
+        guard hour != midnight else { return String(localized: "Midnight") }
         let parts = DateComponents(year: 2001, month: 2, day: 1, hour: hour)
         guard let date = calendar.date(from: parts) else { return "\(hour):00" }
         var style = Date.FormatStyle.dateTime.hour().minute()

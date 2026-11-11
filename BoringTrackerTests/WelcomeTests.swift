@@ -172,3 +172,38 @@ struct WelcomeTests {
         #expect(UnitSystem.preferred(Locale(identifier: identifier)) == expected)
     }
 }
+
+@Suite("Localisation française")
+struct FrenchLocalizationTests {
+    @Test("Le catalogue français est inclus et traduit les écrans et les suivis proposés")
+    func frenchCatalogueIsBundled() throws {
+        let url = try #require(Bundle.main.url(forResource: "fr", withExtension: "lproj"))
+        let bundle = try #require(Bundle(url: url))
+        for (key, expected) in [
+            ("Settings", "Réglages"), ("History", "Historique"),
+            ("Weight", "Poids"), ("Protein", "Protéines"),
+            ("Food", "Alimentation"), ("Edits this entry", "Modifie cette entrée")
+        ] {
+            #expect(bundle.localizedString(forKey: key, value: nil, table: nil) == expected)
+        }
+    }
+
+    @Test("Les compteurs français utilisent le singulier et le pluriel")
+    func frenchCounts() throws {
+        let url = try #require(Bundle.main.url(forResource: "fr", withExtension: "lproj"))
+        let bundle = try #require(Bundle(url: url))
+        for (value, expected) in [(1, "1 entrée"), (2, "2 entrées")] {
+            #expect(String(localized: "\(value) entries", bundle: bundle,
+                           locale: Locale(identifier: "fr_FR")) == expected)
+        }
+    }
+
+    @Test("Les noms enregistrés ne sont pas traduits à la lecture")
+    func storedNamesRemainUnchanged() throws {
+        let tracker = Tracker(name: "Weight", unit: "kg", group: "My group")
+        let data = try StoreCoding.encoder().encode(tracker)
+        let decoded = try StoreCoding.decoder().decode(Tracker.self, from: data)
+        #expect(decoded.name == "Weight")
+        #expect(decoded.group == "My group")
+    }
+}

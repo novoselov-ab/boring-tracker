@@ -52,12 +52,12 @@ struct BatchEditor: View {
                 }
 
                 Section {
-                    Button(item.entries.count == 1 ? "Delete Entry" : "Delete Batch",
+                    Button(item.entries.count == 1 ? String(localized: "Delete Entry") : String(localized: "Delete Batch"),
                            systemImage: "trash", role: .destructive, action: delete)
                 }
             }
             .readableContent()
-            .navigationTitle(item.entries.count == 1 ? "Edit Entry" : "Edit Batch")
+            .navigationTitle(item.entries.count == 1 ? String(localized: "Edit Entry") : String(localized: "Edit Batch"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -90,7 +90,7 @@ struct BatchEditor: View {
     }
 
     private func trackerName(for entry: Entry) -> String {
-        store.tracker(entry.trackerID)?.name ?? "Deleted tracker"
+        store.tracker(entry.trackerID)?.name ?? String(localized: "Deleted tracker")
     }
 
     private func prepare() {

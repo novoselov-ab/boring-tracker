@@ -1,6 +1,7 @@
 name: BoringTracker
 
 options:
+  knownRegions: [en, fr, Base]
   bundleIdPrefix: com.novoselov
   deploymentTarget:
     iOS: "18.0"

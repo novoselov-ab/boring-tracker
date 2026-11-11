@@ -100,8 +100,8 @@ struct DayKey: Codable, Hashable, Comparable, Sendable {
     /// have to agree — the same day named two ways on two screens is its own kind
     /// of drift.
     func label(today: DayKey, calendar: Calendar = .current) -> String {
-        if self == today { return "Today" }
-        if self == today.adding(days: -1, calendar: calendar) { return "Yesterday" }
+        if self == today { return String(localized: "Today") }
+        if self == today.adding(days: -1, calendar: calendar) { return String(localized: "Yesterday") }
         let start = startOfDay(calendar: calendar)
         return if year == today.year {
             start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))

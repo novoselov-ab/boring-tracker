@@ -36,7 +36,7 @@ struct TrackerEditor: View {
                 }
             }
             .readableContent()
-            .navigationTitle(isNew ? "New Tracker" : "Tracker")
+            .navigationTitle(isNew ? String(localized: "New Tracker") : String(localized: "Tracker"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -109,8 +109,7 @@ struct TrackerEditor: View {
                 TextField("Group name", text: $typedGroup)
             }
         } footer: {
-            Text("Trackers in a group are logged together, in one sheet — "
-                + "calories and protein come from the same meal.")
+            Text("Trackers in a group are logged together, in one sheet — calories and protein come from the same meal.")
         }
     }
 
@@ -121,10 +120,10 @@ struct TrackerEditor: View {
     /// What the chosen kind means, in the one place someone is choosing it.
     private func kindFooter(_ kind: Tracker.Kind) -> String {
         switch kind {
-        case .dailyTotal: "Entries add up over the day and start again at \(resetsAt)."
-        case .measurement: "Each entry is a reading on its own. Nothing resets."
+        case .dailyTotal: String(localized: "Entries add up over the day and start again at \(resetsAt).")
+        case .measurement: String(localized: "Each entry is a reading on its own. Nothing resets.")
         case .lastTime:
-            "One tap writes the date and nothing else. The card reads how long it has been."
+            String(localized: "One tap writes the date and nothing else. The card reads how long it has been.")
         }
     }
 
@@ -133,7 +132,7 @@ struct TrackerEditor: View {
     /// went on promising a boundary the app had stopped using.
     private var resetsAt: String {
         store.dayStartHour == DayStart.midnight
-            ? "midnight"
+            ? String(localized: "midnight")
             : DayStart.label(store.dayStartHour, calendar: store.calendar)
     }
 
@@ -158,7 +157,7 @@ struct TrackerEditor: View {
                        systemImage: "trash", role: .destructive) {
                     confirming = .keepingHistory
                 }
-                Button("Delete Tracker and \(count.formatted()) \(count == 1 ? "Entry" : "Entries")",
+                Button("Delete Tracker and \(count) entries",
                        systemImage: "trash.fill", role: .destructive) {
                     confirming = .withHistory
                 }
@@ -167,9 +166,7 @@ struct TrackerEditor: View {
             if count == 0 {
                 Text("Nothing has ever been logged against this tracker.")
             } else {
-                Text("Keeping the history leaves the \(count.formatted()) entries in the file, "
-                    + "so an export still has them and a later import can put them back. "
-                    + "Deleting the history removes them for good.")
+                Text("Keeping the history leaves the \(count.formatted()) entries in the file, so an export still has them and a later import can put them back. Deleting the history removes them for good.")
             }
         }
         // Both are asked about, because neither can be undone: there is no undo
@@ -207,26 +204,25 @@ struct TrackerEditor: View {
 
         var confirmation: String {
             switch self {
-            case .keepingHistory: "Delete Tracker"
-            case .withHistory: "Delete Everything"
+            case .keepingHistory: String(localized: "Delete Tracker")
+            case .withHistory: String(localized: "Delete Everything")
             }
         }
 
         func title(name: String, count: Int) -> String {
             switch self {
-            case .keepingHistory: "Delete \(name)?"
-            case .withHistory: "Delete \(name) and its \(count.formatted()) entries?"
+            case .keepingHistory: String(localized: "Delete \(name)?")
+            case .withHistory: String(localized: "Delete \(name) and its \(count.formatted()) entries?")
             }
         }
 
         func consequence(count: Int) -> String {
-            let entries = "\(count.formatted()) \(count == 1 ? "entry" : "entries")"
+            let entries = String(localized: "\(count) entries")
             switch self {
             case .keepingHistory:
-                return "The \(entries) stay in your data and in any export, but nothing in "
-                    + "the app will show them once the tracker is gone. This cannot be undone."
+                return String(localized: "The \(entries) stay in your data and in any export, but nothing in the app will show them once the tracker is gone. This cannot be undone.")
             case .withHistory:
-                return "The \(entries) are removed for good. This cannot be undone."
+                return String(localized: "The \(entries) are removed for good. This cannot be undone.")
             }
         }
     }
@@ -242,7 +238,7 @@ struct TrackerEditor: View {
 
     private var displayName: String {
         let trimmed = (draft ?? tracker).name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "this tracker" : trimmed
+        return trimmed.isEmpty ? String(localized: "this tracker") : trimmed
     }
 
     /// Every group that exists, plus this tracker's own — which is not in the

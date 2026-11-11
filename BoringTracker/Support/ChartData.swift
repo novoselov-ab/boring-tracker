@@ -10,10 +10,10 @@ enum ChartRange: String, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .week: "Week"
-        case .month: "Month"
-        case .year: "Year"
-        case .all: "All"
+        case .week: String(localized: "Week")
+        case .month: String(localized: "Month")
+        case .year: String(localized: "Year")
+        case .all: String(localized: "All")
         }
     }
 

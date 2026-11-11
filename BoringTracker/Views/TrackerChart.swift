@@ -156,11 +156,11 @@ struct TrackerChart: View {
             let logged = points.filter { $0.value != 0 }
             guard !logged.isEmpty else { return "" }
             let mean = logged.reduce(0) { $0 + $1.value } / Double(logged.count)
-            return "\(tracker.format(mean)) a day on \(logged.count) logged days"
+            return String(localized: "\(tracker.format(mean)) a day on \(logged.count) logged days")
         case .measurement:
             let low = points.min { $0.value < $1.value }?.value ?? 0
             let high = points.max { $0.value < $1.value }?.value ?? 0
-            return "\(tracker.format(low)) to \(tracker.format(high))"
+            return String(localized: "\(tracker.format(low)) to \(tracker.format(high))")
         case .lastTime:
             return ""
         }

@@ -56,7 +56,7 @@ enum StoreMigration {
             // Not reachable through the probe above, which needs an object to
             // decode at all. Written down rather than forced, because this is the
             // path that ends with a file being replaced.
-            throw StoreError.invalidDocument("the file is not a JSON object.")
+            throw StoreError.invalidDocument(String(localized: "the file is not a JSON object."))
         }
         let migrated = try chain(object, from: found, to: supported, steps: steps)
         return try decodeCurrent(JSONSerialization.data(withJSONObject: migrated))
@@ -86,7 +86,7 @@ enum StoreMigration {
             // refusal names the step, and so a chain cannot be half-applied.
             guard JSONSerialization.isValidJSONObject(document) else {
                 throw StoreError.invalidDocument(
-                    "the migration step from version \(version) produced a value that is not JSON."
+                    String(localized: "the migration step from version \(version) produced a value that is not JSON.")
                 )
             }
             version += 1

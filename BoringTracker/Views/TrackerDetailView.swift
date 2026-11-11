@@ -52,8 +52,8 @@ struct TrackerDetailView: View {
                     "Nothing logged yet",
                     systemImage: "number",
                     description: Text(tracker.kind == .lastTime
-                        ? "Tap + the first time you do it."
-                        : "Tap + to add the first \(tracker.name.lowercased()).")
+                        ? String(localized: "Tap + the first time you do it.")
+                        : String(localized: "Tap + to add the first \(tracker.name.lowercased())."))
                 )
                 .listRowBackground(Color.clear)
             }

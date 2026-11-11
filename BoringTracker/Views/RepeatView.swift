@@ -54,9 +54,7 @@ struct RepeatView: View {
                         "Nothing to log again yet",
                         systemImage: RepeatDisc.symbol,
                         description: Text(
-                            "Anything you log to a daily total turns up here, named or not, to "
-                                + "log again in one tap. A measurement like weight does not: you "
-                                + "would take a new reading rather than repeat the last one."
+                            "Anything you log to a daily total turns up here, named or not, to log again in one tap. A measurement like weight does not: you would take a new reading rather than repeat the last one."
                         )
                     )
                 } else if shown.isEmpty {
